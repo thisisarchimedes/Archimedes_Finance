@@ -1,0 +1,51 @@
+
+
+/*
+  Vault is just a simple in/out it provide a fixed (non upgradable) address to transfer OUSD to (and pay interest into).
+  That means we need to change the architecture and add Minter or have the coordinator deal with than
+*/
+
+
+contract VaultOUsdLvUsd is ReentrancyGuard {
+
+  /// Note about managing balance
+  /// Anyone can ERC20 transfer OUSD to the vault. The vault doesn't keep the ledger
+  // so we probably don't care too much about that. We treat all incoming OUSD as interest payments
+  /// when they do, we need to run an admin function to update vault balance OR
+  // we decide simply to use OUSD contract as source of truth (but not both)
+
+  /// @dev Deposits collateral into the vault.
+  /// Privileged access - only the contract owner (the leverage engine) can deposit
+  ///
+  /// This function is only for the intial principle Deposits
+  /// Partners use ERC20 transfer to send OUSD as interest
+  ///
+  /// @param _amount the amount of collateral to deposit.
+  /// @param _isInterest TRUE = interest payment that needs to be processed ;
+  ///                    FALSE = principle deposit
+  function deposit(uint256 _amount, bool _isInterest) external onlyOwner nonReentrant expectInitialized ;
+
+
+  /// @dev Attempts to withdraw part of a CDP's collateral.
+  /// Privileged access - only the contract owner (the leverage engine and the coordinator (for protocol fees))
+  /// can withdraw
+  ///
+  /// This function reverts if a deposit into the CDP was made in the same block. This is to prevent flash loan attacks
+  /// on other internal or external systems.
+  ///
+  /// @param _amount the amount of collateral to withdraw.
+  function withdraw(uint256 _amount) external nonReentrant onlyOwner expectInitialized returns (uint256, uint256) ;
+
+
+  /// @dev Sets the address of the current owner
+  /// Timelocked function (set cadidate and change owner after 17,280 blocks ~3 days)
+  /// Emits OwnerSet prevent
+  /// Maybe we want to call it Withdrawer instead of Owner - TBD
+  ///
+  /// @param account the accounts to set.
+
+  function setOwner(address[] calldata accounts) external onlyOwner ;
+
+
+
+  }
