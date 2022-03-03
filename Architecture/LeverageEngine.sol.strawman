@@ -1,0 +1,34 @@
+
+
+contract LeverageEngine is ReentrancyGuard {
+
+  /* Privileged functions: Admin */
+
+  /// @dev change the max number of leverage cycles allowed
+  ///
+  /// User sends OUSD to the contract. We mint NFT and do the leverage cycles
+  ///
+  /// @param _maxCycleNumber max number
+  function setMaxLeverageCyclesAllowed(uint256 _maxCycleNumber) external nonReentrant onlyAdmin expectInitialized ;
+
+
+
+  /* Non-privileged functions: Leverage engine */
+
+  /// @dev deposit OUSD under NFT ID
+  ///
+  /// User sends OUSD to the contract. We mint NFT and do the leverage cycles
+  ///
+  /// @param _amount the amount of OUSD sent to Archimedes
+  function createLeveragedPosition(uint256 _amount) external nonReentrant expectInitialized ;
+
+
+  /// @dev deposit OUSD under NFT ID
+  ///
+  /// De-leverage and unwind. Send OUSD to msg.sender
+  /// must check that the msg.sender owns the NFT
+  ///
+  /// @param _nftId the nft ID
+  function destroyLeveragedPosition(uint256 _nftId) external nonReentrant expectInitialized ;
+
+}
