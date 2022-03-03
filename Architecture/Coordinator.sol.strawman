@@ -1,0 +1,115 @@
+
+* Deposit against Address - need to deal with rebasing (getting more OUSD)
+* Deposit/withdraw/borrow/repay under NFT (maybe leverage engine deals with NFT and this contract is agnostic?)
+** problem is with liquidation and people taking different leverage - so probably nope
+* change collateral rate
+* split to minter and coordinator? TBD
+
+contract Coordinator is ReentrancyGuard {
+
+/* Privileged functions: Admin */
+
+/// @dev Mint more lvUSD and send it to OUSD/lvUSD vault to allow more leverage
+///
+///  call "mint" function of lvUSD contract, gets lvUSD back and sends it to the vault
+///
+/// @param _amount the amount of lvUSD to mint
+function increaseLvUSDCap(uint256 _amount) external nonReentrant onlyAdmin expectInitialized ;
+
+/// @dev Claim protocol fees and send it the treasury contract
+///
+///
+function claimProtocolFees() external nonReentrant onlyAdmin expectInitialized ;
+
+/// @dev change collateral rate
+///
+/// Max lvUSD that can be minted for 1 OUSD
+/// Shoud emit an event
+///
+/// @param _ratio
+function changeCollateralRate(uint256 _ratio) external nonReentrant onlyAdmin expectInitialized ;
+
+/// @dev change liquidation threshold
+///
+/// Need to verify: liquidation threshold > collateral rate
+/// Shoud emit an event
+///
+/// @param _threshold
+function changeLiquidationThreshold(uint256 _threshold) external nonReentrant onlyAdmin expectInitialized ;
+
+
+/* Privileged functions: Leverage engine */
+
+/// @dev deposit OUSD under NFT ID
+///
+/// User sends OUSD to the contract. OUSD is written under NFT ID
+///
+/// @param _amount the amount of OUSD sent to Archimedes
+/// @param _nftId the Archimedes ERC-721 token id
+function depositCollateralUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
+
+/// @dev deposit OUSD under NFT ID
+///
+/// User withraw OUSD to the contract
+/// If user borrowed lvUSD against OUSD, they need to repay at least some of the
+/// borrowed lvUSD first ( to bring collateral ratio below the threshold)
+///
+/// @param _amount the amount of OUSD user request to withdraw
+/// @param _nftId the Archimedes ERC-721 token id
+function withdrawCollateralUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
+
+/// @dev Borrow lvUSD under NFT ID
+///
+/// User borrow lvUSD against the OUSD deposited as collateral
+/// Need to check collaterallization ratio
+///
+/// @param _amount the amount of lvUSD requested
+/// @param _nftId the Archimedes ERC-721 token id
+function borrowUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
+
+/// @dev Borrow lvUSD under NFT ID
+///
+/// User borrow lvUSD against the OUSD deposited as collateral
+/// Need to check collaterallization ratio
+///
+/// @param _amount the amount of lvUSD requested
+/// @param _nftId the Archimedes ERC-721 token id
+function repayUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
+
+
+/* Non-privileged functions */
+
+/// @dev deposit OUSD under address (vs. under NFT token ID)
+///
+/// User sends OUSD to the contract. OUSD is written under msg.sender
+///
+/// @param _amount the amount of OUSD sent to Archimedes
+function depositCollateralUnderAddress(uint256 _amount) external nonReentrant expectInitialized ;
+
+/// @dev deposit OUSD under address (vs. under NFT token ID)
+///
+/// User withraw OUSD to the contract
+/// If user borrowed lvUSD against OUSD, they need to repay at least some of the
+/// borrowed lvUSD first ( to bring collateral ratio below the threshold)
+///
+/// @param _amount the amount of OUSD user request to withdraw
+function withdrawCollateralUnderAddress(uint256 _amount) external nonReentrant expectInitialized ;
+
+/// @dev Borrow lvUSD under address (vs. under NFT token ID)
+///
+/// User borrow lvUSD against the OUSD deposited as collateral
+/// Need to check collaterallization ratio
+///
+/// @param _amount the amount of lvUSD requested
+function borrowUnderAddress(uint256 _amount) external nonReentrant expectInitialized ;
+
+/// @dev Borrow lvUSD under address (vs. under NFT token ID)
+///
+/// User borrow lvUSD against the OUSD deposited as collateral
+/// Need to check collaterallization ratio
+///
+/// @param _amount the amount of lvUSD requested
+function repayUnderAddress(uint256 _amount) external nonReentrant expectInitialized ;
+
+
+}
