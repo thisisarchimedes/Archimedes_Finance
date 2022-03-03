@@ -37,4 +37,13 @@ contract LvUsdToken is AccessControl, ERC20("Archimedes lvUSD", "lvUSD") {
         _burn(_msgSender(), amount);
     }
 
+
+  /// @dev Sets the address of the current minter contract
+  /// Timelocked function (set cadidate and change owner after 17,280 blocks ~3 days)
+  /// Emits MinterSet
+  ///
+  ///
+  /// @param account the accounts to set.
+  function setMinter(address[] calldata accounts) external onlyAdmin ;
+
 }
