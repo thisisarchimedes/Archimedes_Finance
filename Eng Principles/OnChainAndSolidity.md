@@ -3,5 +3,5 @@
 
 
 TBD
-* Agree on common syntax
 * Agree on roles (onlyAdmin, onlyOwner etc.....)
+* Agree on common syntax
