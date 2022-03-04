@@ -13,7 +13,7 @@ contract LeverageEngine is ReentrancyGuard {
 
 
 
-  /* Non-privileged functions: Leverage engine */
+  /* Non-privileged functions */
 
   /// @dev deposit OUSD under NFT ID
   ///
