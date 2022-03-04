@@ -1,26 +1,30 @@
 
 // holds the protocol fee ledeger of ARCH holders
+/*
+For MVP we'll go manual - simple despoit / widthrawl contract with access control
+We can do airdrops for token holders and later introduce an on-chain logic to distribute protocol fees
+
+*/
 
 contract Treasury is AccessControl {
 
-  /* Privileged functions: Coordinatore */
 
   /// @dev despoit protocol fees
   ///
   /// OUSD fees are sent to the Treasury.
-  /// "deposit" function updates ledger:
-  /// * amount for allocated for the actual protocol
-  /// * amount of OUSD each address staking ARCH token is eligable for
+  /// for straters we hold the actual ledger off chain
   ///
   /// @param _amount the amount of OUSD deposited
-  function deposit(uint256 _amount) external nonReentrant onlyOwner expectInitialized   ;
+  function deposit(uint256 _amount) external nonReentrant expectInitialized   ;
+
+  /* Privileged functions: Coordinatore */
 
 
   /// @dev return OUSD rewards the protocol eligable for
   ///
-  /// updates the ledger + emmit an event
+  /// 
   ///
- function protocolClaimRewards() external nonReentrant onlyOwner expectInitialized   ;
+ function withdraw(uint256 _amount) external nonReentrant onlyOwner expectInitialized   ;
 
  /// @dev Sets the address of the current owner
  /// Timelocked function (set cadidate and change owner after 17,280 blocks ~3 days)
@@ -30,17 +34,6 @@ contract Treasury is AccessControl {
  /// @param account the accounts to set.
 
  function setOwner(address[] calldata accounts) external onlyOwner ;
- 
- /* Non-Privileged functions: Coordinatore */
-
- /// @dev return OUSD rewards the msg.sender address eligable for
- ///
- /// updates the ledger
- ///
- function userClaimRewards() external nonReentrant expectInitialized   ;
-
-
-
 
 
 }
