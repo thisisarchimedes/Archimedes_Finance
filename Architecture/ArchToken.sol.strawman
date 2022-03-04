@@ -10,7 +10,7 @@ import {IDetailedERC20} from "./interfaces/IDetailedERC20.sol";
 /// @dev This is the governence token
 ///
 ///
-contract AtchToken is AccessControl, ERC20("Archimedes ARCH Token", "ARCH") {
+contract ArchToken is AccessControl, ERC20("Archimedes ARCH Token", "ARCH") {
   using SafeERC20 for ERC20;
 
 /// @dev Mints tokens to a recipient.
