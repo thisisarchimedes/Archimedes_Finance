@@ -1,0 +1,30 @@
+import {ERC721Burnable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+
+// The "NFT"
+
+contract PositionToken is ERC721Burnable {
+
+  /// This function reverts if the caller does not have the admin role.
+  ///
+  /// @param _toWhitelist the account to mint tokens to.
+  /// @param _state the whitelist state.
+  function setWhitelist(address _toWhitelist, bool _state) external onlyAdmin ;
+
+  /// @dev Mints NFT tokens to a recipient.
+  ///
+  /// This function reverts if the caller does not have the minter role.
+  ///
+  /// @param _recipient the account to mint tokens to.
+  /// @param _amount    the amount of tokens to mint.
+  function mint(address _recipient) external onlyWhitelisted ;
+
+
+  /// @dev burns NFT tokens of the caller
+  ///
+  /// @param amount to burn
+  function burn(uint256 _tokenId) public onlyWhitelisted {
+        _burn(_tokenId);
+    }
+
+    
+}
