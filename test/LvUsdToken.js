@@ -2,14 +2,52 @@ const { expect } = require("chai");
 
 describe("LVUSD Token contract", function () {
 
-  it("Deployment should assign the total supply of tokens to the owner", async function () {
-    const [owner] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("LvUsdToken");
+    let lvTokenContract;
+    let lvToken;
+    let owner;
+    let addr1;
+    let addr2;
+    let addrs;
 
-    const hardhatToken = await Token.deploy();
+  // `beforeEach` will run before each test, re-deploying the contract every
+   // time. It receives a callback, which can be async.
+   beforeEach(async function () {
+     // Get the ContractFactory and Signers here.
+     lvTokenContract = await ethers.getContractFactory("LvUsdToken");
+     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
 
-    const ownerBalance = await hardhatToken.balanceOf(owner.address);
-    expect(await hardhatToken.totalSupply()).to.equal(ownerBalance);
+     // To deploy our contract, we just have to call Token.deploy() and await
+     // for it to be deployed(), which happens once its transaction has been
+     // mined.
+     lvToken = await lvTokenContract.deploy();
+   });
+
+
+  it("Initial Deployment shouldn't mint anything", async function () {
+
+    expect(await lvToken.totalSupply()).to.equal(0);
   });
+
+
+  it("Owner can mint", async function () {
+
+    let mint_amount = 100;
+
+    lvToken.mint(owner.address, mint_amount);
+
+    expect(await lvToken.totalSupply()).to.equal(mint_amount);
+    expect(await lvToken.balanceOf(owner.address)).to.equal(mint_amount);
+
+  });
+
+  it("Non owner cannot mint", async function () {
+
+    let mint_amount = 200;
+    
+    await expect(lvToken.connect(addr1).mint(owner.address, mint_amount)).to.be.revertedWith('Ownable: caller is not the owner');
+
+  });
+
+
 });
