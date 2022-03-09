@@ -1,7 +1,9 @@
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+//import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Roles.sol";
+
+//import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IDetailedERC20} from "./interfaces/IDetailedERC20.sol";
 
@@ -13,13 +15,9 @@ import {IDetailedERC20} from "./interfaces/IDetailedERC20.sol";
 ///
 contract LvUsdToken is AccessControl, ERC20("Archimedes lvUSD", "lvUSD") {
   using SafeERC20 for ERC20;
+  using Roles for Roles.Role;
 
 
-  /// This function reverts if the caller does not have the admin role.
-  ///
-  /// @param _toWhitelist the account to mint tokens to.
-  /// @param _state the whitelist state.
-  function setWhitelist(address _toWhitelist, bool _state) external onlyAdmin ;
 
   /// @dev Mints tokens to a recipient.
   ///
@@ -27,15 +25,7 @@ contract LvUsdToken is AccessControl, ERC20("Archimedes lvUSD", "lvUSD") {
   ///
   /// @param _recipient the account to mint tokens to.
   /// @param _amount    the amount of tokens to mint.
-  function mint(address _recipient, uint256 _amount) external onlyWhitelisted ;
-
-
-  /// @dev burns tokens of the caller
-  ///
-  /// @param amount to burn
-  function burn(uint256 amount) public virtual {
-        _burn(_msgSender(), amount);
-    }
+  function mint(address _recipient, uint256 _amount) external onlyMinter ;
 
 
   /// @dev Sets the address of the current minter contract
