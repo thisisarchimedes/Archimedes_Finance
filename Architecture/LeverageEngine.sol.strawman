@@ -20,7 +20,9 @@ contract LeverageEngine is ReentrancyGuard {
   /// User sends OUSD to the contract. We mint NFT and do the leverage cycles
   ///
   /// @param _amount the amount of OUSD sent to Archimedes
-  function createLeveragedPosition(uint256 _amount) external nonReentrant expectInitialized ;
+  /// @param _collateralRate collateralization rate (of each cycle)
+  /// @param _cycles How many leverage cycles to do
+  function createLeveragedPosition(uint256 _amount, uint256 _collateralRate, uint256 _cycles) external nonReentrant expectInitialized ;
 
 
   /// @dev deposit OUSD under NFT ID
