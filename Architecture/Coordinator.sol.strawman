@@ -37,6 +37,20 @@ function changeCollateralRate(uint256 _ratio) external nonReentrant onlyAdmin ex
 /// @param _threshold
 function changeLiquidationThreshold(uint256 _threshold) external nonReentrant onlyAdmin expectInitialized ;
 
+/// @dev change orginiation fee
+///
+/// How much off principle is taken as protocol fees, each time lvUSD is borrowed
+/// Shoud emit an event
+///
+/// @param _fee
+function changeOriginiationFee(uint256 _fee) external nonReentrant onlyAdmin expectInitialized ;
+
+/// @dev change NFT sell fee
+///
+/// When NFT is sold, this function collect protocol fee
+///
+/// @param _fee
+function changeNFTSellFee(uint256 _fee) external nonReentrant onlyWhitelisted expectInitialized ;
 
 /* Privileged functions: Leverage engine */
 
@@ -76,6 +90,14 @@ function borrowUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant o
 /// @param _nftId the Archimedes ERC-721 token id
 function repayUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
 
+/* Privileged functions: NFT contract */
+
+/// @dev Claim sell fee
+///
+/// When NFT is sold, this function collect protocol fee
+///
+/// @param _nftId the Archimedes ERC-721 token id
+function collectNFTSellFee(uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
 
 /* Non-privileged functions */
 
