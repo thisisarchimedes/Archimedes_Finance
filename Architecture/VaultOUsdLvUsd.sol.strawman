@@ -23,7 +23,7 @@ contract VaultOUsdLvUsd is ReentrancyGuard {
   /// @param _amount the amount of collateral to deposit.
   /// @param _isInterest TRUE = interest payment that needs to be processed ;
   ///                    FALSE = principle deposit
-  function deposit(uint256 _amount, bool _isInterest) external onlyOwner nonReentrant expectInitialized ;
+  function deposit(uint256 _amount, bool _isInterest) external onlyCoordinator nonReentrant expectInitialized ;
 
 
   /// @dev Attempts to withdraw part of a CDP's collateral.
@@ -34,17 +34,8 @@ contract VaultOUsdLvUsd is ReentrancyGuard {
   /// on other internal or external systems.
   ///
   /// @param _amount the amount of collateral to withdraw.
-  function withdraw(uint256 _amount) external nonReentrant onlyOwner expectInitialized returns (uint256, uint256) ;
+  function withdraw(uint256 _amount) external nonReentrant onlyCoordinator expectInitialized returns (uint256, uint256) ;
 
-
-  /// @dev Sets the address of the current owner
-  /// Timelocked function (set cadidate and change owner after 17,280 blocks ~3 days)
-  /// Emits OwnerSet prevent
-  /// Maybe we want to call it Withdrawer instead of Owner - TBD
-  ///
-  /// @param account the accounts to set.
-
-  function setOwner(address[] calldata accounts) external onlyOwner ;
 
 
 
