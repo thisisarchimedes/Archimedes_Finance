@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-const ERC20Mock = artifacts.require('ERC20Mock');
+//const ERC20Mock = artifacts.require('ERC20Mock');
 
 
 describe("Vault OUSDlvUSD contract", function () {
@@ -28,7 +28,7 @@ describe("Vault OUSDlvUSD contract", function () {
      // mined.
      vault = await vaultContract.deploy();
 
-     this.mockToken = await ERC20Mock.new("mockOUSD", "OUSD", owner.address, 10000000000000);
+    // this.mockToken = await ERC20Mock.new("mockOUSD", "OUSD", owner.address, 10000000000000);
 
    });
 
