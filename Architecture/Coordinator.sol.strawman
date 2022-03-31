@@ -5,21 +5,32 @@
 * change collateral rate
 * split to minter and coordinator? TBD
 
-contract Coordinator is ReentrancyGuard {
+import {AdminConfig} from "./libraries/AdminConfig.sol";
 
-/* Privileged functions: Admin */
+contract Coordinator is ReentrancyGuard. Ownable {
+
+  using AdminConfig;
+
+
+    // parameters for contract
+    // - lvUSD Token contract address 
+    // - OUSD/lvUSD Vault contract address
+
+/* Privileged functions: Governor */
 
 /// @dev Mint more lvUSD and send it to OUSD/lvUSD vault to allow more leverage
 ///
 ///  call "mint" function of lvUSD contract, gets lvUSD back and sends it to the vault
 ///
-/// @param _amount the amount of lvUSD to mint
-function increaseLvUSDCap(uint256 _amount) external nonReentrant onlyAdmin expectInitialized ;
+/// @param amount the amount of lvUSD to mint
+function increaseLvUSDCap(uint256 amount) external onlyOwner ;
 
+----
 /// @dev Claim protocol fees and send it the treasury contract
 ///
 ///
 function claimProtocolFees() external nonReentrant onlyAdmin expectInitialized ;
+----
 
 /// @dev change collateral rate
 ///
@@ -29,28 +40,13 @@ function claimProtocolFees() external nonReentrant onlyAdmin expectInitialized ;
 /// @param _ratio
 function changeCollateralRate(uint256 _ratio) external nonReentrant onlyAdmin expectInitialized ;
 
-/// @dev change liquidation threshold
-///
-/// Need to verify: liquidation threshold > collateral rate
-/// Shoud emit an event
-///
-/// @param _threshold
-function changeLiquidationThreshold(uint256 _threshold) external nonReentrant onlyAdmin expectInitialized ;
-
 /// @dev change orginiation fee
 ///
 /// How much off principle is taken as protocol fees, each time lvUSD is borrowed
 /// Shoud emit an event
-///
-/// @param _fee
+/// 
+/// @param _fee in percentage 
 function changeOriginiationFee(uint256 _fee) external nonReentrant onlyAdmin expectInitialized ;
-
-/// @dev change NFT sell fee
-///
-/// When NFT is sold, this function collect protocol fee
-///
-/// @param _fee
-function changeNFTSellFee(uint256 _fee) external nonReentrant onlyWhitelisted expectInitialized ;
 
 /* Privileged functions: Leverage engine */
 
@@ -62,45 +58,35 @@ function changeNFTSellFee(uint256 _fee) external nonReentrant onlyWhitelisted ex
 /// @param _nftId the Archimedes ERC-721 token id
 function depositCollateralUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
 
-/// @dev deposit OUSD under NFT ID
+/// @dev withdraw OUSD under NFT ID
 ///
 /// User withraw OUSD to the contract
-/// If user borrowed lvUSD against OUSD, they need to repay at least some of the
-/// borrowed lvUSD first ( to bring collateral ratio below the threshold)
 ///
-/// @param _amount the amount of OUSD user request to withdraw
 /// @param _nftId the Archimedes ERC-721 token id
+/// @param uint256 sum to withdraw
 function withdrawCollateralUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
 
 /// @dev Borrow lvUSD under NFT ID
 ///
-/// User borrow lvUSD against the OUSD deposited as collateral
+/// User borrow lvUSD against the OUSD deposited as collateral in Vault
 /// Need to check collaterallization ratio
 ///
 /// @param _amount the amount of lvUSD requested
 /// @param _nftId the Archimedes ERC-721 token id
 function borrowUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
 
-/// @dev Borrow lvUSD under NFT ID
+/// @dev Repay lvUSD under NFT ID
 ///
-/// User borrow lvUSD against the OUSD deposited as collateral
+/// User repay lvUSD against the OUSD deposited as collateral 
 /// Need to check collaterallization ratio
 ///
 /// @param _amount the amount of lvUSD requested
 /// @param _nftId the Archimedes ERC-721 token id
 function repayUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
 
-/* Privileged functions: NFT contract */
-
-/// @dev Claim sell fee
-///
-/// When NFT is sold, this function collect protocol fee
-///
-/// @param _nftId the Archimedes ERC-721 token id
-function collectNFTSellFee(uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
-
 /* Non-privileged functions */
 
+/// TODO: Should this be accessed by admin only or not?
 /// @dev deposit OUSD under address (vs. under NFT token ID)
 ///
 /// User sends OUSD to the contract. OUSD is written under msg.sender
@@ -108,11 +94,11 @@ function collectNFTSellFee(uint256 _nftId) external nonReentrant onlyWhitelisted
 /// @param _amount the amount of OUSD sent to Archimedes
 function depositCollateralUnderAddress(uint256 _amount) external nonReentrant expectInitialized ;
 
-/// @dev deposit OUSD under address (vs. under NFT token ID)
+/// @dev withraw OUSD under address (vs. under NFT token ID)
 ///
 /// User withraw OUSD to the contract
 /// If user borrowed lvUSD against OUSD, they need to repay at least some of the
-/// borrowed lvUSD first ( to bring collateral ratio below the threshold)
+/// borrowed lvUSD first (to bring collateral ratio below the threshold)
 ///
 /// @param _amount the amount of OUSD user request to withdraw
 function withdrawCollateralUnderAddress(uint256 _amount) external nonReentrant expectInitialized ;
@@ -132,6 +118,5 @@ function borrowUnderAddress(uint256 _amount) external nonReentrant expectInitial
 ///
 /// @param _amount the amount of lvUSD requested
 function repayUnderAddress(uint256 _amount) external nonReentrant expectInitialized ;
-
 
 }

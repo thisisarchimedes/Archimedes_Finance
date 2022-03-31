@@ -6,24 +6,24 @@
 */
 
 
-contract VaultOUsdLvUsd is ReentrancyGuard {
-
+contract VaultOUsdLvUsd is ReentrancyGuard, ERC20("Archimedes oUSDVault", "VaultUsd") {
   /// Note about managing balance
   /// Anyone can ERC20 transfer OUSD to the vault. The vault doesn't keep the ledger
-  // so we probably don't care too much about that. We treat all incoming OUSD as interest payments
+  // so we probably don't care too much about that. We treat all transfered OUSD as interest payments
   /// when they do, we need to run an admin function to update vault balance OR
   // we decide simply to use OUSD contract as source of truth (but not both)
+
+    // Total oUSD sum in vault after last rebase (i.e handing out interest to positions)
+  uint256 oUSDRebasedAmount;
 
   /// @dev Deposits collateral into the vault.
   /// Privileged access - only the contract owner (the leverage engine) can deposit
   ///
-  /// This function is only for the intial principle Deposits
+  /// This function is only for the intial principle Deposits. It adds amount to oUSDRebasedAmount
   /// Partners use ERC20 transfer to send OUSD as interest
   ///
   /// @param _amount the amount of collateral to deposit.
-  /// @param _isInterest TRUE = interest payment that needs to be processed ;
-  ///                    FALSE = principle deposit
-  function deposit(uint256 _amount, bool _isInterest) external onlyCoordinator nonReentrant expectInitialized ;
+  function deposit(uint256 _amount) external onlyCoordinator nonReentrant  ;
 
 
   /// @dev Attempts to withdraw part of a CDP's collateral.
@@ -33,10 +33,9 @@ contract VaultOUsdLvUsd is ReentrancyGuard {
   /// This function reverts if a deposit into the CDP was made in the same block. This is to prevent flash loan attacks
   /// on other internal or external systems.
   ///
+  /// It remove amount to oUSDRebasedAmount
+  ///
   /// @param _amount the amount of collateral to withdraw.
-  function withdraw(uint256 _amount) external nonReentrant onlyCoordinator expectInitialized returns (uint256, uint256) ;
-
-
-
+  function withdraw(uint256 _amount) external nonReentrant onlyCoordinator  returns (uint256) ;
 
   }

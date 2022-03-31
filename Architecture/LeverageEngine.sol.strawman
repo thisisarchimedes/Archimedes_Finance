@@ -1,15 +1,26 @@
+// contracts/Box.sol
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.13;
+
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
 
-contract LeverageEngine is ReentrancyGuard {
+// Notes
+// - nonReentran t: a method cant call itself (nested calls). Furthermore, 
+//   any method that has nonReentrant modifier cannot call another method with nonReentrant.
+// - onlyOwner: only ownwer can call  
+// - expectInitialized: TBD  - found some info here but needs to be implemented 
+//    https://github.com/NAOS-Finance/NAOS-Formation/blob/master/contracts/FormationV2.sol
+contract LeverageEngine is ReentrancyGuard, Ownable {
 
-  /* Privileged functions: Admin */
+  /* Privileged functions: Governor  */
 
   /// @dev change the max number of leverage cycles allowed
   ///
   /// User sends OUSD to the contract. We mint NFT and do the leverage cycles
   ///
-  /// @param _maxCycleNumber max number
-  function setMaxLeverageCyclesAllowed(uint256 _maxCycleNumber) external nonReentrant onlyAdmin expectInitialized ;
+  /// @param maxCycleNumber max number
+  function setMaxLeverageCyclesAllowed(uint256 maxCycleNumber) external nonReentrant;
 
 
 
@@ -17,12 +28,13 @@ contract LeverageEngine is ReentrancyGuard {
 
   /// @dev deposit OUSD under NFT ID
   ///
-  /// User sends OUSD to the contract. We mint NFT and do the leverage cycles
+  /// User sends OUSD to the contract. 
+  /// We mint NFT, assign to msg.sender and do the leverage cycles
   ///
-  /// @param _amount the amount of OUSD sent to Archimedes
-  /// @param _collateralRate collateralization rate (of each cycle)
-  /// @param _cycles How many leverage cycles to do
-  function createLeveragedPosition(uint256 _amount, uint256 _collateralRate, uint256 _cycles) external nonReentrant expectInitialized ;
+  /// @param amount the amount of OUSD sent to Archimedes
+  /// @param collateralRation % of deposit used as collateral
+  /// @param cycles How many leverage cycles to do
+  function createLeveragedPosition(uint256 amount, uint256 collateralRation, uint256 cycles) external nonReentrant ;
 
 
   /// @dev deposit OUSD under NFT ID
@@ -30,7 +42,7 @@ contract LeverageEngine is ReentrancyGuard {
   /// De-leverage and unwind. Send OUSD to msg.sender
   /// must check that the msg.sender owns the NFT
   ///
-  /// @param _nftId the nft ID
-  function destroyLeveragedPosition(uint256 _nftId) external nonReentrant expectInitialized ;
+  /// @param nftId the nft ID
+  function destroyLeveragedPosition(uint256 nftId) external nonReentrant ;
 
 }

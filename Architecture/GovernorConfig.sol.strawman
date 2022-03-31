@@ -1,0 +1,31 @@
+Contract GovernorConfig {
+    
+    /* Privileged functions: Governor  */
+
+    /// @dev change lvUSD minter address
+    ///
+    /// @param newMinter address of new minter 
+    function changeLvUsdMinterAddress(address newMinter) external;
+
+    /// @dev update EOA of treasury. EOA is multi-sig.
+    ///
+    /// @param newTreasuryAddress new EOA address of treasury
+    function changeTreasuryAddress(address newTreasuryAddress) external;
+    
+    /// @dev update GloablCollateralRate
+    /// 
+    /// @param newGloablCollateralRate new value to assign to GloablCollateralRate
+    function changeGloablCollateralRate(uint256 newGloablCollateralRate) external;
+
+    /// @dev update globalLiqudationThreshold
+    ///
+    /// @param newGlobalLiqudationThreshold new value to assign to globalLiqudationThreshold
+    function changeGlobalLiqudationThreshold(uint256 newGlobalLiqudationThreshold) external;
+
+    /// @dev update max allowed number of leverage cycles 
+    ///
+    /// @param newMaxLeverageCycles new vaule to assign to MaxLeverageCycles
+    function changeMaxLeverageCycles(uint256 newMaxLeverageCycles) external;
+
+    
+}

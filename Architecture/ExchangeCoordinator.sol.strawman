@@ -1,0 +1,34 @@
+****
+
+
+abstract contract ExchangeCoordinator {
+
+    /* Privileged functions: Governor  */
+
+    //// Note: Internally methods need to decide which of the 3CRV tokens to use as meduim 
+
+    event tokenSwap(bytes32 indexed fromToken, bytes32 indexed toToken,  bytes32 indexed platform
+    uint256 amountIn, uint256 amountOut);
+
+    /// @dev use curve pool to trade Ousd for lvUSD
+    ///
+    ///
+    /// in simple terms: deposit ousd, get lvUSD
+    /// Use MaxOusdTraded to get lvUSDAmountRecieved, fail if lvUSDAmountRecieved < minLvUSDReturned
+    /// Emit event for each swap (including lvUSD, oUSD and 3CRV) include nftID 
+    ///
+    /// @param minLvUSDReturned - min amount of lvUSD to recieve from trade. If output (of trade) is lower then minLvUSDReturned, revert
+    /// @param MaxOusdTraded - max allowed OUSD to use for trade 
+    /// MaxOusdTraded = total OUSD + Interest
+    function swapOUSDforLvUSD(uint256 minLvUSDReturned, uint256 MaxOusdTraded) external virtual return(uint256 lvUSDAmountRecieved);
+
+
+    /// @dev trade lvUSD for USDT
+    ///
+    /// in simple terms: deposit lvUSD, get OUSD
+    /// Assume this is close to 1:1 swap rate.
+    /// Emit event for each swap (including lvUSD, oUSD and 3CRV) include nftID 
+    ///
+    /// @param lvUSDTraded - the amount of lvUSD avaliable for trading. 
+    function swapLvUSDforOUSD(uint256 lvUSDTraded) external virtual return(uint256 ousdAmountReceived);
+}

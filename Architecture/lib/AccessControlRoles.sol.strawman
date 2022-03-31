@@ -1,0 +1,37 @@
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+
+
+library AccessControlRoles {
+
+    using Roles for Roles.Role;
+
+    // all contracts have "governor": access all privilaged functions
+    Roles.Role private roleGovernor;
+
+    // all contracts have an admin: assign other roles and deal with proxy upgrade
+    Roles.Role private roleAdmin;
+
+    // allowed to borrow under an nftID
+    Roles.Role private roleLeverageEngine;
+
+    // allowed to burn NFT (used by the liquidiator instead of giving liquidator a "full" governor)
+    Roles.Role private roleNFTBurner;
+
+    // emergemcy stop of a few specific sensitive positions (isn't timelocked). Only Admin can "un-guardian"
+    Roles.Role private roleGuardian;
+
+    function initializeAccessControl(address governor, address admin) private 
+    {
+        roleGovernor.add(governor);
+        roleAdmin.add(admin);
+
+        // On the privilaged function:  require(roleGovernor.has(msg.sender), "DOES_NOT_HAVE_GOVERNOR_ROLE");
+
+    }
+
+
+    /// @dev set newGovernor address as Governor of contract
+    ///
+    /// @param newGovernor  EOA to assign as the new governor
+    function setGovernor(address newGovernor) external;
+}

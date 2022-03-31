@@ -1,0 +1,105 @@
+contract CDPosition {
+    uint256 private gloablCollateralRate;
+
+    struct CDP {
+        uint256 oUSDPrinciple; // Amount of OUSD originally deposited by user
+        uint256 oUSDIntresetEarned; // Total interest earned (and rebased) so far
+        uint256 oUSDTotal; // Principle + OUSD acquired from selling borrowed lvUSD + Interest earned
+        uint256 lvUSDBorrowed; // Total lvUSD borrowed under this position
+
+        bool firstCycle; // to prevent quick "in and out", we don't credit interest to a position at first the interest payment cycle
+    }
+
+    mapping[uint256 => CDP] private nftCDP;
+    mapping[address => CDP] private addressCDP;
+
+    event interestPaid(uint256 interestPaidPer1kOusd); 
+
+    /* Privileged functions: Governor  */
+
+    /// @dev distribute interest into positions based on the latest OUSD rewards cycle 
+    /// 
+    /// Reward cycle will be triggered by an event, intreset is originally paid into vault
+    /// Emit pay interest event 
+    /// Dont pay interest if CDP.firstCycle==true. Mark every CDP.firstCycle to false
+    /// pay based on totalOUSDInArch VSVS position OUSD total 
+    /// For source of truth, use balanceOf[vault address] on ousdContract 
+    ///
+    /// @param vaultRebasedOSDAmount total rebased ousd in vault (meaning ousd deposited + interest already payed to positions)
+    function payInterestToPositions(uint256 vaultRebasedOSDAmount) external;
+
+    /// @dev add new entry to NFTID<>CP map with ousdPrinciple. Set CDP.firstCycle = true 
+    ///
+    ///
+    /// @param nftID newly minted NFT
+    /// @param ousdPrinciple initial OUSD investment (ie position principle)
+    function createPoisiton(uint256 nftID, uint256 ousdPrinciple) external;
+
+    
+    function borrowLvUSDFromPosition(uint256 nftID,uint256 lvUSDAmountToBorrow) external;
+    function repayLvUSDToPosition(uint256 nftID, uint lvUSDAmountToRepay) external;
+    function depositOUSDtoPosition(uint256 nftID, uint256 ousdAmountToDeposit) external;
+    function withdrawOusdFromPosition(uint256 nftID, uint256 ousdAmountToWithdraw) external;
+
+    /// @dev delete entry in CDP --if-- lvUSD borrowed balance is zero
+    ///
+    /// @param nftID entry address to delete
+    function deletePosition(uint256 nftID) external;
+
+    /// @dev update collateral rate 
+    ///
+    /// Max lvUSD that can be minted for 1 OUSD
+    ///
+    /// @param ratio
+    function updateCollateralRate(uint256 ratio) external;
+
+    /// Public Methods /// 
+
+    /// EXPAND get a reader for every item in CDP struct  - EXPAND
+    function getOUSDPrincpile(uint256 nftID) external; 
+
+    /// @dev get how much NFTid can (yet) borrow in lvUSD
+    /// Amount availble to borrow = [collateralization rate - (Amount lvUSD borrowed / Total OUSD under this position)] * Total OUSD under this position 
+    ///
+    /// @param nftID 
+    function amountOfLvUSDAvaliableToBorrow(uint256 nftID) public; -- need to know collateral rate  
+
+    /// @dev the price of a single OUSD in paper real life USD dollars at which liqudation need ot happen
+    /// Math - (lvBorrowed / liq.Threshold) / total OUSD 
+    ///
+    /// @param nftID
+    function getLiqudiationPriceOfOusd(uint256 nftID, uint256 globalLiqudationThreshold) public;
+}
+
+
+
+    /*
+
+    Shoud it be a "lib" and not a contract?
+
+        nftId<>CDP
+        Address<>CDP
+
+        CDP
+        {   
+            - OUSD princpile 
+            - OUSD total
+            - lvUSD borrowed - This is the amount of lvUSD that "coordinator" got from vault overall
+
+            - OUSD interest earned
+
+            - bool firstCycle
+        }
+
+
+        GOVERNOR
+
+        payInterest
+        Create position
+        Update position
+        Delete
+        Read
+
+        
+    */
+}

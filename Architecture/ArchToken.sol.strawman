@@ -13,22 +13,22 @@ import {IDetailedERC20} from "./interfaces/IDetailedERC20.sol";
 contract ArchToken is AccessControl, ERC20("Archimedes ARCH Token", "ARCH") {
   using SafeERC20 for ERC20;
 
-/// @dev Mints tokens to a recipient.
-///
-/// This function reverts if the caller does not have the minter role.
-///
-/// @param _recipient the account to mint tokens to.
-/// @param _amount    the amount of tokens to mint.
-function mint(address _recipient, uint256 _amount) external onlyWhitelisted ;
+  /* Privileged functions: Governor  */
 
+  /// @dev Mints tokens to a recipient.
+  ///
+  /// This function reverts if the caller does not have the minter role.
+  ///
+  /// @param _recipient the account to mint tokens to.
+  /// @param _amount    the amount of tokens to mint.
+  function mint(address _recipient, uint256 _amount) external ;
 
-/// @dev burns tokens of the caller
-///
-/// @param amount to burn
-function burn(uint256 amount) public virtual {
-      _burn(_msgSender(), amount);
+  /// @dev burns tokens of the caller
+  ///
+  /// @param amount to burn
+  function burn(uint256 amount) public virtual {
+        _burn(_msgSender(), amount);
   }
-
 }
 
 

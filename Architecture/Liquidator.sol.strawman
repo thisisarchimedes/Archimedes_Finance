@@ -1,0 +1,36 @@
+contract Liquidator {
+    uint256 private globalLiqudationThreshold;
+
+    /* Privileged functions: Governor  */
+
+    /// @dev liquidate position if OUSD<>3CRV price is lower then liqudation price.
+    /// ORACLE: directly checks OUSD/3CRV pool to get current ousd price.
+    ///
+    /// BURNING: Since we are running high collaterlization rate, there isn't much left of the position on liquidation.
+    /// Therefore, we basically burn the entire position and transfer whatever left to our treasury
+    /// Process:
+    /// 1) Take all OUSD of liquidated position from our vault
+    /// 2) on Curve: swap OUSD->3CRV->lvUSD
+    /// 3) payback lvUSD debt (deposit lvUSD back to the vault)
+    /// 4) we might have some lvUSD left, send it to treasury
+    /// 5) assume Burner role
+    /// 6) NFT: We took all OUSD out of the NFT - NFT holds no asset now. NFT is burned since it holds no value.
+    ///
+    /// @param nftId
+    function liqudatePosition(uint256 nftId) external;
+
+    function liqudateAddresss(address addr) external;
+
+    /// @dev update Liqudation Threshold
+    ///
+    /// @param newGlobalLiqudationThreshold new value to set as globalLiqudationThreshold
+    function setGlobalLiqudationThreshold(uint256 newGlobalLiqudationThreshold)
+        external;
+
+    /* public methods */
+
+    /// @dev return if a live position is eligable for liqudation
+    ///
+    /// @param nftId
+    function isPositionLiqudatable(uint256 nftId) public view nonReentrant;
+}
