@@ -1,64 +1,30 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.4;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title lvUSD token
 ///
 /// @dev This is the contract for the Archimedes lvUSD USD pegged stablecoin
 ///
-/// Not implementation just external facing interfaces
+/// TODO: add access control and roles
 ///
-contract LvUsdToken is ERC20, AccessControl {
-  using SafeERC20 for ERC20;
+contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD") {
+    /// @dev Mints tokens to a recipient.
+    ///
+    /// This function reverts if the caller does not have the minter role.
+    ///
+    /// @param recipient the account to mint tokens to.
+    /// @param amount    the amount of tokens to mint.
+    function mint(address recipient, uint256 amount) external {
+        _mint(recipient, amount);
+    }
 
-  /* Access Control */
-  bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-  constructor() ERC20("Archimedes lvUSD", "lvUSD") {
-
-      // Grant the contract deployer the default admin role and minter role
-      _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-      _grantRole(MINTER_ROLE, msg.sender);
-  }
-
-  /// @dev Set minter
-  ///
-  /// Set minter
-  ///
-  /// @param _minter new minter address
- function setMinter(address _minter) external {
-   require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an admin");
-   grantRole(MINTER_ROLE, _minter);
- }
-
- /// @dev Revoke minter
- ///
- /// Set minter
- ///
- /// @param _minter to revoke minter address
- function revokeMinter(address _minter) external {
-   require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an admin");
-   revokeRole(MINTER_ROLE, _minter);
- }
-
-  /// @dev mint new lvUSD tokens
-  ///
-  /// This function reverts if the caller does not have the Owner role.
-  ///
-  /// @param _recipient the account to mint tokens to.
-  /// @param _amount    the amount of tokens to mint.
-  function mint(address _recipient, uint256 _amount) external  {
-
-    // Access Control
-    require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
-
-    _mint(_recipient, _amount);
-
-  }
-
+    /// @dev Sets the address of the current minter contract
+    /// Timelocked function (set cadidate and change owner after 17,280 blocks ~3 days)
+    /// Emits MinterSet
+    ///
+    ///
+    /// @param accounts the accounts to set.
+    function setMinter(address[] calldata accounts) external {}
 }
-
-
-/* TODO: Add timelock on admin actions */
