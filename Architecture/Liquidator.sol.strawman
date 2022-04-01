@@ -11,7 +11,7 @@ contract Liquidator {
     // @dev update Liqudation Threshold
     ///
     /// @param newGlobalLiqudationThreshold new value to set as globalLiqudationThreshold
-    function setGlobalLiqudationThreshold(uint256 newGlobalLiqudationThreshold) external;
+    function changeLiqudationThreshold(uint256 newGlobalLiqudationThreshold) external;
 
     /* Privileged functions: Guardian  */
 

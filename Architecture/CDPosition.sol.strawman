@@ -27,7 +27,7 @@ contract CDPosition {
     /// Max lvUSD that can be minted for 1 OUSD
     ///
     /// @param ratio
-    function updateCollateralRate(uint256 ratio) external;
+    function changeCollateralRate(uint256 ratio) external;
 
     /* Privileged functions: Executive  */
 

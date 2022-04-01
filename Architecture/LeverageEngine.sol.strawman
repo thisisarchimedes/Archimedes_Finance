@@ -20,7 +20,7 @@ contract LeverageEngine is ReentrancyGuard, Ownable {
   /// User sends OUSD to the contract. We mint NFT and do the leverage cycles
   ///
   /// @param maxCycleNumber max number
-  function setMaxLeverageCyclesAllowed(uint256 maxCycleNumber) external nonReentrant;
+  function changeMaxLeverageCyclesAllowed(uint256 maxCycleNumber) external nonReentrant;
 
 
 
