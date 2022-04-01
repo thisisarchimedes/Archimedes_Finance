@@ -42,5 +42,11 @@ Contract GovernorConfig {
     /// @param _fee in percentage 
     function changeOriginiationFee(uint256 _fee) external nonReentrant expectInitialized ;
 
+
+    // EXCEPTION: NOT TIME LOCKED
+    // Invoke liquidation (if meet requirements)
+    function liqudatePosition(uint256 nftId) external;
+    function liqudateAddresss(address addr) external;
+
     
 }

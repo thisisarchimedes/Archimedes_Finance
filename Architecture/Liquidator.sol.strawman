@@ -34,7 +34,6 @@ contract Liquidator {
 
     function liqudateAddresss(address addr) external;
 
-    /
 
     /* public methods */
 
