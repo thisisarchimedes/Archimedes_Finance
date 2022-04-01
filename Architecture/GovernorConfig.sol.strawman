@@ -1,52 +1,73 @@
-Contract GovernorConfig {
+
+
+/// @title GovernorConfig
+///
+/// @notice GOVERNOR rule can change different privilaged protocol parameters 
+/// @notice This contract funnels all GOVERNOR calls to all relevant contracts (it also has GOVERNOR in all contracts) 
+/// @notice We do it because: 
+/// @notice 1) we want to enforce timelock in one place. 
+/// @notice 2) there are updates that require more than one contract (like update Treasury address)
+/// @notice 3) it makes on going auditing a bit easier 
+/// @notice 4) Manage the same one GUARDIAN address for all contract
+///
+/// @dev Contract is upgradeable via proxy
+/// 
+contract GovernorConfig {
     
     /* Privileged functions: Governor (multisig EOA)  */
 
     /// @dev change lvUSD minter address
     ///
+    /// @notice Related contracts: LvUsdToken
+    /// 
     /// @param newMinter address of new minter 
     function changeLvUsdMinterAddress(address newMinter) external;
 
     /// @dev update EOA of treasury. EOA is multi-sig.
+    ///
+    /// @notice Related contracts: Liquidator, CDPosition, Coordinator
     ///
     /// @param newTreasuryAddress new EOA address of treasury
     function changeTreasuryAddress(address newTreasuryAddress) external;
     
     /// @dev update GloablCollateralRate
     /// 
+    /// @notice Related contracts: CDPostion
+    ///
     /// @param newGloablCollateralRate new value to assign to GloablCollateralRate
-    function changeGloablCollateralRate(uint256 newGloablCollateralRate) external;
+    function changeCollateralRate(uint256 newGloablCollateralRate) external;
 
     /// @dev update globalLiqudationThreshold
     ///
+    /// @notice Related contracts: Liquidator
+    ///
     /// @param newGlobalLiqudationThreshold new value to assign to globalLiqudationThreshold
-    function changeGlobalLiqudationThreshold(uint256 newGlobalLiqudationThreshold) external;
+    function changeLiqudationThreshold(uint256 newGlobalLiqudationThreshold) external;
 
     /// @dev update max allowed number of leverage cycles 
     ///
-    /// @param newMaxLeverageCycles new vaule to assign to MaxLeverageCycles
-    function changeMaxLeverageCycles(uint256 newMaxLeverageCycles) external;
-
-    // @dev Mint more lvUSD and send it to OUSD/lvUSD vault to allow more leverage
+    /// @notice Related contracts: LeverageEngine
     ///
-    ///  call "mint" function of lvUSD contract, gets lvUSD back and sends it to the vault
+    /// @param newMaxLeverageCycles new vaule to assign to MaxLeverageCycles
+    function changeMaxLeverageCyclesAllowed(uint256 newMaxLeverageCycles) external;
+
+    /// @dev Mint more lvUSD and send it to OUSD/lvUSD vault to allow more leverage
+    ///
+    /// @notice call "mint" function of lvUSD contract, gets lvUSD back and sends it to the vault
+    ///
+    /// @notice Related contracts: LvUSDToken
     ///
     /// @param amount the amount of lvUSD to mint
     function increaseLvUSDCap(uint256 amount) external ;
 
     /// @dev change orginiation fee
     ///
-    /// How much off principle is taken as protocol fees, each time lvUSD is borrowed
-    /// Shoud emit an event
+    /// @notice How much off principle is taken as protocol fees, each time lvUSD is borrowed
+    ///
+    /// @notice Related contracts: Coordinator
     /// 
     /// @param _fee in percentage 
-    function changeOriginiationFee(uint256 _fee) external nonReentrant expectInitialized ;
-
-
-    // EXCEPTION: NOT TIME LOCKED
-    // Invoke liquidation (if meet requirements)
-    function liqudatePosition(uint256 nftId) external;
-    function liqudateAddresss(address addr) external;
+    function changeOriginiationFee(uint256 _fee) external ;
 
     
 }
