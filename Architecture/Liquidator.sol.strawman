@@ -13,7 +13,7 @@ contract Liquidator {
     /// @param newGlobalLiqudationThreshold new value to set as globalLiqudationThreshold
     function setGlobalLiqudationThreshold(uint256 newGlobalLiqudationThreshold) external;
 
-    /* Privileged functions: Executive  */
+    /* Privileged functions: Guardian  */
 
 
     /// @dev liquidate position if OUSD<>3CRV price is lower then liqudation price.
