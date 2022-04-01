@@ -1,6 +1,6 @@
 Contract GovernorConfig {
     
-    /* Privileged functions: Governor  */
+    /* Privileged functions: Governor (multisig EOA)  */
 
     /// @dev change lvUSD minter address
     ///
@@ -26,6 +26,21 @@ Contract GovernorConfig {
     ///
     /// @param newMaxLeverageCycles new vaule to assign to MaxLeverageCycles
     function changeMaxLeverageCycles(uint256 newMaxLeverageCycles) external;
+
+    // @dev Mint more lvUSD and send it to OUSD/lvUSD vault to allow more leverage
+    ///
+    ///  call "mint" function of lvUSD contract, gets lvUSD back and sends it to the vault
+    ///
+    /// @param amount the amount of lvUSD to mint
+    function increaseLvUSDCap(uint256 amount) external ;
+
+    /// @dev change orginiation fee
+    ///
+    /// How much off principle is taken as protocol fees, each time lvUSD is borrowed
+    /// Shoud emit an event
+    /// 
+    /// @param _fee in percentage 
+    function changeOriginiationFee(uint256 _fee) external nonReentrant expectInitialized ;
 
     
 }

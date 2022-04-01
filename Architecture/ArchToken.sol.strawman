@@ -14,6 +14,8 @@ contract ArchToken is AccessControl, ERC20("Archimedes ARCH Token", "ARCH") {
   using SafeERC20 for ERC20;
 
   /* Privileged functions: Governor  */
+  // TBD: Which role mints ARCH token
+  // Also, make sure privilaged functions comply with out scheme
 
   /// @dev Mints tokens to a recipient.
   ///

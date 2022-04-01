@@ -17,7 +17,15 @@ contract LvUsdToken is AccessControl, ERC20("Archimedes lvUSD", "lvUSD") {
   using SafeERC20 for ERC20;
   using Roles for Roles.Role;
 
+   
 
+  ///  We need to keep in mind this role. It is baked into ERC20 
+  ///  setExecutive need to call setMinter
+  ///  Called by Admin (AccessControlAdmin)
+  ///  function setMinter(address[] calldata accounts) external onlyAdmin ;
+
+
+   /* Privileged functions: Executive  */
 
   /// @dev Mints tokens to a recipient.
   ///
@@ -28,12 +36,5 @@ contract LvUsdToken is AccessControl, ERC20("Archimedes lvUSD", "lvUSD") {
   function mint(address _recipient, uint256 _amount) external onlyMinter ;
 
 
-  /// @dev Sets the address of the current minter contract
-  /// Timelocked function (set cadidate and change owner after 17,280 blocks ~3 days)
-  /// Emits MinterSet
-  ///
-  ///
-  /// @param account the accounts to set.
-  function setMinter(address[] calldata accounts) external onlyAdmin ;
-
+  
 }

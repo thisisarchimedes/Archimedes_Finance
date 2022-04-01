@@ -3,6 +3,19 @@ contract Liquidator {
 
     /* Privileged functions: Governor  */
 
+     /// @dev update EOA of treasury. EOA is multi-sig.
+    ///
+    /// @param newTreasuryAddress new EOA address of treasury
+    function changeTreasuryAddress(address newTreasuryAddress) external;
+
+    // @dev update Liqudation Threshold
+    ///
+    /// @param newGlobalLiqudationThreshold new value to set as globalLiqudationThreshold
+    function setGlobalLiqudationThreshold(uint256 newGlobalLiqudationThreshold) external;
+
+    /* Privileged functions: Executive  */
+
+
     /// @dev liquidate position if OUSD<>3CRV price is lower then liqudation price.
     /// ORACLE: directly checks OUSD/3CRV pool to get current ousd price.
     ///
@@ -21,11 +34,7 @@ contract Liquidator {
 
     function liqudateAddresss(address addr) external;
 
-    /// @dev update Liqudation Threshold
-    ///
-    /// @param newGlobalLiqudationThreshold new value to set as globalLiqudationThreshold
-    function setGlobalLiqudationThreshold(uint256 newGlobalLiqudationThreshold)
-        external;
+    /
 
     /* public methods */
 

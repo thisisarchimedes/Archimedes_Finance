@@ -17,7 +17,21 @@ contract CDPosition {
 
     /* Privileged functions: Governor  */
 
-    /// @dev distribute interest into positions based on the latest OUSD rewards cycle 
+    /// @dev update EOA of treasury. EOA is multi-sig.
+    ///
+    /// @param newTreasuryAddress new EOA address of treasury
+    function changeTreasuryAddress(address newTreasuryAddress) external;
+
+    /// @dev update collateral rate 
+    ///
+    /// Max lvUSD that can be minted for 1 OUSD
+    ///
+    /// @param ratio
+    function updateCollateralRate(uint256 ratio) external;
+
+    /* Privileged functions: Executive  */
+
+    /// @dev distribute interest into positions based on the latest OUSD rewards cycle (also sends protocol fees to vault)
     /// 
     /// Reward cycle will be triggered by an event, intreset is originally paid into vault
     /// Emit pay interest event 
@@ -46,29 +60,23 @@ contract CDPosition {
     /// @param nftID entry address to delete
     function deletePosition(uint256 nftID) external;
 
-    /// @dev update collateral rate 
-    ///
-    /// Max lvUSD that can be minted for 1 OUSD
-    ///
-    /// @param ratio
-    function updateCollateralRate(uint256 ratio) external;
 
     /// Public Methods /// 
 
     /// EXPAND get a reader for every item in CDP struct  - EXPAND
-    function getOUSDPrincpile(uint256 nftID) external; 
+    function getOUSDPrinciple(uint256 nftID) view external; 
 
     /// @dev get how much NFTid can (yet) borrow in lvUSD
     /// Amount availble to borrow = [collateralization rate - (Amount lvUSD borrowed / Total OUSD under this position)] * Total OUSD under this position 
     ///
     /// @param nftID 
-    function amountOfLvUSDAvaliableToBorrow(uint256 nftID) public; -- need to know collateral rate  
+    function amountOfLvUSDAvaliableToBorrow(uint256 nftID) view public; -- need to know collateral rate  
 
     /// @dev the price of a single OUSD in paper real life USD dollars at which liqudation need ot happen
     /// Math - (lvBorrowed / liq.Threshold) / total OUSD 
     ///
     /// @param nftID
-    function getLiqudiationPriceOfOusd(uint256 nftID, uint256 globalLiqudationThreshold) public;
+    function getLiqudiationPriceOfOusd(uint256 nftID, uint256 globalLiqudationThreshold) view public;
 }
 
 

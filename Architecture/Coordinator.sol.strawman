@@ -18,37 +18,20 @@ contract Coordinator is ReentrancyGuard. Ownable {
 
 /* Privileged functions: Governor */
 
-/// @dev Mint more lvUSD and send it to OUSD/lvUSD vault to allow more leverage
-///
-///  call "mint" function of lvUSD contract, gets lvUSD back and sends it to the vault
-///
-/// @param amount the amount of lvUSD to mint
-function increaseLvUSDCap(uint256 amount) external onlyOwner ;
-
-----
-/// @dev Claim protocol fees and send it the treasury contract
-///
-///
-function claimProtocolFees() external nonReentrant onlyAdmin expectInitialized ;
-----
-
-/// @dev change collateral rate
-///
-/// Max lvUSD that can be minted for 1 OUSD
-/// Shoud emit an event
-///
-/// @param _ratio
-function changeCollateralRate(uint256 _ratio) external nonReentrant onlyAdmin expectInitialized ;
-
 /// @dev change orginiation fee
 ///
 /// How much off principle is taken as protocol fees, each time lvUSD is borrowed
 /// Shoud emit an event
 /// 
 /// @param _fee in percentage 
-function changeOriginiationFee(uint256 _fee) external nonReentrant onlyAdmin expectInitialized ;
+function changeOriginiationFee(uint256 _fee) external nonReentrant expectInitialized ;
 
-/* Privileged functions: Leverage engine */
+ /// @dev update EOA of treasury. EOA is multi-sig.
+ ///
+ /// @param newTreasuryAddress new EOA address of treasury
+ function changeTreasuryAddress(address newTreasuryAddress) external;
+
+/* Privileged functions: Executive */
 
 /// @dev deposit OUSD under NFT ID
 ///
@@ -70,6 +53,7 @@ function withdrawCollateralUnderNFT(uint256 _amount, uint256 _nftId) external no
 ///
 /// User borrow lvUSD against the OUSD deposited as collateral in Vault
 /// Need to check collaterallization ratio
+/// Need to collect origination fee and sent them to vault
 ///
 /// @param _amount the amount of lvUSD requested
 /// @param _nftId the Archimedes ERC-721 token id
@@ -86,7 +70,7 @@ function repayUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant on
 
 /* Non-privileged functions */
 
-/// TODO: Should this be accessed by admin only or not?
+/// TODO: Should this be accessed by admin only or not? <<<<
 /// @dev deposit OUSD under address (vs. under NFT token ID)
 ///
 /// User sends OUSD to the contract. OUSD is written under msg.sender
@@ -107,6 +91,7 @@ function withdrawCollateralUnderAddress(uint256 _amount) external nonReentrant e
 ///
 /// User borrow lvUSD against the OUSD deposited as collateral
 /// Need to check collaterallization ratio
+/// Need to collect origination fee and sent them to vault
 ///
 /// @param _amount the amount of lvUSD requested
 function borrowUnderAddress(uint256 _amount) external nonReentrant expectInitialized ;

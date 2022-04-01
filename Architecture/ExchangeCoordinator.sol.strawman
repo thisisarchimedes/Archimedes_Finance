@@ -3,7 +3,7 @@
 
 abstract contract ExchangeCoordinator {
 
-    /* Privileged functions: Governor  */
+    /* Privileged functions: Executive  */
 
     //// Note: Internally methods need to decide which of the 3CRV tokens to use as meduim 
 

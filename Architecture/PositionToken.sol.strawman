@@ -3,7 +3,7 @@ import {ERC721Burnable} from "@openzeppelin/contracts/token/ERC721/extensions/ER
 // The "NFT"
 
 contract PositionToken is ERC721Burnable {
-  /* Privileged functions: Governor */
+   /* Privileged functions: Executive  */
 
   /// @dev Mints NFT tokens to a recipient.
   ///
@@ -11,14 +11,12 @@ contract PositionToken is ERC721Burnable {
   ///
   /// @param _recipient the account to mint tokens to.
   /// @param _amount    the amount of tokens to mint.
-  function mint(address _recipient) external onlyWhitelisted ;
-  
-  /* Privileged functions: Governor & Burner */ 
-  
+  function mint(address _recipient) external ;
+    
   /// @dev burns NFT tokens of the caller
   ///
   /// @param amount to burn
-  function burn(uint256 _tokenId) public onlyWhitelisted {
+  function burn(uint256 _tokenId) public  {
         _burn(_tokenId);
   }
 }
