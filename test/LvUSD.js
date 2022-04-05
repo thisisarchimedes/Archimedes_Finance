@@ -2,9 +2,6 @@
 const { expect } = require("chai");
 const exp = require("constants");
 
-const name = "Archimedes lvUSD"
-const symbol = "lvUSD"
-
 describe("LvUSD contract test suit", function () {
   const tokenSupply = 1000000
 
@@ -22,7 +19,7 @@ describe("LvUSD contract test suit", function () {
   });
 
   describe("Minting", function () {
-    it("Should be able to mint to specifc address", async function () {
+    it("Should be able to mint to specific address", async function () {
       await token.mint(owner.address, tokenSupply);
       expect(await token.totalSupply()).to.equal(tokenSupply);
     })
@@ -60,7 +57,6 @@ describe("LvUSD contract test suit", function () {
       const initialOwnerBalance = await token.balanceOf(owner.address);
 
       // Try to send 1 token from addr1 (0 tokens) to owner (1000000 tokens).
-      // `require` will evaluate false and revert the transaction.
       await expect(
         token.connect(addr1).transfer(owner.address, 1)
       ).to.be.revertedWith("ERC20: transfer amount exceeds balance");

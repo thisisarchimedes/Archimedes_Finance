@@ -24,7 +24,7 @@ contract CDPosition {
 
     /// @dev update collateral rate 
     ///
-    /// Max lvUSD that can be minted for 1 OUSD
+    /// @notice Max lvUSD that can be minted for 1 OUSD
     ///
     /// @param ratio
     function changeCollateralRate(uint256 ratio) external;
@@ -33,11 +33,11 @@ contract CDPosition {
 
     /// @dev distribute interest into positions based on the latest OUSD rewards cycle (also sends protocol fees to vault)
     /// 
-    /// Reward cycle will be triggered by an event, intreset is originally paid into vault
-    /// Emit pay interest event 
-    /// Dont pay interest if CDP.firstCycle==true. Mark every CDP.firstCycle to false
-    /// pay based on totalOUSDInArch VSVS position OUSD total 
-    /// For source of truth, use balanceOf[vault address] on ousdContract 
+    /// @notice Reward cycle will be triggered by an event, intreset is originally paid into vault
+    /// @notice Emit pay interest event 
+    /// @notice Dont pay interest if CDP.firstCycle==true. Mark every CDP.firstCycle to false
+    /// @notice pay based on totalOUSDInArch VSVS position OUSD total 
+    /// @notice For source of truth, use balanceOf[vault address] on ousdContract 
     ///
     /// @param vaultRebasedOSDAmount total rebased ousd in vault (meaning ousd deposited + interest already payed to positions)
     function payInterestToPositions(uint256 vaultRebasedOSDAmount) external;
@@ -67,13 +67,13 @@ contract CDPosition {
     function getOUSDPrinciple(uint256 nftID) view external; 
 
     /// @dev get how much NFTid can (yet) borrow in lvUSD
-    /// Amount availble to borrow = [collateralization rate - (Amount lvUSD borrowed / Total OUSD under this position)] * Total OUSD under this position 
+    /// @notice Amount availble to borrow = [collateralization rate - (Amount lvUSD borrowed / Total OUSD under this position)] * Total OUSD under this position 
     ///
     /// @param nftID 
     function amountOfLvUSDAvaliableToBorrow(uint256 nftID) view public; -- need to know collateral rate  
 
     /// @dev the price of a single OUSD in paper real life USD dollars at which liqudation need ot happen
-    /// Math - (lvBorrowed / liq.Threshold) / total OUSD 
+    /// @notice Math - (lvBorrowed / liq.Threshold) / total OUSD 
     ///
     /// @param nftID
     function getLiqudiationPriceOfOusd(uint256 nftID, uint256 globalLiqudationThreshold) view public;
