@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Hardhat CI
+name: Build and Test
 
 # Controls when the workflow will run
 on:
@@ -41,8 +41,6 @@ jobs:
         
       - name: Install OpenZeppelin dependencies
         run: npm install --save-dev @openzeppelin/contracts @openzeppelin/test-helpers
-        
-        # consider adding https://www.npmjs.com/package/solidity-coverage
         
       - name: Compile contracts
         run: npx hardhat compile
