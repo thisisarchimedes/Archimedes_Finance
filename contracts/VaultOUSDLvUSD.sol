@@ -11,10 +11,12 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "hardhat/console.sol";
 
+/// @title Contract to hold and track OUSD funds owned by Archimedes
 contract VaultOUSDLvUSD {
     address private oUSDContractAddress;
     address private lvUSDContractAddress;
 
+    // The amount of OUSD deposited in the vault by customers or interest earned from OUSD that was already distributed among the positions. OUSD contract balanceOf can be different from oUSDRebasedBalance since interest earned but not distributed to positions is not included in "rebase" value
     uint256 private oUSDRebasedBalance;
     uint256 private lvUSDBalance;
 
@@ -61,6 +63,11 @@ contract VaultOUSDLvUSD {
         external
         nonZeroAmount(amount)
     {
+        require(
+            oUSDRebasedBalance >= amount,
+            "Insufficient funds in Vault"
+        );
+        console.log("Vault:withdrawOUSD:oUSDRebasedBalance = %s", oUSDRebasedBalance);
         /// Approve amount, then approve back to zero
         IERC20(oUSDContractAddress).approve(address(this), amount);
         IERC20(oUSDContractAddress).transferFrom(address(this), to, amount);
@@ -89,6 +96,7 @@ contract VaultOUSDLvUSD {
         external
         nonZeroAmount(amount)
     {
+        require(lvUSDBalance >= amount, "Insufficient funds in Vault");
         /// Approve amount, then approve back to zero
         IERC20(lvUSDContractAddress).approve(address(this), amount);
         IERC20(lvUSDContractAddress).transferFrom(address(this), to, amount);
