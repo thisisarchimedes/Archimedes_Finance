@@ -9,6 +9,9 @@ const {
     parseFixed
 } = require("@ethersproject/bignumber");
 
+const getEighteenDecimal = (naturalNumber) => {
+    return ethers.utils.parseEther(naturalNumber.toString())
+}
 
 describe("VaultOUSDLvUSD test suit", function () {
     let vault;
@@ -18,9 +21,10 @@ describe("VaultOUSDLvUSD test suit", function () {
     let addr1;
     let addr2;
     let addrs;
-
-    const defaultUserOUSDBalance = 1000000;
-    const defaultUserLvUSDBalance = 10000; /// Using different value for lvUSD and OUSD to distinguish 
+    const defaultUserOUSDBalanceNatural = 1000000
+    const defaultUserOUSDBalance = getEighteenDecimal(defaultUserOUSDBalanceNatural);
+    const defaultUserLvUSDBalanceNatural = 10000
+    const defaultUserLvUSDBalance = getEighteenDecimal(defaultUserLvUSDBalanceNatural); /// Using different value for lvUSD and OUSD to distinguish 
 
     beforeEach(async function () {
         let contract = await ethers.getContractFactory("VaultOUSDLvUSD");
@@ -52,7 +56,6 @@ describe("VaultOUSDLvUSD test suit", function () {
             .address, 0);
         await OUSDMockToken.connect(fromAccount).approve(vault
             .address, amount);
-        // console.log("test:Vault:depositFunds:addr1 allowance %s", await)
         await vault
             .depositOUSD(fromAccount.address, amount);
     };
@@ -84,12 +87,10 @@ describe("VaultOUSDLvUSD test suit", function () {
     }
 
     // TODO: add test that deposit and withdraw multiple times and from multiple accounts 
-    
+
     describe("Deposit OUSD funds", function () {
         it("Should be able to deposit OUSD into vault", async function () {
-            let depositedAmount = 1000;
-            console.log("test:Vault:depositFunds:contract address", vault
-                .address);
+            let depositedAmount = getEighteenDecimal(1000);
             await depositOUSDFundsInVault(depositedAmount)
             await checkVaultOUSDBalance(depositedAmount)
         });
@@ -99,80 +100,80 @@ describe("VaultOUSDLvUSD test suit", function () {
             let depositedAmount = await OUSDMockToken.balanceOf(addr1.address) + 1;
 
             // store vault balance before trying to deposit
-            let vaultBalance = await vault
+            let vaultOUSDBalance = await vault
                 .getVaultOUSDBalance()
 
             // User tries to deposit more OUSD than they have - should revert
             await expect(depositOUSDFundsInVault(depositedAmount)).to.be.revertedWith("ERC20: transfer amount exceeds balance")
 
             // we don't expect balance to change, because nothing happened
-            await checkVaultOUSDBalance(vaultBalance)
+            await checkVaultOUSDBalance(vaultOUSDBalance)
         });
 
         it("Should be able to deposit OUSD in two different transactions", async function () {
             // mint more OUSD for a different account
             await OUSDMockToken.mint(addr2.address, defaultUserOUSDBalance)
 
-            let vaultBalance = await vault
+            let vaultOUSDBalance = await vault
                 .getVaultOUSDBalance()
 
             // perform multiple deposits 
-            await depositOUSDFundsInVaultFromAccount(addr1, 250);
-            await depositOUSDFundsInVaultFromAccount(addr2, 300);
-            await depositOUSDFundsInVaultFromAccount(addr1, 250);
+            await depositOUSDFundsInVaultFromAccount(addr1, getEighteenDecimal(250));
+            await depositOUSDFundsInVaultFromAccount(addr2, getEighteenDecimal(300));
+            await depositOUSDFundsInVaultFromAccount(addr1, getEighteenDecimal(250));
 
-            await checkVaultOUSDBalance(vaultBalance + (250 + 250 + 300));
+            await checkVaultOUSDBalance(vaultOUSDBalance + getEighteenDecimal(250 + 250 + 300));
         });
 
         it("Should not be able to deposit zero OUSD", async function () {
-            let vaultBalance = await vault
+            let vaultOUSDBalance = await vault
                 .getVaultOUSDBalance()
             await expect(depositOUSDFundsInVault(0)).to.be.revertedWith("Amount must be greater than zero");
-            await checkVaultOUSDBalance(vaultBalance)
+            await checkVaultOUSDBalance(vaultOUSDBalance)
         });
     });
 
     describe("Withdraw OUSD funds", function () {
         beforeEach(async function () {
             // test prep - deposit funds into vault 
-            let depositedAmount = 1000
+            let depositedAmount = getEighteenDecimal(1000)
             await depositOUSDFundsInVault(depositedAmount);
             await checkVaultOUSDBalance(depositedAmount);
-            console.log("withdrawOUSD:beforeEach:depositedOUSD %s", await OUSDMockToken.balanceOf(vault
-                .address))
         });
 
         it("Should be able to withdraw OUSD from Vault", async function () {
-            let amountToWithdraw = 1000;
-            let vaultBalance = await vault
+            let amountToWithdraw = getEighteenDecimal(1000);
+            let vaultOUSDBalance = await vault
                 .getVaultOUSDBalance()
             await vault
                 .withdrawOUSD(addr1.address, amountToWithdraw);
-            await checkVaultOUSDBalance(vaultBalance - amountToWithdraw);
+            await checkVaultOUSDBalance(vaultOUSDBalance - amountToWithdraw);
         });
 
         it("should be able to withdraw just some of the funds in the vault", async function () {
-            let amountToWithdraw = 400;
-            let amountExpectedToStayInVault = 600
+            let amountToWithdraw = getEighteenDecimal(400);
+            let amountExpectedToStayInVault = getEighteenDecimal(600)
             await vault
                 .withdrawOUSD(addr1.address, amountToWithdraw);
             await checkVaultOUSDBalance(amountExpectedToStayInVault);
+
             /// check that funds where transferred from OUSD contract 
-            expect(await OUSDMockToken.balanceOf(addr1.address)).to.equal(defaultUserOUSDBalance
-                - amountExpectedToStayInVault)
+            let ousdTokenBalance = await OUSDMockToken.balanceOf(addr1.address)
+            let expectedOUSDBalance = getEighteenDecimal(999400);
+            await expect(ousdTokenBalance).to.equal(expectedOUSDBalance)
         });
 
         it("Should not be able to withdraw zero OUSD", async function () {
-            let vaultBalance = await vault
+            let vaultOUSDBalance = await vault
                 .getVaultOUSDBalance()
             await expect(vault
                 .withdrawOUSD(addr1.address, 0)).to.be.revertedWith("Amount must be greater than zero");
-            await checkVaultOUSDBalance(vaultBalance)
+            await checkVaultOUSDBalance(vaultOUSDBalance)
         });
 
         it("Should not be able to withdraw more OUSD then deposited in vault", async function () {
             let amountToWithdraw = BigNumber.from(await vault
-                .getVaultOUSDBalance()).add(100)
+                .getVaultOUSDBalance()).add(getEighteenDecimal(100))
 
             await expect(vault
                 .withdrawOUSD(addr1.address, amountToWithdraw)).to.be.revertedWith("Insufficient funds in Vault");
@@ -181,7 +182,7 @@ describe("VaultOUSDLvUSD test suit", function () {
 
     describe("deposit LvUSD in Vault", async function () {
         it("Should be able to deposit lvUSD into Vault", async function () {
-            let amountToDeposit = 1000;
+            let amountToDeposit = getEighteenDecimal(1000);
             await depositLvUSDIntoVault(amountToDeposit);
             await checkVaultLvUSDBalance(amountToDeposit);
         });
@@ -194,29 +195,29 @@ describe("VaultOUSDLvUSD test suit", function () {
     describe("withdraw lvUSD from Vault", async function () {
         beforeEach(async function () {
             /// first deposit some lvUSD into vault 
-            let amountToDeposit = 1000;
+            let amountToDeposit = getEighteenDecimal(1000);
             await depositLvUSDIntoVault(amountToDeposit);
             await checkVaultLvUSDBalance(amountToDeposit);
         });
 
         it("Should be able to withdraw LvUSD from Vault", async function () {
-            let amountToWithdraw = 600;
+            let amountToWithdraw = getEighteenDecimal(600);
             await vault
                 .withdrawLvUSD(addr1.address, amountToWithdraw);
-            await checkVaultLvUSDBalance(400);
+            await checkVaultLvUSDBalance(getEighteenDecimal(400));
         });
 
         it("Should not be able to withdraw zero LvUSD", async function () {
-            let vaultBalance = await vault
+            let vaultLvUSDBalance = await vault
                 .getVaultOUSDBalance()
             await expect(vault
                 .withdrawLvUSD(addr1.address, 0)).to.be.revertedWith("Amount must be greater than zero");
-            await checkVaultOUSDBalance(vaultBalance)
+            await checkVaultOUSDBalance(vaultLvUSDBalance)
         });
 
         it("Should not be able to withdraw more lvUSD then deposited in vault", async function () {
             let amountToWithdraw = BigNumber.from(await vault
-                .getVaultLvUSDBalance()).add(100)
+                .getVaultLvUSDBalance()).add(getEighteenDecimal(100))
 
             await expect(vault
                 .withdrawLvUSD(addr1.address, amountToWithdraw)).to.be.revertedWith("Insufficient funds in Vault");

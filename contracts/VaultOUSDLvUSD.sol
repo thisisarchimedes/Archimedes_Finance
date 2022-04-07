@@ -55,7 +55,9 @@ contract VaultOUSDLvUSD {
     /// This function reverts if a deposit into the CDP was made in the same block. This is to prevent flash loan attacks
     /// on other internal or external systems.
     ///
-    /// It remove amount to oUSDRebasedBalance
+    /// It remove amount from oUSDRebasedBalance
+    ///
+    /// TODO: Add/discuss revert logic
     ///
     /// @param to address to transfer OUSD to.
     /// @param amount the amount of  OUSD collateral to withdraw.
@@ -63,15 +65,11 @@ contract VaultOUSDLvUSD {
         external
         nonZeroAmount(amount)
     {
-        require(
-            oUSDRebasedBalance >= amount,
-            "Insufficient funds in Vault"
-        );
-        console.log("Vault:withdrawOUSD:oUSDRebasedBalance = %s", oUSDRebasedBalance);
+        require(oUSDRebasedBalance >= amount, "Insufficient funds in Vault");
         /// Approve amount, then approve back to zero
         IERC20(oUSDContractAddress).approve(address(this), amount);
         IERC20(oUSDContractAddress).transferFrom(address(this), to, amount);
-        /// redundant as we used all the allowance but being extra careful
+        /// Set allowance to zero again 
         IERC20(oUSDContractAddress).approve(address(this), 0);
         subtractRebasedOUSDBalance(amount);
     }
@@ -100,8 +98,6 @@ contract VaultOUSDLvUSD {
         /// Approve amount, then approve back to zero
         IERC20(lvUSDContractAddress).approve(address(this), amount);
         IERC20(lvUSDContractAddress).transferFrom(address(this), to, amount);
-        /// redundant as we used all the allowance but being extra careful
-        IERC20(lvUSDContractAddress).approve(address(this), 0);
         subtractLvUSDBalance(amount);
     }
 
