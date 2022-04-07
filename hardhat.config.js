@@ -1,5 +1,4 @@
 require("@nomiclabs/hardhat-waffle");
-require('solidity-coverage')
 
 // grab the private api key from the private repo
 require('dotenv').config({ path: 'secrets/alchemy.env' })
