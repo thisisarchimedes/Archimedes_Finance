@@ -11,14 +11,31 @@ contract CDPosition {
         uint256 lvUSDBorrowed; // Total lvUSD borrowed under this position
         bool firstCycle; // to prevent quick "in and out", we don't credit interest to a position at first the interest payment cycle
     }
-    
+
     uint256 private globalCollateralRate;
 
     mapping(uint256 => cdp) private nftCDP;
+    /// late add on to be able to iterate 
+    /// TODO : remove position when deleting, add position when creating. Maybe we want to check
+    uint256 public totalEntries = 0;
+    uint256[] createdNFtPositions;
 
-    /// @dev add new entry to NFTID<>CP globalCollateralRatemap with ousdPrinciple.
+    /// @dev distribute interest into positions based on the latest OUSD rewards cycle (also sends protocol fees to vault)
+    ///
+    /// @notice Reward cycle will be triggered by an event, interest is originally paid into vault
+    /// @notice Emit pay interest event
+    /// @notice Dont pay interest if CDP.firstCycle==true. Mark every CDP.firstCycle to false
+    /// @notice pay based on totalOUSDInArch VSVS position OUSD total
+    /// @notice For source of truth, use balanceOf[vault address] on ousdContract
+    ///
+    /// @param interestToPay total rebased ousd in vault (meaning ousd deposited + interest already payed to positions)
+    function payInterestToPositions(uint256 interestToPay) external {
+        /// TODO: Add pay to treasury
+    }
+
+    /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Set CDP.firstCycle = true
-    /// Update both principle and total with oOUSDPrinciple
+    /// Update both principle and total with OUSDPrinciple
     /// @param nftID newly minted NFT
     /// @param oOUSDPrinciple initial OUSD investment (ie position principle)
     function createPosition(uint256 nftID, uint256 oOUSDPrinciple)
@@ -85,12 +102,12 @@ contract CDPosition {
     }
 
     // /// @dev get how much NFTid can (yet) borrow in lvUSD
-    // /// @notice Amount available to borrow = [collateral rate - (Amount lvUSD borrowed / Total OUSD under this position)] * Total OUSD under this position 
+    // /// @notice Amount available to borrow = [collateral rate - (Amount lvUSD borrowed / Total OUSD under this position)] * Total OUSD under this position
     // ///
-    // /// @param nftID 
-    // function amountOfLvUSDAvailableToBorrow(uint256 nftID) view public; -- need to know collateral rate  
+    // /// @param nftID
+    // function amountOfLvUSDAvailableToBorrow(uint256 nftID) view public; -- need to know collateral rate
 
-    /// @dev update collateral rate 
+    /// @dev update collateral rate
     ///
     /// @notice Max lvUSD that can be minted for 1 OUSD
     ///
@@ -99,7 +116,7 @@ contract CDPosition {
         globalCollateralRate = ratio;
     }
 
-    function getCollateralRate() external view returns(uint256) {
+    function getCollateralRate() external view returns (uint256) {
         return globalCollateralRate;
     }
 
@@ -136,20 +153,45 @@ contract CDPosition {
     function getOUSDInterestEarned(uint256 nftID)
         external
         view
+        nftIDMustExist(nftID)
         returns (uint256)
     {
         return nftCDP[nftID].oUSDInterestEarned;
     }
 
-    function getOUSDTotal(uint256 nftID) external view returns (uint256) {
+    function getOUSDTotal(uint256 nftID)
+        external
+        view
+        nftIDMustExist(nftID)
+        returns (uint256)
+    {
         return nftCDP[nftID].oUSDTotal;
     }
 
-    function getLvUSDBorrowed(uint256 nftID) external view returns (uint256) {
+    function getLvUSDBorrowed(uint256 nftID)
+        external
+        view
+        nftIDMustExist(nftID)
+        returns (uint256)
+    {
         return nftCDP[nftID].lvUSDBorrowed;
     }
 
-    function getFirstCycle(uint256 nftID) external view returns (bool) {
+    function getFirstCycle(uint256 nftID)
+        external
+        view
+        nftIDMustExist(nftID)
+        returns (bool)
+    {
         return nftCDP[nftID].firstCycle;
+    }
+
+    function addNFTPositionToTracker(uint256 nftIDToAdd) internal nftIDMustNotExist(nftID) {
+        createdNFtPositions[totalEntries] = nftIDToAdd;
+        totalEntries += 1;
+    }
+
+    function removeNFTPositionFromTracker(uint256 nftIDToRemove) internal nftIDMustExist(nftID) {
+        
     }
 }
