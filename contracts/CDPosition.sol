@@ -11,10 +11,12 @@ contract CDPosition {
         uint256 lvUSDBorrowed; // Total lvUSD borrowed under this position
         bool firstCycle; // to prevent quick "in and out", we don't credit interest to a position at first the interest payment cycle
     }
+    
+    uint256 private globalCollateralRate;
 
     mapping(uint256 => cdp) private nftCDP;
 
-    /// @dev add new entry to NFTID<>CP map with ousdPrinciple.
+    /// @dev add new entry to NFTID<>CP globalCollateralRatemap with ousdPrinciple.
     /// Set CDP.firstCycle = true
     /// Update both principle and total with oOUSDPrinciple
     /// @param nftID newly minted NFT
@@ -80,6 +82,25 @@ contract CDPosition {
         uint256 oUSDAmountToWithdraw
     ) external nftIDMustExist(nftID) {
         nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
+    }
+
+    // /// @dev get how much NFTid can (yet) borrow in lvUSD
+    // /// @notice Amount available to borrow = [collateral rate - (Amount lvUSD borrowed / Total OUSD under this position)] * Total OUSD under this position 
+    // ///
+    // /// @param nftID 
+    // function amountOfLvUSDAvailableToBorrow(uint256 nftID) view public; -- need to know collateral rate  
+
+    /// @dev update collateral rate 
+    ///
+    /// @notice Max lvUSD that can be minted for 1 OUSD
+    ///
+    /// @param ratio new ratio to set as collateral
+    function changeCollateralRate(uint256 ratio) external {
+        globalCollateralRate = ratio;
+    }
+
+    function getCollateralRate() external view returns(uint256) {
+        return globalCollateralRate;
     }
 
     // Maps return default value when entry is not present. OUSD principle will always be gt 0 if nftCDP has
