@@ -14,10 +14,11 @@ contract CDPosition {
 
     mapping(uint256 => cdp) private nftCDP;
 
-    // /// @dev add new entry to NFTID<>CP map with ousdPrinciple. Set CDP.firstCycle = true
-    // ///
-    // /// @param nftID newly minted NFT
-    // /// @param ousdPrinciple initial OUSD investment (ie position principle)
+    /// @dev add new entry to NFTID<>CP map with ousdPrinciple.
+    /// Set CDP.firstCycle = true
+    /// Update both principle and total with oOUSDPrinciple
+    /// @param nftID newly minted NFT
+    /// @param oOUSDPrinciple initial OUSD investment (ie position principle)
     function createPosition(uint256 nftID, uint256 oOUSDPrinciple)
         external
         nftIDMustNotExist(nftID)
@@ -74,11 +75,11 @@ contract CDPosition {
     /// @dev update deposited OUSD in position. This method removed a delta to existing deposited value
     /// @param nftID NFT position to update
     /// @param oUSDAmountToWithdraw amount to remove to position's existing deposited sum
-    function withdrawOusdFromPosition(
+    function withdrawOUSDFromPosition(
         uint256 nftID,
         uint256 oUSDAmountToWithdraw
     ) external nftIDMustExist(nftID) {
-        nftCDP[nftID].oUSDTotal += oUSDAmountToWithdraw;
+        nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
     }
 
     // Maps return default value when entry is not present. OUSD principle will always be gt 0 if nftCDP has
