@@ -1,4 +1,9 @@
 require("@nomiclabs/hardhat-waffle");
+require('solidity-coverage')
+
+// grab the private api key from the private repo
+require('dotenv').config({ path: 'secrets/alchemy.env' })
+let alchemy_url = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -22,7 +27,7 @@ module.exports = {
   networks: {
     hardhat: {
       forking: {
-        url: "https://eth-mainnet.alchemyapi.io/v2/NfWNo_4fJbF5Aiu_KD-j4qVeyn1X_xqs",
+        url: alchemy_url,
         blockNumber: 14533286
       }
     }
