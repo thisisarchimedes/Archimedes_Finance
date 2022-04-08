@@ -50,7 +50,6 @@ jobs:
         
       - name: Run tests
         run:
-          mkdir secrets
           echo ALCHEMY_API_KEY='${{ secrets.ALCHEMY_API }}' >> secrets/alchemy.env
           npx hardhat test
 
