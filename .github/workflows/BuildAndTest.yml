@@ -27,7 +27,6 @@ jobs:
         with:
           token: '${{ secrets.PAT }}'
           repository: thisisarchimedes/secrets
-          path: Archimedes_Finance/secrets
           ref: 'main'
       
       - name: Setup NodeJS 16
