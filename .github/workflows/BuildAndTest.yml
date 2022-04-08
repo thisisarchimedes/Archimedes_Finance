@@ -48,8 +48,11 @@ jobs:
       - name: Compile contracts
         run: npx hardhat compile
         
-      - name: Run tests
+      - name: Grab API key
         run:
           echo ALCHEMY_API_KEY='${{ secrets.ALCHEMY_API }}' >> secrets/alchemy.env
+      
+      - name: Run tests
+        run:
           npx hardhat test
 
