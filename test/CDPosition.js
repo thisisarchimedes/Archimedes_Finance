@@ -147,27 +147,4 @@ describe("CDPosition test suit", function () {
 
 
     })
-
-    // describe("Pay Interest", function () {
-    //     let interestToPay = getEighteenDecimal(3000)
-    //     let depositOUSDAmount = getEighteenDecimal(10000000)
-    //     beforeEach(async function () {
-    //         /// setup two accounts, deposit principle and some more OUSD funds to position
-    //         await cdp.createPosition(NFT_ID
-    //             , BASIC_OUSD_PRINCIPLE)
-    //         await cdp.createPosition(NFT_ID_SECONDARY, BASIC_OUSD_PRINCIPLE)
-    //         await cdp.depositOUSDtoPosition(NFT_ID, depositOUSDAmount)
-    //         await cdp.depositOUSDtoPosition(NFT_ID_SECONDARY, depositOUSDAmount)
-    //     })
-
-    //     it("Should pay interest to positions", async function () {
-    //         await cdp.payInterestToPositions(interestToPay)
-    //         let nftIdMainOUSDInterestEarned = await cdp.getOUSDInterestEarned(NFT_ID);
-    //         let nftIdSecondaryOUSDInterestEarned = await cdp.getOUSDInterestEarned(NFT_ID_SECONDARY);
-    //         console.log("nftIdMainOUSDInterestEarned %s", nftIdMainOUSDInterestEarned)
-    //         console.log("nftIdSecondaryOUSDInterestEarned %s", nftIdSecondaryOUSDInterestEarned)
-    //         await expect(nftIdMainOUSDInterestEarned).to.equal(getEighteenDecimal(1000))
-    //         await expect(nftIdSecondaryOUSDInterestEarned).to.equal(getEighteenDecimal(2000))
-    //     })
-    // });
 });
