@@ -26,8 +26,8 @@ jobs:
       - uses: actions/checkout@v2
         with:
           token: '${{ secrets.PAT }}'
-          repository: https://github.com/thisisarchimedes/Archimedes_Finance.git/secrets
-          path: secrets
+          repository: thisisarchimedes/secrets
+          path: Archimedes_Finance/secrets
           ref: 'main'
       
       - name: Setup NodeJS 16
