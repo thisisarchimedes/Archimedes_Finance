@@ -25,7 +25,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         with:
-          token: '${{ secrets.<PAT> }}'
+          token: '${{ secrets.PAT }}'
           repository: https://github.com/thisisarchimedes/Archimedes_Finance.git/secrets
           path: secrets
           ref: 'main'
