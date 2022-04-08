@@ -16,22 +16,6 @@ contract CDPosition {
 
     mapping(uint256 => cdp) private nftCDP;
 
-    /// @dev distribute interest into positions based on the latest OUSD rewards cycle (also sends protocol fees to vault)
-    ///
-    /// @notice Reward cycle will be triggered by an event, interest is originally paid into vault
-    /// @notice Emit pay interest event
-    /// @notice Dont pay interest if CDP.firstCycle==true. Mark every CDP.firstCycle to false
-    /// @notice pay based on totalOUSDInArch VSVS position OUSD total
-    /// @notice For source of truth, use balanceOf[vault address] on ousdContract
-    ///
-    /// @param interestToPay total rebased ousd in vault (meaning ousd deposited + interest already payed to positions)
-    function payInterestToPositions(uint256 interestToPay) external {
-        /// TODO: Add pay to treasury
-        // for (uint256 i = 0; i < createdNFtPositions.length; i++) {
-        //     uint256 accountToPayInterestTo = createdNFtPositions[i];
-        // }
-    }
-
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Set CDP.firstCycle = true
     /// Update both principle and total with OUSDPrinciple
@@ -41,8 +25,6 @@ contract CDPosition {
         external
         nftIDMustNotExist(nftID)
     {
-        addNFTPositionToTracker(nftID); /// TODO: not unit tests yet! add for this!
-
         nftCDP[nftID] = cdp(oOUSDPrinciple, 0, oOUSDPrinciple, 0, true);
     }
 
@@ -54,8 +36,6 @@ contract CDPosition {
         nftIDMustExist(nftID)
         canDeletePosition(nftID)
     {
-        // removeNFTPositionFromTracker(nftID); /// TODO: not unit tests yet! add for this!
-
         /// Set all values to default. Not way to remove key from mapping in solidity
         nftCDP[nftID] = cdp(0, 0, 0, 0, false);
     }
@@ -191,41 +171,5 @@ contract CDPosition {
         returns (bool)
     {
         return nftCDP[nftID].firstCycle;
-    }
-
-    /// TODO: this entire section is not tested!!!!!!
-    /// late add on to be able to iterate
-    uint256 private totalEntries = 0; // Might be funky if we start with zero since zero can never be replaced
-    uint256 private lastDeletedEntry = 0;
-    uint256[] private createdNFtPositions; /// save valid NFT id in array. Need to be removed
-    mapping(uint256 => uint256) private nftToArrayIndexMapping; // given nftID, return createdNFtPositions array location of nftID
-
-    /// does not work if you delete more then one entry in a row.
-
-    function addNFTPositionToTracker(uint256 nftIDToAdd) internal {
-        if (lastDeletedEntry == 0) {
-            createdNFtPositions.push(nftIDToAdd);
-            nftToArrayIndexMapping[totalEntries] = nftIDToAdd; // This is the array index of nftID
-            totalEntries += 1;
-        } else {
-            createdNFtPositions[lastDeletedEntry] = nftIDToAdd;
-            nftToArrayIndexMapping[lastDeletedEntry] = nftIDToAdd; // This is the array index of nftID
-            lastDeletedEntry = 0;
-        }
-
-        // console.log("addNFTPositionToTracker : createdNFtPositions : ");
-        // for (uint i = 0; i < createdNFtPositions.length; i++) {
-        //     console.log(createdNFtPositions[i]);
-        // }
-    }
-
-    function removeNFTPositionFromTracker(uint256 nftIDToRemove)
-        internal
-        nftIDMustExist(nftIDToRemove)
-    {
-        uint256 arrayIndexOfNftToRemove = nftToArrayIndexMapping[nftIDToRemove];
-        createdNFtPositions[arrayIndexOfNftToRemove] = 0;
-        nftToArrayIndexMapping[nftIDToRemove] = 0;
-        lastDeletedEntry = arrayIndexOfNftToRemove;
     }
 }
