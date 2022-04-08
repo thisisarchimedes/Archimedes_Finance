@@ -69,7 +69,7 @@ contract VaultOUSDLvUSD {
         /// Approve amount, then approve back to zero
         IERC20(oUSDContractAddress).approve(address(this), amount);
         IERC20(oUSDContractAddress).transferFrom(address(this), to, amount);
-        /// Set allowance to zero again 
+        /// Set allowance to zero again
         IERC20(oUSDContractAddress).approve(address(this), 0);
         subtractRebasedOUSDBalance(amount);
     }
@@ -100,8 +100,6 @@ contract VaultOUSDLvUSD {
         IERC20(lvUSDContractAddress).transferFrom(address(this), to, amount);
         subtractLvUSDBalance(amount);
     }
-
-
 
     /// @dev get overall OUSD balance in vault
     function getVaultOUSDBalance() external view returns (uint256) {

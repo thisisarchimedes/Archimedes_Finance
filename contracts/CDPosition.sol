@@ -88,12 +88,6 @@ contract CDPosition {
         nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
     }
 
-    // /// @dev get how much NFTid can (yet) borrow in lvUSD
-    // /// @notice Amount available to borrow = [collateral rate - (Amount lvUSD borrowed / Total OUSD under this position)] * Total OUSD under this position
-    // ///
-    // /// @param nftID
-    // function amountOfLvUSDAvailableToBorrow(uint256 nftID) view public; -- need to know collateral rate
-
     /// @dev update collateral rate
     ///
     /// @notice Max lvUSD that can be minted for 1 OUSD
