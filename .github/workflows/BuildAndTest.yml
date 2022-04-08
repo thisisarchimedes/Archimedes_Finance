@@ -48,7 +48,7 @@ jobs:
         run: npm install --save-dev @openzeppelin/contracts @openzeppelin/test-helpers dotenv
 
       - name: Compile contracts
-        run: ls && npx hardhat compile
+        run: pwd && ls && npx hardhat compile
         
       - name: Run tests
         run: npx hardhat test
