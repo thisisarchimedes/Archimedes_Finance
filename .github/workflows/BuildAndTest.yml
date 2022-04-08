@@ -25,8 +25,10 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          submodules: 'true'
+          token: '${{ secrets.<PAT> }}'
+          repository: https://github.com/thisisarchimedes/Archimedes_Finance.git/secrets
+          path: secrets
+          ref: 'main'
       
       - name: Setup NodeJS 16
         uses: actions/setup-node@v2
