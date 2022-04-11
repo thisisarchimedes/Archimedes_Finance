@@ -28,6 +28,8 @@ describe("CDPosition test suit", function () {
     const NFT_ID = 1234;
     const NFT_ID_SECONDARY = 67889;
     const BASIC_OUSD_PRINCIPLE_NATURAL = 1000000
+    // No OUSD tokens need to be transferred for CDP testing. CDP does not hold the tokens nor does it
+    // know about OUSD contract state. It just keeps track of the positions for internal accounting.
     const BASIC_OUSD_PRINCIPLE = getEighteenDecimal(BASIC_OUSD_PRINCIPLE_NATURAL)
 
     beforeEach(async () => {
@@ -47,7 +49,7 @@ describe("CDPosition test suit", function () {
             await validateCDP(NFT_ID
                 , BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, true)
         });
-        it("Should not create position on existing address", async function () {
+        it("Should not create position on existing NFT ID", async function () {
             // create a new position
             await cdp.createPosition(NFT_ID
                 , BASIC_OUSD_PRINCIPLE)
@@ -76,7 +78,7 @@ describe("CDPosition test suit", function () {
             await expect(cdp.deletePosition(NFT_ID)).to.be
                 .revertedWith("Borrowed LvUSD must be zero before deleting")
         });
-        it("Should not delete position if address does not exist in mapping", async function () {
+        it("Should not delete position if NFT ID does not exist in mapping", async function () {
             await expect(cdp.deletePosition(NFT_ID)).to.be.revertedWith("NFT ID must exist")
         });
     });
@@ -144,7 +146,5 @@ describe("CDPosition test suit", function () {
             await expect(cdp.withdrawOUSDFromPosition(NFT_ID, getEighteenDecimal(1100000)))
                 .to.be.revertedWith("OUSD total amount must be greater than amount to withdraw");
         })
-
-
     })
 });

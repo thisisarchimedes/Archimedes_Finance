@@ -3,6 +3,11 @@ pragma solidity 0.8.4;
 
 import "hardhat/console.sol";
 
+/// @title CDPosition is ledger contract for all  NFT positions and regular positions
+/// @dev CDP creates and destroy NFT and address positions. It keep tracks of how many tokens user has borrowed.
+/// It keeps track of how much interest each position accrue
+/// @notice CDPosition does not hold any tokens. It is not a vault of any kind.
+///
 contract CDPosition {
     struct cdp {
         uint256 oUSDPrinciple; // Amount of OUSD originally deposited by user
@@ -12,9 +17,9 @@ contract CDPosition {
         bool firstCycle; // to prevent quick "in and out", we don't credit interest to a position at first the interest payment cycle
     }
 
-    uint256 private globalCollateralRate;
+    uint256 internal globalCollateralRate;
 
-    mapping(uint256 => cdp) private nftCDP;
+    mapping(uint256 => cdp) internal nftCDP;
 
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Set CDP.firstCycle = true
@@ -37,7 +42,7 @@ contract CDPosition {
         canDeletePosition(nftID)
     {
         /// Set all values to default. Not way to remove key from mapping in solidity
-        nftCDP[nftID] = cdp(0, 0, 0, 0, false);
+        delete nftCDP[nftID];
     }
 
     /// @dev update borrowed lvUSD in position. This method adds a delta to existing borrowed value
@@ -59,7 +64,7 @@ contract CDPosition {
     {
         require(
             nftCDP[nftID].lvUSDBorrowed >= lvUSDAmountToRepay,
-            "lvUSD Borrowed amount must be greater than amount to repay"
+            "lvUSD Borrowed amount must be greater or equal than amount to repay"
         );
         nftCDP[nftID].lvUSDBorrowed -= lvUSDAmountToRepay;
     }
@@ -83,7 +88,7 @@ contract CDPosition {
     ) external nftIDMustExist(nftID) {
         require(
             nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw,
-            "OUSD total amount must be greater than amount to withdraw"
+            "OUSD total amount must be greater or equal than amount to withdraw"
         );
         nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
     }
