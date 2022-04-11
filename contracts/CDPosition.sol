@@ -7,7 +7,8 @@ import "hardhat/console.sol";
 /// @dev CDP creates and destroy NFT and address positions. It keep tracks of how many tokens user has borrowed.
 /// It keeps track of how much interest each position accrue
 /// @notice CDPosition does not hold any tokens. It is not a vault of any kind.
-///
+/// @notice CDP does not emit any events. All related events will be emitted by the calling contract.
+/// @notice This contract (will be) proxy upgradable
 contract CDPosition {
     struct cdp {
         uint256 oUSDPrinciple; // Amount of OUSD originally deposited by user
@@ -97,9 +98,9 @@ contract CDPosition {
     ///
     /// @notice Max lvUSD that can be minted for 1 OUSD
     ///
-    /// @param ratio new ratio to set as collateral
-    function changeCollateralRate(uint256 ratio) external {
-        globalCollateralRate = ratio;
+    /// @param rate new rate to set as collateral
+    function changeCollateralRate(uint256 rate) external {
+        globalCollateralRate = rate;
     }
 
     function getCollateralRate() external view returns (uint256) {
