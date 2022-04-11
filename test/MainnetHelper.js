@@ -86,7 +86,7 @@ module.exports = {
         ////////////// 2. WETH->USDT //////////////
 
         // approve tripool to spend WETH9 on behalf of destUser
-        await weth9.approve(CURVE_TRIPOOL2_ADDRESS, ethAmountToSwap)
+        await weth9.approve(CURVE_TRIPOOL2_ADDRESS, weth9Balance)
 
         // get user balance
         usdtBalance = await usdtToken.balanceOf(destUser.address)
@@ -98,7 +98,7 @@ module.exports = {
         // j: Index value of the token to receive.
         // dx: The amount of i being exchanged.
         // min_dy: The minimum amount of j to receive. If the swap would result in less, the transaction will revert.
-        await triPool.exchange(WETH_POOL_INDEX_NUMBER, USDT_POOL_INDEX_NUMBER, ethAmountToSwap, 1)
+        await triPool.exchange(WETH_POOL_INDEX_NUMBER, USDT_POOL_INDEX_NUMBER, weth9Balance, 1)
 
         // read balance again and make sure it increased
         expect(await usdtToken.balanceOf(destUser.address)).to.gt(usdtBalance)
