@@ -112,7 +112,7 @@ describe("CDPosition test suit", function () {
 
         it("Should not mark down repayed lvUSD if not enough borrowed lvUSD", async function () {
             await expect(cdp.repayLvUSDToPosition(NFT_ID, getEighteenDecimal(1000)))
-                .to.be.revertedWith("lvUSD Borrowed amount must be greater than amount to repay")
+                .to.be.revertedWith("lvUSD Borrowed amount must be greater or equal than amount to repay")
         })
 
         /* depositOUSDtoPosition section */
@@ -144,7 +144,7 @@ describe("CDPosition test suit", function () {
 
         it("Should not mark down withdraw OUSD if total deposited OUSD is lower then amount to withdraw", async function () {
             await expect(cdp.withdrawOUSDFromPosition(NFT_ID, getEighteenDecimal(1100000)))
-                .to.be.revertedWith("OUSD total amount must be greater than amount to withdraw");
+                .to.be.revertedWith("OUSD total amount must be greater or equal than amount to withdraw");
         })
     })
 });
