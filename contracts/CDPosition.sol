@@ -22,6 +22,10 @@ contract CDPosition {
 
     mapping(uint256 => cdp) internal nftCDP;
 
+    uint256 internal _totalNftEntries;
+    uint256[] internal _nftIDArray; // list out all valid and live NFT ID
+    mapping(uint256 => uint256) internal _nftIDToArrayLocation;
+
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Set CDP.firstCycle = true
     /// Update both principle and total with OUSDPrinciple
@@ -175,13 +179,6 @@ contract CDPosition {
         return nftCDP[nftID].firstCycle;
     }
 
-    /// Public for testing
-    uint256 public _totalNftEntries;
-    uint256[] public _nftIDArray; // list out all valid and live NFT ID
-    mapping(uint256 => uint256) public _nftIDToArrayLocation;
-
-    // end public for testing
-
     function _addPositionToTrackingArray(uint256 nftID) internal {
         _nftIDArray.push(nftID); // Push nft to end of array
         _nftIDToArrayLocation[nftID] = _totalNftEntries; // the index location of nftID in array
@@ -191,14 +188,6 @@ contract CDPosition {
     function _deletePositionFromTrackingArray(uint256 nftID) internal {
         uint256 nftToDeleteArrayIndex = _nftIDToArrayLocation[nftID];
         uint256 nftIDToSave = _nftIDArray[_totalNftEntries - 1]; // last valid nft id in array
-
-        console.log(
-            "%s nft is in location in array %s",
-            nftID,
-            _nftIDToArrayLocation[nftID]
-        );
-        console.log("total entries at this stage is  %s", _totalNftEntries);
-        console.log("nftIDToSave", nftIDToSave);
         // swap _nftIDArray[nftToDeleteArrayIndex] with last entry in array 
         _nftIDArray[nftToDeleteArrayIndex] = nftIDToSave;
         _nftIDToArrayLocation[nftID] = 0; // delete last entry in array now that is not being used anymore

@@ -59,28 +59,6 @@ describe("CDPosition test suit", function () {
         })
     });
 
-    describe("Create and delete multiple Position", () => {
-        let NFT_ID_THIRD = 345234
-        it("Should ", async () => {
-            await cdp.createPosition(NFT_ID
-                , BASIC_OUSD_PRINCIPLE)
-            await cdp.createPosition(NFT_ID_SECONDARY
-                , BASIC_OUSD_PRINCIPLE)
-            await cdp.createPosition(NFT_ID_THIRD
-                , BASIC_OUSD_PRINCIPLE)
-            expect(await cdp._totalNftEntries()).to.equal(3)
-            await cdp.deletePosition(NFT_ID_SECONDARY)
-            expect(await cdp._totalNftEntries()).to.equal(2)
-            expect(await cdp._nftIDArray(0)).to.equal(NFT_ID)
-            expect(await cdp._nftIDArray(1)).to.equal(NFT_ID_THIRD)
-        });
-
-        // describe("Delete secondary NFT ID position", async () => {
-        //     await cdp.deletePosition(NFT_ID_SECONDARY)
-        //     /// Add an it
-        // });
-    });
-
     describe("Delete Position", function () {
         it("Should delete position", async function () {
             await cdp.createPosition(NFT_ID
