@@ -31,6 +31,7 @@ contract CDPosition {
         external
         nftIDMustNotExist(nftID)
     {
+        _addPositionToTrackingArray(nftID);
         nftCDP[nftID] = cdp(oOUSDPrinciple, 0, oOUSDPrinciple, 0, true);
     }
 
@@ -42,6 +43,7 @@ contract CDPosition {
         nftIDMustExist(nftID)
         canDeletePosition(nftID)
     {
+        _deletePositionFromTrackingArray(nftID);
         /// Set all values to default. Not way to remove key from mapping in solidity
         delete nftCDP[nftID];
     }
@@ -171,5 +173,36 @@ contract CDPosition {
         returns (bool)
     {
         return nftCDP[nftID].firstCycle;
+    }
+
+    /// Public for testing
+    uint256 public _totalNftEntries;
+    uint256[] public _nftIDArray; // list out all valid and live NFT ID
+    mapping(uint256 => uint256) public _nftIDToArrayLocation;
+
+    // end public for testing
+
+    function _addPositionToTrackingArray(uint256 nftID) internal {
+        _nftIDArray.push(nftID); // Push nft to end of array
+        _nftIDToArrayLocation[nftID] = _totalNftEntries; // the index location of nftID in array
+        _totalNftEntries += 1;
+    }
+
+    function _deletePositionFromTrackingArray(uint256 nftID) internal {
+        uint256 nftToDeleteArrayIndex = _nftIDToArrayLocation[nftID];
+        uint256 nftIDToSave = _nftIDArray[_totalNftEntries - 1]; // last valid nft id in array
+
+        console.log(
+            "%s nft is in location in array %s",
+            nftID,
+            _nftIDToArrayLocation[nftID]
+        );
+        console.log("total entries at this stage is  %s", _totalNftEntries);
+        console.log("nftIDToSave", nftIDToSave);
+        // swap _nftIDArray[nftToDeleteArrayIndex] with last entry in array 
+        _nftIDArray[nftToDeleteArrayIndex] = nftIDToSave;
+        _nftIDToArrayLocation[nftID] = 0; // delete last entry in array now that is not being used anymore
+
+        _totalNftEntries -= 1;
     }
 }
