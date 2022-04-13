@@ -6,8 +6,7 @@ contract CDPosition {
         uint256 oUSDInterestEarned; // Total interest earned (and rebased) so far
         uint256 oUSDTotal; // Principle + OUSD acquired from selling borrowed lvUSD + Interest earned
         uint256 lvUSDBorrowed; // Total lvUSD borrowed under this position
-        uint shares; // VaultOUSD shares under this position
-        bool firstCycle; // to prevent quick "in and out", we don't credit interest to a position at first the interest payment cycle
+        uint256 shares; // ERC4626 VaultOUSD shares under this position
     }
 
     mapping(uint256 => CDP) private nftCDP;
@@ -46,7 +45,7 @@ contract CDPosition {
     function depositOUSDtoPosition(uint256 nftID, uint256 ousdAmountToDeposit) external;
     function withdrawOusdFromPosition(uint256 nftID, uint256 ousdAmountToWithdraw) external;
 
-    /// @dev assign shares to a CDP entry
+    /// @dev assign 4626 vault shares to a CDP NFT ID entry
     /// @param nftID nft ID to assign shares to
     /// @param sharesAmountToAssign number of shares to assign
     function assignSharesToPosition(uint256 nftID, uint256 sharesAmountToAssign) external
