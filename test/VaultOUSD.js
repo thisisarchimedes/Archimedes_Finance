@@ -28,7 +28,7 @@ describe("VaultOUSD test suit", function () {
         tokenOUSD = new ethers.Contract(helper.addressOUSD, helper.abiOUSDToken, owner)
         let contractVault = await ethers.getContractFactory("VaultOUSD");
         tokenVault
-            = await contractVault.deploy(tokenOUSD.address, "VaultOUSD", "OUSD");
+            = await contractVault.deploy(tokenOUSD.address, "VaultOUSD", "VOUSD");
 
         // Mint initial amount on OUSD token, will be used by all tests
         await MainnetHelper.helperSwapETHWithOUSD(addr1, ethers.utils.parseEther("100.0"))
@@ -59,7 +59,7 @@ describe("VaultOUSD test suit", function () {
         describe("Adding more money to vault as interest (ie no shares are minted)", function () {
             before(async function () {
                 //increase Vaults balance without minting more shares
-                await tokenOUSD.connect(addr1).transfer(tokenVault.address, interestIntoVault)
+                await tokenOUSD.transfer(tokenVault.address, interestIntoVault)
             })
 
             it("Should show interest plus deposited in total assets", async function () {
