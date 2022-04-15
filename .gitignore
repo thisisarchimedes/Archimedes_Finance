@@ -42,8 +42,6 @@ Thumbs.db
 artifacts/
 cache/
 node_modules/
-package-lock.json
-package.json
 
 .idea
 .vscode
