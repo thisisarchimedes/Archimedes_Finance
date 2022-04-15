@@ -15,6 +15,11 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
 
     let signer;
     let user;
+    
+    before(async function () {
+        /// Reset network before integration tests 
+        helper.helperResetNetwork(14533286)
+    })
 
     beforeEach(async function () {
       
