@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.0;
 
 interface Coordinator {
+    
+    
     /*================INTERFACE SCRATCH AREA=========*/
     
     // parameters for contract
     // - lvUSD Token contract address
     // - OUSD Vault contract address
-    
+
     /*===============================================*/
 
     /* Privileged functions: Governor */
@@ -98,4 +99,10 @@ interface Coordinator {
     ///
     /// @param _amount the amount of lvUSD requested
     function repayUnderAddress(uint256 _amount) external;
+
+    /// @dev returns the address of lvUSD contract on file
+    function addressOfLvUSDToken() external returns (address);
+
+    /// @dev returns the address of VaultOUSD contract on file
+    function addressOfVaultOUSDToken() external returns (address);
 }
