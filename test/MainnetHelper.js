@@ -33,7 +33,7 @@ function parseUnitsBetweenUSDTAndOUD(usdtAmount) {
 }
 
 module.exports = {
-    
+
     /* helper functions */
     helperResetNetwork: async function (lockBlock) {
 
@@ -62,7 +62,7 @@ module.exports = {
         ////////////// Loading some contracts //////////////
 
         // loading WETH9 contract
-        const weth9 = z
+        const weth9 = new ethers.Contract(addressWETH9, abiWETH9Token, destUser)
         // loading USDT contract
         const usdtToken = new ethers.Contract(addressUSDT, abiUSDTToken, destUser)
         // loading Tripool2 contract
