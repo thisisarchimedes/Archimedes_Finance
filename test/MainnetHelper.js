@@ -62,7 +62,7 @@ module.exports = {
         ////////////// Loading some contracts //////////////
 
         // loading WETH9 contract
-        const weth9 = new ethers.Contract(addressWETH9, abiWETH9Token, destUser)
+        const weth9 = z
         // loading USDT contract
         const usdtToken = new ethers.Contract(addressUSDT, abiUSDTToken, destUser)
         // loading Tripool2 contract
@@ -144,6 +144,3 @@ module.exports = {
     abiWETH9Token,
     abiCurveFactory,
 }
-
-100000000000000000000
-964430808115000000

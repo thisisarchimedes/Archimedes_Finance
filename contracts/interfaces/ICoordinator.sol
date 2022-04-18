@@ -1,19 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface Coordinator {
-    
-    
+interface ICoordinator {
     /*================INTERFACE SCRATCH AREA=========*/
-    
     // parameters for contract
     // - lvUSD Token contract address
     // - OUSD Vault contract address
-
     /*===============================================*/
-
     /* Privileged functions: Governor */
-
     /// @dev change origination fee
     ///
     /// How much off principle is taken as protocol fees, each time lvUSD is borrowed
@@ -21,14 +15,11 @@ interface Coordinator {
     ///
     /// @param fee in percentage
     function changeOriginationFee(uint256 fee) external;
-
     /// @dev update EOA of treasury. EOA is multi-sig.
     ///
     /// @param newTreasuryAddress new EOA address of treasury
     function changeTreasuryAddress(address newTreasuryAddress) external;
-
     /* Privileged functions: Executive */
-
     /// @dev deposit OUSD under NFT ID
     ///
     /// User sends OUSD to the contract. OUSD is written under NFT ID
@@ -36,7 +27,6 @@ interface Coordinator {
     /// @param amount the amount of OUSD sent to Archimedes
     /// @param nftId the Archimedes ERC-721 token id
     function depositCollateralUnderNFT(uint256 amount, uint256 nftId) external;
-
     /// @dev withdraw OUSD under NFT ID
     ///
     /// User withdraw OUSD from the contract
@@ -44,7 +34,6 @@ interface Coordinator {
     /// @param amount sum to withdraw
     /// @param nftId the position token id
     function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external;
-
     /// @dev Borrow lvUSD under NFT ID
     ///
     /// User borrow lvUSD against the OUSD deposited as collateral in Vault
@@ -54,7 +43,6 @@ interface Coordinator {
     /// @param _amount the amount of lvUSD requested
     /// @param _nftId the Archimedes ERC-721 token id
     function borrowUnderNFT(uint256 _amount, uint256 _nftId) external;
-
     /// @dev Repay lvUSD under NFT ID
     ///
     /// User repay lvUSD against the OUSD deposited as collateral
@@ -63,9 +51,7 @@ interface Coordinator {
     /// @param _amount the amount of lvUSD requested
     /// @param _nftId the Archimedes ERC-721 token id
     function repayUnderNFT(uint256 _amount, uint256 _nftId) external;
-
     /* Non-privileged functions */
-
     /// TODO: Should this be accessed by admin only or not? <<<<
     /// @dev deposit OUSD under address (vs. under NFT token ID)
     ///
@@ -73,7 +59,6 @@ interface Coordinator {
     ///
     /// @param _amount the amount of OUSD sent to Archimedes
     function depositCollateralUnderAddress(uint256 _amount) external;
-
     /// @dev withraw OUSD under address (vs. under NFT token ID)
     ///
     /// User withraw OUSD to the contract
@@ -82,7 +67,6 @@ interface Coordinator {
     ///
     /// @param _amount the amount of OUSD user request to withdraw
     function withdrawCollateralUnderAddress(uint256 _amount) external;
-
     /// @dev Borrow lvUSD under address (vs. under NFT token ID)
     ///
     /// User borrow lvUSD against the OUSD deposited as collateral
@@ -91,7 +75,6 @@ interface Coordinator {
     ///
     /// @param _amount the amount of lvUSD requested
     function borrowUnderAddress(uint256 _amount) external;
-
     /// @dev Borrow lvUSD under address (vs. under NFT token ID)
     ///
     /// User borrow lvUSD against the OUSD deposited as collateral
