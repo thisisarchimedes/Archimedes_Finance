@@ -16,16 +16,18 @@ describe("VaultOUSD test suit", function () {
     let addr2;
     let addrs;
     let sharesOwnerAddress;
- 
-    let addr1Deposit = 10000    
+
+    let addr1Deposit = 10000
     let addr2Deposit = 20000
     let interestIntoVault = 10000
     before(async function () {
         [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+        helper.helperResetNetwork(14533286);
         tokenOUSD = new ethers.Contract(helper.addressOUSD, helper.abiOUSDToken, owner)
         let contractVault = await ethers.getContractFactory("VaultOUSD");
         tokenVault
             = await contractVault.deploy(tokenOUSD.address, "VaultOUSD", "VOUSD");
+
 
         // Mint initial amount on OUSD token, will be used by all tests
         await MainnetHelper.helperSwapETHWithOUSD(addr1, ethers.utils.parseEther("100.0"))
