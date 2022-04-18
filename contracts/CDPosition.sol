@@ -53,6 +53,10 @@ contract CDPosition {
         external
         nftIDMustExist(nftID)
     {
+        // sainty check
+        require (lvUSDAmountToBorrow + nftCDP[nftID].lvUSDBorrowed <= nftCDP[nftID].oUSDTotal,
+          "Attempt to borrow to much lvUSD"); 
+
         nftCDP[nftID].lvUSDBorrowed += lvUSDAmountToBorrow;
     }
 

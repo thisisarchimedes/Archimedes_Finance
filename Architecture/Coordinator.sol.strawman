@@ -20,7 +20,7 @@ contract Coordinator is ReentrancyGuard. Ownable {
 
 /// @dev change orginiation fee
 ///
-/// How much off principle is taken as protocol fees, each time lvUSD is borrowed
+/// How much of principle is taken as protocol fees, each time lvUSD is borrowed
 /// Shoud emit an event
 /// 
 /// @param _fee in percentage 
@@ -68,8 +68,6 @@ function borrowUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant o
 /// @param _nftId the Archimedes ERC-721 token id
 function repayUnderNFT(uint256 _amount, uint256 _nftId) external nonReentrant onlyWhitelisted expectInitialized ;
 
-/* Non-privileged functions */
-
 /// TODO: Should this be accessed by admin only or not? <<<<
 /// @dev deposit OUSD under address (vs. under NFT token ID)
 ///
@@ -96,10 +94,9 @@ function withdrawCollateralUnderAddress(uint256 _amount) external nonReentrant e
 /// @param _amount the amount of lvUSD requested
 function borrowUnderAddress(uint256 _amount) external nonReentrant expectInitialized ;
 
-/// @dev Borrow lvUSD under address (vs. under NFT token ID)
+/// @dev Repay lvUSD under address (vs. under NFT token ID)
 ///
-/// User borrow lvUSD against the OUSD deposited as collateral
-/// Need to check collaterallization ratio
+/// User repay lvUSD against the OUSD deposited as collateral
 ///
 /// @param _amount the amount of lvUSD requested
 function repayUnderAddress(uint256 _amount) external nonReentrant expectInitialized ;

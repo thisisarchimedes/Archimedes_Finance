@@ -7,7 +7,12 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IERC4626} from "../contracts/interfaces/IERC4626.sol";
 import {ERC4626} from "../contracts/standard/ERC4626.sol";
 
-contract VaultOUSD is ERC20, ERC4626 {
+
+
+/// @title Archimedes OUSD vault 
+/// @notice Vault holds OUSD managed by Archimedes under all positions.
+/// @notice It Uses ER4626 to mint shares for deposited OUSD. 
+contract VaultOUSD is ERC4626 {
     constructor(
         IERC20Metadata asset,
         string memory name,
