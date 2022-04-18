@@ -1,15 +1,12 @@
 const { expect } = require("chai");
 const exp = require("constants");
 const { ethers } = require("hardhat");
-const {
-    BigNumber,
-    FixedFormat,
-    FixedNumber,
-    formatFixed,
-    parseFixed
-} = require("@ethersproject/bignumber");
+const { BN } = require('@openzeppelin/test-helpers');
 var helper = require('./MainnetHelper');
 const MainnetHelper = require("./MainnetHelper");
+
+const parseToken = (token) => (new BN(token)).mul(new BN('1000000000000'));
+
 
 describe("VaultOUSD test suit", function () {
     let tokenVault;
@@ -19,8 +16,8 @@ describe("VaultOUSD test suit", function () {
     let addr2;
     let addrs;
     let sharesOwnerAddress;
-
-    let addr1Deposit = 10000
+ 
+    let addr1Deposit = 10000    
     let addr2Deposit = 20000
     let interestIntoVault = 10000
     before(async function () {
@@ -35,6 +32,7 @@ describe("VaultOUSD test suit", function () {
         await MainnetHelper.helperSwapETHWithOUSD(addr2, ethers.utils.parseEther("200.0"))
         await MainnetHelper.helperSwapETHWithOUSD(owner, ethers.utils.parseEther("300.0"))
         sharesOwnerAddress = owner.address
+
         // deposit OUSD as a user (that gets shares) into vault. Shares goes to owner, not user.
         await tokenOUSD.connect(addr1).approve(tokenVault.address, addr1Deposit);
         await tokenVault.connect(addr1).deposit(addr1Deposit, sharesOwnerAddress)
@@ -60,6 +58,7 @@ describe("VaultOUSD test suit", function () {
             before(async function () {
                 //increase Vaults balance without minting more shares
                 await tokenOUSD.transfer(tokenVault.address, interestIntoVault)
+                expect(await tokenOUSD.balanceOf(tokenVault.address)).to.equal(addr1Deposit + addr2Deposit + interestIntoVault)
             })
 
             it("Should show interest plus deposited in total assets", async function () {
@@ -72,6 +71,7 @@ describe("VaultOUSD test suit", function () {
             })
 
             it("Should redeem with each share worth more then 1 underlying", async function () {
+                /// ERC4626 rebases shares based on deposited assets and interest
                 expect(await tokenVault.previewRedeem(addr1Deposit + addr2Deposit)).to.equal(addr1Deposit + addr2Deposit + interestIntoVault)
             })
         })
