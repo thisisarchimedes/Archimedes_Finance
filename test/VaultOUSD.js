@@ -29,8 +29,6 @@ describe("VaultOUSD test suit", function () {
         tokenVault
             = await contractVault.deploy(tokenOUSD.address, "VaultOUSD", "VOUSD");
 
-        console.log("Starting to mint")
-        console.log("OUSD decimal: ", await tokenOUSD.decimals())
         // Mint initial amount on OUSD token, will be used by all tests
         await MainnetHelper.helperSwapETHWithOUSD(addr1, ethers.utils.parseEther("1.0"))
         await MainnetHelper.helperSwapETHWithOUSD(addr2, ethers.utils.parseEther("1.0"))
