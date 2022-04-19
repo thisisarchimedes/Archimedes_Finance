@@ -3,7 +3,7 @@ pragma solidity 0.8.4;
 
 import {ICoordinator} from "../contracts/interfaces/ICoordinator.sol";
 
-contract Coordinator is ICoordinator {
+ contract Coordinator is ICoordinator {
     address internal tokenLvUSD;
     address internal tokenVaultOUSD;
 

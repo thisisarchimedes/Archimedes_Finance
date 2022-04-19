@@ -22,6 +22,7 @@ async function setup() {
 
 describe("Coordinator Test suit", function () {
     before(async function () {
+        helper.helperResetNetwork(14533286)
         await setup();
     })
     it("Should create Coordinator", async function () {

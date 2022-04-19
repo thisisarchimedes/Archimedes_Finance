@@ -30,7 +30,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
 
     it("Should do a basic ETH<>OUSD swap", async function () {
 
-        await helper.helperSwapETHWithOUSD(user, ethers.utils.parseEther("7.0"))
+        await helper.helperSwapETHWithOUSD(user, ethers.utils.parseEther("3.0"))
 
     })
 
