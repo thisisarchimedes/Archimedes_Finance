@@ -21,12 +21,6 @@ describe("Arch Token test suit", function () {
         await token.mint(owner.address, tokenSupply);
     });
 
-    describe("Minting", function () {
-        it("Should be able to mint to specific address", async function () {
-            expect(await token.balanceOf(owner.address)).to.eq(tokenSupply);
-        });
-    });
-
     // basic end-to-end testing of underlying erc20
     describe("Transactions", function () {
         it("Should not be able to transfer more than total supply", async function () {
