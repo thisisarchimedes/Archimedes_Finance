@@ -7,19 +7,32 @@ interface ICoordinator {
     // - lvUSD Token contract address
     // - OUSD Vault contract address
     /*===============================================*/
+    
     /* Privileged functions: Governor */
+
     /// @dev change origination fee
     ///
     /// How much off principle is taken as protocol fees, each time lvUSD is borrowed
     /// Should emit an event
     ///
-    /// @param fee in percentage
-    function changeOriginationFee(uint256 fee) external;
+    /// @param newFeeRate in percentage
+    function changeOriginationFeeRate(uint256 newFeeRate) external;
+
+    /// @dev get origination fee number
+    ///
+    function getOriginationFeeRate() external view returns (uint256);
+    
     /// @dev update EOA of treasury. EOA is multi-sig.
     ///
     /// @param newTreasuryAddress new EOA address of treasury
     function changeTreasuryAddress(address newTreasuryAddress) external;
+    
+    /// @dev get treasury address.
+    ///
+    function getTreasuryAddress() external view returns (address);
+
     /* Privileged functions: Executive */
+
     /// @dev deposit OUSD under NFT ID
     ///
     /// User sends OUSD to the contract. OUSD is written under NFT ID
