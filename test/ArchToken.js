@@ -30,20 +30,20 @@ describe("Arch Token test suit", function () {
 
     // basic end-to-end testing of underlying erc20
     describe("Transactions", function () {
-        it("Should not be able to transfer more than total supply", async function () {
+        it("Should not be able to transfer() more than total supply", async function () {
             let amount = totalSupply + 1;
             await expect(
                 token.transfer(user1.address, amount)
             ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
         });
 
-        it("Should be able to transfer tokens between accounts", async function () {
+        it("Should be able to transfer() tokens between accounts", async function () {
             let amount = ethers.utils.parseUnits("1");
             await token.transfer(user1.address, amount);
             expect(await token.balanceOf(user1.address)).to.eq(amount);
         });
 
-        it("Should fail if sender doesn't have enough tokens", async function () {
+        it("transfer() should fail if sender doesn't have enough tokens", async function () {
             let amount1 = ethers.utils.parseUnits("1");
             let amount2 = ethers.utils.parseUnits("2");
             await token.transfer(user2.address, amount1);
@@ -52,7 +52,7 @@ describe("Arch Token test suit", function () {
             ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
         });
 
-        it("Should update balances after transfers", async function () {
+        it("Should update balances after transfer()", async function () {
             let amount1 = ethers.utils.parseUnits("1");
             let amount2 = ethers.utils.parseUnits("2");
             const ownerInitialBalance = await token.balanceOf(owner.address);
