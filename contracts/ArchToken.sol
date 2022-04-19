@@ -6,13 +6,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 /// @title Archimedes Token
 /// @dev This is the contract for the Archimedes rewards token
 contract ArchToken is ERC20 {
-    
-    constructor() ERC20("Archimedes Token", "ARCH") {}
-
-    /// @notice Mints tokens to a recipient.
-    /// @param to the account to mint tokens to.
-    /// @param amount the amount of tokens to mint.
-    function mint(address to, uint256 amount) external {
-        _mint(to, amount);
+    constructor() ERC20("Archimedes Token", "ARCH") {
+        // premint 1,000,000 tokens to owner
+        _mint(msg.sender, 1000000 * 10**decimals());
     }
 }
