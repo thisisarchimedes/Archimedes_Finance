@@ -3,7 +3,11 @@ pragma solidity 0.8.4;
 
 import {ICoordinator} from "../contracts/interfaces/ICoordinator.sol";
 
- contract Coordinator is ICoordinator {
+/// @title Coordinator
+/// @dev is in charge of overall flow of creating positions and unwinding positions
+/// It manages keeping tracks of fund in vault, updating CDP as needed and transferring lvUSD inside the system
+/// It is controlled (and called) by the leverage engine
+contract Coordinator is ICoordinator {
     address internal tokenLvUSD;
     address internal tokenVaultOUSD;
     address internal treasuryAddress;
@@ -16,28 +20,12 @@ import {ICoordinator} from "../contracts/interfaces/ICoordinator.sol";
         treasuryAddress = _treasuryAddress;
     }
 
-    function addressOfLvUSDToken() external view override returns (address) {
-        return tokenLvUSD;
-    }
-
-    function addressOfVaultOUSDToken()
-        external
-        view
-        override
-        returns (address)
-    {
-        return tokenVaultOUSD;
-    }
-
+    /* Privileged functions: Governor */
     function changeOriginationFeeRate(uint256 newFeeRate)
         external
         override
     {
         originationFeeRate = newFeeRate;
-    }
-
-    function getOriginationFeeRate() external override view returns (uint256) {
-        return originationFeeRate;
     }
 
     function changeTreasuryAddress(address newTreasuryAddress)
@@ -47,9 +35,7 @@ import {ICoordinator} from "../contracts/interfaces/ICoordinator.sol";
         treasuryAddress = newTreasuryAddress;
     }
 
-    function getTreasuryAddress()  public override view returns (address) {
-        return treasuryAddress;
-    }
+    /* Privileged functions: Executive */
 
     function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId)
         external
@@ -98,6 +84,29 @@ import {ICoordinator} from "../contracts/interfaces/ICoordinator.sol";
         override
         notImplementedYet
     {}
+
+    /* Privileged functions: Anyone */
+
+    function addressOfLvUSDToken() external view override returns (address) {
+        return tokenLvUSD;
+    }
+
+    function addressOfVaultOUSDToken()
+        external
+        view
+        override
+        returns (address)
+    {
+        return tokenVaultOUSD;
+    }
+
+    function getOriginationFeeRate() external override view returns (uint256) {
+        return originationFeeRate;
+    }
+
+     function getTreasuryAddress() public override view returns (address) {
+        return treasuryAddress;
+    }
 
     modifier notImplementedYet() {
         revert("Method not implemented yet");

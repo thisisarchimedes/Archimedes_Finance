@@ -31,8 +31,7 @@ const originationFeeDefaultValue = ethers.utils.parseEther("0.05")
 
 describe("Coordinator Test suit", function () {
     before(async function () {
-        
-        helper.helperResetNetwork(14533286)
+        helper.helperResetNetwork(helper.defaultBlockNumber)
         await setup();
     })
     it("Should create Coordinator", async function () {
@@ -42,38 +41,37 @@ describe("Coordinator Test suit", function () {
     })
 
     it("Should have default value for treasury address", async function () {
-        let defaultTreasuryAddress = await coordinator.getTreasuryAddress();
-        expect(defaultTreasuryAddress).to.equal(treasurySigner.address)
+        let returnedTreasuryAddress = await coordinator.getTreasuryAddress();
+        expect(returnedTreasuryAddress).to.equal(treasurySigner.address)
     })
+
     describe("Change treasury address", function () {
         /// Note : when we have access control, check that only admin can change it
-        let newTreasuryAddress = ethers.Wallet.createRandom()
+        let newTreasurySigner = ethers.Wallet.createRandom()
         before(async function () {
-            await coordinator.changeTreasuryAddress(newTreasuryAddress.address);
-            // 0.01 equals to 1%
-            // await coordinator.changeOriginationFee(ethers.utils.parseEther("0.01"))
+            await coordinator.changeTreasuryAddress(newTreasurySigner.address);
         })
         it("should have updated treasury address", async function () {
             let returnedTreasuryAddress = await coordinator.getTreasuryAddress();
-            expect(returnedTreasuryAddress).to.equal(newTreasuryAddress.address)
+            expect(returnedTreasuryAddress).to.equal(newTreasurySigner.address)
         })
     })
 
     it("Should have default origination fee value", async function () {
-        let defaultOriginationFee = await coordinator.getOriginationFeeRate();
-        expect(defaultOriginationFee).to.equal(originationFeeDefaultValue)
+        let defaultOriginationFeeRate = await coordinator.getOriginationFeeRate();
+        expect(defaultOriginationFeeRate).to.equal(originationFeeDefaultValue)
     })
 
     describe("Change origination fee", function () {
         // Note : when we have access control, check that only admin can change it
         // 0.01 equals to 1%
-        let newOriginationFee = ethers.utils.parseEther("0.01")
+        let newOriginationFeeRate = ethers.utils.parseEther("0.01")
         before(async function () {
-            await coordinator.changeOriginationFeeRate(newOriginationFee)
+            await coordinator.changeOriginationFeeRate(newOriginationFeeRate)
         })
         it("should have updated treasury address", async function () {
             let returnedOriginationFee = await coordinator.getOriginationFeeRate();
-            expect(returnedOriginationFee).to.equal(newOriginationFee)
+            expect(returnedOriginationFee).to.equal(newOriginationFeeRate)
         })
     })   
 })
