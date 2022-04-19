@@ -35,7 +35,7 @@ describe("Coordinator Test suit", function () {
         await setup();
     })
     it("Should create Coordinator", async function () {
-        /// basic check of contract creation
+        /// basic check of contract creation 
         expect(await coordinator.addressOfLvUSDToken()).to.equal(tokenLvUSD.address)
         expect(await coordinator.addressOfVaultOUSDToken()).to.equal(tokenVault.address)
     })
