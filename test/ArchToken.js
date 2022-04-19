@@ -1,12 +1,10 @@
 // We import Chai to use its asserting functions here.
 const { expect } = require("chai");
 const exp = require("constants");
+const { ethers } = require("hardhat");
 
 describe("Arch Token test suit", function () {
-    // parseUnits uses 18 decimal by default
-    const tokenSupply = ethers.utils.parseUnits("100");
-    console.log(tokenSupply);
-
+    let totalSupply;
     let contract;
     let token;
     let owner;
@@ -18,13 +16,22 @@ describe("Arch Token test suit", function () {
         contract = await ethers.getContractFactory("ArchToken");
         [owner, user1, user2, ...users] = await ethers.getSigners();
         token = await contract.deploy();
-        await token.mint(owner.address, tokenSupply);
+        totalSupply = await token.totalSupply();
+    });
+
+    describe("Pre-Mint", function () {
+        it("Should have pre-mint totalSupply of 100m", async function () {
+            // convert from BigNumber to readable value
+            totalSupply = ethers.utils.formatUnits(totalSupply, "ether");
+            // formatUnits() returns a number with the tenths place included
+            expect(totalSupply).to.eq("100000000.0");
+        });
     });
 
     // basic end-to-end testing of underlying erc20
     describe("Transactions", function () {
         it("Should not be able to transfer more than total supply", async function () {
-            let amount = ethers.utils.parseUnits("101");
+            let amount = totalSupply + 1;
             await expect(
                 token.transfer(user1.address, amount)
             ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
