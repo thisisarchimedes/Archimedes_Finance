@@ -36,7 +36,7 @@ describe("Arch Token test suit", function () {
             // formatUnits() returns a number with the tenths place included
             expect(totalSupply).to.eq("100000000.0");
         });
-        it("Should be minted to the correct _addressTreasury", async function () {
+        it("Should be minted to the correct _addressTreasury correct amount", async function () {
             let treasury = await token.balanceOf(treasuryAddress);
             expect(totalSupply).to.eq(treasury);
         });
@@ -74,6 +74,13 @@ describe("Arch Token test suit", function () {
                 let amount = totalSupply + 1;
                 await expect(
                     token.transfer(user1.address, amount)
+                ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+            });
+
+            it("Should NOT be able to transfer() more than current balance", async function () {
+                let balance = (await token.balanceOf(owner.address)) + 1;
+                await expect(
+                    token.transfer(user1.address, balance)
                 ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
             });
 
