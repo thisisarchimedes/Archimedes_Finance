@@ -67,10 +67,13 @@ describe("CDPosition test suit", async function () {
             await validateCDP(NFT_ID
                 , BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, true)
             await cdp.deletePosition(NFT_ID)
-            // expect validation to revert since key is missing in CDP
-            await expect(validateCDP(NFT_ID
-                , 0, 0, 0, 0, false)).to.be.revertedWith("NFT ID must exist")
+           
+            // Create new NFT position on the same NFT ID. If can create new position, it means same NFT ID was deleted 
+            await cdp.createPosition(NFT_ID, BASIC_OUSD_PRINCIPLE)
+            await validateCDP(NFT_ID
+                , BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, true)
         });
+
         it("Should not delete position if position still has borrowed lvUSD", async function () {
             await cdp.createPosition(NFT_ID
                 , BASIC_OUSD_PRINCIPLE)
