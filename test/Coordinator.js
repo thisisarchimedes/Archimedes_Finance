@@ -7,20 +7,26 @@ let owner;
 let addr1;
 let addr2;
 let treasurySigner;
-let coordinator
-let tokenVault
-let tokenLvUSD
+let leverageEngineSigner;
+let coordinator;
+let tokenVault;
+let tokenLvUSD;
+let tokenCDP;
+let tokenOUSD
 
 async function setup() {
-    [owner, addr1, addr2, treasurySigner] = await ethers.getSigners();
-    let tokenOUSD = new ethers.Contract(helper.addressOUSD, helper.abiOUSDToken, owner)
+    [owner, addr1, addr2, treasurySigner, leverageEngineSigner] = await ethers.getSigners();
+    tokenOUSD = new ethers.Contract(helper.addressOUSD, helper.abiOUSDToken, owner)
     let contractVault = await ethers.getContractFactory("VaultOUSD");
     tokenVault
         = await contractVault.deploy(tokenOUSD.address, "VaultOUSD", "VOUSD");
     let contractLvUSD = await ethers.getContractFactory("LvUSDToken");
     tokenLvUSD = await contractLvUSD.deploy();
+    let contractCDP = await ethers.getContractFactory("CDPosition");
+    tokenCDP = await contractCDP.deploy();
     const contractCoordinator = await ethers.getContractFactory("Coordinator")
-    coordinator = await contractCoordinator.deploy(tokenLvUSD.address, tokenVault.address, treasurySigner.address)
+    coordinator = await contractCoordinator.deploy(tokenLvUSD.address, tokenVault.address, tokenCDP.address, treasurySigner.address)
+
 }
 
 const getDecimal = (naturalNumber) => {
@@ -28,12 +34,15 @@ const getDecimal = (naturalNumber) => {
 }
 
 const originationFeeDefaultValue = ethers.utils.parseEther("0.05")
+const nftIdFirstPosition = 23681623
 
 describe("Coordinator Test suit", function () {
     before(async function () {
         helper.helperResetNetwork(helper.defaultBlockNumber)
         await setup();
+        await helper.helperSwapETHWithOUSD(addr1, ethers.utils.parseEther("1.0"))
     })
+
     it("Should create Coordinator", async function () {
         /// basic check of contract creation 
         expect(await coordinator.addressOfLvUSDToken()).to.equal(tokenLvUSD.address)
@@ -73,5 +82,25 @@ describe("Coordinator Test suit", function () {
             let returnedOriginationFee = await coordinator.getOriginationFeeRate();
             expect(returnedOriginationFee).to.equal(newOriginationFeeRate)
         })
-    })   
+    })
+
+    describe("Deposit collateral into new NFT position (NFT already exist)", function () {
+        /// depositing collateral need to transfer funds to vault, create a new CDP entry with valid values
+        let collateralAmount = ethers.utils.parseEther("500")
+
+        before(async function () {
+            /// important implementation detail - we when customer call createLeveragePosition we transfer funds from user's account to the leverage engine (or another calling contract). For this test, we'll set leverage engine as addr2
+            await tokenOUSD.connect(addr1).transfer(leverageEngineSigner.address, collateralAmount)
+            expect(await tokenOUSD.balanceOf(leverageEngineSigner.address)).to.equal(collateralAmount)
+            console.log("some senders to look at  coordinator %s owner %s", coordinator.address, owner.address)
+            /// now we can deposit from coordinator to vault. Trying to connect as coordinator
+            await coordinator.connect(leverageEngineSigner).depositCollateralUnderNFT(nftIdFirstPosition, collateralAmount, addr2.address)
+        })
+        it("Should have taken OUSD from out under the coordinator address", async function () {
+            expect(await tokenOUSD.balanceOf(leverageEngineSigner.address)).to.equal(0)
+        })
+        // it("Should have increased OUSD in the vault", async function () {
+        //     expect(await tokenVault.totalAssets()).to.equal(collateralAmount)
+        // })
+    })
 })
