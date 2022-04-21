@@ -4,12 +4,8 @@ const exp = require("constants");
 const { ethers } = require("hardhat");
 
 // TODO create separate test constants file to load in multiple test
-// fix style guide const not capital
-const ZERO_ADDRESS = ethers.constants.AddressZero;
-const MAX_UINT256 = ethers.constants.MaxUint256;
-
-// TODO test for increase and decrease allowance functions since they are inherited
-// TODO test for burn functionality
+const zeroAddress = ethers.constants.AddressZero;
+const maxUint256 = ethers.constants.MaxUint256;
 
 describe("Arch Token test suit", function () {
     let token;
@@ -29,7 +25,6 @@ describe("Arch Token test suit", function () {
     });
 
     describe("Pre-Mint", function () {
-
         it("Should have pre-mint totalSupply of 100m", async function () {
             totalSupply = await token.totalSupply();
 
@@ -65,7 +60,7 @@ describe("Arch Token test suit", function () {
             });
             it("Sender can send to the zero address", async function () {
                 await expect(
-                    token.transfer(ZERO_ADDRESS, amount1)
+                    token.transfer(zeroAddress, amount1)
                 ).to.be.revertedWith("transfer to the zero address");
             });
 
@@ -141,19 +136,19 @@ describe("Arch Token test suit", function () {
                 ).to.be.revertedWith("insufficient allowance");
             });
 
-            it("Should revert when transferFrom() to the ZERO_ADDRESS", async function () {
+            it("Should revert when transferFrom() to the zeroAddress", async function () {
                 await expect(
-                    token.transferFrom(user1.address, ZERO_ADDRESS, amount1)
+                    token.transferFrom(user1.address, zeroAddress, amount1)
                 ).to.be.revertedWith("transfer to the zero address");
             });
         });
-        // To set unlimited, set allowance amount to: MAX_UINT256
+        // To set unlimited, set allowance amount to: maxUint256
         describe("When spender has unlimited allowance", async function () {
             beforeEach(async function () {
                 // transfer 2 ethers to user 1
                 await token.transfer(user1.address, amount2);
                 // connect as user1. approve owner to spend "unlimited"
-                await token.connect(user1).approve(owner.address, MAX_UINT256);
+                await token.connect(user1).approve(owner.address, maxUint256);
             });
 
             it("Should NOT decrease the spender allowance", async function () {
@@ -166,7 +161,7 @@ describe("Arch Token test suit", function () {
                     owner.address
                 );
                 // should still be "unlimited"
-                expect(ownerAllowanceOnUser1).to.eq(MAX_UINT256);
+                expect(ownerAllowanceOnUser1).to.eq(maxUint256);
             });
         });
     });
