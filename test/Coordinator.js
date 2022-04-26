@@ -1,57 +1,29 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-var helper = require('./MainnetHelper');
+const mainnetHelper = require('./MainnetHelper');
+const { ContractTestContext } = require('./ContractTestContext');
 
-/// Need to move this whole block to its own module for DI
-let owner;
-let addr1;
-let addr2;
-let treasurySigner;
-let leverageEngineSigner;
-let coordinator;
-let tokenVault;
-let tokenLvUSD;
-let tokenCDP;
-let tokenOUSD
-
-async function setup() {
-    [owner, addr1, addr2, treasurySigner, leverageEngineSigner] = await ethers.getSigners();
-    tokenOUSD = new ethers.Contract(helper.addressOUSD, helper.abiOUSDToken, owner)
-    let contractVault = await ethers.getContractFactory("VaultOUSD");
-    tokenVault
-        = await contractVault.deploy(tokenOUSD.address, "VaultOUSD", "VOUSD");
-    let contractLvUSD = await ethers.getContractFactory("LvUSDToken");
-    tokenLvUSD = await contractLvUSD.deploy();
-    let contractCDP = await ethers.getContractFactory("CDPosition");
-    tokenCDP = await contractCDP.deploy();
-    const contractCoordinator = await ethers.getContractFactory("Coordinator")
-    coordinator = await contractCoordinator.deploy(tokenLvUSD.address, tokenVault.address, tokenCDP.address, treasurySigner.address)
-
-}
-
-const getDecimal = (naturalNumber) => {
-    return ethers.utils.parseEther(naturalNumber.toString())
-}
 
 const originationFeeDefaultValue = ethers.utils.parseEther("0.05")
-const nftIdFirstPosition = 23681623
 
 describe("Coordinator Test suit", function () {
-    before(async function () {
-        helper.helperResetNetwork(helper.defaultBlockNumber)
-        await setup();
-        await helper.helperSwapETHWithOUSD(addr1, ethers.utils.parseEther("1.0"))
-    })
+    let contractTestContext;
+    let coordinator;
 
-    it("Should create Coordinator", async function () {
-        /// basic check of contract creation 
-        expect(await coordinator.addressOfLvUSDToken()).to.equal(tokenLvUSD.address)
-        expect(await coordinator.addressOfVaultOUSDToken()).to.equal(tokenVault.address)
+    before(async function () {
+        mainnetHelper.helperResetNetwork(mainnetHelper.defaultBlockNumber)
+
+        contractTestContext = new ContractTestContext();
+        await contractTestContext.setup();
+
+        // Object under test 
+        coordinator = contractTestContext.coordinator
     })
 
     it("Should have default value for treasury address", async function () {
         let returnedTreasuryAddress = await coordinator.getTreasuryAddress();
         expect(returnedTreasuryAddress).to.equal(treasurySigner.address)
+
     })
 
     describe("Change treasury address", function () {
