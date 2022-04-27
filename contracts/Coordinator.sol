@@ -9,8 +9,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "hardhat/console.sol";
 
-
-
 /// @title Coordinator
 /// @dev is in charge of overall flow of creating positions and unwinding positions
 /// It manages keeping tracks of fund in vault, updating CDP as needed and transferring lvUSD inside the system
@@ -22,9 +20,15 @@ contract Coordinator is ICoordinator {
     address internal treasuryAddress;
     address internal tokenOUSD;
 
-    uint256 originationFeeRate = 5 ether/100;
+    uint256 originationFeeRate = 5 ether / 100;
 
-    constructor(address _tokenLvUSD, address _tokenVaultOUSD, address _tokenCDP, address _tokenOUSD, address _treasuryAddress) {
+    constructor(
+        address _tokenLvUSD,
+        address _tokenVaultOUSD,
+        address _tokenCDP,
+        address _tokenOUSD,
+        address _treasuryAddress
+    ) {
         tokenLvUSD = _tokenLvUSD;
         tokenVaultOUSD = _tokenVaultOUSD;
         tokenCDP = _tokenCDP;
@@ -33,14 +37,10 @@ contract Coordinator is ICoordinator {
 
         // approve VaultOUSD address to spend on behalf of coordinator
         IERC20(tokenOUSD).approve(tokenVaultOUSD, type(uint256).max);
-
     }
 
     /* Privileged functions: Governor */
-    function changeOriginationFeeRate(uint256 newFeeRate)
-        external
-        override
-    {
+    function changeOriginationFeeRate(uint256 newFeeRate) external override {
         originationFeeRate = newFeeRate;
     }
 
@@ -53,10 +53,11 @@ contract Coordinator is ICoordinator {
 
     /* Privileged functions: Executive */
 
-    function depositCollateralUnderNFT(uint256 nftId, uint256 amount, address sharesOwner)
-        external
-        override
-    {   
+    function depositCollateralUnderNFT(
+        uint256 nftId,
+        uint256 amount,
+        address sharesOwner
+    ) external override {
         /// Transfer collateral to vault, mint shares to shares owner
         VaultOUSD(tokenVaultOUSD).deposit(amount, sharesOwner);
         // create CDP position with collateral
@@ -80,8 +81,6 @@ contract Coordinator is ICoordinator {
         override
         notImplementedYet
     {}
-
-    
 
     function depositCollateralUnderAddress(uint256 _amount)
         external
@@ -122,11 +121,11 @@ contract Coordinator is ICoordinator {
         return tokenVaultOUSD;
     }
 
-    function getOriginationFeeRate() external override view returns (uint256) {
+    function getOriginationFeeRate() external view override returns (uint256) {
         return originationFeeRate;
     }
 
-     function getTreasuryAddress() public override view returns (address) {
+    function getTreasuryAddress() public view override returns (address) {
         return treasuryAddress;
     }
 
