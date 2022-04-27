@@ -36,7 +36,7 @@ jobs:
       - name: Show NodeJS version    
         run: npm --version
       
-      - name: Install Hardhat
+      - name: Install dependencies
         run: npm install
 
       - name: Compile contracts
