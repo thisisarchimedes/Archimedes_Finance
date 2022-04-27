@@ -4,6 +4,7 @@ require("hardhat-contract-sizer");
 require("hardhat-deploy");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-vyper");
+require("@tenderly/hardhat-tenderly");
 
 // grab the private api key from the private repo
 require("dotenv").config({ path: "secrets/alchemy.env" });
@@ -29,6 +30,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 module.exports = {
     solidity: {
         compilers: [
+            { version: "0.8.13" },
             { version: "0.8.9" },
             { version: "0.8.4" },
             { version: "0.8.0" },
