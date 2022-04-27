@@ -2,6 +2,7 @@
 pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /// @title lvUSD token
 ///
@@ -10,13 +11,20 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 /// TODO: add access control and roles
 ///
 contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD") {
+    /// @dev Sets the address of the current minter contract
+    /// Timelocked function (set cadidate and change owner after 17,280 blocks ~3 days)
+    /// Emits MinterSet
+    ///
+    /// @param accounts the accounts to set.
+    function _setMinter(address[] calldata accounts) internal {}
+
     /// @dev Mints tokens to a recipient.
     ///
     /// This function reverts if the caller does not have the minter role.
     ///
     /// @param recipient the account to mint tokens to.
     /// @param amount    the amount of tokens to mint.
-    function mint(address recipient, uint256 amount) external {
+    function mint(address recipient, uint256 amount) external nonReentrant {
         _mint(recipient, amount);
     }
 
@@ -24,7 +32,8 @@ contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD") {
     /// Timelocked function (set cadidate and change owner after 17,280 blocks ~3 days)
     /// Emits MinterSet
     ///
-    ///
     /// @param accounts the accounts to set.
-    function setMinter(address[] calldata accounts) external {}
+    function setMinter(address[] calldata accounts) external nonReentrant {
+        _setMinter(accounts);
+    }
 }
