@@ -1,4 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
+require("@tenderly/hardhat-tenderly");
+
 
 // grab the private api key from the private repo
 require('dotenv').config({ path: 'secrets/alchemy.env' })
@@ -28,6 +30,9 @@ module.exports = {
       forking: {
         url: alchemy_url,
         blockNumber: 14533286
+      },
+      localhost: {
+        url: "http://127.0.0.1:8545"
       }
     }
   }
