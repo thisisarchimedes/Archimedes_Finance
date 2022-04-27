@@ -121,7 +121,7 @@ async function helperSwapETHWithOUSD(destUser, ethAmountToSwap) {
         // Exchange USDT->OUSD
         // https://github.com/OriginProtocol/origin-dollar/blob/e9ef066ab5cd8842d044e7759b99d956a44acd47/contracts/contracts/flipper/Flipper.sol
 
-        await ousdSwapper.buyOusdWithUsdt(parseUnitsBetweenUSDTAndOUD(usdtBalance))
+        await ousdSwapper.buyOusdWithUsdt(parseUnitsBetweenUSDTAndOUSD(usdtBalance))
 
         // read balance again and make sure it increased
         expect(await ousdToken.balanceOf(destUser.address)).to.gt(ousdBalance)
