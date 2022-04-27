@@ -44,10 +44,7 @@ contract Coordinator is ICoordinator {
         originationFeeRate = newFeeRate;
     }
 
-    function changeTreasuryAddress(address newTreasuryAddress)
-        external
-        override
-    {
+    function changeTreasuryAddress(address newTreasuryAddress) external override {
         treasuryAddress = newTreasuryAddress;
     }
 
@@ -64,47 +61,19 @@ contract Coordinator is ICoordinator {
         CDPosition(tokenCDP).createPosition(nftId, amount);
     }
 
-    function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId)
-        external
-        override
-        notImplementedYet
-    {}
+    function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
 
-    function borrowUnderNFT(uint256 _amount, uint256 _nftId)
-        external
-        override
-        notImplementedYet
-    {}
+    function borrowUnderNFT(uint256 _amount, uint256 _nftId) external override notImplementedYet {}
 
-    function repayUnderNFT(uint256 _amount, uint256 _nftId)
-        external
-        override
-        notImplementedYet
-    {}
+    function repayUnderNFT(uint256 _amount, uint256 _nftId) external override notImplementedYet {}
 
-    function depositCollateralUnderAddress(uint256 _amount)
-        external
-        override
-        notImplementedYet
-    {}
+    function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
 
-    function withdrawCollateralUnderAddress(uint256 _amount)
-        external
-        override
-        notImplementedYet
-    {}
+    function withdrawCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
 
-    function borrowUnderAddress(uint256 _amount)
-        external
-        override
-        notImplementedYet
-    {}
+    function borrowUnderAddress(uint256 _amount) external override notImplementedYet {}
 
-    function repayUnderAddress(uint256 _amount)
-        external
-        override
-        notImplementedYet
-    {}
+    function repayUnderAddress(uint256 _amount) external override notImplementedYet {}
 
     /* Privileged functions: Anyone */
 
@@ -112,12 +81,7 @@ contract Coordinator is ICoordinator {
         return tokenLvUSD;
     }
 
-    function addressOfVaultOUSDToken()
-        external
-        view
-        override
-        returns (address)
-    {
+    function addressOfVaultOUSDToken() external view override returns (address) {
         return tokenVaultOUSD;
     }
 

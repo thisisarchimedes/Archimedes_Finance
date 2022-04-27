@@ -30,13 +30,7 @@ abstract contract ERC4626 is ERC20, IERC4626 {
      * Will revert if asserts > 0, totalSupply > 0 and totalAssets = 0. That corresponds to a case where any asset
      * would represent an infinite amout of shares.
      */
-    function convertToShares(uint256 assets)
-        public
-        view
-        virtual
-        override
-        returns (uint256 shares)
-    {
+    function convertToShares(uint256 assets) public view virtual override returns (uint256 shares) {
         uint256 supply = totalSupply();
 
         return
@@ -46,29 +40,14 @@ abstract contract ERC4626 is ERC20, IERC4626 {
     }
 
     /** @dev See {IERC4262-convertToAssets} */
-    function convertToAssets(uint256 shares)
-        public
-        view
-        virtual
-        override
-        returns (uint256 assets)
-    {
+    function convertToAssets(uint256 shares) public view virtual override returns (uint256 assets) {
         uint256 supply = totalSupply();
 
-        return
-            (supply == 0)
-                ? (shares * 10**_asset.decimals()) / 10**decimals()
-                : (shares * totalAssets()) / supply;
+        return (supply == 0) ? (shares * 10**_asset.decimals()) / 10**decimals() : (shares * totalAssets()) / supply;
     }
 
     /** @dev See {IERC4262-maxDeposit} */
-    function maxDeposit(address)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function maxDeposit(address) public view virtual override returns (uint256) {
         return type(uint256).max;
     }
 
@@ -78,84 +57,40 @@ abstract contract ERC4626 is ERC20, IERC4626 {
     }
 
     /** @dev See {IERC4262-maxWithdraw} */
-    function maxWithdraw(address owner)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function maxWithdraw(address owner) public view virtual override returns (uint256) {
         return convertToAssets(balanceOf(owner));
     }
 
     /** @dev See {IERC4262-maxRedeem} */
-    function maxRedeem(address owner)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function maxRedeem(address owner) public view virtual override returns (uint256) {
         return balanceOf(owner);
     }
 
     /** @dev See {IERC4262-previewDeposit} */
-    function previewDeposit(uint256 assets)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function previewDeposit(uint256 assets) public view virtual override returns (uint256) {
         return convertToShares(assets);
     }
 
     /** @dev See {IERC4262-previewMint} */
-    function previewMint(uint256 shares)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function previewMint(uint256 shares) public view virtual override returns (uint256) {
         uint256 assets = convertToAssets(shares);
         return assets + (convertToShares(assets) < shares ? 1 : 0);
     }
 
     /** @dev See {IERC4262-previewWithdraw} */
-    function previewWithdraw(uint256 assets)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function previewWithdraw(uint256 assets) public view virtual override returns (uint256) {
         uint256 shares = convertToShares(assets);
         return shares + (convertToAssets(shares) < assets ? 1 : 0);
     }
 
     /** @dev See {IERC4262-previewRedeem} */
-    function previewRedeem(uint256 shares)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function previewRedeem(uint256 shares) public view virtual override returns (uint256) {
         return convertToAssets(shares);
     }
 
     /** @dev See {IERC4262-deposit} */
-    function deposit(uint256 assets, address receiver)
-        public
-        virtual
-        override
-        returns (uint256)
-    {
-        require(
-            assets <= maxDeposit(receiver),
-            "ERC4626: deposit more then max"
-        );
+    function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
+        require(assets <= maxDeposit(receiver), "ERC4626: deposit more then max");
 
         address caller = _msgSender();
         uint256 shares = previewDeposit(assets);
@@ -171,12 +106,7 @@ abstract contract ERC4626 is ERC20, IERC4626 {
     }
 
     /** @dev See {IERC4262-mint} */
-    function mint(uint256 shares, address receiver)
-        public
-        virtual
-        override
-        returns (uint256)
-    {
+    function mint(uint256 shares, address receiver) public virtual override returns (uint256) {
         require(shares <= maxMint(receiver), "ERC4626: mint more then max");
 
         address caller = _msgSender();
@@ -198,10 +128,7 @@ abstract contract ERC4626 is ERC20, IERC4626 {
         address receiver,
         address owner
     ) public virtual override returns (uint256) {
-        require(
-            assets <= maxWithdraw(owner),
-            "ERC4626: withdraw more then max"
-        );
+        require(assets <= maxWithdraw(owner), "ERC4626: withdraw more then max");
 
         address caller = _msgSender();
         uint256 shares = previewWithdraw(assets);
