@@ -67,6 +67,9 @@ module.exports = {
                 blockGasLimit: 1000000004297200000,
                 allowUnlimitedContractSize: true,
             },
+            localhost: {
+              url: "http://127.0.0.1:8545"
+            },
             allowUnlimitedContractSize: true,
         },
     },
