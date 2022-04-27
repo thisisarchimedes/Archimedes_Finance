@@ -1,4 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
+require("@tenderly/hardhat-tenderly");
+
 
 // grab the private api key from the private repo
 require('dotenv').config({ path: 'secrets/alchemy.env' })
@@ -21,7 +23,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  solidity: "0.8.4",
+  solidity: "0.8.13",
 
   networks: {
     hardhat: {
@@ -29,11 +31,9 @@ module.exports = {
         url: alchemy_url,
         blockNumber: 14533286
       },
-
-    localhost: {
-      url: "http://127.0.0.1:8545"
-    }
-
+      localhost: {
+        url: "http://127.0.0.1:8545"
+      }
     }
   }
 };

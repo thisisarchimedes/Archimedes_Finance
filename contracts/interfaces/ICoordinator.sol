@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.13;
 
 interface ICoordinator {
     /*================INTERFACE SCRATCH AREA=========*/
@@ -37,9 +37,11 @@ interface ICoordinator {
     ///
     /// User sends OUSD to the contract. OUSD is written under NFT ID
     ///
-    /// @param amount the amount of OUSD sent to Archimedes
     /// @param nftId the Archimedes ERC-721 token id
-    function depositCollateralUnderNFT(uint256 amount, uint256 nftId) external;
+    /// @param amount the amount of OUSD sent to Archimedes
+    /// @param sharesOwner who to send shares to
+    function depositCollateralUnderNFT(uint256 nftId, uint256 amount, address sharesOwner) external;
+
     /// @dev withdraw OUSD under NFT ID
     ///
     /// User withdraw OUSD from the contract
