@@ -1,38 +1,44 @@
 {
-  "name": "archimedes_finance",
-  "version": "1.0.0",
-  "description": "Archimedes Finance!",
-  "main": "hardhat.config.js",
-  "directories": {
-    "test": "test"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/thisisarchimedes/Archimedes_Finance.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/thisisarchimedes/Archimedes_Finance/issues"
-  },
-  "homepage": "https://github.com/thisisarchimedes/Archimedes_Finance#readme",
-  "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.0.5",
-    "@nomiclabs/hardhat-waffle": "^2.0.3",
-    "@openzeppelin/contracts": "^4.5.0",
-    "@openzeppelin/test-helpers": "^0.5.15",
-    "chai": "^4.3.6",
-    "ethereum-waffle": "^3.4.4",
-    "ethers": "^5.6.2",
-    "hardhat": "^2.9.3",
-    "prettier": "^2.6.2",
-    "prettier-plugin-solidity": "^1.0.0-beta.19"
-  },
-  "dependencies": {
-    "dotenv": "^16.0.0"
-  }
+    "name": "archimedes_finance",
+    "version": "1.0.0",
+    "description": "Archimedes Finance!",
+    "main": "hardhat.config.js",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/thisisarchimedes/Archimedes_Finance.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/thisisarchimedes/Archimedes_Finance/issues"
+    },
+    "homepage": "https://github.com/thisisarchimedes/Archimedes_Finance#readme",
+    "devDependencies": {
+        "@nomiclabs/hardhat-vyper": "^3.0.0",
+        "@nomiclabs/hardhat-etherscan": "^3.0.3",
+        "@uniswap/v2-core": "^1.0.1",
+        "@uniswap/v2-periphery": "^1.1.0-beta.0",
+        "hardhat-contract-sizer": "^2.5.1",
+        "hardhat-deploy": "^0.11.4",
+        "@nomiclabs/hardhat-ethers": "^2.0.5",
+        "@nomiclabs/hardhat-waffle": "^2.0.3",
+        "@openzeppelin/contracts": "^4.5.0",
+        "@openzeppelin/test-helpers": "^0.5.15",
+        "chai": "^4.3.6",
+        "ethereum-waffle": "^3.4.4",
+        "ethers": "^5.6.2",
+        "hardhat": "^2.9.3",
+        "prettier": "^2.6.2",
+        "prettier-plugin-solidity": "^1.0.0-beta.19"
+    },
+    "dependencies": {
+        "dotenv": "^16.0.0"
+    }
 }
