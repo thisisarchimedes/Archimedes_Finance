@@ -1,5 +1,5 @@
 const { expect, assert } = require("chai");
-const poolHelper = require("./poolHelper.js");
+const poolHelper = require("./PoolHelper.js");
 
 describe("Test Pools Rewards", () => {
     let tUSD_metapool_coin;
