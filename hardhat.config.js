@@ -28,7 +28,12 @@ module.exports = {
       forking: {
         url: alchemy_url,
         blockNumber: 14533286
-      }
+      },
+
+    localhost: {
+      url: "http://127.0.0.1:8545"
+    }
+
     }
   }
 };
