@@ -23,6 +23,7 @@ contract Coordinator is ICoordinator {
     address internal tokenOUSD;
 
     uint256 originationFeeRate = 5 ether/100;
+    uint256 internal globalCollateralRate = 90; // in percentage
 
     constructor(address _tokenLvUSD, address _tokenVaultOUSD, address _tokenCDP, address _tokenOUSD, address _treasuryAddress) {
         tokenLvUSD = _tokenLvUSD;
@@ -126,12 +127,24 @@ contract Coordinator is ICoordinator {
         return originationFeeRate;
     }
 
-     function getTreasuryAddress() public override view returns (address) {
+    function getTreasuryAddress() public override view returns (address) {
         return treasuryAddress;
     }
 
     modifier notImplementedYet() {
         revert("Method not implemented yet");
         _;
+    }
+
+    /// Method returns the allowed leverage for principle and number of cycles 
+    /// Return value does not include principle! 
+    function getAllowedLeverageForPosition(uint256 principle, uint numberOfCycles) public view returns(uint256) {
+        uint256 leverageAmount = 0;
+        uint256 cyclePrinciple = principle;
+        for (uint i =0; i < numberOfCycles; i++) {
+            cyclePrinciple = cyclePrinciple * globalCollateralRate/100;
+            leverageAmount += cyclePrinciple;
+        }
+        return leverageAmount;
     }
 }

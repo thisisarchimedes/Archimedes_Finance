@@ -3,6 +3,7 @@ const { ethers } = require("hardhat");
 const mainnetHelper = require('./MainnetHelper');
 const { ContractTestContext } = require('./ContractTestContext');
 const { MAX_UINT256 } = require("@openzeppelin/test-helpers/src/constants");
+const ether = require("@openzeppelin/test-helpers/src/ether");
 
 
 const originationFeeDefaultValue = ethers.utils.parseEther("0.05")
@@ -28,6 +29,21 @@ describe("Coordinator Test suit", function () {
         leverageEngineSigner = r.owner
 
         await mainnetHelper.helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseEther("5.0"))
+    })
+
+    describe("Calculate allowed leverage", function () {
+        it("Should return zero if no cycles", async function () {
+            expect(await coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 0)).to.equal(ethers.utils.parseEther("0"))
+        })
+        it("Should calculate allowed leverage for 2 cycles", async function () {
+            expect(await coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 2)).to.equal(ethers.utils.parseEther("171"))
+        })
+        it("Should calculate allowed leverage for 3 cycles", async function () {
+            expect(await coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 3)).to.equal(ethers.utils.parseEther("243.9"))
+        })
+        it("Should calculate allowed leverage for 5 cycles", async function () {
+            expect(await coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 5)).to.equal(ethers.utils.parseEther("368.559"))
+        })
     })
 
     it("Should have default value for treasury address", async function () {
@@ -95,8 +111,6 @@ describe("Coordinator Test suit", function () {
 
         it("Should create entry in CDP with principle", async function () {
             expect(await r.cdp.getOUSDPrinciple(nftIdFirstPosition)).to.equal(collateralAmount);
-
         })
-
     })
 })
