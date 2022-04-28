@@ -20,9 +20,9 @@ contract Coordinator is ICoordinator {
     address internal _treasuryAddress;
     address internal _tokenOUSD;
 
-    uint256 internal _originationFeeRate = 5 ether/100;
-    uint internal _globalCollateralRate = 90; // in percentage
-    uint internal _maxNumberOfCycles = 10;
+    uint256 internal _originationFeeRate = 5 ether / 100;
+    uint256 internal _globalCollateralRate = 90; // in percentage
+    uint256 internal _maxNumberOfCycles = 10;
 
     constructor(
         address tokenLvUSD,
@@ -50,12 +50,15 @@ contract Coordinator is ICoordinator {
         _treasuryAddress = newTreasuryAddress;
     }
 
-    function changeGlobalCollateralRate(uint _newGlobalCollateralRate) external override {
-        require(_newGlobalCollateralRate <= 100 && _newGlobalCollateralRate > 0, "_globalCollateralRate must be a number between 1 and 100");
+    function changeGlobalCollateralRate(uint256 _newGlobalCollateralRate) external override {
+        require(
+            _newGlobalCollateralRate <= 100 && _newGlobalCollateralRate > 0,
+            "_globalCollateralRate must be a number between 1 and 100"
+        );
         _globalCollateralRate = _newGlobalCollateralRate;
     }
 
-    function changeMaxNumberOfCycles(uint _newMaxNumberOfCycles) external override {
+    function changeMaxNumberOfCycles(uint256 _newMaxNumberOfCycles) external override {
         _maxNumberOfCycles = _newMaxNumberOfCycles;
     }
 
@@ -104,11 +107,11 @@ contract Coordinator is ICoordinator {
         return _treasuryAddress;
     }
 
-    function getGlobalCollateralRate() external view returns (uint) {
+    function getGlobalCollateralRate() external view returns (uint256) {
         return _globalCollateralRate;
     }
 
-    function getMaxNumberOfCycles() external view returns(uint) {
+    function getMaxNumberOfCycles() external view returns (uint256) {
         return _maxNumberOfCycles;
     }
 
@@ -117,15 +120,15 @@ contract Coordinator is ICoordinator {
         _;
     }
 
-    /// Method returns the allowed leverage for principle and number of cycles 
-    /// Return value does not include principle! 
+    /// Method returns the allowed leverage for principle and number of cycles
+    /// Return value does not include principle!
     /// must be public as we need to access it in contract
-    function getAllowedLeverageForPosition(uint256 principle, uint numberOfCycles) public view returns(uint256) {
+    function getAllowedLeverageForPosition(uint256 principle, uint256 numberOfCycles) public view returns (uint256) {
         require(numberOfCycles <= _maxNumberOfCycles, "Number of cycles must be lower then allowed max");
         uint256 leverageAmount = 0;
         uint256 cyclePrinciple = principle;
-        for (uint i =0; i < numberOfCycles; i++) {
-            cyclePrinciple = cyclePrinciple * _globalCollateralRate/100;
+        for (uint256 i = 0; i < numberOfCycles; i++) {
+            cyclePrinciple = (cyclePrinciple * _globalCollateralRate) / 100;
             leverageAmount += cyclePrinciple;
         }
         return leverageAmount;
