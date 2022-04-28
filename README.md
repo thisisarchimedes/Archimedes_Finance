@@ -10,4 +10,3 @@ We build in public - so here is how we do stuff in
 Common issues
 
 - "ProviderError: Must be authenticated!": related to git hub private repo not being able to be checked out. One simple fix is to clone secrets repo inside this folder to have root/secrets
-
