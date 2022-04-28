@@ -123,7 +123,6 @@ contract CDPosition {
     }
 
     modifier canDeletePosition(uint256 nftID) {
-        // console.log("CDP:canDeletePosition:CDP[nft] %s");
         require(
             _nftCDP[nftID].lvUSDBorrowed == 0,
             "Borrowed LvUSD must be zero before deleting"
