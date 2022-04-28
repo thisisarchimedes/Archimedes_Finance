@@ -51,24 +51,19 @@ describe("Arch Token test suit", function () {
                 expect(user1Balance).to.eq(totalSupply);
             });
             it("Sender can transfer zero tokens", async function () {
-                await token.transfer(
-                    user1.address,
-                    ethers.utils.parseUnits("0")
-                );
+                await token.transfer(user1.address, ethers.utils.parseUnits("0"));
                 let user1Balance = await token.balanceOf(user1.address);
                 expect(user1Balance).to.eq(ethers.utils.parseUnits("0"));
             });
             it("Sender can send to the zero address", async function () {
-                await expect(
-                    token.transfer(zeroAddress, amount1)
-                ).to.be.revertedWith("transfer to the zero address");
+                await expect(token.transfer(zeroAddress, amount1)).to.be.revertedWith("transfer to the zero address");
             });
 
             it("Should NOT be able to transfer() more than total supply", async function () {
                 let amount = expectedTotalSupply + 1;
-                await expect(
-                    token.transfer(user1.address, amount)
-                ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+                await expect(token.transfer(user1.address, amount)).to.be.revertedWith(
+                    "ERC20: transfer amount exceeds balance"
+                );
             });
 
             it("Should be able to transfer() tokens between accounts", async function () {
@@ -80,24 +75,20 @@ describe("Arch Token test suit", function () {
                 // transfer user2 1 eth
                 await token.transfer(user2.address, amount1);
                 // attempt to transfer 2 eth as user2
-                await expect(
-                    token.connect(user2).transfer(user1.address, amount2)
-                ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+                await expect(token.connect(user2).transfer(user1.address, amount2)).to.be.revertedWith(
+                    "ERC20: transfer amount exceeds balance"
+                );
             });
 
             it("Should update balances after transfer()", async function () {
-                const ownerInitialBalance = await token.balanceOf(
-                    owner.address
-                );
+                const ownerInitialBalance = await token.balanceOf(owner.address);
                 // transfer user1 1 eth
                 await token.transfer(user1.address, amount1);
                 // transfer user2 2 eth
                 await token.transfer(user2.address, amount2);
                 expect(await token.balanceOf(user1.address)).to.eq(amount1);
                 expect(await token.balanceOf(user2.address)).to.eq(amount2);
-                expect(await token.balanceOf(owner.address)).to.eq(
-                    ownerInitialBalance.sub(amount1).sub(amount2)
-                );
+                expect(await token.balanceOf(owner.address)).to.eq(ownerInitialBalance.sub(amount1).sub(amount2));
             });
         });
 
@@ -122,10 +113,7 @@ describe("Arch Token test suit", function () {
 
             it("Should approve requested amount", async function () {
                 // allowance(address owner, address spender)
-                let user1Allowance = await token.allowance(
-                    user1.address,
-                    owner.address
-                );
+                let user1Allowance = await token.allowance(user1.address, owner.address);
                 expect(user1Allowance).to.eq(amount1);
             });
 
@@ -137,9 +125,9 @@ describe("Arch Token test suit", function () {
             });
 
             it("Should revert when transferFrom() to the zeroAddress", async function () {
-                await expect(
-                    token.transferFrom(user1.address, zeroAddress, amount1)
-                ).to.be.revertedWith("transfer to the zero address");
+                await expect(token.transferFrom(user1.address, zeroAddress, amount1)).to.be.revertedWith(
+                    "transfer to the zero address"
+                );
             });
         });
         // To set unlimited, set allowance amount to: maxUint256
@@ -156,10 +144,7 @@ describe("Arch Token test suit", function () {
                 await token.transferFrom(user1.address, user2.address, amount1);
                 // get allowance amount after
                 // allowance(address owner, address spender)
-                let ownerAllowanceOnUser1 = await token.allowance(
-                    user1.address,
-                    owner.address
-                );
+                let ownerAllowanceOnUser1 = await token.allowance(user1.address, owner.address);
                 // should still be "unlimited"
                 expect(ownerAllowanceOnUser1).to.eq(maxUint256);
             });

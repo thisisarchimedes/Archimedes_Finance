@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 ///
 /// TODO: add access control and roles
 ///
-contract OUSDMockToken is ERC20("Mock OUSD", "oUSD"){
+contract OUSDMockToken is ERC20("Mock OUSD", "oUSD") {
     /// @dev Mints tokens to a recipient.
     ///
     /// This function reverts if the caller does not have the minter role.
@@ -19,5 +19,4 @@ contract OUSDMockToken is ERC20("Mock OUSD", "oUSD"){
     function mint(address recipient, uint256 amount) external {
         _mint(recipient, amount);
     }
-
 }
