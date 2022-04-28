@@ -199,7 +199,7 @@ describe("CDPosition test suit", async function () {
             // Deposit OUSD into struct
             await cdp.depositOUSDtoPosition(NFT_ID, amountInOUSDToDeposit);
             await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, nftIDMainExpectedOUSDTotal, 0, true);
-            await validateCDP(NFT_ID_SECONDARY, nftIDSecondaryPrinciple, 0, nftIDSecondaryPrinciple, 0, true);
+            await validateCDP(NFT_ID_SECONDARY, nftIDSecondaryPrinciple, 1, nftIDSecondaryPrinciple, 0, true);
         });
 
         it("Should update multiple fields in CDP struct for a specific address", async function () {
