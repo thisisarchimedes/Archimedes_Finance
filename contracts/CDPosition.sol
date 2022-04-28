@@ -10,7 +10,7 @@ import "hardhat/console.sol";
 /// @notice CDP does not emit any events. All related events will be emitted by the calling contract.
 /// @notice This contract (will be) proxy upgradable
 contract CDPosition {
-    struct cdp {
+    struct CDP {
         uint256 oUSDPrinciple; // Amount of OUSD originally deposited by user
         uint256 oUSDInterestEarned; // Total interest earned (and rebased) so far
         uint256 oUSDTotal; // Principle + OUSD acquired from selling borrowed lvUSD + Interest earned
@@ -18,9 +18,9 @@ contract CDPosition {
         bool firstCycle; // to prevent quick "in and out", we don't credit interest to a position at first the interest payment cycle
     }
 
-    uint256 internal globalCollateralRate;
+    uint256 internal _globalCollateralRate;
 
-    mapping(uint256 => cdp) internal nftCDP;
+    mapping(uint256 => CDP) internal _nftCDP;
 
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Set CDP.firstCycle = true
@@ -31,7 +31,7 @@ contract CDPosition {
         external
         nftIDMustNotExist(nftID)
     {
-        nftCDP[nftID] = cdp(oOUSDPrinciple, 0, oOUSDPrinciple, 0, true);
+        _nftCDP[nftID] = CDP(oOUSDPrinciple, 0, oOUSDPrinciple, 0, true);
     }
 
     /// @dev delete entry in CDP --if-- lvUSD borrowed balance is zero
@@ -43,7 +43,7 @@ contract CDPosition {
         canDeletePosition(nftID)
     {
         /// Set all values to default. Not way to remove key from mapping in solidity
-        delete nftCDP[nftID];
+        delete _nftCDP[nftID];
     }
 
     /// @dev update borrowed lvUSD in position. This method adds a delta to existing borrowed value
@@ -54,10 +54,10 @@ contract CDPosition {
         nftIDMustExist(nftID)
     {
         // sainty check
-        require (lvUSDAmountToBorrow + nftCDP[nftID].lvUSDBorrowed <= nftCDP[nftID].oUSDTotal,
+        require (lvUSDAmountToBorrow + _nftCDP[nftID].lvUSDBorrowed <= _nftCDP[nftID].oUSDTotal,
           "Attempt to borrow to much lvUSD"); 
 
-        nftCDP[nftID].lvUSDBorrowed += lvUSDAmountToBorrow;
+        _nftCDP[nftID].lvUSDBorrowed += lvUSDAmountToBorrow;
     }
 
     /// @dev update borrowed lvUSD in position. This method removed a delta to existing borrowed value
@@ -68,10 +68,10 @@ contract CDPosition {
         nftIDMustExist(nftID)
     {
         require(
-            nftCDP[nftID].lvUSDBorrowed >= lvUSDAmountToRepay,
+            _nftCDP[nftID].lvUSDBorrowed >= lvUSDAmountToRepay,
             "lvUSD Borrowed amount must be greater or equal than amount to repay"
         );
-        nftCDP[nftID].lvUSDBorrowed -= lvUSDAmountToRepay;
+        _nftCDP[nftID].lvUSDBorrowed -= lvUSDAmountToRepay;
     }
 
     /// @dev update deposited OUSD in position. This method adds a delta to existing deposited value
@@ -81,7 +81,7 @@ contract CDPosition {
         external
         nftIDMustExist(nftID)
     {
-        nftCDP[nftID].oUSDTotal += oUSDAmountToDeposit;
+        _nftCDP[nftID].oUSDTotal += oUSDAmountToDeposit;
     }
 
     /// @dev update deposited OUSD in position. This method removed a delta to existing deposited value
@@ -92,10 +92,10 @@ contract CDPosition {
         uint256 oUSDAmountToWithdraw
     ) external nftIDMustExist(nftID) {
         require(
-            nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw,
+            _nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw,
             "OUSD total amount must be greater or equal than amount to withdraw"
         );
-        nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
+        _nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
     }
 
     /// @dev update collateral rate
@@ -104,28 +104,27 @@ contract CDPosition {
     ///
     /// @param rate new rate to set as collateral
     function changeCollateralRate(uint256 rate) external {
-        globalCollateralRate = rate;
+        _globalCollateralRate = rate;
     }
 
     function getCollateralRate() external view returns (uint256) {
-        return globalCollateralRate;
+        return _globalCollateralRate;
     }
 
-    // Maps return default value when entry is not present. OUSD principle will always be gt 0 if nftCDP has
+    // Maps return default value when entry is not present. OUSD principle will always be gt 0 if _nftCDP has
     // a valid value in nftID
     modifier nftIDMustExist(uint256 nftID) {
-        require(nftCDP[nftID].oUSDPrinciple > 0, "NFT ID must exist");
+        require(_nftCDP[nftID].oUSDPrinciple > 0, "NFT ID must exist");
         _;
     }
     modifier nftIDMustNotExist(uint256 nftID) {
-        require(nftCDP[nftID].oUSDPrinciple == 0, "NFT ID must not exist");
+        require(_nftCDP[nftID].oUSDPrinciple == 0, "NFT ID must not exist");
         _;
     }
 
     modifier canDeletePosition(uint256 nftID) {
-        // console.log("CDP:canDeletePosition:cdp[nft] %s");
         require(
-            nftCDP[nftID].lvUSDBorrowed == 0,
+            _nftCDP[nftID].lvUSDBorrowed == 0,
             "Borrowed LvUSD must be zero before deleting"
         );
         _;
@@ -138,7 +137,7 @@ contract CDPosition {
         nftIDMustExist(nftID)
         returns (uint256)
     {
-        return nftCDP[nftID].oUSDPrinciple;
+        return _nftCDP[nftID].oUSDPrinciple;
     }
 
     function getOUSDInterestEarned(uint256 nftID)
@@ -147,7 +146,7 @@ contract CDPosition {
         nftIDMustExist(nftID)
         returns (uint256)
     {
-        return nftCDP[nftID].oUSDInterestEarned;
+        return _nftCDP[nftID].oUSDInterestEarned;
     }
 
     function getOUSDTotal(uint256 nftID)
@@ -156,7 +155,7 @@ contract CDPosition {
         nftIDMustExist(nftID)
         returns (uint256)
     {
-        return nftCDP[nftID].oUSDTotal;
+        return _nftCDP[nftID].oUSDTotal;
     }
 
     function getLvUSDBorrowed(uint256 nftID)
@@ -165,7 +164,7 @@ contract CDPosition {
         nftIDMustExist(nftID)
         returns (uint256)
     {
-        return nftCDP[nftID].lvUSDBorrowed;
+        return _nftCDP[nftID].lvUSDBorrowed;
     }
 
     function getFirstCycle(uint256 nftID)
@@ -174,6 +173,6 @@ contract CDPosition {
         nftIDMustExist(nftID)
         returns (bool)
     {
-        return nftCDP[nftID].firstCycle;
+        return _nftCDP[nftID].firstCycle;
     }
 }
