@@ -20,15 +20,11 @@ describe("ContractTestContext", function () {
             });
 
             it("coordinator has a LvUSDToken address", async function () {
-                expect(await coordinator.addressOfLvUSDToken()).to.equal(
-                    contractTestContext.lvUSD.address
-                );
+                expect(await coordinator.addressOfLvUSDToken()).to.equal(contractTestContext.lvUSD.address);
             });
 
             it("coordinator has a OUSD contract address", async function () {
-                expect(await coordinator.addressOfVaultOUSDToken()).to.equal(
-                    contractTestContext.vault.address
-                );
+                expect(await coordinator.addressOfVaultOUSDToken()).to.equal(contractTestContext.vault.address);
             });
         });
     });

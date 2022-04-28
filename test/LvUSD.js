@@ -44,9 +44,9 @@ describe("LvUSD contract test suit", function () {
 
     it("Transaction should revert if sender doesn’t have enough tokens", async function () {
         // Try to send 1 token from addr1 (0 tokens) to owner (1000000 tokens).
-        await expect(
-            token.connect(addr1).transfer(owner.address, 1)
-        ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+        await expect(token.connect(addr1).transfer(owner.address, 1)).to.be.revertedWith(
+            "ERC20: transfer amount exceeds balance"
+        );
     });
 
     it("Balance should remain unchanged if transfer is reverted due to insufficient balance", async function () {
@@ -58,9 +58,7 @@ describe("LvUSD contract test suit", function () {
         } catch {}
 
         // Owner balance shouldn't have changed.
-        expect(await token.balanceOf(owner.address)).to.equal(
-            initialOwnerBalance
-        );
+        expect(await token.balanceOf(owner.address)).to.equal(initialOwnerBalance);
     });
 
     describe("Should update balances after transfers", async function () {

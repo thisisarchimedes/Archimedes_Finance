@@ -1,10 +1,4 @@
-const {
-    BigNumber,
-    FixedFormat,
-    FixedNumber,
-    formatFixed,
-    parseFixed,
-} = require("@ethersproject/bignumber");
+const { BigNumber, FixedFormat, FixedNumber, formatFixed, parseFixed } = require("@ethersproject/bignumber");
 const { expect } = require("chai");
 const { BN } = require("@openzeppelin/test-helpers");
 const {
@@ -20,8 +14,7 @@ const {
 
 // grab the private api key from the private repo
 require("dotenv").config({ path: "secrets/alchemy.env" });
-let alchemy_url =
-    "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
+let alchemy_url = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
 
 /* CONTRACT ADDRESSES ON MAINNET */
 const addressCurveTripool2 = "0xd51a44d3fae010294c616388b506acda1bfaae46";
@@ -72,11 +65,7 @@ async function helperSwapETHWithUSDT(destUser, ethAmountToSwap) {
     // loading USDT contract
     const usdtToken = new ethers.Contract(addressUSDT, abiUSDTToken, destUser);
     // loading Tripool2 contract
-    const triPool = new ethers.Contract(
-        addressCurveTripool2,
-        abiCurveTripool2,
-        destUser
-    );
+    const triPool = new ethers.Contract(addressCurveTripool2, abiCurveTripool2, destUser);
 
     // Verify we got the correct TriPool connected (verifying USDT and WETH addresses)
     ret = await triPool.coins(indexTripoolUSDT);
@@ -111,12 +100,7 @@ async function helperSwapETHWithUSDT(destUser, ethAmountToSwap) {
     // j: Index value of the token to receive.
     // dx: The amount of i being exchanged.
     // min_dy: The minimum amount of j to receive. If the swap would result in less, the transaction will revert.
-    await triPool.exchange(
-        indexTripoolWETH9,
-        indexTripoolUSDT,
-        ethAmountToSwap,
-        1
-    );
+    await triPool.exchange(indexTripoolWETH9, indexTripoolUSDT, ethAmountToSwap, 1);
 
     // read balance again and make sure it increased
     expect(await usdtToken.balanceOf(destUser.address)).to.gt(usdtBalance);
@@ -139,11 +123,7 @@ async function helperSwapETHWith3CRV(destUser, ethAmountToSwap) {
     // loading 3CRV token contract
     const token3CRV = new ethers.Contract(address3CRV, abi3CRVToken, destUser);
     // loading 3Pool pool contract
-    const contractCurve3Pool = new ethers.Contract(
-        addressCurve3Pool,
-        abiCurve3Pool,
-        destUser
-    );
+    const contractCurve3Pool = new ethers.Contract(addressCurve3Pool, abiCurve3Pool, destUser);
 
     ////////////// 1. ETH->USDT on Curve /////////////////////////
 
@@ -179,11 +159,7 @@ async function helperSwapETHWithOUSD(destUser, ethAmountToSwap) {
     // loading OUSD token contract
     const tokenOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, destUser);
     // loading OUSD Swapper contract
-    const contractCurveOUSDPool = new ethers.Contract(
-        addressCurveOUSDPool,
-        abiCurveOUSDPool,
-        destUser
-    );
+    const contractCurveOUSDPool = new ethers.Contract(addressCurveOUSDPool, abiCurveOUSDPool, destUser);
 
     ////////////// 1. ETH->USDT on Curve /////////////////////////
 
@@ -198,12 +174,7 @@ async function helperSwapETHWithOUSD(destUser, ethAmountToSwap) {
     balanceOUSD = await tokenOUSD.balanceOf(destUser.address);
 
     // Exchange USDT->OUSD
-    await contractCurveOUSDPool.exchange(
-        indexCurveOUSD3CRV,
-        indexCurveOUSDOUSD,
-        balance3CRV,
-        1
-    );
+    await contractCurveOUSDPool.exchange(indexCurveOUSD3CRV, indexCurveOUSDOUSD, balance3CRV, 1);
 
     // read balance again and make sure it increased
     expect(await tokenOUSD.balanceOf(destUser.address)).to.gt(balanceOUSD);

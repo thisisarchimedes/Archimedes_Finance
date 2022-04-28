@@ -1,12 +1,6 @@
 var helper = require("./MainnetHelper");
 
-const {
-    BigNumber,
-    FixedFormat,
-    FixedNumber,
-    formatFixed,
-    parseFixed,
-} = require("@ethersproject/bignumber");
+const { BigNumber, FixedFormat, FixedNumber, formatFixed, parseFixed } = require("@ethersproject/bignumber");
 const { expect } = require("chai");
 const {
     CURVE_FACTORY_ADDRESS,
@@ -38,10 +32,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
     });
 
     it("Should do a basic ETH<>OUSD swap", async function () {
-        await helper.helperSwapETHWithOUSD(
-            user,
-            ethers.utils.parseEther("3.0")
-        );
+        await helper.helperSwapETHWithOUSD(user, ethers.utils.parseEther("3.0"));
     });
 
     it("Should deploy lvUSD ERC-20 contract", async function () {
@@ -67,11 +58,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
 
     // Deploy using the Meta-Pool Factory: https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry
     it("Should deploy lvUSD/3CRV pool", async function () {
-        const curveFactory = new ethers.Contract(
-            helper.addressCurveFactory,
-            helper.abiCurveFactory,
-            signer
-        );
+        const curveFactory = new ethers.Contract(helper.addressCurveFactory, helper.abiCurveFactory, signer);
 
         // Factory.deploy_metapool(_base_pool: address, _name: String[32], _symbol: String[10], _coin: address, _A: uint256, _fee: uint256) → address: nonpayable
         // https://curve.readthedocs.io/factory-deployer.html#deploying-a-pool
@@ -87,10 +74,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
         // now let's see if we can find this pool
         // https://curve.readthedocs.io/factory-deployer.html#Factory.find_pool_for_coins
         // we deployed a 3CRV/lvUSD pool - so we ask Curve Factory to look for pools that can deal with USDT/lvUSD
-        contract3CRVlvUSDPool = await curveFactory.find_pool_for_coins(
-            helper.addressUSDT,
-            contractlvUSDToken.address
-        );
+        contract3CRVlvUSDPool = await curveFactory.find_pool_for_coins(helper.addressUSDT, contractlvUSDToken.address);
         expect(contract3CRVlvUSDPool).to.not.equal(0);
     });
 

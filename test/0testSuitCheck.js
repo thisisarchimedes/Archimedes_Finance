@@ -11,11 +11,7 @@ describe("Checking test suit state before running unit tests", function () {
 
     it("Ensure mainnet fork is running", async function () {
         // loading USDT contract
-        const usdtToken = new ethers.Contract(
-            helper.addressUSDT,
-            helper.abiUSDTToken,
-            signer
-        );
+        const usdtToken = new ethers.Contract(helper.addressUSDT, helper.abiUSDTToken, signer);
         expect(usdtToken.address).to.equal(helper.addressUSDT);
 
         // check decimals (USDT has 6 decimals)

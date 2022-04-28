@@ -4,11 +4,11 @@
     "useTabs": false,
     "semi": true,
     "singleQuote": false,
+    "printWidth": 120,
     "overrides": [
         {
             "files": "*.sol",
             "options": {
-                "printWidth": 120,
                 "bracketSpacing": false,
                 "explicitTypes": "always"
             }

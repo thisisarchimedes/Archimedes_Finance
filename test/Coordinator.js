@@ -26,10 +26,7 @@ describe("Coordinator Test suit", function () {
         addr2 = r.addr2;
         leverageEngineSigner = r.owner;
 
-        await mainnetHelper.helperSwapETHWithOUSD(
-            endUserSigner,
-            ethers.utils.parseEther("5.0")
-        );
+        await mainnetHelper.helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseEther("5.0"));
     });
 
     it("Should have default value for treasury address", async function () {
@@ -44,15 +41,13 @@ describe("Coordinator Test suit", function () {
             await coordinator.changeTreasuryAddress(newTreasurySigner.address);
         });
         it("should have updated treasury address", async function () {
-            let returnedTreasuryAddress =
-                await coordinator.getTreasuryAddress();
+            let returnedTreasuryAddress = await coordinator.getTreasuryAddress();
             expect(returnedTreasuryAddress).to.equal(newTreasurySigner.address);
         });
     });
 
     it("Should have default origination fee value", async function () {
-        let defaultOriginationFeeRate =
-            await coordinator.getOriginationFeeRate();
+        let defaultOriginationFeeRate = await coordinator.getOriginationFeeRate();
         expect(defaultOriginationFeeRate).to.equal(originationFeeDefaultValue);
     });
 
@@ -64,8 +59,7 @@ describe("Coordinator Test suit", function () {
             await coordinator.changeOriginationFeeRate(newOriginationFeeRate);
         });
         it("should have updated treasury address", async function () {
-            let returnedOriginationFee =
-                await coordinator.getOriginationFeeRate();
+            let returnedOriginationFee = await coordinator.getOriginationFeeRate();
             expect(returnedOriginationFee).to.equal(newOriginationFeeRate);
         });
     });
@@ -77,45 +71,30 @@ describe("Coordinator Test suit", function () {
         before(async function () {
             sharesOwnerAddress = coordinator.address; // shares will be given to coordinator
             // transfer OUSD from user to coordinator address (this will happen in leverage engine in full Archimedes flow)
-            await r.externalOUSD
-                .connect(endUserSigner)
-                .transfer(coordinator.address, collateralAmount);
-            expect(
-                await r.externalOUSD.balanceOf(coordinator.address)
-            ).to.equal(collateralAmount);
+            await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, collateralAmount);
+            expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(collateralAmount);
 
-            await coordinator.depositCollateralUnderNFT(
-                nftIdFirstPosition,
-                collateralAmount,
-                sharesOwnerAddress,
-                { gasLimit: 3000000 }
-            );
+            await coordinator.depositCollateralUnderNFT(nftIdFirstPosition, collateralAmount, sharesOwnerAddress, {
+                gasLimit: 3000000,
+            });
         });
 
         it("Should have transferred collateral out of coordinator address", async function () {
-            expect(
-                await r.externalOUSD.balanceOf(coordinator.address)
-            ).to.equal(0);
+            expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(0);
         });
         it("Should have increased vault balance on OUSD", async function () {
-            expect(await r.externalOUSD.balanceOf(r.vault.address)).to.equal(
-                collateralAmount
-            );
+            expect(await r.externalOUSD.balanceOf(r.vault.address)).to.equal(collateralAmount);
         });
         it("Should have increased OUSD in the vault", async function () {
             expect(await r.vault.totalAssets()).to.equal(collateralAmount);
         });
 
         it("Should have given shares to shares owner", async function () {
-            expect(await r.vault.maxRedeem(sharesOwnerAddress)).to.equal(
-                collateralAmount
-            );
+            expect(await r.vault.maxRedeem(sharesOwnerAddress)).to.equal(collateralAmount);
         });
 
         it("Should create entry in CDP with principle", async function () {
-            expect(await r.cdp.getOUSDPrinciple(nftIdFirstPosition)).to.equal(
-                collateralAmount
-            );
+            expect(await r.cdp.getOUSDPrinciple(nftIdFirstPosition)).to.equal(collateralAmount);
         });
     });
 });
