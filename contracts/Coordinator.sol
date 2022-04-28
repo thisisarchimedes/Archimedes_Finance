@@ -14,38 +14,38 @@ import "hardhat/console.sol";
 /// It manages keeping tracks of fund in vault, updating CDP as needed and transferring lvUSD inside the system
 /// It is controlled (and called) by the leverage engine
 contract Coordinator is ICoordinator {
-    address internal tokenLvUSD;
-    address internal tokenVaultOUSD;
-    address internal tokenCDP;
-    address internal treasuryAddress;
-    address internal tokenOUSD;
+    address internal _tokenLvUSD;
+    address internal _tokenVaultOUSD;
+    address internal _tokenCDP;
+    address internal _treasuryAddress;
+    address internal _tokenOUSD;
 
-    uint256 originationFeeRate = 5 ether / 100;
+    uint256 _originationFeeRate = 5 ether / 100;
 
     constructor(
-        address _tokenLvUSD,
-        address _tokenVaultOUSD,
-        address _tokenCDP,
-        address _tokenOUSD,
-        address _treasuryAddress
+        address tokenLvUSD,
+        address tokenVaultOUSD,
+        address tokenCDP,
+        address tokenOUSD,
+        address treasuryAddress
     ) {
-        tokenLvUSD = _tokenLvUSD;
-        tokenVaultOUSD = _tokenVaultOUSD;
-        tokenCDP = _tokenCDP;
-        treasuryAddress = _treasuryAddress;
-        tokenOUSD = _tokenOUSD;
+        _tokenLvUSD = tokenLvUSD;
+        _tokenVaultOUSD = tokenVaultOUSD;
+        _tokenCDP = tokenCDP;
+        _treasuryAddress = treasuryAddress;
+        _tokenOUSD = tokenOUSD;
 
         // approve VaultOUSD address to spend on behalf of coordinator
-        IERC20(tokenOUSD).approve(tokenVaultOUSD, type(uint256).max);
+        IERC20(_tokenOUSD).approve(_tokenVaultOUSD, type(uint256).max);
     }
 
     /* Privileged functions: Governor */
     function changeOriginationFeeRate(uint256 newFeeRate) external override {
-        originationFeeRate = newFeeRate;
+        _originationFeeRate = newFeeRate;
     }
 
     function changeTreasuryAddress(address newTreasuryAddress) external override {
-        treasuryAddress = newTreasuryAddress;
+        _treasuryAddress = newTreasuryAddress;
     }
 
     /* Privileged functions: Executive */
@@ -56,9 +56,9 @@ contract Coordinator is ICoordinator {
         address sharesOwner
     ) external override {
         /// Transfer collateral to vault, mint shares to shares owner
-        VaultOUSD(tokenVaultOUSD).deposit(amount, sharesOwner);
+        VaultOUSD(_tokenVaultOUSD).deposit(amount, sharesOwner);
         // create CDP position with collateral
-        CDPosition(tokenCDP).createPosition(nftId, amount);
+        CDPosition(_tokenCDP).createPosition(nftId, amount);
     }
 
     function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
@@ -78,19 +78,19 @@ contract Coordinator is ICoordinator {
     /* Privileged functions: Anyone */
 
     function addressOfLvUSDToken() external view override returns (address) {
-        return tokenLvUSD;
+        return _tokenLvUSD;
     }
 
     function addressOfVaultOUSDToken() external view override returns (address) {
-        return tokenVaultOUSD;
+        return _tokenVaultOUSD;
     }
 
     function getOriginationFeeRate() external view override returns (uint256) {
-        return originationFeeRate;
+        return _originationFeeRate;
     }
 
     function getTreasuryAddress() public view override returns (address) {
-        return treasuryAddress;
+        return _treasuryAddress;
     }
 
     modifier notImplementedYet() {
