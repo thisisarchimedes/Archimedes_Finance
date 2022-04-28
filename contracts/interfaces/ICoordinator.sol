@@ -27,6 +27,14 @@ interface ICoordinator {
     /// @param newTreasuryAddress new EOA address of treasury
     function changeTreasuryAddress(address newTreasuryAddress) external;
     
+    /// @dev update globalCollateralRate
+    /// @param newGlobalCollateralRate value to set globalCollateralRate
+    function changeGlobalCollateralRate(uint newGlobalCollateralRate) external;
+
+    /// @dev update maxNumberOfCycles
+    /// @param newMaxNumberOfCycles value to set maxNumberOfCycles
+    function changeMaxNumberOfCycles(uint newMaxNumberOfCycles) external;
+
     /// @dev get treasury address.
     ///
     function getTreasuryAddress() external view returns (address);

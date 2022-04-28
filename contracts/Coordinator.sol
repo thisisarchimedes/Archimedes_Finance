@@ -23,7 +23,9 @@ contract Coordinator is ICoordinator {
     address internal tokenOUSD;
 
     uint256 originationFeeRate = 5 ether/100;
-    uint256 internal globalCollateralRate = 90; // in percentage
+    // TODO: when changing globalCollateralRate, check thats its between 0-100
+    uint internal globalCollateralRate = 90; // in percentage
+    uint internal maxNumberOfCycles = 10;
 
     constructor(address _tokenLvUSD, address _tokenVaultOUSD, address _tokenCDP, address _tokenOUSD, address _treasuryAddress) {
         tokenLvUSD = _tokenLvUSD;
@@ -50,6 +52,15 @@ contract Coordinator is ICoordinator {
         override
     {
         treasuryAddress = newTreasuryAddress;
+    }
+
+    function changeGlobalCollateralRate(uint newGlobalCollateralRate) external {
+        require(newGlobalCollateralRate <= 100 && newGlobalCollateralRate > 0, "globalCollateralRate must be a number between 1 and 100");
+        globalCollateralRate = newGlobalCollateralRate;
+    }
+
+    function changeMaxNumberOfCycles(uint newMaxNumberOfCycles) external {
+        maxNumberOfCycles = newMaxNumberOfCycles;
     }
 
     /* Privileged functions: Executive */
@@ -127,8 +138,16 @@ contract Coordinator is ICoordinator {
         return originationFeeRate;
     }
 
-    function getTreasuryAddress() public override view returns (address) {
+    function getTreasuryAddress() external override view returns (address) {
         return treasuryAddress;
+    }
+
+    function getGlobalCollateralRate() external view returns (uint) {
+        return globalCollateralRate;
+    }
+
+    function getMaxNumberOfCycles() external view returns(uint) {
+        return maxNumberOfCycles;
     }
 
     modifier notImplementedYet() {
@@ -138,7 +157,9 @@ contract Coordinator is ICoordinator {
 
     /// Method returns the allowed leverage for principle and number of cycles 
     /// Return value does not include principle! 
+    /// must be public as we need to access it in contract
     function getAllowedLeverageForPosition(uint256 principle, uint numberOfCycles) public view returns(uint256) {
+        require(numberOfCycles <= maxNumberOfCycles, "Number of cycles must be lower then allowed max");
         uint256 leverageAmount = 0;
         uint256 cyclePrinciple = principle;
         for (uint i =0; i < numberOfCycles; i++) {
