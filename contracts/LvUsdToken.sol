@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 ///
 contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), ReentrancyGuard {
     /// @dev Sets the address of the current minter contract
-    /// Timelocked function (set cadidate and change owner after 17,280 blocks ~3 days)
+    /// Timelocked function (set candidate and change owner after 17,280 blocks ~3 days)
     /// Emits MinterSet
     ///
     /// @param accounts the accounts to set.
@@ -29,7 +29,7 @@ contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), ReentrancyGuard {
     }
 
     /// @dev Sets the address of the current minter contract
-    /// Timelocked function (set cadidate and change owner after 17,280 blocks ~3 days)
+    /// Timelocked function (set candidate and change owner after 17,280 blocks ~3 days)
     /// Emits MinterSet
     ///
     /// @param accounts the accounts to set.
