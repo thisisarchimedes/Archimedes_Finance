@@ -1,8 +1,8 @@
-require("@nomiclabs/hardhat-etherscan");
+// require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
-require("hardhat-contract-sizer");
-require("hardhat-deploy");
-require("@nomiclabs/hardhat-ethers");
+// require("hardhat-contract-sizer");
+// require("hardhat-deploy");
+// require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-vyper");
 require("@tenderly/hardhat-tenderly");
 
