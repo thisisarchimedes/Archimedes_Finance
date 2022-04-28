@@ -24,7 +24,7 @@ contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), ReentrancyGuard {
     ///
     /// @param recipient the account to mint tokens to.
     /// @param amount    the amount of tokens to mint.
-    function mint(address recipient, uint256 amount) nonReentrant external {
+    function mint(address recipient, uint256 amount) external nonReentrant {
         _mint(recipient, amount);
     }
 
@@ -33,7 +33,7 @@ contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), ReentrancyGuard {
     /// Emits MinterSet
     ///
     /// @param accounts the accounts to set.
-    function setMinter(address[] calldata accounts) nonReentrant external {
+    function setMinter(address[] calldata accounts) external nonReentrant {
         _setMinter(accounts);
     }
 }

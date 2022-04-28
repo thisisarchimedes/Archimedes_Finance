@@ -27,21 +27,14 @@ contract CDPosition {
     /// Update both principle and total with OUSDPrinciple
     /// @param nftID newly minted NFT
     /// @param oOUSDPrinciple initial OUSD investment (ie position principle)
-    function createPosition(uint256 nftID, uint256 oOUSDPrinciple)
-        external
-        nftIDMustNotExist(nftID)
-    {
+    function createPosition(uint256 nftID, uint256 oOUSDPrinciple) external nftIDMustNotExist(nftID) {
         _nftCDP[nftID] = CDP(oOUSDPrinciple, 0, oOUSDPrinciple, 0, true);
     }
 
     /// @dev delete entry in CDP --if-- lvUSD borrowed balance is zero
     ///
     /// @param nftID entry address to delete
-    function deletePosition(uint256 nftID)
-        external
-        nftIDMustExist(nftID)
-        canDeletePosition(nftID)
-    {
+    function deletePosition(uint256 nftID) external nftIDMustExist(nftID) canDeletePosition(nftID) {
         /// Set all values to default. Not way to remove key from mapping in solidity
         delete _nftCDP[nftID];
     }
@@ -49,13 +42,12 @@ contract CDPosition {
     /// @dev update borrowed lvUSD in position. This method adds a delta to existing borrowed value
     /// @param nftID NFT position to update
     /// @param lvUSDAmountToBorrow amount to add to position's existing borrowed lvUSD sum
-    function borrowLvUSDFromPosition(uint256 nftID, uint256 lvUSDAmountToBorrow)
-        external
-        nftIDMustExist(nftID)
-    {
+    function borrowLvUSDFromPosition(uint256 nftID, uint256 lvUSDAmountToBorrow) external nftIDMustExist(nftID) {
         // sainty check
-        require (lvUSDAmountToBorrow + _nftCDP[nftID].lvUSDBorrowed <= _nftCDP[nftID].oUSDTotal,
-          "Attempt to borrow to much lvUSD"); 
+        require(
+            lvUSDAmountToBorrow + _nftCDP[nftID].lvUSDBorrowed <= _nftCDP[nftID].oUSDTotal,
+            "Attempt to borrow to much lvUSD"
+        );
 
         _nftCDP[nftID].lvUSDBorrowed += lvUSDAmountToBorrow;
     }
@@ -63,10 +55,7 @@ contract CDPosition {
     /// @dev update borrowed lvUSD in position. This method removed a delta to existing borrowed value
     /// @param nftID NFT position to update
     /// @param lvUSDAmountToRepay amount to remove fom position's existing borrowed lvUSD sum
-    function repayLvUSDToPosition(uint256 nftID, uint256 lvUSDAmountToRepay)
-        external
-        nftIDMustExist(nftID)
-    {
+    function repayLvUSDToPosition(uint256 nftID, uint256 lvUSDAmountToRepay) external nftIDMustExist(nftID) {
         require(
             _nftCDP[nftID].lvUSDBorrowed >= lvUSDAmountToRepay,
             "lvUSD Borrowed amount must be greater or equal than amount to repay"
@@ -77,20 +66,14 @@ contract CDPosition {
     /// @dev update deposited OUSD in position. This method adds a delta to existing deposited value
     /// @param nftID NFT position to update
     /// @param oUSDAmountToDeposit amount to add to position's existing deposited sum
-    function depositOUSDtoPosition(uint256 nftID, uint256 oUSDAmountToDeposit)
-        external
-        nftIDMustExist(nftID)
-    {
+    function depositOUSDtoPosition(uint256 nftID, uint256 oUSDAmountToDeposit) external nftIDMustExist(nftID) {
         _nftCDP[nftID].oUSDTotal += oUSDAmountToDeposit;
     }
 
     /// @dev update deposited OUSD in position. This method removed a delta to existing deposited value
     /// @param nftID NFT position to update
     /// @param oUSDAmountToWithdraw amount to remove to position's existing deposited sum
-    function withdrawOUSDFromPosition(
-        uint256 nftID,
-        uint256 oUSDAmountToWithdraw
-    ) external nftIDMustExist(nftID) {
+    function withdrawOUSDFromPosition(uint256 nftID, uint256 oUSDAmountToWithdraw) external nftIDMustExist(nftID) {
         require(
             _nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw,
             "OUSD total amount must be greater or equal than amount to withdraw"
@@ -123,56 +106,28 @@ contract CDPosition {
     }
 
     modifier canDeletePosition(uint256 nftID) {
-        require(
-            _nftCDP[nftID].lvUSDBorrowed == 0,
-            "Borrowed LvUSD must be zero before deleting"
-        );
+        require(_nftCDP[nftID].lvUSDBorrowed == 0, "Borrowed LvUSD must be zero before deleting");
         _;
     }
 
     // * CDP Getters *//
-    function getOUSDPrinciple(uint256 nftID)
-        external
-        view
-        nftIDMustExist(nftID)
-        returns (uint256)
-    {
+    function getOUSDPrinciple(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
         return _nftCDP[nftID].oUSDPrinciple;
     }
 
-    function getOUSDInterestEarned(uint256 nftID)
-        external
-        view
-        nftIDMustExist(nftID)
-        returns (uint256)
-    {
+    function getOUSDInterestEarned(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
         return _nftCDP[nftID].oUSDInterestEarned;
     }
 
-    function getOUSDTotal(uint256 nftID)
-        external
-        view
-        nftIDMustExist(nftID)
-        returns (uint256)
-    {
+    function getOUSDTotal(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
         return _nftCDP[nftID].oUSDTotal;
     }
 
-    function getLvUSDBorrowed(uint256 nftID)
-        external
-        view
-        nftIDMustExist(nftID)
-        returns (uint256)
-    {
+    function getLvUSDBorrowed(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
         return _nftCDP[nftID].lvUSDBorrowed;
     }
 
-    function getFirstCycle(uint256 nftID)
-        external
-        view
-        nftIDMustExist(nftID)
-        returns (bool)
-    {
+    function getFirstCycle(uint256 nftID) external view nftIDMustExist(nftID) returns (bool) {
         return _nftCDP[nftID].firstCycle;
     }
 }
