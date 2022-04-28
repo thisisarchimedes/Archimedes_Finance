@@ -50,13 +50,13 @@ contract Coordinator is ICoordinator {
         _treasuryAddress = newTreasuryAddress;
     }
 
-    function change_GlobalCollateralRate(uint new_GlobalCollateralRate) external {
-        require(new_GlobalCollateralRate <= 100 && new_GlobalCollateralRate > 0, "_globalCollateralRate must be a number between 1 and 100");
-        _globalCollateralRate = new_GlobalCollateralRate;
+    function changeGlobalCollateralRate(uint _newGlobalCollateralRate) external override {
+        require(_newGlobalCollateralRate <= 100 && _newGlobalCollateralRate > 0, "_globalCollateralRate must be a number between 1 and 100");
+        _globalCollateralRate = _newGlobalCollateralRate;
     }
 
-    function change_MaxNumberOfCycles(uint new_MaxNumberOfCycles) external {
-        _maxNumberOfCycles = new_MaxNumberOfCycles;
+    function changeMaxNumberOfCycles(uint _newMaxNumberOfCycles) external override {
+        _maxNumberOfCycles = _newMaxNumberOfCycles;
     }
 
     /* Privileged functions: Executive */
@@ -104,11 +104,11 @@ contract Coordinator is ICoordinator {
         return _treasuryAddress;
     }
 
-    function get_GlobalCollateralRate() external view returns (uint) {
+    function getGlobalCollateralRate() external view returns (uint) {
         return _globalCollateralRate;
     }
 
-    function get_MaxNumberOfCycles() external view returns(uint) {
+    function getMaxNumberOfCycles() external view returns(uint) {
         return _maxNumberOfCycles;
     }
 
