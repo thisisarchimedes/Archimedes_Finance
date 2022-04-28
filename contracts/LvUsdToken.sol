@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 ///
 /// TODO: add access control and roles
 ///
-contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD") {
+contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), ReentrancyGuard {
     /// @dev Sets the address of the current minter contract
     /// Timelocked function (set cadidate and change owner after 17,280 blocks ~3 days)
     /// Emits MinterSet
@@ -24,7 +24,7 @@ contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD") {
     ///
     /// @param recipient the account to mint tokens to.
     /// @param amount    the amount of tokens to mint.
-    function mint(address recipient, uint256 amount) external nonReentrant {
+    function mint(address recipient, uint256 amount) nonReentrant external {
         _mint(recipient, amount);
     }
 
@@ -33,7 +33,7 @@ contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD") {
     /// Emits MinterSet
     ///
     /// @param accounts the accounts to set.
-    function setMinter(address[] calldata accounts) external nonReentrant {
+    function setMinter(address[] calldata accounts) nonReentrant external {
         _setMinter(accounts);
     }
 }
