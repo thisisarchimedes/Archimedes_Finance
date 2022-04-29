@@ -13,6 +13,7 @@ class ContractTestContext {
     cdp;
     vault;
     lvUSD;
+    exchanger;
 
     // External contracts
     externalOUSD;
@@ -39,6 +40,9 @@ class ContractTestContext {
             this.externalOUSD.address,
             this.treasurySigner.address
         );
+
+        let contractExchanger = await ethers.getContractFactory("Exchanger");
+        this.exchanger = await contractExchanger.deploy();
     }
 }
 
