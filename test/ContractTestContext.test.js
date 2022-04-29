@@ -1,8 +1,8 @@
-const { expect } = require("chai");
-const mainnetHelper = require("./MainnetHelper");
-const { ContractTestContext } = require("./ContractTestContext");
+const { expect } = require('chai');
+const mainnetHelper = require('./MainnetHelper');
+const { ContractTestContext } = require('./ContractTestContext');
 
-describe("ContractTestContext", function () {
+describe('ContractTestContext', function () {
     let contractTestContext;
 
     before(async function () {
@@ -11,19 +11,19 @@ describe("ContractTestContext", function () {
         await contractTestContext.setup();
     });
 
-    describe("When context is initialized", () => {
-        describe("Coordinator will be initialized", async function () {
+    describe('When context is initialized', () => {
+        describe('Coordinator will be initialized', async function () {
             let coordinator;
 
             beforeEach(() => {
                 coordinator = contractTestContext.coordinator;
             });
 
-            it("coordinator has a LvUSDToken address", async function () {
+            it('coordinator has a LvUSDToken address', async function () {
                 expect(await coordinator.addressOfLvUSDToken()).to.equal(contractTestContext.lvUSD.address);
             });
 
-            it("coordinator has a OUSD contract address", async function () {
+            it('coordinator has a OUSD contract address', async function () {
                 expect(await coordinator.addressOfVaultOUSDToken()).to.equal(contractTestContext.vault.address);
             });
         });
