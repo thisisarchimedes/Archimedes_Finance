@@ -75,17 +75,19 @@ contract Coordinator is ICoordinator {
         // create CDP position with collateral
         // TODO : !!!!!! update shares allocation to position !!!!!!!
         CDPosition(_tokenCDP).createPosition(nftId, amount);
-        
     }
 
     function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
 
-    function borrowUnderNFT(uint256 _nftId, uint256 _amount ) external override {
+    function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override {
         IERC20(_tokenLvUSD).transfer(_tokenVaultOUSD, _amount);
         CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amount);
     }
 
-    function repayUnderNFT(uint256 _amount, uint256 _nftId) external override notImplementedYet {}
+    function repayUnderNFT(uint256 _nftId, uint256 _amount) external override {
+        IERC20(_tokenLvUSD).transferFrom(address(this), _tokenVaultOUSD, _amount);
+        CDPosition(_tokenCDP).repayLvUSDToPosition(_nftId, _amount);
+    }
 
     function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
 
