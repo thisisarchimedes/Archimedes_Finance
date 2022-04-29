@@ -17,7 +17,7 @@ class ContractTestContext {
     // External contracts
     externalOUSD;
 
-    async setup() {
+    async setup () {
         [this.owner, this.addr1, this.addr2, this.treasurySigner] = await ethers.getSigners();
 
         const contractCDP = await ethers.getContractFactory("CDPosition");
@@ -35,7 +35,7 @@ class ContractTestContext {
             this.vault.address,
             this.cdp.address,
             this.externalOUSD.address,
-            this.treasurySigner.address
+            this.treasurySigner.address,
         );
     }
 }

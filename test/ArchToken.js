@@ -63,7 +63,7 @@ describe("Arch Token test suit", function () {
             it("Should NOT be able to transfer() more than total supply", async function () {
                 const amount = expectedTotalSupply + 1;
                 await expect(token.transfer(user1.address, amount)).to.be.revertedWith(
-                    "ERC20: transfer amount exceeds balance"
+                    "ERC20: transfer amount exceeds balance",
                 );
             });
 
@@ -77,7 +77,7 @@ describe("Arch Token test suit", function () {
                 await token.transfer(user2.address, amount1);
                 // attempt to transfer 2 eth as user2
                 await expect(token.connect(user2).transfer(user1.address, amount2)).to.be.revertedWith(
-                    "ERC20: transfer amount exceeds balance"
+                    "ERC20: transfer amount exceeds balance",
                 );
             });
 
@@ -108,7 +108,7 @@ describe("Arch Token test suit", function () {
 
                 expect(
                     // allowance(address owner, address spender)
-                    await token.allowance(user1.address, owner.address)
+                    await token.allowance(user1.address, owner.address),
                 ).to.eq(amount2);
             });
 
@@ -121,13 +121,13 @@ describe("Arch Token test suit", function () {
             it("Should revert if spending more than approved amount", async function () {
                 await expect(
                     // owner only has 1 eth approved to spend of user1 money so 2 reverts
-                    token.transferFrom(user1.address, user2.address, amount2)
+                    token.transferFrom(user1.address, user2.address, amount2),
                 ).to.be.revertedWith("insufficient allowance");
             });
 
             it("Should revert when transferFrom() to the zeroAddress", async function () {
                 await expect(token.transferFrom(user1.address, zeroAddress, amount1)).to.be.revertedWith(
-                    "transfer to the zero address"
+                    "transfer to the zero address",
                 );
             });
         });

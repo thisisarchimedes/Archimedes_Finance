@@ -63,7 +63,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
             "lvUSD",
             contractlvUSDToken.address,
             10,
-            4000000
+            4000000,
         );
 
         // now let's see if we can find this pool

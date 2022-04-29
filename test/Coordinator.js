@@ -46,7 +46,7 @@ describe("Coordinator Test suit", function () {
 
         it("Should revert if new globalCollateralRate is higher then 100", async function () {
             await expect(coordinator.changeGlobalCollateralRate(120)).to.revertedWith(
-                "globalCollateralRate must be a number between 1 and 100"
+                "globalCollateralRate must be a number between 1 and 100",
             );
         });
 
@@ -64,27 +64,27 @@ describe("Coordinator Test suit", function () {
         });
         it("Should return zero if no cycles", async function () {
             expect(await coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 0)).to.equal(
-                ethers.utils.parseEther("0")
+                ethers.utils.parseEther("0"),
             );
         });
         it("Should calculate allowed leverage for 2 cycles", async function () {
             expect(await coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 2)).to.equal(
-                ethers.utils.parseEther("171")
+                ethers.utils.parseEther("171"),
             );
         });
         it("Should calculate allowed leverage for 3 cycles", async function () {
             expect(await coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 3)).to.equal(
-                ethers.utils.parseEther("243.9")
+                ethers.utils.parseEther("243.9"),
             );
         });
         it("Should calculate allowed leverage for 5 cycles", async function () {
             expect(await coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 5)).to.equal(
-                ethers.utils.parseEther("368.559")
+                ethers.utils.parseEther("368.559"),
             );
         });
         it("Should revert if number of cycles is bigger then allowed max", async function () {
             await expect(
-                coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 20)
+                coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 20),
             ).to.be.revertedWith("Number of cycles must be lower then allowed max");
         });
     });

@@ -56,27 +56,27 @@ describe("VaultOUSD test suit", function () {
                 // increase Vaults balance without minting more shares
                 await tokenOUSD.transfer(tokenVault.address, getDecimal(interestIntoVault));
                 expect(await tokenOUSD.balanceOf(tokenVault.address)).to.equal(
-                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault)
+                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault),
                 );
             });
 
             it("Should show interest plus deposited in total assets", async function () {
                 expect(await tokenVault.totalAssets()).to.equal(
-                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault)
+                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault),
                 );
             });
 
             it("Should not change number of shares per deposit", async function () {
                 /// Check the max number of share owner has
                 expect(await tokenVault.maxRedeem(sharesOwnerAddress)).to.equal(
-                    getDecimal(addr1Deposit + addr2Deposit)
+                    getDecimal(addr1Deposit + addr2Deposit),
                 );
             });
 
             it("Should redeem with each share worth more then 1 underlying", async function () {
                 /// ERC4626 rebases shares based on deposited assets and interest
                 expect(await tokenVault.previewRedeem(getDecimal(addr1Deposit + addr2Deposit))).to.equal(
-                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault)
+                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault),
                 );
             });
         });
