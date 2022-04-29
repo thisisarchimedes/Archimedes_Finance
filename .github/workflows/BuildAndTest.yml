@@ -40,8 +40,8 @@ jobs:
             - name: Install dependencies
               run: npm install
 
-            - name: Lint .sol files
-              run: npm run lint:sol
+            - name: Lint files
+              run: npm run lint
 
             - name: Run project tests
               run: npm run test
