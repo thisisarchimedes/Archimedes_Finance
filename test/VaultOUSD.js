@@ -1,7 +1,5 @@
 const { expect } = require('chai');
-const exp = require('constants');
 const { ethers } = require('hardhat');
-const { BN } = require('@openzeppelin/test-helpers');
 const MainnetHelper = require('./MainnetHelper');
 
 const getDecimal = (naturalNumber) => {
@@ -14,14 +12,13 @@ describe('VaultOUSD test suit', function () {
     let owner;
     let addr1;
     let addr2;
-    let addrs;
     let sharesOwnerAddress;
 
     const addr1Deposit = 10;
     const addr2Deposit = 20;
     const interestIntoVault = 10;
     before(async function () {
-        [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+        [owner, addr1, addr2] = await ethers.getSigners();
         MainnetHelper.helperResetNetwork(14533286);
         tokenOUSD = new ethers.Contract(MainnetHelper.addressOUSD, MainnetHelper.abiOUSDToken, owner);
         const contractVault = await ethers.getContractFactory('VaultOUSD');

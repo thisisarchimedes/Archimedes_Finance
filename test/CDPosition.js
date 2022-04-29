@@ -1,7 +1,5 @@
 const { expect } = require('chai');
-const exp = require('constants');
 const { ethers } = require('hardhat');
-const { BigNumber, FixedFormat, FixedNumber, formatFixed, parseFixed } = require('@ethersproject/bignumber');
 
 const getEighteenDecimal = (naturalNumber) => {
     return ethers.utils.parseEther(naturalNumber.toString());
@@ -27,7 +25,6 @@ describe('CDPosition test suit', async function () {
 
     beforeEach(async () => {
         const contract = await ethers.getContractFactory('CDPosition');
-        [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
         cdp = await contract.deploy();
     });
 
@@ -137,7 +134,7 @@ describe('CDPosition test suit', async function () {
             );
         });
 
-        it('Should mark down OUSD withdrawn from position taking into account OUSD deposited after principle ', async function () {
+        it('Should mark down OUSD withdrawn from position except OUSD deposited after principle', async function () {
             // deposit OUSD before withdrawing from position
             await cdp.depositOUSDtoPosition(NFT_ID, OUSD_AMOUNT);
             const OUSDBalanceInTotalAfterDepositNatural = BASIC_OUSD_PRINCIPLE_NATURAL + OUSD_AMOUNT_NATURAL;
@@ -161,14 +158,14 @@ describe('CDPosition test suit', async function () {
             );
         });
 
-        it('Should not mark down withdraw OUSD if total deposited OUSD is lower then amount to withdraw', async function () {
+        it('Should revert if total deposited OUSD is lower then amount to withdraw', async function () {
             await expect(cdp.withdrawOUSDFromPosition(NFT_ID, getEighteenDecimal(1100000))).to.be.revertedWith(
                 'OUSD total amount must be greater or equal than amount to withdraw',
             );
         });
 
         it('Shouldn\'t allow to borrow more lvUSD if we above collateral rate', async function () {
-            totalOUSD = await cdp.getOUSDTotal(NFT_ID);
+            const totalOUSD = await cdp.getOUSDTotal(NFT_ID);
 
             // try to borrow more than totalOUSD - expect revert
             await expect(cdp.borrowLvUSDFromPosition(NFT_ID, totalOUSD + OUSD_AMOUNT)).to.be.revertedWith(
@@ -177,7 +174,7 @@ describe('CDPosition test suit', async function () {
         });
     });
 
-    describe('Make sure that changes to a specific NFT ID CDP struct does not effect other NFT IDs struct', function () {
+    describe('Changes to a specific NFT ID CDP struct should not effect other NFT IDs struct', function () {
         const nftIDMainPrinciple = BASIC_OUSD_PRINCIPLE;
         const nftIDSecondaryPrinciple = getEighteenDecimal(BASIC_OUSD_PRINCIPLE_NATURAL * 2);
         beforeEach(async function () {

@@ -2,8 +2,8 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const mainnetHelper = require('./MainnetHelper');
 const { ContractTestContext } = require('./ContractTestContext');
-const { MAX_UINT256 } = require('@openzeppelin/test-helpers/src/constants');
-const ether = require('@openzeppelin/test-helpers/src/ether');
+// const { MAX_UINT256 } = require('@openzeppelin/test-helpers/src/constants');
+// const ether = require('@openzeppelin/test-helpers/src/ether');
 
 const originationFeeDefaultValue = ethers.utils.parseEther('0.05');
 
@@ -11,8 +11,8 @@ describe('Coordinator Test suit', function () {
     let r;
     let coordinator;
     let endUserSigner;
-    let addr2;
-    let leverageEngineSigner;
+    // let addr2;
+    // let leverageEngineSigner;
     const nftIdFirstPosition = 35472;
 
     before(async function () {
@@ -24,8 +24,8 @@ describe('Coordinator Test suit', function () {
         // Object under test
         coordinator = r.coordinator;
         endUserSigner = r.addr1;
-        addr2 = r.addr2;
-        leverageEngineSigner = r.owner;
+        // addr2 = r.addr2;
+        // leverageEngineSigner = r.owner;
 
         await mainnetHelper.helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseEther('5.0'));
     });
@@ -125,12 +125,14 @@ describe('Coordinator Test suit', function () {
     });
 
     describe('Deposit collateral into new NFT position', function () {
-        /// depositing collateral is expected to transfer funds to vault, shares to be minted and create a new CDP entry with valid values
+        // depositing collateral is expected to transfer funds to vault,
+        // shares to be minted and create a new CDP entry with valid values
         const collateralAmount = ethers.utils.parseEther('1');
         let sharesOwnerAddress;
         before(async function () {
             sharesOwnerAddress = coordinator.address; // shares will be given to coordinator
-            // transfer OUSD from user to coordinator address (this will happen in leverage engine in full Archimedes flow)
+            // transfer OUSD from user to coordinator address
+            // (this will happen in leverage engine in full Archimedes flow)
             await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, collateralAmount);
             expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(collateralAmount);
 

@@ -1,3 +1,4 @@
+const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const helper = require('./MainnetHelper');
 
@@ -6,7 +7,7 @@ describe('Checking test suit state before running unit tests', function () {
 
     beforeEach(async function () {
         // get signers
-        [signer, addr1, addr2, ...addrs] = await ethers.getSigners();
+        [signer] = await ethers.getSigners();
     });
 
     it('Ensure mainnet fork is running', async function () {

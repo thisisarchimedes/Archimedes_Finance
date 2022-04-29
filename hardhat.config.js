@@ -1,9 +1,12 @@
 require('@nomiclabs/hardhat-waffle');
 require('@tenderly/hardhat-tenderly');
 
+const { task } = require('hardhat/config');
+
 // grab the private api key from the private repo
 require('dotenv').config({ path: 'secrets/alchemy.env' });
-const alchemy_url = 'https://eth-mainnet.alchemyapi.io/v2/' + process.env.ALCHEMY_API_KEY;
+
+const alchemyUrl = 'https://eth-mainnet.alchemyapi.io/v2/' + process.env.ALCHEMY_API_KEY;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -27,7 +30,7 @@ module.exports = {
     networks: {
         hardhat: {
             forking: {
-                url: alchemy_url,
+                url: alchemyUrl,
                 blockNumber: 14533286,
             },
             localhost: {

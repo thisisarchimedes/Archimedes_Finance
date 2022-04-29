@@ -50,8 +50,5 @@
 
         "promise/always-return": "off",
         "promise/avoid-new": "off"
-    },
-    "parserOptions": {
-        "ecmaVersion": 2018
     }
 }

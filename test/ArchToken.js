@@ -1,6 +1,5 @@
 // We import Chai to use its asserting functions here.
 const { expect } = require('chai');
-const exp = require('constants');
 const { ethers } = require('hardhat');
 
 // TODO create separate test constants file to load in multiple test
@@ -12,21 +11,22 @@ describe('Arch Token test suit', function () {
     let owner;
     let user1;
     let user2;
-    let users;
+    let treasuryAddress;
+
     const amount1 = ethers.utils.parseUnits('1');
     const amount2 = ethers.utils.parseUnits('2');
     const expectedTotalSupply = ethers.utils.parseUnits('100000000');
 
     beforeEach(async function () {
         const contract = await ethers.getContractFactory('ArchToken');
-        [owner, user1, user2, ...users] = await ethers.getSigners();
+        [owner, user1, user2] = await ethers.getSigners();
         treasuryAddress = owner.address;
         token = await contract.deploy(treasuryAddress);
     });
 
     describe('Pre-Mint', function () {
         it('Should have pre-mint totalSupply of 100m', async function () {
-            totalSupply = await token.totalSupply();
+            const totalSupply = await token.totalSupply();
 
             expect(totalSupply).to.eq(expectedTotalSupply);
         });
@@ -45,6 +45,7 @@ describe('Arch Token test suit', function () {
     describe('Transactions', function () {
         describe('transfer()', function () {
             it('Sender can transfer entire balance', async function () {
+                const totalSupply = await token.totalSupply();
                 const ownerBalance = await token.balanceOf(owner.address);
                 await token.transfer(user1.address, ownerBalance);
                 const user1Balance = await token.balanceOf(user1.address);

@@ -1,15 +1,6 @@
 const helper = require('./MainnetHelper');
-
-const { BigNumber, FixedFormat, FixedNumber, formatFixed, parseFixed } = require('@ethersproject/bignumber');
+const { ethers } = require('hardhat');
 const { expect } = require('chai');
-const {
-    CURVE_FACTORY_ADDRESS,
-    CURVE_FACTORY_ABI,
-    CURVE_3POOL_ADDRESS,
-    USDT_ADDRESS,
-    abiCurveFactory,
-} = require('./MainnetHelper');
-const { long } = require('webidl-conversions');
 
 /* Integration tests start here */
 
@@ -22,13 +13,13 @@ describe('Setting the stage: Getting some OUSD and deploying our contracts', fun
     let user;
 
     before(async function () {
-        /// Reset network before integration tests
+        // Reset network before integration tests
         helper.helperResetNetwork(14533286);
     });
 
     beforeEach(async function () {
         // get signers
-        [signer, user, addr2, ...addrs] = await ethers.getSigners();
+        [signer, user] = await ethers.getSigners();
     });
 
     it('Should do a basic ETH<>OUSD swap', async function () {
@@ -47,7 +38,8 @@ describe('Setting the stage: Getting some OUSD and deploying our contracts', fun
 
     it('Should deploy ARCH token ERC-20 contract', async function () {
         // deploying ARCH contract
-        // NOTE: we don't have ARCH token contract yet - so we use lvUSD as a mock here. TBD: replace when we implement ARCH
+        // NOTE: we don't have ARCH token contract yet - so we use lvUSD as a mock here.
+        // TBD: replace when we implement ARCH
         const factoryARCHToken = await ethers.getContractFactory('LvUSDToken');
         contractARCHToken = await factoryARCHToken.deploy();
         await contractARCHToken.deployed();
@@ -56,12 +48,15 @@ describe('Setting the stage: Getting some OUSD and deploying our contracts', fun
         expect(await contractARCHToken.decimals()).to.equal(18);
     });
 
-    // Deploy using the Meta-Pool Factory: https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry
+    // Deploy using the Meta-Pool Factory:
+    // https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry
     it('Should deploy lvUSD/3CRV pool', async function () {
         const curveFactory = new ethers.Contract(helper.addressCurveFactory, helper.abiCurveFactory, signer);
 
-        // Factory.deploy_metapool(_base_pool: address, _name: String[32], _symbol: String[10], _coin: address, _A: uint256, _fee: uint256) → address: nonpayable
-        // https://curve.readthedocs.io/factory-deployer.html#deploying-a-pool
+        /* Factory.deploy_metapool(
+                _base_pool: address, _name: String[32], _symbol: String[10], _coin: address, _A: uint256, _fee: uint256
+            ) → address: nonpayable
+           https://curve.readthedocs.io/factory-deployer.html#deploying-a-pool */
         await curveFactory.deploy_metapool(
             helper.addressCurve3Pool,
             'lvUSD pool',
@@ -84,6 +79,7 @@ describe('Setting the stage: Getting some OUSD and deploying our contracts', fun
     //   (LiquidityGaugeV3 carries this LiquidityGaugeV2 functionality, it just that it is documented under v2)
     it('Should add ARCH token as an extra bonus to the deployed lvUSD/3CRV pool', async function () {
         // TBD: looks like we nede to implement a StakingReward contract (that interfaces with Curve),
-        //      and probalby also a RewardsManager. Based on the example everyone copys: https://github.com/lidofinance/staking-rewards-manager/tree/main/contracts
+        // and probalby also a RewardsManager. Based on the example everyone copys:
+        // https://github.com/lidofinance/staking-rewards-manager/tree/main/contracts
     });
 });
