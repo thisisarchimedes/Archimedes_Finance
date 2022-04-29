@@ -17,8 +17,4 @@ contract VaultOUSD is ERC4626 {
         string memory name,
         string memory symbol
     ) ERC20(name, symbol) ERC4626(asset) {}
-
-    // function giveCoordinatorApproval(address _tokenCoordinator) external {
-    //     IERC20(asset).approve(_tokenCoordinator, type(uint256).max);
-    // }
 }
