@@ -43,13 +43,6 @@ contract CDPosition {
     /// @param nftID NFT position to update
     /// @param lvUSDAmountToBorrow amount to add to position's existing borrowed lvUSD sum
     function borrowLvUSDFromPosition(uint256 nftID, uint256 lvUSDAmountToBorrow) external nftIDMustExist(nftID) {
-        // commenting out and eventually deleting this check as it does not make sense - we are always borrowing more then we have deposited OUSD
-        // might make sense to add a check on allowed leverage (via coordinator)? The leverage engine should maybe be in charge of it 
-        // require(
-        //     lvUSDAmountToBorrow + _nftCDP[nftID].lvUSDBorrowed <= _nftCDP[nftID].oUSDTotal,
-        //     "Attempt to borrow to much lvUSD"
-        // );
-
         _nftCDP[nftID].lvUSDBorrowed += lvUSDAmountToBorrow;
     }
 
