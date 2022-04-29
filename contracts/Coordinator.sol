@@ -5,6 +5,7 @@ import {ICoordinator} from "../contracts/interfaces/ICoordinator.sol";
 import {IERC4626} from "../contracts/interfaces/IERC4626.sol";
 import {VaultOUSD} from "../contracts/VaultOUSD.sol";
 import {CDPosition} from "../contracts/CDPosition.sol";
+import {LvUSDToken} from "../contracts/LvUSDToken.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "hardhat/console.sol";
@@ -72,12 +73,17 @@ contract Coordinator is ICoordinator {
         /// Transfer collateral to vault, mint shares to shares owner
         VaultOUSD(_tokenVaultOUSD).deposit(amount, sharesOwner);
         // create CDP position with collateral
+        // TODO : !!!!!! update shares allocation to position !!!!!!!
         CDPosition(_tokenCDP).createPosition(nftId, amount);
+        
     }
 
     function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
 
-    function borrowUnderNFT(uint256 _amount, uint256 _nftId) external override notImplementedYet {}
+    function borrowUnderNFT(uint256 _nftId, uint256 _amount ) external override {
+        IERC20(_tokenLvUSD).transfer(_tokenVaultOUSD, _amount);
+        CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amount);
+    }
 
     function repayUnderNFT(uint256 _amount, uint256 _nftId) external override notImplementedYet {}
 

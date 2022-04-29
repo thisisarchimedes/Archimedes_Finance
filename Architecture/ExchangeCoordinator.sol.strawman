@@ -12,7 +12,6 @@ abstract contract ExchangeCoordinator {
 
     /// @dev use curve pool to trade Ousd for lvUSD
     ///
-    ///
     /// in simple terms: deposit ousd, get lvUSD
     /// Use MaxOusdTraded to get lvUSDAmountRecieved, fail if lvUSDAmountRecieved < minLvUSDReturned
     /// Emit event for each swap (including lvUSD, oUSD and 3CRV) include nftID 
@@ -20,7 +19,7 @@ abstract contract ExchangeCoordinator {
     /// @param minLvUSDReturned - min amount of lvUSD to recieve from trade. If output (of trade) is lower then minLvUSDReturned, revert
     /// @param MaxOusdTraded - max allowed OUSD to use for trade 
     /// MaxOusdTraded = total OUSD + Interest
-    function swapOUSDforLvUSD(uint256 minLvUSDReturned, uint256 MaxOusdTraded) external virtual return(uint256 lvUSDAmountRecieved);
+    function swapOUSDforLvUSD(uint256 minLvUSDReturned, uint256 MaxOusdTraded,) external virtual return(uint256 lvUSDAmountRecieved);
 
 
     /// @dev trade lvUSD for USDT
