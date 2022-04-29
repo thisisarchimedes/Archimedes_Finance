@@ -84,10 +84,7 @@ contract Coordinator is ICoordinator {
         CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amount);
     }
 
-    function repayUnderNFT(uint256 _nftId, uint256 _amount) external override {
-        IERC20(_tokenLvUSD).transferFrom(address(this), _tokenVaultOUSD, _amount);
-        CDPosition(_tokenCDP).repayLvUSDToPosition(_nftId, _amount);
-    }
+    function repayUnderNFT(uint256 _nftId, uint256 _amount) external override notImplementedYet {}
 
     function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
 
