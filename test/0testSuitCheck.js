@@ -1,8 +1,8 @@
-const { ethers } = require('hardhat');
-const { expect } = require('chai');
-const helper = require('./MainnetHelper');
+const { ethers } = require("hardhat");
+const { expect } = require("chai");
+const helper = require("./MainnetHelper");
 
-describe('Checking test suit state before running unit tests', function () {
+describe("Checking test suit state before running unit tests", function () {
     let signer;
 
     beforeEach(async function () {
@@ -10,7 +10,7 @@ describe('Checking test suit state before running unit tests', function () {
         [signer] = await ethers.getSigners();
     });
 
-    it('Ensure mainnet fork is running', async function () {
+    it("Ensure mainnet fork is running", async function () {
         // loading USDT contract
         const usdtToken = new ethers.Contract(helper.addressUSDT, helper.abiUSDTToken, signer);
         expect(usdtToken.address).to.equal(helper.addressUSDT);

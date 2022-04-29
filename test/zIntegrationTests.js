@@ -1,6 +1,6 @@
-const helper = require('./MainnetHelper');
-const { ethers } = require('hardhat');
-const { expect } = require('chai');
+const helper = require("./MainnetHelper");
+const { ethers } = require("hardhat");
+const { expect } = require("chai");
 
 /* Integration tests start here */
 
@@ -8,7 +8,7 @@ let contractlvUSDToken;
 let contractARCHToken;
 let contract3CRVlvUSDPool;
 
-describe('Setting the stage: Getting some OUSD and deploying our contracts', function () {
+describe("Setting the stage: Getting some OUSD and deploying our contracts", function () {
     let signer;
     let user;
 
@@ -22,13 +22,13 @@ describe('Setting the stage: Getting some OUSD and deploying our contracts', fun
         [signer, user] = await ethers.getSigners();
     });
 
-    it('Should do a basic ETH<>OUSD swap', async function () {
-        await helper.helperSwapETHWithOUSD(user, ethers.utils.parseEther('3.0'));
+    it("Should do a basic ETH<>OUSD swap", async function () {
+        await helper.helperSwapETHWithOUSD(user, ethers.utils.parseEther("3.0"));
     });
 
-    it('Should deploy lvUSD ERC-20 contract', async function () {
+    it("Should deploy lvUSD ERC-20 contract", async function () {
         // deploying lvUSD contract
-        const factorylvUSDToken = await ethers.getContractFactory('LvUSDToken');
+        const factorylvUSDToken = await ethers.getContractFactory("LvUSDToken");
         contractlvUSDToken = await factorylvUSDToken.deploy();
         await contractlvUSDToken.deployed();
 
@@ -36,11 +36,11 @@ describe('Setting the stage: Getting some OUSD and deploying our contracts', fun
         expect(await contractlvUSDToken.decimals()).to.equal(18);
     });
 
-    it('Should deploy ARCH token ERC-20 contract', async function () {
+    it("Should deploy ARCH token ERC-20 contract", async function () {
         // deploying ARCH contract
         // NOTE: we don't have ARCH token contract yet - so we use lvUSD as a mock here.
         // TBD: replace when we implement ARCH
-        const factoryARCHToken = await ethers.getContractFactory('LvUSDToken');
+        const factoryARCHToken = await ethers.getContractFactory("LvUSDToken");
         contractARCHToken = await factoryARCHToken.deploy();
         await contractARCHToken.deployed();
 
@@ -50,7 +50,7 @@ describe('Setting the stage: Getting some OUSD and deploying our contracts', fun
 
     // Deploy using the Meta-Pool Factory:
     // https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry
-    it('Should deploy lvUSD/3CRV pool', async function () {
+    it("Should deploy lvUSD/3CRV pool", async function () {
         const curveFactory = new ethers.Contract(helper.addressCurveFactory, helper.abiCurveFactory, signer);
 
         /* Factory.deploy_metapool(
@@ -59,11 +59,11 @@ describe('Setting the stage: Getting some OUSD and deploying our contracts', fun
            https://curve.readthedocs.io/factory-deployer.html#deploying-a-pool */
         await curveFactory.deploy_metapool(
             helper.addressCurve3Pool,
-            'lvUSD pool',
-            'lvUSD',
+            "lvUSD pool",
+            "lvUSD",
             contractlvUSDToken.address,
             10,
-            4000000,
+            4000000
         );
 
         // now let's see if we can find this pool
@@ -77,7 +77,7 @@ describe('Setting the stage: Getting some OUSD and deploying our contracts', fun
     // * The main function we are using is: https://curve.readthedocs.io/dao-gauges.html#setting-the-rewards-contract
     // * However, we are using LiquidityGaugeV3 not LiquidityGaugeV2
     //   (LiquidityGaugeV3 carries this LiquidityGaugeV2 functionality, it just that it is documented under v2)
-    it('Should add ARCH token as an extra bonus to the deployed lvUSD/3CRV pool', async function () {
+    it("Should add ARCH token as an extra bonus to the deployed lvUSD/3CRV pool", async function () {
         // TBD: looks like we nede to implement a StakingReward contract (that interfaces with Curve),
         // and probalby also a RewardsManager. Based on the example everyone copys:
         // https://github.com/lidofinance/staking-rewards-manager/tree/main/contracts

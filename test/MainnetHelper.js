@@ -1,5 +1,5 @@
-const { ethers, network } = require('hardhat');
-const { expect } = require('chai');
+const { ethers, network } = require("hardhat");
+const { expect } = require("chai");
 const {
     abiOUSDToken,
     abiCurveOUSDPool,
@@ -9,21 +9,21 @@ const {
     abiCurveFactory,
     abi3CRVToken,
     abiCurve3Pool,
-} = require('../ABIs');
+} = require("../ABIs");
 
 // grab the private api key from the private repo
-require('dotenv').config({ path: 'secrets/alchemy.env' });
-const alchemyUrl = 'https://eth-mainnet.alchemyapi.io/v2/' + process.env.ALCHEMY_API_KEY;
+require("dotenv").config({ path: "secrets/alchemy.env" });
+const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
 
 /* CONTRACT ADDRESSES ON MAINNET */
-const addressCurveTripool2 = '0xd51a44d3fae010294c616388b506acda1bfaae46';
-const addressUSDT = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
-const addressWETH9 = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-const addressCurveFactory = '0xB9fC157394Af804a3578134A6585C0dc9cc990d4';
-const addressCurve3Pool = '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7';
-const addressCurveOUSDPool = '0x87650D7bbfC3A9F10587d7778206671719d9910D';
-const addressOUSD = '0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86';
-const address3CRV = '0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490';
+const addressCurveTripool2 = "0xd51a44d3fae010294c616388b506acda1bfaae46";
+const addressUSDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
+const addressWETH9 = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+const addressCurveFactory = "0xB9fC157394Af804a3578134A6585C0dc9cc990d4";
+const addressCurve3Pool = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
+const addressCurveOUSDPool = "0x87650D7bbfC3A9F10587d7778206671719d9910D";
+const addressOUSD = "0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86";
+const address3CRV = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
 
 const indexTripoolUSDT = 0;
 const indexTripoolWETH9 = 2;
@@ -36,10 +36,10 @@ const indexCurveOUSD3CRV = 1;
 // }
 
 /* helper functions */
-async function helperResetNetwork (lockBlock) {
+async function helperResetNetwork(lockBlock) {
     // Reset hardhat mainnet fork
     await network.provider.request({
-        method: 'hardhat_reset',
+        method: "hardhat_reset",
         params: [
             {
                 forking: {
@@ -56,7 +56,7 @@ async function helperResetNetwork (lockBlock) {
     1. Convert ETH to WETH (because this is what Curve is working with)
     2. WETH->USDT on TriCrypto2@Curve
 */
-async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
+async function helperSwapETHWithUSDT(destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // loading WETH9 contract
@@ -114,7 +114,7 @@ async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     2. WETH->USDT on TriCrypto2@Curve
     3. Deposit USDT with 3Pool to get some 3CRV
 */
-async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
+async function helperSwapETHWith3CRV(destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // loading USDT contract
@@ -150,7 +150,7 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     2. WETH->USDT on TriCrypto2@Curve
     3. USDT->OUSD with OUSD contract
 */
-async function helperSwapETHWithOUSD (destUser, ethAmountToSwap) {
+async function helperSwapETHWithOUSD(destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // loading USDT contract
