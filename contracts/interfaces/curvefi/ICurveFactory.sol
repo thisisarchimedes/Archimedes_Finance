@@ -1,12 +1,9 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+pragma solidity ^0.8.0;
 
 //solhint-disable
 interface ICurveFactory {
-    function metapool_implementations(address _base_pool)
-        external
-        view
-        returns (address[10] memory);
+    function metapool_implementations(address _base_pool) external view returns (address[10] memory);
 
     function find_pool_for_coins(address _from, address _to) external view returns (address);
 
@@ -120,20 +117,15 @@ interface ICurveFactory {
         address[10] calldata _implementations
     ) external;
 
-    function set_metapool_implementations(address _base_pool, address[10] calldata _implementations)
-        external;
+    function set_metapool_implementations(address _base_pool, address[10] calldata _implementations) external;
 
-    function set_plain_implementations(uint256 _n_coins, address[10] calldata _implementations)
-        external;
+    function set_plain_implementations(uint256 _n_coins, address[10] calldata _implementations) external;
 
     function set_gauge_implementation(address _gauge_implementation) external;
 
     function set_gauge(address _pool, address _gauge) external;
 
-    function batch_set_pool_asset_type(
-        address[32] calldata _pools,
-        uint256[32] calldata _asset_types
-    ) external;
+    function batch_set_pool_asset_type(address[32] calldata _pools, uint256[32] calldata _asset_types) external;
 
     function commit_transfer_ownership(address _addr) external;
 

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity ^0.8.0;
 
+import "../contracts/interfaces/curvefi/ICurveFactory.sol";
+import "../contracts/interfaces/curvefi/IRegistry.sol";
+import "../contracts/interfaces/curvefi/IStableSwapPool.sol";
 import {IExchanger} from "../contracts/interfaces/IExchanger.sol";
 
 contract Exchanger is IExchanger {
