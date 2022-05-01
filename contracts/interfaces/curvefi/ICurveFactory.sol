@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-//solhint-disable
 interface ICurveFactory {
+    /* solhint-disable */
+
     function metapool_implementations(address _base_pool) external view returns (address[10] memory);
 
     function find_pool_for_coins(address _from, address _to) external view returns (address);
