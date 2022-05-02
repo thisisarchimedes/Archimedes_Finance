@@ -5,11 +5,6 @@ const { ContractTestContext } = require("./ContractTestContext");
 const { MAX_UINT256 } = require("@openzeppelin/test-helpers/src/constants");
 const ether = require("@openzeppelin/test-helpers/src/ether");
 
-// const { leverageTests } = require("./Coordinator/LeverageTests");
-// const { adminChanges } = require("./Coordinator/AdminChanges");
-// const { borrowAndRepayTests } = require("./Coordinator/BorrowAndRepayTests");
-// const { collateralTests } = require("./Coordinator/CollateralTests");
-
 describe("Coordinator Test suit", function () {
     let r;
     let endUserSigner;
