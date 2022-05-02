@@ -6,7 +6,7 @@ const getEighteenDecimal = (naturalNumber) => {
 };
 
 describe("CDPosition test suit", async function () {
-    async function validateCDP(nftID, principle, interestEarned, total, borrowed, firstCycle) {
+    async function validateCDP (nftID, principle, interestEarned, total, borrowed, firstCycle) {
         expect(await cdp.getOUSDPrinciple(nftID)).to.equal(principle);
         expect(await cdp.getOUSDInterestEarned(nftID)).to.equal(interestEarned);
         expect(await cdp.getOUSDTotal(nftID)).to.equal(total);

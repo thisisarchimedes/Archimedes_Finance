@@ -23,13 +23,15 @@ describe("Coordinator Test suit", function () {
     });
 
     describe("Deposit collateral into new NFT position", function () {
-        /// depositing collateral is expected to transfer funds to vault, shares to be minted and create a new CDP entry with
-        /// valid values
+        // depositing collateral is expected to transfer funds to vault,
+        // shares to be minted and create a new CDP entry with
+        // valid values
         const collateralAmount = ethers.utils.parseEther("1");
         const nftIdFirstPosition = 35472;
 
         before(async function () {
-            // transfer OUSD from user to coordinator address (this will happen in leverage engine in full Archimedes flow)
+            // transfer OUSD from user to coordinator address
+            // (this will happen in leverage engine in full Archimedes flow)
             await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, collateralAmount);
             expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(collateralAmount);
 
@@ -76,11 +78,12 @@ describe("Coordinator Test suit", function () {
             it("Should update CDP with borrowed lvUSD", async function () {
                 expect(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)).to.equal(lvUSDAmountToBorrow);
             });
-            it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address", async function () {
-                await expect(
-                    coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("200")),
-                ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
-            });
+            it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address",
+                async function () {
+                    await expect(
+                        coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("200")),
+                    ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+                });
         });
     });
 
