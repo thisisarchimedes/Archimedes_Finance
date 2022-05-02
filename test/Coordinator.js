@@ -2,15 +2,11 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const mainnetHelper = require("./MainnetHelper");
 const { ContractTestContext } = require("./ContractTestContext");
-const { MAX_UINT256 } = require("@openzeppelin/test-helpers/src/constants");
-const ether = require("@openzeppelin/test-helpers/src/ether");
 
 describe("Coordinator Test suit", function () {
     let r;
     let endUserSigner;
-    let leverageEngineSigner;
     let sharesOwnerAddress;
-
     let coordinator;
 
     before(async function () {
@@ -20,7 +16,6 @@ describe("Coordinator Test suit", function () {
         await r.setup();
 
         endUserSigner = r.addr1;
-        leverageEngineSigner = r.owner;
         coordinator = r.coordinator;
         sharesOwnerAddress = coordinator.address;
 
@@ -28,12 +23,15 @@ describe("Coordinator Test suit", function () {
     });
 
     describe("Deposit collateral into new NFT position", function () {
-        /// depositing collateral is expected to transfer funds to vault, shares to be minted and create a new CDP entry with valid values
+        // depositing collateral is expected to transfer funds to vault,
+        // shares to be minted and create a new CDP entry with
+        // valid values
         const collateralAmount = ethers.utils.parseEther("1");
         const nftIdFirstPosition = 35472;
 
         before(async function () {
-            // transfer OUSD from user to coordinator address (this will happen in leverage engine in full Archimedes flow)
+            // transfer OUSD from user to coordinator address
+            // (this will happen in leverage engine in full Archimedes flow)
             await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, collateralAmount);
             expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(collateralAmount);
 
@@ -80,11 +78,12 @@ describe("Coordinator Test suit", function () {
             it("Should update CDP with borrowed lvUSD", async function () {
                 expect(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)).to.equal(lvUSDAmountToBorrow);
             });
-            it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address", async function () {
-                await expect(
-                    coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("200")),
-                ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
-            });
+            it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address",
+                async function () {
+                    await expect(
+                        coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("200")),
+                    ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+                });
 
             describe("Repay lvUSD for position", function () {
                 const lvUSDAmountToRepayInTwoParts = ethers.utils.parseEther("1");
@@ -170,37 +169,36 @@ describe("Coordinator Test suit", function () {
     describe("Admin changes for coordinator", function () {
         const originationFeeDefaultValue = ethers.utils.parseEther("0.05");
         it("Should have default value for treasury address", async function () {
-            let returnedTreasuryAddress = await r.coordinator.getTreasuryAddress();
+            const returnedTreasuryAddress = await r.coordinator.getTreasuryAddress();
             expect(returnedTreasuryAddress).to.equal(r.treasurySigner.address);
         });
 
         describe("Change treasury address", function () {
             /// Note : when we have access control, check that only admin can change it
-            let newTreasurySigner = ethers.Wallet.createRandom();
+            const newTreasurySigner = ethers.Wallet.createRandom();
             before(async function () {
                 await r.coordinator.changeTreasuryAddress(newTreasurySigner.address);
             });
             it("should have updated treasury address", async function () {
-                console.log("Inside should have updated treasury address");
-                let returnedTreasuryAddress = await r.coordinator.getTreasuryAddress();
+                const returnedTreasuryAddress = await r.coordinator.getTreasuryAddress();
                 expect(returnedTreasuryAddress).to.equal(newTreasurySigner.address);
             });
         });
 
         it("Should have default origination fee value", async function () {
-            let defaultOriginationFeeRate = await r.coordinator.getOriginationFeeRate();
+            const defaultOriginationFeeRate = await r.coordinator.getOriginationFeeRate();
             expect(defaultOriginationFeeRate).to.equal(originationFeeDefaultValue);
         });
 
         describe("Change origination fee", function () {
             // Note : when we have access control, check that only admin can change it
             // 0.01 equals to 1%
-            let newOriginationFeeRate = ethers.utils.parseEther("0.01");
+            const newOriginationFeeRate = ethers.utils.parseEther("0.01");
             before(async function () {
                 await r.coordinator.changeOriginationFeeRate(newOriginationFeeRate);
             });
             it("should have updated treasury address", async function () {
-                let returnedOriginationFee = await r.coordinator.getOriginationFeeRate();
+                const returnedOriginationFee = await r.coordinator.getOriginationFeeRate();
                 expect(returnedOriginationFee).to.equal(newOriginationFeeRate);
             });
         });
