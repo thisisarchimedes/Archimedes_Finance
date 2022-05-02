@@ -80,6 +80,9 @@ contract Coordinator is ICoordinator {
     function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
 
     function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override {
+        // TODO: check in test that we revert if lvUSD does not have enough token
+        // TODO: need to check if we are allowed to borrow it? 
+        
         IERC20(_tokenLvUSD).transfer(_tokenVaultOUSD, _amount);
         CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amount);
     }
