@@ -82,8 +82,26 @@ describe("Coordinator Test suit", function () {
             });
             it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address", async function () {
                 await expect(
-                    coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("200"))
+                    coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("200")),
                 ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+            });
+
+            describe("Repay lvUSD for position", function () {
+                const lvUSDAmountToRepayInTwoParts = ethers.utils.parseEther("1");
+                before(async function () {
+                    // method under test
+                    await coordinator.repayUnderNFT(nftIdFirstPosition, lvUSDAmountToRepayInTwoParts);
+                });
+                it("Should transfer lvUSD to coordinator address", async function () {
+                    expect(await r.lvUSD.balanceOf(coordinator.address)).to.equal(ethers.utils.parseEther("99"));
+                });
+                it("Should decrease Vault's lvUSD balance", async function () {
+                    // Vault should still have half the lvUSD under it
+                    expect(await r.lvUSD.balanceOf(r.vault.address)).to.equal(lvUSDAmountToRepayInTwoParts);
+                });
+                it("Should update CDP with repayed lvUSD", async function () {
+                    expect(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)).to.equal(lvUSDAmountToRepayInTwoParts);
+                });
             });
         });
     });
@@ -105,7 +123,7 @@ describe("Coordinator Test suit", function () {
 
             it("Should revert if new globalCollateralRate is higher then 100", async function () {
                 await expect(r.coordinator.changeGlobalCollateralRate(120)).to.revertedWith(
-                    "globalCollateralRate must be a number between 1 and 100"
+                    "globalCollateralRate must be a number between 1 and 100",
                 );
             });
 
@@ -123,27 +141,27 @@ describe("Coordinator Test suit", function () {
             });
             it("Should return zero if no cycles", async function () {
                 expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 0)).to.equal(
-                    ethers.utils.parseEther("0")
+                    ethers.utils.parseEther("0"),
                 );
             });
             it("Should calculate allowed leverage for 2 cycles", async function () {
                 expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 2)).to.equal(
-                    ethers.utils.parseEther("171")
+                    ethers.utils.parseEther("171"),
                 );
             });
             it("Should calculate allowed leverage for 3 cycles", async function () {
                 expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 3)).to.equal(
-                    ethers.utils.parseEther("243.9")
+                    ethers.utils.parseEther("243.9"),
                 );
             });
             it("Should calculate allowed leverage for 5 cycles", async function () {
                 expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 5)).to.equal(
-                    ethers.utils.parseEther("368.559")
+                    ethers.utils.parseEther("368.559"),
                 );
             });
             it("Should revert if number of cycles is bigger then allowed max", async function () {
                 await expect(
-                    r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 20)
+                    r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 20),
                 ).to.be.revertedWith("Number of cycles must be lower then allowed max");
             });
         });
