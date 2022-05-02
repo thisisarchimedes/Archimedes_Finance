@@ -2,15 +2,11 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const mainnetHelper = require("./MainnetHelper");
 const { ContractTestContext } = require("./ContractTestContext");
-const { MAX_UINT256 } = require("@openzeppelin/test-helpers/src/constants");
-const ether = require("@openzeppelin/test-helpers/src/ether");
 
 describe("Coordinator Test suit", function () {
     let r;
     let endUserSigner;
-    let leverageEngineSigner;
     let sharesOwnerAddress;
-
     let coordinator;
 
     before(async function () {
@@ -20,7 +16,6 @@ describe("Coordinator Test suit", function () {
         await r.setup();
 
         endUserSigner = r.addr1;
-        leverageEngineSigner = r.owner;
         coordinator = r.coordinator;
         sharesOwnerAddress = coordinator.address;
 
@@ -28,7 +23,8 @@ describe("Coordinator Test suit", function () {
     });
 
     describe("Deposit collateral into new NFT position", function () {
-        /// depositing collateral is expected to transfer funds to vault, shares to be minted and create a new CDP entry with valid values
+        /// depositing collateral is expected to transfer funds to vault, shares to be minted and create a new CDP entry with
+        /// valid values
         const collateralAmount = ethers.utils.parseEther("1");
         const nftIdFirstPosition = 35472;
 
@@ -82,7 +78,7 @@ describe("Coordinator Test suit", function () {
             });
             it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address", async function () {
                 await expect(
-                    coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("200"))
+                    coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("200")),
                 ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
             });
         });
@@ -105,7 +101,7 @@ describe("Coordinator Test suit", function () {
 
             it("Should revert if new globalCollateralRate is higher then 100", async function () {
                 await expect(r.coordinator.changeGlobalCollateralRate(120)).to.revertedWith(
-                    "globalCollateralRate must be a number between 1 and 100"
+                    "globalCollateralRate must be a number between 1 and 100",
                 );
             });
 
@@ -123,27 +119,27 @@ describe("Coordinator Test suit", function () {
             });
             it("Should return zero if no cycles", async function () {
                 expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 0)).to.equal(
-                    ethers.utils.parseEther("0")
+                    ethers.utils.parseEther("0"),
                 );
             });
             it("Should calculate allowed leverage for 2 cycles", async function () {
                 expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 2)).to.equal(
-                    ethers.utils.parseEther("171")
+                    ethers.utils.parseEther("171"),
                 );
             });
             it("Should calculate allowed leverage for 3 cycles", async function () {
                 expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 3)).to.equal(
-                    ethers.utils.parseEther("243.9")
+                    ethers.utils.parseEther("243.9"),
                 );
             });
             it("Should calculate allowed leverage for 5 cycles", async function () {
                 expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 5)).to.equal(
-                    ethers.utils.parseEther("368.559")
+                    ethers.utils.parseEther("368.559"),
                 );
             });
             it("Should revert if number of cycles is bigger then allowed max", async function () {
                 await expect(
-                    r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 20)
+                    r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 20),
                 ).to.be.revertedWith("Number of cycles must be lower then allowed max");
             });
         });
@@ -152,37 +148,37 @@ describe("Coordinator Test suit", function () {
     describe("Admin changes for coordinator", function () {
         const originationFeeDefaultValue = ethers.utils.parseEther("0.05");
         it("Should have default value for treasury address", async function () {
-            let returnedTreasuryAddress = await r.coordinator.getTreasuryAddress();
+            const returnedTreasuryAddress = await r.coordinator.getTreasuryAddress();
             expect(returnedTreasuryAddress).to.equal(r.treasurySigner.address);
         });
 
         describe("Change treasury address", function () {
             /// Note : when we have access control, check that only admin can change it
-            let newTreasurySigner = ethers.Wallet.createRandom();
+            const newTreasurySigner = ethers.Wallet.createRandom();
             before(async function () {
                 await r.coordinator.changeTreasuryAddress(newTreasurySigner.address);
             });
             it("should have updated treasury address", async function () {
                 console.log("Inside should have updated treasury address");
-                let returnedTreasuryAddress = await r.coordinator.getTreasuryAddress();
+                const returnedTreasuryAddress = await r.coordinator.getTreasuryAddress();
                 expect(returnedTreasuryAddress).to.equal(newTreasurySigner.address);
             });
         });
 
         it("Should have default origination fee value", async function () {
-            let defaultOriginationFeeRate = await r.coordinator.getOriginationFeeRate();
+            const defaultOriginationFeeRate = await r.coordinator.getOriginationFeeRate();
             expect(defaultOriginationFeeRate).to.equal(originationFeeDefaultValue);
         });
 
         describe("Change origination fee", function () {
             // Note : when we have access control, check that only admin can change it
             // 0.01 equals to 1%
-            let newOriginationFeeRate = ethers.utils.parseEther("0.01");
+            const newOriginationFeeRate = ethers.utils.parseEther("0.01");
             before(async function () {
                 await r.coordinator.changeOriginationFeeRate(newOriginationFeeRate);
             });
             it("should have updated treasury address", async function () {
-                let returnedOriginationFee = await r.coordinator.getOriginationFeeRate();
+                const returnedOriginationFee = await r.coordinator.getOriginationFeeRate();
                 expect(returnedOriginationFee).to.equal(newOriginationFeeRate);
             });
         });
