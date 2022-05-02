@@ -1,6 +1,6 @@
+const { ethers } = require("hardhat");
 // We import Chai to use its asserting functions here.
 const { expect } = require("chai");
-const exp = require("constants");
 
 describe("LvUSD contract test suit", function () {
     const tokenSupply = 1000000;
@@ -10,11 +10,10 @@ describe("LvUSD contract test suit", function () {
     let owner;
     let addr1;
     let addr2;
-    let addrs;
 
     beforeEach(async function () {
         contract = await ethers.getContractFactory("LvUSDToken");
-        [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+        [owner, addr1, addr2] = await ethers.getSigners();
         token = await contract.deploy();
     });
 
@@ -45,7 +44,7 @@ describe("LvUSD contract test suit", function () {
     it("Transaction should revert if sender doesn’t have enough tokens", async function () {
         // Try to send 1 token from addr1 (0 tokens) to owner (1000000 tokens).
         await expect(token.connect(addr1).transfer(owner.address, 1)).to.be.revertedWith(
-            "ERC20: transfer amount exceeds balance"
+            "ERC20: transfer amount exceeds balance",
         );
     });
 
@@ -55,7 +54,7 @@ describe("LvUSD contract test suit", function () {
         // Try to send 1 token from addr1 (0 tokens) to owner (1000000 tokens).
         try {
             await token.connect(addr1).transfer(owner.address, 1);
-        } catch {}
+        } catch (e) {}
 
         // Owner balance shouldn't have changed.
         expect(await token.balanceOf(owner.address)).to.equal(initialOwnerBalance);

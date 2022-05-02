@@ -1,7 +1,5 @@
 const { expect } = require("chai");
-const exp = require("constants");
 const { ethers } = require("hardhat");
-const { BN } = require("@openzeppelin/test-helpers");
 const MainnetHelper = require("./MainnetHelper");
 
 const getDecimal = (naturalNumber) => {
@@ -14,17 +12,16 @@ describe("VaultOUSD test suit", function () {
     let owner;
     let addr1;
     let addr2;
-    let addrs;
     let sharesOwnerAddress;
 
-    let addr1Deposit = 10;
-    let addr2Deposit = 20;
-    let interestIntoVault = 10;
+    const addr1Deposit = 10;
+    const addr2Deposit = 20;
+    const interestIntoVault = 10;
     before(async function () {
-        [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+        [owner, addr1, addr2] = await ethers.getSigners();
         MainnetHelper.helperResetNetwork(14533286);
         tokenOUSD = new ethers.Contract(MainnetHelper.addressOUSD, MainnetHelper.abiOUSDToken, owner);
-        let contractVault = await ethers.getContractFactory("VaultOUSD");
+        const contractVault = await ethers.getContractFactory("VaultOUSD");
         tokenVault = await contractVault.deploy(tokenOUSD.address, "VaultOUSD", "VOUSD");
 
         // Mint initial amount on OUSD token, will be used by all tests
@@ -42,7 +39,7 @@ describe("VaultOUSD test suit", function () {
 
     describe("Addr1 and addr2 signer deposited OUSD into vault", function () {
         it("Should return OUSD to be Vault's asset", async function () {
-            let vaultAsset = await tokenVault.asset();
+            const vaultAsset = await tokenVault.asset();
             expect(vaultAsset).to.equal(MainnetHelper.addressOUSD);
         });
 
@@ -56,30 +53,30 @@ describe("VaultOUSD test suit", function () {
 
         describe("Adding more money to vault as interest (ie no shares are minted)", function () {
             before(async function () {
-                //increase Vaults balance without minting more shares
+                // increase Vaults balance without minting more shares
                 await tokenOUSD.transfer(tokenVault.address, getDecimal(interestIntoVault));
                 expect(await tokenOUSD.balanceOf(tokenVault.address)).to.equal(
-                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault)
+                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault),
                 );
             });
 
             it("Should show interest plus deposited in total assets", async function () {
                 expect(await tokenVault.totalAssets()).to.equal(
-                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault)
+                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault),
                 );
             });
 
             it("Should not change number of shares per deposit", async function () {
                 /// Check the max number of share owner has
                 expect(await tokenVault.maxRedeem(sharesOwnerAddress)).to.equal(
-                    getDecimal(addr1Deposit + addr2Deposit)
+                    getDecimal(addr1Deposit + addr2Deposit),
                 );
             });
 
             it("Should redeem with each share worth more then 1 underlying", async function () {
                 /// ERC4626 rebases shares based on deposited assets and interest
                 expect(await tokenVault.previewRedeem(getDecimal(addr1Deposit + addr2Deposit))).to.equal(
-                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault)
+                    getDecimal(addr1Deposit + addr2Deposit + interestIntoVault),
                 );
             });
         });
