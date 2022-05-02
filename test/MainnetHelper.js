@@ -30,11 +30,6 @@ const indexTripoolWETH9 = 2;
 const indexCurveOUSDOUSD = 0;
 const indexCurveOUSD3CRV = 1;
 
-// function parseUnitsBetweenUSDTAndOUSD (usdtAmount) {
-//     const balanceOfUSDTInNatural = ethers.utils.formatUnits(usdtBalance, 6);
-//     return ethers.utils.parseUnits(balanceOfUSDTInNatural, 18);
-// }
-
 /* helper functions */
 async function helperResetNetwork (lockBlock) {
     // Reset hardhat mainnet fork
