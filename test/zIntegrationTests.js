@@ -1,20 +1,11 @@
 const helper = require("./MainnetHelper");
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
-const {
-    CURVE_FACTORY_ADDRESS,
-    CURVE_FACTORY_ABI,
-    CURVE_3POOL_ADDRESS,
-    USDT_ADDRESS,
-    abiCurveFactory,
-} = require("./MainnetHelper");
-const { long } = require("webidl-conversions");
 const { ContractTestContext } = require("./ContractTestContext");
 
 /* Integration tests start here */
 
 let contractARCHToken;
-let contract3CRVlvUSDPool;
 
 describe("Setting the stage: Getting some OUSD and deploying our contracts", function () {
     let signer;
@@ -57,7 +48,8 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
         expect(await contractARCHToken.decimals()).to.equal(18);
     });
 
-    // Deploy using the Meta-Pool Factory: https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry
+    // Deploy using the Meta-Pool Factory:
+    // https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry
     it("Should deploy lvUSD/3CRV pool with correct A value", async function () {
         const pool = await helper.createCurveMetapool3CRV(lvUSD, signer);
         expect(await pool.A()).to.eq(1337);
