@@ -5,7 +5,6 @@ import {ICoordinator} from "../contracts/interfaces/ICoordinator.sol";
 import {IERC4626} from "../contracts/interfaces/IERC4626.sol";
 import {VaultOUSD} from "../contracts/VaultOUSD.sol";
 import {CDPosition} from "../contracts/CDPosition.sol";
-import {LvUSDToken} from "../contracts/LvUSDToken.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "hardhat/console.sol";
