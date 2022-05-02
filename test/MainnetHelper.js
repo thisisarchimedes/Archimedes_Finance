@@ -45,8 +45,8 @@ function parseUnitsBetweenUSDTAndOUSD(usdtAmount) {
 async function createCurveMetapool3CRV(token, signer) {
     // CurvePool Factory
     const factoryCurveMetapool = new ethers.Contract(addressCurveFactory, abiCurveFactory, signer);
-    const tokenName = await token.symbol();
-    const poolSymbol = tokenName + "+3CRV";
+    const tokenName = (await token.symbol()) + "/3CRV";
+    const poolSymbol = tokenName + "3CRV";
 
     // examples on Mainnet: https://etherscan.io/address/0xB9fC157394Af804a3578134A6585C0dc9cc990d4?method=Deploy_metapool~de7fe3bf
     // https://curve.readthedocs.io/factory-deployer.html#Factory.deploy_metapool
