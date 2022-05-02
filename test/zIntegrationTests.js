@@ -1,6 +1,5 @@
-var helper = require("./MainnetHelper");
-
-const { BigNumber, FixedFormat, FixedNumber, formatFixed, parseFixed } = require("@ethersproject/bignumber");
+const helper = require("./MainnetHelper");
+const { ethers } = require("hardhat");
 const { expect } = require("chai");
 const {
     CURVE_FACTORY_ADDRESS,
@@ -24,7 +23,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
     let lvUSD;
 
     before(async function () {
-        /// Reset network before integration tests
+        // Reset network before integration tests
         helper.helperResetNetwork(14533286);
         // Setup & deploy contracts
         r = new ContractTestContext();
@@ -34,7 +33,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
 
     beforeEach(async function () {
         // get signers
-        [signer, user, addr2, ...addrs] = await ethers.getSigners();
+        [signer, user] = await ethers.getSigners();
     });
 
     it("Should do a basic ETH<>OUSD swap", async function () {
@@ -48,7 +47,8 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
 
     it("Should deploy ARCH token ERC-20 contract", async function () {
         // deploying ARCH contract
-        // NOTE: we don't have ARCH token contract yet - so we use lvUSD as a mock here. TBD: replace when we implement ARCH
+        // NOTE: we don't have ARCH token contract yet - so we use lvUSD as a mock here.
+        // TBD: replace when we implement ARCH
         const factoryARCHToken = await ethers.getContractFactory("LvUSDToken");
         contractARCHToken = await factoryARCHToken.deploy();
         await contractARCHToken.deployed();
@@ -69,6 +69,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
     //   (LiquidityGaugeV3 carries this LiquidityGaugeV2 functionality, it just that it is documented under v2)
     it("Should add ARCH token as an extra bonus to the deployed lvUSD/3CRV pool", async function () {
         // TBD: looks like we nede to implement a StakingReward contract (that interfaces with Curve),
-        //      and probalby also a RewardsManager. Based on the example everyone copys: https://github.com/lidofinance/staking-rewards-manager/tree/main/contracts
+        // and probalby also a RewardsManager. Based on the example everyone copys:
+        // https://github.com/lidofinance/staking-rewards-manager/tree/main/contracts
     });
 });
