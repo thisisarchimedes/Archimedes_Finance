@@ -2,8 +2,6 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const mainnetHelper = require("./MainnetHelper");
 const { ContractTestContext } = require("./ContractTestContext");
-const { MAX_UINT256 } = require("@openzeppelin/test-helpers/src/constants");
-const ether = require("@openzeppelin/test-helpers/src/ether");
 
 describe("Exchanger Test suit", function () {
     let r;
@@ -19,10 +17,15 @@ describe("Exchanger Test suit", function () {
 
         // Object under test
         exchanger = r.exchanger;
+
+        // Setup a Curve Meta Pool
+        // pool = mainnetHelper.
+        // Get indexes of underlying coins to use for exchanges
+        // Factory.get_underlying_coins(pool: address)
     });
 
     this.beforeEach(async function () {
-        let LvUSDFactory = await ethers.getContractFactory("LvUSDToken");
+        const LvUSDFactory = await ethers.getContractFactory("LvUSDToken");
         [owner, user1, user2, ...users] = await ethers.getSigners();
         LvUSD = await LvUSDFactory.deploy();
         await LvUSD.mint(owner.address, 1000);
@@ -30,14 +33,14 @@ describe("Exchanger Test suit", function () {
 
     describe("Exchanges", function () {
         it("Should swap LvUSD for OUSD", async function () {
-            // await exchanger.xLvUSDforOUSD(100);
-            // expect(balanceLvUSD).to.eq(900);
+            await exchanger.xLvUSDforOUSD(100, owner.address);
+            expect(await LvUSD.balanceOf(owner.address)).to.eq(900);
         });
         it("Should swap OUSD for LvUSD", async function () {
             // @param: amount OUSD
             // @param: minAmount returned LVUSD
             // await exchanger.xOUSDforLvUSD(100, 90);
-            // expect(balanceOUSD).to.eq(0);
+            // expect(await LvUSD.balanceOf(owner.address)).to.eq(0);
         });
     });
 });
