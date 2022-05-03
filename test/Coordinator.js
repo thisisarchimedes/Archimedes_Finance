@@ -10,10 +10,9 @@ const originationFeeDefaultValue = ethers.utils.parseEther("0.05");
 describe("Coordinator Test suit", function () {
     let r;
     let coordinator;
-    let endUserSigner;
-    let addr2;
     let leverageEngineSigner;
-    const nftIdFirstPosition = 35472;
+    const nftIdAddr1Position = 35472;
+    const nftIdAddr2Position = 15426;
 
     before(async function () {
         mainnetHelper.helperResetNetwork(mainnetHelper.defaultBlockNumber);
@@ -23,11 +22,10 @@ describe("Coordinator Test suit", function () {
 
         // Object under test
         coordinator = r.coordinator;
-        endUserSigner = r.addr1;
-        addr2 = r.addr2;
         leverageEngineSigner = r.owner;
 
-        await mainnetHelper.helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseEther("5.0"));
+        await mainnetHelper.helperSwapETHWithOUSD(r.addr1, ethers.utils.parseEther("5.0"));
+        await mainnetHelper.helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("5.0"));
     });
 
     describe("Get and update leverage related values", function () {
@@ -126,15 +124,23 @@ describe("Coordinator Test suit", function () {
 
     describe("Deposit collateral into new NFT position", function () {
         /// depositing collateral is expected to transfer funds to vault, shares to be minted and create a new CDP entry with valid values
-        const collateralAmount = ethers.utils.parseEther("1");
+        const addr1CollateralAmount = ethers.utils.parseEther("1");
+        const addr2CollateralAmount = ethers.utils.parseEther("2");
+        /* Shares and assets always increase by the same amount in our vault (both are equal) because
+           only one user (coordinator) is depositing. Each time a deposit takes place the shares for the
+           deposit are stored in CDPosition. Therefore the amount of shares is equal to the collateral: */
+        const addr1Shares = addr1CollateralAmount;
+        const addr2Shares = addr2CollateralAmount;
+        const threeEth = ethers.utils.parseEther("2");
         let sharesOwnerAddress;
         before(async function () {
+            console.log('running first before');
             sharesOwnerAddress = coordinator.address; // shares will be given to coordinator
             // transfer OUSD from user to coordinator address (this will happen in leverage engine in full Archimedes flow)
-            await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, collateralAmount);
-            expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(collateralAmount);
+            await r.externalOUSD.connect(r.addr1).transfer(coordinator.address, addr1CollateralAmount);
+            expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr1CollateralAmount);
 
-            await coordinator.depositCollateralUnderNFT(nftIdFirstPosition, collateralAmount, sharesOwnerAddress, {
+            await coordinator.depositCollateralUnderNFT(nftIdAddr1Position, addr1CollateralAmount, sharesOwnerAddress, {
                 gasLimit: 3000000,
             });
         });
@@ -143,18 +149,72 @@ describe("Coordinator Test suit", function () {
             expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(0);
         });
         it("Should have increased vault balance on OUSD", async function () {
-            expect(await r.externalOUSD.balanceOf(r.vault.address)).to.equal(collateralAmount);
+            const balance = await r.externalOUSD.balanceOf(r.vault.address);
+            console.log('balance 1', balance)
+            expect(balance).to.equal(addr1CollateralAmount)
         });
         it("Should have increased OUSD in the vault", async function () {
-            expect(await r.vault.totalAssets()).to.equal(collateralAmount);
+            expect(await r.vault.totalAssets()).to.equal(addr1CollateralAmount);
         });
-
+        it("Should have increased OUSD shares", async function () {
+            expect(await r.vault.totalSupply()).to.equal(addr1CollateralAmount);
+        });
         it("Should have given shares to shares owner", async function () {
-            expect(await r.vault.maxRedeem(sharesOwnerAddress)).to.equal(collateralAmount);
+            expect(await r.vault.maxRedeem(sharesOwnerAddress)).to.equal(addr1CollateralAmount);
+        });
+        it("Should create entry for first depositer principle in CDP", async function () {
+            expect(await r.cdp.getOUSDPrinciple(nftIdAddr1Position)).to.equal(addr1CollateralAmount);
+        });
+        it("Should create entry for first depositer shares in CDP", async function () {
+            expect(await r.cdp.getShares(nftIdAddr1Position)).to.equal(addr1CollateralAmount);
         });
 
-        it("Should create entry in CDP with principle", async function () {
-            expect(await r.cdp.getOUSDPrinciple(nftIdFirstPosition)).to.equal(collateralAmount);
-        });
+        describe("Separate deposits made by another user", function() {
+            before(async function () {
+                console.log('running second before')
+                // transfer OUSD from user to coordinator address (this will happen in leverage engine in full Archimedes flow)
+                await r.externalOUSD.connect(r.addr2).transfer(coordinator.address, addr2CollateralAmount);
+                expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr2CollateralAmount);
+    
+                await coordinator.depositCollateralUnderNFT(nftIdAddr2Position, addr2CollateralAmount, sharesOwnerAddress, {
+                    gasLimit: 3000000,
+                });
+            });
+
+            const combinedCollateralAmount = addr1CollateralAmount.add(addr2CollateralAmount);
+            it("Should have increased vault balance on OUSD by second collateral amount", async function () {
+                const balance = await r.externalOUSD.balanceOf(r.vault.address);
+                console.log('balance 2', balance)
+                expect(balance).to.equal(combinedCollateralAmount);
+            });
+            it("Should have increased OUSD in the vault by second collateral amount", async function () {
+                expect(await r.vault.totalAssets()).to.equal(combinedCollateralAmount);
+            });
+            it("Should have increased OUSD shares by second collateral amount", async function () {
+                expect(await r.vault.totalSupply()).to.equal(combinedCollateralAmount);
+            });
+            it("Should have increased shares to shares owner by second collateral amount", async function () {
+                expect(await r.vault.maxRedeem(sharesOwnerAddress)).to.equal(combinedCollateralAmount);
+            });
+            it("Should create entry for second depositer principle in CDP", async function () {
+                expect(await r.cdp.getOUSDPrinciple(nftIdAddr2Position)).to.equal(addr2CollateralAmount);
+            });
+            it("Should create entry for second depositer shares in CDP", async function () {
+                expect(await r.cdp.getShares(nftIdAddr2Position)).to.equal(addr2CollateralAmount);
+            });
+            it("Vault should contain the correct number of shares after a rebase event", async function () {
+                console.log({
+                    addr3: r.addr3.address,
+                    vaultAddr: r.vault.address,
+                })
+                await mainnetHelper.helperSwapETHWithOUSD(r.addr3, ethers.utils.parseEther("1"));
+                console.log('done swapping')
+                console.log(r.externalOUSD);
+                // await r.externalOUSD.connect(r.addr3).approve(r.vault.address, ethers.utils.parseEther("1"));
+                await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseEther("1"));
+                // const totalShares = await r.vault.totalSupply();
+                // console.log({ totalShares });
+            });
+        })
     });
 });

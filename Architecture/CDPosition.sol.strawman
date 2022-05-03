@@ -28,12 +28,12 @@ contract CDPosition {
 
     /* Privileged functions: Executive  */
 
-    /// @dev add new entry to NFTID<>CP map with ousdPrinciple. Set CDP.firstCycle = true 
+    /// @dev add new entry to NFTID<>CP map with ousdPrinciple.
     ///
     ///
     /// @param nftID newly minted NFT
     /// @param ousdPrinciple initial OUSD investment (ie position principle)
-    function createPosition(uint256 nftID, uint256 ousdPrinciple) external;
+    function createPosition(uint256 nftID, uint256 ousdPrinciple, uint256 shares) external;
 
     /// @dev delete entry in CDP --if-- lvUSD borrowed balance is zero
     ///
