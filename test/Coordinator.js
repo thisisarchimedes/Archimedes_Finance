@@ -1,4 +1,4 @@
-const { expect, util } = require("chai");
+const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const mainnetHelper = require("./MainnetHelper");
 const { ContractTestContext } = require("./ContractTestContext");
