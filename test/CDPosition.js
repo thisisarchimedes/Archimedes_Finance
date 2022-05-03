@@ -68,6 +68,34 @@ describe("CDPosition test suit", async function () {
         });
     });
 
+    describe("Add and remove shares from position", () => {
+        beforeEach(async function () {
+            // create a new position
+            await cdp.createPosition(NFT_ID, BASIC_OUSD_PRINCIPLE);
+        });
+
+        it("Should add shares to position", async function () {
+            // validate CDP Values
+            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, 0);
+            // create a new position
+            await cdp.addSharesToPosition(NFT_ID, 20);
+            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, 20);
+        });
+
+        it("Should remove shares from position", async function () {
+            // create a new position
+            await cdp.addSharesToPosition(NFT_ID, 20);
+            await cdp.removeSharesFromPosition(NFT_ID, 20);
+            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, 0);
+        });
+
+        it("Should revert when removing more shares than the position owns", async function () {
+            await expect(
+                cdp.removeSharesFromPosition(NFT_ID, 20),
+            ).to.be.revertedWith("Shares to remove exceed position balance");
+        });
+    });
+
     describe("Borrow and deposit actions for position", function () {
         const LVUSD_AMOUNT_NATURAL = 10000;
         const LVUSD_AMOUNT = getEighteenDecimal(LVUSD_AMOUNT_NATURAL);
