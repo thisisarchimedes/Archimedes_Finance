@@ -43,12 +43,6 @@ contract CDPosition {
     /// @param nftID NFT position to update
     /// @param lvUSDAmountToBorrow amount to add to position's existing borrowed lvUSD sum
     function borrowLvUSDFromPosition(uint256 nftID, uint256 lvUSDAmountToBorrow) external nftIDMustExist(nftID) {
-        // sainty check
-        require(
-            lvUSDAmountToBorrow + _nftCDP[nftID].lvUSDBorrowed <= _nftCDP[nftID].oUSDTotal,
-            "Attempt to borrow to much lvUSD"
-        );
-
         _nftCDP[nftID].lvUSDBorrowed += lvUSDAmountToBorrow;
     }
 
