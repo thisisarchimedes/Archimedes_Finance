@@ -38,7 +38,6 @@ describe("Coordinator Test suit", function () {
         const nftIdFirstPosition = 35472;
         let sharesOwnerAddress;
         before(async function () {
-            console.log("running first before");
             sharesOwnerAddress = coordinator.address; // shares will be given to coordinator
             // transfer OUSD from user to coordinator address (this will happen in leverage engine in full Archimedes flow)
             await r.externalOUSD.connect(r.addr1).transfer(coordinator.address, addr1CollateralAmount);
@@ -54,7 +53,6 @@ describe("Coordinator Test suit", function () {
         });
         it("Should have increased vault balance on OUSD", async function () {
             const balance = await r.externalOUSD.balanceOf(r.vault.address);
-            console.log("balance 1", balance);
             expect(balance).to.equal(addr1CollateralAmount);
         });
         it("Should have increased OUSD in the vault", async function () {
@@ -75,7 +73,6 @@ describe("Coordinator Test suit", function () {
 
         describe("Separate deposits made by another user", function () {
             before(async function () {
-                console.log("running second before");
                 // transfer OUSD from user to coordinator address
                 // (this will happen in leverage engine in full Archimedes flow)
                 await r.externalOUSD.connect(r.addr2).transfer(coordinator.address, addr2CollateralAmount);
@@ -89,7 +86,6 @@ describe("Coordinator Test suit", function () {
             const combinedCollateralAmount = addr1CollateralAmount.add(addr2CollateralAmount);
             it("Should have increased vault balance on OUSD by second collateral amount", async function () {
                 const balance = await r.externalOUSD.balanceOf(r.vault.address);
-                console.log("balance 2", balance);
                 expect(balance).to.equal(combinedCollateralAmount);
             });
             it("Should have increased OUSD in the vault by second collateral amount", async function () {
@@ -225,7 +221,6 @@ describe("Coordinator Test suit", function () {
                 await r.coordinator.changeTreasuryAddress(newTreasurySigner.address);
             });
             it("should have updated treasury address", async function () {
-                console.log("Inside should have updated treasury address");
                 const returnedTreasuryAddress = await r.coordinator.getTreasuryAddress();
                 expect(returnedTreasuryAddress).to.equal(newTreasurySigner.address);
             });
