@@ -89,7 +89,6 @@ describe("Coordinator Test suit", function () {
                 const lvUSDAmountToRepayInTwoParts = ethers.utils.parseEther("1");
                 before(async function () {
                     // method under test
-                    await r.vault.giveCoordinatorApproval(r.externalOUSD, coordinator.address);
                     await coordinator.repayUnderNFT(nftIdFirstPosition, lvUSDAmountToRepayInTwoParts);
                 });
                 it("Should transfer lvUSD to coordinator address", async function () {
@@ -102,6 +101,7 @@ describe("Coordinator Test suit", function () {
                 it("Should update CDP with repayed lvUSD", async function () {
                     expect(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)).to.equal(lvUSDAmountToRepayInTwoParts);
                 });
+                /// add test for when we try to repay more then we have 
             });
         });
     });

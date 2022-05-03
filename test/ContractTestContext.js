@@ -37,6 +37,9 @@ class ContractTestContext {
             this.externalOUSD.address,
             this.treasurySigner.address,
         );
+
+        // Post init contracts
+        await this.vault.init(this.lvUSD.address, this.coordinator.address);
     }
 }
 
