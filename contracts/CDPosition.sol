@@ -26,12 +26,8 @@ contract CDPosition {
     /// Update both principle and total with OUSDPrinciple
     /// @param nftID newly minted NFT
     /// @param oOUSDPrinciple initial OUSD investment (ie position principle)
-    function createPosition(
-        uint256 nftID,
-        uint256 oOUSDPrinciple,
-        uint256 shares
-    ) external nftIDMustNotExist(nftID) {
-        _nftCDP[nftID] = CDP(oOUSDPrinciple, 0, oOUSDPrinciple, 0, shares);
+    function createPosition(uint256 nftID, uint256 oOUSDPrinciple) external nftIDMustNotExist(nftID) {
+        _nftCDP[nftID] = CDP(oOUSDPrinciple, 0, oOUSDPrinciple, 0, 0);
     }
 
     /// @dev delete entry in CDP --if-- lvUSD borrowed balance is zero
@@ -40,6 +36,21 @@ contract CDPosition {
     function deletePosition(uint256 nftID) external nftIDMustExist(nftID) canDeletePosition(nftID) {
         /// Set all values to default. Not way to remove key from mapping in solidity
         delete _nftCDP[nftID];
+    }
+
+    /// @dev add shares to a position.
+    /// @param nftID NFT position to update
+    /// @param shares shares to add
+    function addSharesToPosition(uint256 nftID, uint256 shares) external nftIDMustExist(nftID) {
+        _nftCDP[nftID].shares += shares;
+    }
+
+    /// @dev remove shares from position.
+    /// @param nftID NFT position to update
+    /// @param shares shares to remove
+    function removeSharesFromPosition(uint256 nftID, uint256 shares) external nftIDMustExist(nftID) {
+        require(_nftCDP[nftID].shares >= shares, "Shares to remove exceed position balance");
+        _nftCDP[nftID].shares -= shares;
     }
 
     /// @dev update borrowed lvUSD in position. This method adds a delta to existing borrowed value

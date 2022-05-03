@@ -73,7 +73,8 @@ contract Coordinator is ICoordinator {
         uint256 shares = VaultOUSD(_tokenVaultOUSD).deposit(amount, sharesOwner);
         console.log("shares", shares);
         // create CDP position with collateral
-        CDPosition(_tokenCDP).createPosition(nftId, amount, shares);
+        CDPosition(_tokenCDP).createPosition(nftId, amount);
+        CDPosition(_tokenCDP).addSharesToPosition(nftId, shares);
     }
 
     function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
