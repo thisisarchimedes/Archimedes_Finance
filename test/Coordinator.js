@@ -107,18 +107,17 @@ describe("Coordinator Test suit", function () {
             it("Should create entry for second depositer shares in CDP", async function () {
                 expect(await r.cdp.getShares(nftIdAddr2Position)).to.equal(addr2CollateralAmount);
             });
-            it("Vault should contain the correct number of shares after a rebase event", async function () {
-                console.log({
-                    addr3: r.addr3.address,
-                    vaultAddr: r.vault.address,
-                });
-                await mainnetHelper.helperSwapETHWithOUSD(r.addr3, ethers.utils.parseEther("1"));
-                console.log("done swapping");
-                console.log(r.externalOUSD);
-                // await r.externalOUSD.connect(r.addr3).approve(r.vault.address, ethers.utils.parseEther("1"));
-                await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseEther("1"));
-                // const totalShares = await r.vault.totalSupply();
-                // console.log({ totalShares });
+            it("Vault should contain the correct number of shares and assets after a rebase event", async function () {
+                const rebaseAmount = ethers.utils.parseEther("1");
+                /* simulate rebase by transferring from random new address: */
+                await mainnetHelper.helperSwapETHWithOUSD(r.addr3, rebaseAmount);
+                await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, rebaseAmount);
+                /* shares should stay the same since no address called deposit into the vault: */
+                const totalShares = await r.vault.totalSupply();
+                expect(totalShares).to.equal(combinedCollateralAmount);
+                /* assets should increase due to rebase simulation: */
+                const totalAssets = await r.vault.totalAssets();
+                expect(totalAssets).to.equal(combinedCollateralAmount.add(rebaseAmount));
             });
         });
 
