@@ -70,7 +70,7 @@ interface ICoordinator {
     ///
     /// @param _amount the amount of lvUSD requested
     /// @param _nftId the Archimedes ERC-721 token id
-    function borrowUnderNFT(uint256 _amount, uint256 _nftId) external;
+    function borrowUnderNFT(uint256 _nftId, uint256 _amount) external;
 
     /// @dev Repay lvUSD under NFT ID
     ///
@@ -79,7 +79,7 @@ interface ICoordinator {
     ///
     /// @param _amount the amount of lvUSD requested
     /// @param _nftId the Archimedes ERC-721 token id
-    function repayUnderNFT(uint256 _amount, uint256 _nftId) external;
+    function repayUnderNFT(uint256 _nftId, uint256 _amount) external;
 
     /* Non-privileged functions */
     /// TODO: Should this be accessed by admin only or not? <<<<
