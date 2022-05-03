@@ -1,7 +1,6 @@
 const { expect } = require("chai");
 const mainnetHelper = require("./MainnetHelper");
 const { ContractTestContext } = require("./ContractTestContext");
-const { ethers } = require("hardhat");
 
 describe("ContractTestContext", function () {
     let contractTestContext;

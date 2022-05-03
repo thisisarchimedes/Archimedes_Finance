@@ -73,6 +73,7 @@ describe("Coordinator Test suit", function () {
                 expect(await r.lvUSD.balanceOf(r.exchanger.address)).to.equal(lvUSDAmountToBorrow);
             });
             it("Should decrease coordinator lvUSD balance", async function () {
+                /// we expect coordinator to have 98 ethers since we started with 100 ether lvUSD and borrowed 2 ethers
                 expect(await r.lvUSD.balanceOf(coordinator.address)).to.equal(ethers.utils.parseEther("98"));
             });
             it("Should update CDP with borrowed lvUSD", async function () {
@@ -92,6 +93,8 @@ describe("Coordinator Test suit", function () {
                     await coordinator.repayUnderNFT(nftIdFirstPosition, lvUSDAmountToRepayInTwoParts);
                 });
                 it("Should transfer lvUSD to coordinator address", async function () {
+                    /// we expect coordinator to have 98 ethers since we started with 100 ether lvUSD and
+                    /// borrowed 2 ethers and also repayed 1 ether
                     expect(await r.lvUSD.balanceOf(coordinator.address)).to.equal(ethers.utils.parseEther("99"));
                 });
                 it("Should decrease Vault's lvUSD balance", async function () {
