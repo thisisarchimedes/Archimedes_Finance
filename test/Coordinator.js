@@ -6,8 +6,6 @@ const { ContractTestContext } = require("./ContractTestContext");
 describe("Coordinator Test suit", function () {
     let r;
     let coordinator;
-    let leverageEngineSigner;
-    let sharesOwnerAddress;
     const nftIdAddr1Position = 35472;
     const nftIdAddr2Position = 15426;
 
@@ -19,27 +17,24 @@ describe("Coordinator Test suit", function () {
 
         // Object under test
         coordinator = r.coordinator;
-        leverageEngineSigner = r.owner;
 
         await mainnetHelper.helperSwapETHWithOUSD(r.addr1, ethers.utils.parseEther("5.0"));
         await mainnetHelper.helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("5.0"));
     });
 
     describe("Deposit collateral into new NFT position", function () {
-        /// depositing collateral is expected to transfer funds to vault, shares to be minted and create a new CDP entry with valid values
+        /// depositing collateral is expected to transfer funds to vault
+        // shares to be minted and create a new CDP entry with valid values
         const addr1CollateralAmount = ethers.utils.parseEther("1");
         const addr2CollateralAmount = ethers.utils.parseEther("2");
         /* Shares and assets always increase by the same amount in our vault (both are equal) because
            only one user (coordinator) is depositing. Each time a deposit takes place the shares for the
            deposit are stored in CDPosition. Therefore the amount of shares is equal to the collateral: */
-        const addr1Shares = addr1CollateralAmount;
-        const addr2Shares = addr2CollateralAmount;
-        const threeEth = ethers.utils.parseEther("2");
-        const nftIdFirstPosition = 35472;
         let sharesOwnerAddress;
         before(async function () {
             sharesOwnerAddress = coordinator.address; // shares will be given to coordinator
-            // transfer OUSD from user to coordinator address (this will happen in leverage engine in full Archimedes flow)
+            // transfer OUSD from user to coordinator address
+            // (this will happen in leverage engine in full Archimedes flow)
             await r.externalOUSD.connect(r.addr1).transfer(coordinator.address, addr1CollateralAmount);
             expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr1CollateralAmount);
 
