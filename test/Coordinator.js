@@ -111,7 +111,6 @@ describe("Coordinator Test suit", function () {
             describe("Get leveraged OUSD for position", function () {
                 const leverageAmount = collateralAmount;
                 let currentBorrowedLvUSDInPosition;
-                // const totalOUSDAmount = collateralAmount + collateralAmount;
                 before(async function () {
                     /// Get initial state
                     currentBorrowedLvUSDInPosition = await r.cdp.getLvUSDBorrowed(nftIdFirstPosition);

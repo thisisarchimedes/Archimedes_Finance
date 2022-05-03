@@ -101,32 +101,31 @@ contract Coordinator is ICoordinator {
 
     function getLeveragedOUSD(
         uint256 _nftId,
-        uint256 _amount,
+        uint256 _amountToLeverage,
         address _sharesOwner
-    ) external {
-        /// check if position exist, if amount requested is lower then allowed leverage
-        // borrow LvUSD
-        // call exchanger to exchange funds
-        // deposit funds in vault, get shares
-        // update CDP with returned OUSD
-        // update CDO with accumulated shares
+    ) external override {
+        /* Flow
+          1. basic sanity checks 
+          2. borrow lvUSD
+          3. call exchanger to exchange lvUSD. Exchanged OUSD will be under Coordinator address.  Save exchanged OUSD value 
+          4. deposit OUSD funds in Vault
+          5. Update CDP totalOUSD and shares for nft position
+        */
+
         uint256 ousdPrinciple = CDPosition(_tokenCDP).getOUSDPrinciple(_nftId);
         require(
-            _amount <= getAllowedLeverageForPosition(ousdPrinciple, _maxNumberOfCycles),
+            _amountToLeverage <= getAllowedLeverageForPosition(ousdPrinciple, _maxNumberOfCycles),
             "Cannot get more leverage then max allowed leverage"
         );
 
-        _borrowUnderNFT(_nftId, _amount);
-        /// TODO - call exchanger to exchange fund. For now, assume we got a one to one exchange rate
-        uint256 ousdAmountExchanged = _amount;
-        /// END TODO
+        _borrowUnderNFT(_nftId, _amountToLeverage);
 
-        /// Assume OUSD is under coordinator address ?
+        /// TODO - call exchanger to exchange fund. For now, assume we got a one to one exchange rate
+        uint256 ousdAmountExchanged = _amountToLeverage;
+
         VaultOUSD(_tokenVaultOUSD).deposit(ousdAmountExchanged, _sharesOwner);
 
         /// TODO : update shares on CDP
-
-        /// update CDP with OUSD
         CDPosition(_tokenCDP).depositOUSDtoPosition(_nftId, ousdAmountExchanged);
     }
 
