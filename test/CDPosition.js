@@ -75,14 +75,17 @@ describe("CDPosition test suit", async function () {
         });
 
         it("Should add shares to position", async function () {
+            const sharesToAdd = 20;
             await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, 0);
-            await cdp.addSharesToPosition(NFT_ID, 20);
-            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, 20);
+            await cdp.addSharesToPosition(NFT_ID, sharesToAdd);
+            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, sharesToAdd);
         });
 
         it("Should remove shares from position", async function () {
-            await cdp.addSharesToPosition(NFT_ID, 20);
-            await cdp.removeSharesFromPosition(NFT_ID, 20);
+            const sharesToAdd = 20;
+            await cdp.addSharesToPosition(NFT_ID, sharesToAdd);
+            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, sharesToAdd);
+            await cdp.removeSharesFromPosition(NFT_ID, sharesToAdd);
             await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, 0);
         });
 
