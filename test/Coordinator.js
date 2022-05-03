@@ -1,4 +1,4 @@
-const { expect } = require("chai");
+const { expect, util } = require("chai");
 const { ethers } = require("hardhat");
 const mainnetHelper = require("./MainnetHelper");
 const { ContractTestContext } = require("./ContractTestContext");
@@ -68,7 +68,7 @@ describe("Coordinator Test suit", function () {
                 // method under test
                 await coordinator.borrowUnderNFT(nftIdFirstPosition, lvUSDAmountToBorrow);
             });
-            it("Should transfer lvUSD to vaults address", async function () {
+            it("Should transfer lvUSD to exchanger address", async function () {
                 /// general note - "borrowed" lvUSD is assigned to exchanger
                 expect(await r.lvUSD.balanceOf(r.exchanger.address)).to.equal(lvUSDAmountToBorrow);
             });
@@ -106,6 +106,36 @@ describe("Coordinator Test suit", function () {
                     await expect(coordinator.repayUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("100")))
                         .to.be.revertedWith("Coordinator : Cannot repay more lvUSD then is borrowed");
                 });
+            });
+
+            describe("Get leveraged OUSD for position", function () {
+                const leverageAmount = collateralAmount;
+                let currentBorrowedLvUSDInPosition;
+                // const totalOUSDAmount = collateralAmount + collateralAmount;
+                before(async function () {
+                    /// Get initial state
+                    currentBorrowedLvUSDInPosition = await r.cdp.getLvUSDBorrowed(nftIdFirstPosition);
+                    /// Test artifact only, Once exchanger is functional we can use the exchange and
+                    /// transfer OUSD directly to coordinator
+                    await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, leverageAmount);
+                    // method under test
+                    await coordinator.getLeveragedOUSD(nftIdFirstPosition, leverageAmount, sharesOwnerAddress);
+                });
+                it("Should have increase borrowed amount on CDP for NFT", async function () {
+                    expect(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)).to.equal(
+                        currentBorrowedLvUSDInPosition.add(leverageAmount));
+                });
+                it("Should have increased OUSD deposited in vault", async function () {
+                    expect(await r.vault.totalAssets()).to.equal(leverageAmount.add(collateralAmount));
+                });
+                it("Should have minted (more) shares to owner address", async function () {
+                    expect(await r.vault.maxRedeem(sharesOwnerAddress)).to.equal(
+                        leverageAmount.add(collateralAmount));
+                });
+                it("Should have increased deposited OUSD in CDPosition", async function () {
+                    expect(await r.cdp.getOUSDTotal(nftIdFirstPosition)).to.equal(leverageAmount.add(collateralAmount));
+                });
+                /// Add test for shares
             });
         });
     });

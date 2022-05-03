@@ -82,6 +82,10 @@ contract Coordinator is ICoordinator {
     function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
 
     function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override {
+        _borrowUnderNFT(_nftId, _amount);
+    }
+
+    function _borrowUnderNFT(uint256 _nftId, uint256 _amount) internal {
         IERC20(_tokenLvUSD).transfer(_tokenExchanger, _amount);
         CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amount);
     }
@@ -93,6 +97,37 @@ contract Coordinator is ICoordinator {
         );
         IERC20(_tokenLvUSD).transferFrom(_tokenExchanger, address(this), _amount);
         CDPosition(_tokenCDP).repayLvUSDToPosition(_nftId, _amount);
+    }
+
+    function getLeveragedOUSD(
+        uint256 _nftId,
+        uint256 _amount,
+        address _sharesOwner
+    ) external {
+        /// check if position exist, if amount requested is lower then allowed leverage
+        // borrow LvUSD
+        // call exchanger to exchange funds
+        // deposit funds in vault, get shares
+        // update CDP with returned OUSD
+        // update CDO with accumulated shares
+        uint256 ousdPrinciple = CDPosition(_tokenCDP).getOUSDPrinciple(_nftId);
+        require(
+            _amount <= getAllowedLeverageForPosition(ousdPrinciple, _maxNumberOfCycles),
+            "Cannot get more leverage then max allowed leverage"
+        );
+
+        _borrowUnderNFT(_nftId, _amount);
+        /// TODO - call exchanger to exchange fund. For now, assume we got a one to one exchange rate
+        uint256 ousdAmountExchanged = _amount;
+        /// END TODO
+
+        /// Assume OUSD is under coordinator address ?
+        VaultOUSD(_tokenVaultOUSD).deposit(ousdAmountExchanged, _sharesOwner);
+
+        /// TODO : update shares on CDP
+
+        /// update CDP with OUSD
+        CDPosition(_tokenCDP).depositOUSDtoPosition(_nftId, ousdAmountExchanged);
     }
 
     function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}

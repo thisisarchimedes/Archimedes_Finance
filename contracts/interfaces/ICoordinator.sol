@@ -81,6 +81,12 @@ interface ICoordinator {
     /// @param _nftId the Archimedes ERC-721 token id
     function repayUnderNFT(uint256 _nftId, uint256 _amount) external;
 
+    /// @dev borrow lvUSD and exchange it for OUSD
+    /// @param _nftId NFT ID
+    /// @param _amount amount to borrow
+    /// @param _sharesOwner address to apply shares to
+    function getLeveragedOUSD(uint256 _nftId, uint256 _amount, address _sharesOwner) external; 
+
     /* Non-privileged functions */
     /// TODO: Should this be accessed by admin only or not? <<<<
     /// @dev deposit OUSD under address (vs. under NFT token ID)
