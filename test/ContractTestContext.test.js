@@ -30,10 +30,10 @@ describe("ContractTestContext", function () {
         });
 
         describe("Init methods will be called", async function () {
-            it("Should set unlimited allowance for coordinator to spend Vault's OUSD", async function () {
+            it("Should set unlimited allowance for exchange to spend Coordinator's lvUSD", async function () {
                 expect(await contractTestContext.lvUSD.allowance(
                     contractTestContext.exchanger.address, contractTestContext.coordinator.address))
-                    .to.equal(ethers.utils.parseEther("100000000")); /// random big number, MAX_UINT256 throws an error
+                    .to.equal("115792089237316195423570985008687907853269984665640564039457584007913129639935");
             });
         });
     });
