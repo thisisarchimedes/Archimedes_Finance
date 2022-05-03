@@ -163,15 +163,6 @@ describe("CDPosition test suit", async function () {
                 "OUSD total amount must be greater or equal than amount to withdraw",
             );
         });
-
-        it("Shouldn't allow to borrow more lvUSD if we above collateral rate", async function () {
-            const totalOUSD = await cdp.getOUSDTotal(NFT_ID);
-
-            // try to borrow more than totalOUSD - expect revert
-            await expect(cdp.borrowLvUSDFromPosition(NFT_ID, totalOUSD + OUSD_AMOUNT)).to.be.revertedWith(
-                "Attempt to borrow to much lvUSD",
-            );
-        });
     });
 
     describe("Changes to a specific NFT ID CDP struct should not effect other NFT IDs struct", function () {
