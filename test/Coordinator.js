@@ -5,6 +5,8 @@ const { ContractTestContext } = require("./ContractTestContext");
 
 describe("Coordinator Test suit", function () {
     let r;
+    let endUserSigner;
+    let sharesOwnerAddress;
     let coordinator;
     const nftIdAddr1Position = 35472;
     const nftIdAddr2Position = 15426;
@@ -15,10 +17,12 @@ describe("Coordinator Test suit", function () {
         r = new ContractTestContext();
         await r.setup();
 
+        endUserSigner = r.addr1;
         // Object under test
         coordinator = r.coordinator;
+        sharesOwnerAddress = coordinator.address;
 
-        await mainnetHelper.helperSwapETHWithOUSD(r.addr1, ethers.utils.parseEther("5.0"));
+        await mainnetHelper.helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseEther("5.0"));
         await mainnetHelper.helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("5.0"));
     });
 
@@ -30,12 +34,10 @@ describe("Coordinator Test suit", function () {
         /* Shares and assets always increase by the same amount in our vault (both are equal) because
            only one user (coordinator) is depositing. Each time a deposit takes place the shares for the
            deposit are stored in CDPosition. Therefore the amount of shares is equal to the collateral: */
-        let sharesOwnerAddress;
         before(async function () {
-            sharesOwnerAddress = coordinator.address; // shares will be given to coordinator
             // transfer OUSD from user to coordinator address
             // (this will happen in leverage engine in full Archimedes flow)
-            await r.externalOUSD.connect(r.addr1).transfer(coordinator.address, addr1CollateralAmount);
+            await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, addr1CollateralAmount);
             expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr1CollateralAmount);
 
             await coordinator.depositCollateralUnderNFT(nftIdAddr1Position, addr1CollateralAmount, sharesOwnerAddress, {
