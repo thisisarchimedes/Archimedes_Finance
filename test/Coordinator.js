@@ -89,6 +89,7 @@ describe("Coordinator Test suit", function () {
                 const lvUSDAmountToRepayInTwoParts = ethers.utils.parseEther("1");
                 before(async function () {
                     // method under test
+                    await r.vault.giveCoordinatorApproval(r.externalOUSD, coordinator.address);
                     await coordinator.repayUnderNFT(nftIdFirstPosition, lvUSDAmountToRepayInTwoParts);
                 });
                 it("Should transfer lvUSD to coordinator address", async function () {
