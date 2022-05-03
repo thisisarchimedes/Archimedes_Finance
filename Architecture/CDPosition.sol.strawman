@@ -33,7 +33,7 @@ contract CDPosition {
     ///
     /// @param nftID newly minted NFT
     /// @param ousdPrinciple initial OUSD investment (ie position principle)
-    function createPosition(uint256 nftID, uint256 ousdPrinciple, uint256 shares) external;
+    function createPosition(uint256 nftID, uint256 ousdPrinciple) external;
 
     /// @dev delete entry in CDP --if-- lvUSD borrowed balance is zero
     ///
