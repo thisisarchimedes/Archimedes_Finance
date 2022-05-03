@@ -1,5 +1,5 @@
 const { ethers } = require("hardhat");
-var mainNetHelper = require("./MainnetHelper");
+const mainNetHelper = require("./MainnetHelper");
 
 class ContractTestContext {
     // addresses for different roles
@@ -18,12 +18,10 @@ class ContractTestContext {
     // External contracts
     externalOUSD;
 
-    constructor() {}
-
-    async setup() {
+    async setup () {
         [this.owner, this.addr1, this.addr2, this.treasurySigner, this.addr3] = await ethers.getSigners();
 
-        let contractCDP = await ethers.getContractFactory("CDPosition");
+        const contractCDP = await ethers.getContractFactory("CDPosition");
         this.cdp = await contractCDP.deploy();
 
         this.externalOUSD = new ethers.Contract(mainNetHelper.addressOUSD, mainNetHelper.abiOUSDToken, this.owner);
@@ -38,7 +36,7 @@ class ContractTestContext {
             this.vault.address,
             this.cdp.address,
             this.externalOUSD.address,
-            this.treasurySigner.address
+            this.treasurySigner.address,
         );
     }
 }
