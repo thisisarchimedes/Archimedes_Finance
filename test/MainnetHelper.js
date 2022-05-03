@@ -9,6 +9,7 @@ const {
     abiCurveFactory,
     abi3CRVToken,
     abiCurve3Pool,
+    abi3PoolImplementation,
 } = require("../ABIs");
 
 // grab the private api key from the private repo
@@ -31,6 +32,47 @@ const indexCurveOUSDOUSD = 0;
 const indexCurveOUSD3CRV = 1;
 
 /* helper functions */
+// Spin up a Curve Meta Pool that uses 3CRV
+// @param token: ERC20 token balanced in the pool
+// @param signer: Signer used to deploy / own the pool
+// returns pool object of the newly created CurveMetaPool
+async function createCurveMetapool3CRV (token, signer) {
+    // CurvePool Factory
+    const factoryCurveMetapool = new ethers.Contract(addressCurveFactory, abiCurveFactory, signer);
+    const tokenName = await token.symbol();
+    const poolSymbol = tokenName + "3CRV";
+
+    // examples on Mainnet:
+    // https://etherscan.io/address/0xB9fC157394Af804a3578134A6585C0dc9cc990d4?method=Deploy_metapool~de7fe3bf
+    // https://curve.readthedocs.io/factory-deployer.html#Factory.deploy_metapool
+    /*
+    _base_pool: Address of the base pool to use within the new metapool.
+    _name: Name of the new metapool.
+    _symbol: Symbol for the new metapool’s LP token. This value will be concatenated with the base pool symbol.
+    _coin: Address of the coin being used in the metapool
+    _A: Amplification coefficient
+    _fee: Trade fee, given as an integer with 1e10 precision.
+    */
+    await factoryCurveMetapool.deploy_metapool(addressCurve3Pool, tokenName, poolSymbol, token.address, 1337, 4000000);
+    // https://curve.readthedocs.io/factory-deployer.html#Factory.find_pool_for_coins
+    // We deployed a 3CRV/lvUSD pool - so we ask Curve Factory to look for pools that can deal with USDT/lvUSD
+    // In the future this will be a fixed index we can query instead
+    const poolAddress = await factoryCurveMetapool.find_pool_for_coins(addressUSDT, token.address);
+    // Return the pool object
+    return await getMetapool(poolAddress, signer);
+}
+
+// Gets the Metapool by address
+// Returns a 3CRVMetapool instance
+// We use the 3CRV Base Pool, so we can assume the correct ABI as given in docs:
+// https://curve.readthedocs.io/factory-pools.html#implementation-contracts
+// @param address: address of the metapool
+// @param user: signer or provider used to interact with pool (owner can write)
+async function getMetapool (address, user) {
+    // We assume its a 3CRV metapool, so we use the 3pool implementation abi
+    return await ethers.getContractAt(abi3PoolImplementation, address, user);
+}
+
 async function helperResetNetwork (lockBlock) {
     // Reset hardhat mainnet fork
     await network.provider.request({
@@ -183,6 +225,8 @@ module.exports = {
     helperSwapETHWithUSDT,
     helperSwapETHWith3CRV,
     helperSwapETHWithOUSD,
+    createCurveMetapool3CRV,
+    getMetapool,
 
     /* addresses */
     addressCurveTripool2,
@@ -203,6 +247,7 @@ module.exports = {
     abiCurveFactory,
     abi3CRVToken,
     abiCurve3Pool,
+    abi3PoolImplementation,
 
     /* other */
     indexTripoolUSDT,

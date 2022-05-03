@@ -1,20 +1,25 @@
 const helper = require("./MainnetHelper");
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
+const { ContractTestContext } = require("./ContractTestContext");
 
 /* Integration tests start here */
 
-let contractlvUSDToken;
 let contractARCHToken;
-let contract3CRVlvUSDPool;
 
 describe("Setting the stage: Getting some OUSD and deploying our contracts", function () {
     let signer;
     let user;
+    let r;
+    let lvUSD;
 
     before(async function () {
         // Reset network before integration tests
         helper.helperResetNetwork(14533286);
+        // Setup & deploy contracts
+        r = new ContractTestContext();
+        await r.setup();
+        lvUSD = r.lvUSD;
     });
 
     beforeEach(async function () {
@@ -27,13 +32,8 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
     });
 
     it("Should deploy lvUSD ERC-20 contract", async function () {
-        // deploying lvUSD contract
-        const factorylvUSDToken = await ethers.getContractFactory("LvUSDToken");
-        contractlvUSDToken = await factorylvUSDToken.deploy();
-        await contractlvUSDToken.deployed();
-
         // running simple check - calling decimals to ensure contract was deployed
-        expect(await contractlvUSDToken.decimals()).to.equal(18);
+        expect(await lvUSD.decimals()).to.equal(18);
     });
 
     it("Should deploy ARCH token ERC-20 contract", async function () {
@@ -50,27 +50,9 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
 
     // Deploy using the Meta-Pool Factory:
     // https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry
-    it("Should deploy lvUSD/3CRV pool", async function () {
-        const curveFactory = new ethers.Contract(helper.addressCurveFactory, helper.abiCurveFactory, signer);
-
-        /* Factory.deploy_metapool(
-                _base_pool: address, _name: String[32], _symbol: String[10], _coin: address, _A: uint256, _fee: uint256
-            ) → address: nonpayable
-           https://curve.readthedocs.io/factory-deployer.html#deploying-a-pool */
-        await curveFactory.deploy_metapool(
-            helper.addressCurve3Pool,
-            "lvUSD pool",
-            "lvUSD",
-            contractlvUSDToken.address,
-            10,
-            4000000,
-        );
-
-        // now let's see if we can find this pool
-        // https://curve.readthedocs.io/factory-deployer.html#Factory.find_pool_for_coins
-        // we deployed a 3CRV/lvUSD pool - so we ask Curve Factory to look for pools that can deal with USDT/lvUSD
-        contract3CRVlvUSDPool = await curveFactory.find_pool_for_coins(helper.addressUSDT, contractlvUSDToken.address);
-        expect(contract3CRVlvUSDPool).to.not.equal(0);
+    it("Should deploy lvUSD/3CRV pool with correct A value", async function () {
+        const pool = await helper.createCurveMetapool3CRV(lvUSD, signer);
+        expect(await pool.A()).to.eq(1337);
     });
 
     // get the gauge and add bonus ARCH tokens:
