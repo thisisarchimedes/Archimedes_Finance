@@ -10,6 +10,15 @@ import "../contracts/interfaces/curvefi/IStableSwapPool.sol";
 import {IExchanger} from "../contracts/interfaces/IExchanger.sol";
 
 contract Exchanger is IExchanger {
+    /* Privileged functions: Admin */
+
+    /// @dev initialize Vault
+    /// @param _tokenLvUSD lvUSD contract address
+    /// @param _tokenCoordinator Coordinator contract address
+    function init(address _tokenLvUSD, address _tokenCoordinator) external {
+        IERC20(_tokenLvUSD).approve(_tokenCoordinator, type(uint256).max);
+    }
+
     /* solhint-disable */
     using SafeMath for uint256;
 
