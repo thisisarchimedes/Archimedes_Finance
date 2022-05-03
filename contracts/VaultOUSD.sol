@@ -17,6 +17,4 @@ contract VaultOUSD is ERC4626 {
         string memory name,
         string memory symbol
     ) ERC20(name, symbol) ERC4626(asset) {}
-
-    
 }
