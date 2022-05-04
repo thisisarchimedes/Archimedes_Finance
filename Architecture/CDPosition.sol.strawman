@@ -28,7 +28,7 @@ contract CDPosition {
 
     /* Privileged functions: Executive  */
 
-    /// @dev add new entry to NFTID<>CP map with ousdPrinciple. Set CDP.firstCycle = true 
+    /// @dev add new entry to NFTID<>CP map with ousdPrinciple.
     ///
     ///
     /// @param nftID newly minted NFT

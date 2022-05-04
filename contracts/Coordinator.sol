@@ -73,10 +73,10 @@ contract Coordinator is ICoordinator {
         address _sharesOwner
     ) external override {
         /// Transfer collateral to vault, mint shares to shares owner
-        VaultOUSD(_tokenVaultOUSD).deposit(_amountInOUSD, _sharesOwner);
+        uint256 shares = VaultOUSD(_tokenVaultOUSD).deposit(_amountInOUSD, _sharesOwner);
         // create CDP position with collateral
-        // TODO : !!!!!! update shares allocation to position !!!!!!!
         CDPosition(_tokenCDP).createPosition(_nftId, _amountInOUSD);
+        CDPosition(_tokenCDP).addSharesToPosition(_nftId, shares);
     }
 
     function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
@@ -90,7 +90,6 @@ contract Coordinator is ICoordinator {
         CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amount);
    
     }
-
     function repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) external override {
         require(
             CDPosition(_tokenCDP).getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay,

@@ -30,6 +30,7 @@ describe("ContractTestContext", function () {
 
         describe("Init methods will be called", async function () {
             it("Should set unlimited allowance for exchange to spend Coordinator's lvUSD", async function () {
+                // String in equal is 2^256 -1, max uint256
                 expect(await contractTestContext.lvUSD.allowance(
                     contractTestContext.exchanger.address, contractTestContext.coordinator.address))
                     .to.equal("115792089237316195423570985008687907853269984665640564039457584007913129639935");
