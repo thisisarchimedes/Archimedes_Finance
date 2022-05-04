@@ -40,18 +40,17 @@ describe("ContractTestContext", function () {
     });
 
     describe("Basic contract import functions", async function () {
-        it("Should should be defined if contract exists", async function () {
+        it("Should be defined if contract exists", async function () {
             // String in equal is 2^256 -1, max uint256
             await expect(contractTestContext.coordinator).to.not.be.undefined;
         });
-        it("Should should be undefined if contract does not exist", async function () {
+        it("Should be undefined if contract does not exist", async function () {
             // String in equal is 2^256 -1, max uint256
             let contract;
             try {
                 contract = await ethers.getContractFactory("sdjkfnsdkfjnsfn");
             } catch (e) {}
             await expect(contract).to.be.undefined;
-            // await leContract.deploy();
         });
     });
 });
