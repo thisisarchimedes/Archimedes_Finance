@@ -119,7 +119,7 @@ contract Coordinator is ICoordinator {
             "Cannot get more leverage then max allowed leverage"
         );
 
-        // borrowUnderNFT transfer lvUSD from Coordinator to Exchanger + mark borrowed lvUSD in CDP under nft ID 
+        // borrowUnderNFT transfer lvUSD from Coordinator to Exchanger + mark borrowed lvUSD in CDP under nft ID
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
         /// TODO - call exchanger to exchange fund. For now, assume we got a one to one exchange rate

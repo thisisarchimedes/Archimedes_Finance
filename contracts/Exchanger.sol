@@ -14,7 +14,6 @@ contract Exchanger {
         IERC20(_tokenLvUSD).approve(_tokenCoordinator, type(uint256).max);
     }
 
-
     /**
      * @dev Exchanges LvUSD for OUSD using multiple CRV3Metapools
      * returns amount of OUSD

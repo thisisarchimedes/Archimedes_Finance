@@ -201,7 +201,7 @@ describe("Coordinator Test suit", function () {
                 });
                 it("Should have update CDPosition with shares", async function () {
                     // When getting leveraged OUSD and depositing it into Vault, shares are not always one to one
-                    // (based on a math calculation in Vault). The value beloew is what we expect to
+                    // (based on a math calculation in Vault). The value below is what we expect to
                     // get at this state of the vault
                     const numberOfSharesFromLeverage = ethers.BigNumber.from("750000000000000000");
                     expect(await r.cdp.getShares(nftIdFirstPosition))
