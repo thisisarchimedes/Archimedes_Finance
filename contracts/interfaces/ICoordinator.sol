@@ -45,13 +45,13 @@ interface ICoordinator {
     ///
     /// User sends OUSD to the contract. OUSD is written under NFT ID
     ///
-    /// @param nftId the Archimedes ERC-721 token id
-    /// @param amount the amount of OUSD sent to Archimedes
-    /// @param sharesOwner who to send shares to
+    /// @param _nftId the Archimedes ERC-721 token id
+    /// @param _amountInOUSD the amount of OUSD sent to Archimedes
+    /// @param _sharesOwner who to send shares to
     function depositCollateralUnderNFT(
-        uint256 nftId,
-        uint256 amount,
-        address sharesOwner
+        uint256 _nftId,
+        uint256 _amountInOUSD,
+        address _sharesOwner
     ) external;
 
     /// @dev withdraw OUSD under NFT ID
@@ -68,18 +68,18 @@ interface ICoordinator {
     /// Need to check collaterallization ratio
     /// Need to collect origination fee and sent them to vault
     ///
-    /// @param _amount the amount of lvUSD requested
+    /// @param _amountLvUSDToBorrow the amount of lvUSD requested
     /// @param _nftId the Archimedes ERC-721 token id
-    function borrowUnderNFT(uint256 _nftId, uint256 _amount) external;
+    function borrowUnderNFT(uint256 _nftId, uint256 _amountLvUSDToBorrow) external;
 
     /// @dev Repay lvUSD under NFT ID
     ///
     /// User repay lvUSD against the OUSD deposited as collateral
     /// Need to check collaterallization ratio
     ///
-    /// @param _amount the amount of lvUSD requested
+    /// @param _amountLvUSDToRepay the amount of lvUSD requested
     /// @param _nftId the Archimedes ERC-721 token id
-    function repayUnderNFT(uint256 _nftId, uint256 _amount) external;
+    function repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) external;
 
     /// @dev borrow lvUSD and exchange it for OUSD
     /// @param _nftId NFT ID
