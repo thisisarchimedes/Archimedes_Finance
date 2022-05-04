@@ -6,6 +6,7 @@ import {IERC4626} from "../contracts/interfaces/IERC4626.sol";
 import {VaultOUSD} from "../contracts/VaultOUSD.sol";
 import {CDPosition} from "../contracts/CDPosition.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Exchanger} from "../contracts/Exchanger.sol";
 
 import "hardhat/console.sol";
 
@@ -121,7 +122,7 @@ contract Coordinator is ICoordinator {
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
         /// TODO - call exchanger to exchange fund. For now, assume we got a one to one exchange rate
-        uint256 ousdAmountExchanged = _amountToLeverage;
+        uint256 ousdAmountExchanged = Exchanger(_tokenExchanger).xLvUSDforOUSD(_amountToLeverage, address(this));
 
         uint256 sharesFromDeposit = VaultOUSD(_tokenVaultOUSD).deposit(ousdAmountExchanged, _sharesOwner);
 
