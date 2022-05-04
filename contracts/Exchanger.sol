@@ -15,29 +15,36 @@ contract Exchanger is IExchanger {
     using SafeMath for uint256;
 
     address internal _tokenLvUSD;
+    address internal _tokenCoordinator;
+    IStableSwapPool internal _pool3CrvLvUSD;
+    IStableSwapPool internal constant _pool3CrvOUSD = IStableSwapPool(0x87650D7bbfC3A9F10587d7778206671719d9910D);
 
     /* Privileged functions: Admin */
 
     /// @dev initialize Vault
-    /// @param _tokenLvUSD lvUSD contract address
-    /// @param _tokenCoordinator Coordinator contract address
-    function init(address _tokenLvUSD, address _tokenCoordinator) external {
+    /// @param tokenLvUSD lvUSD contract address
+    /// @param tokenCoordinator Coordinator contract address
+    function initialize(
+        address tokenLvUSD,
+        address tokenCoordinator,
+        address pool3CrvLvUSD
+    ) external {
+        _tokenLvUSD = tokenLvUSD;
+        _tokenCoordinator = tokenCoordinator;
+        _pool3CrvLvUSD = IStableSwapPool(pool3CrvLvUSD);
         IERC20(_tokenLvUSD).approve(_tokenCoordinator, type(uint256).max);
     }
-
-    // ----------------- TOKEN CONVERSIONS -----------------
-    /* 3Crv Pool */
-    IStableSwapPool internal constant _pool3CrvOUSD = IStableSwapPool(0x87650D7bbfC3A9F10587d7778206671719d9910D);
-    /* NOTE: Since LvUSD doesn't exist yet, we use the FEI/Crv3 pool. */
-    /// TODO init with pool address!
-    IStableSwapPool internal constant _pool3CrvLvUSD = IStableSwapPool(0x06cb22615BA53E60D67Bf6C341a0fD5E718E1655);
 
     /**
      * @dev Exchanges LvUSD for OUSD using multiple CRV3Metapools
      * - MUST emit an event
      * NOTE: There is no gaurnatee of a 1:1 exchange ratio
      */
-    function xLvUSDforOUSD(uint256 amount, address to) external override returns (uint256) {
+    function xLvUSDforOUSD(
+        uint256 amount,
+        address to,
+        uint256 minRequired
+    ) external override returns (uint256) {
         /// make sure we have enough to use
         uint256 min;
 

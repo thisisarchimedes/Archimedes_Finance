@@ -8,7 +8,11 @@ interface IExchanger {
      * - MUST emit an event
      * NOTE: There is no gaurnatee of a 1:1 exchange ratio
      */
-    function xLvUSDforOUSD(uint256 amountLvUSD, address to) external returns (uint256);
+    function xLvUSDforOUSD(
+        uint256 amountLvUSD,
+        address to,
+        uint256 minRequired
+    ) external returns (uint256);
 
     /**
      * @dev Exchanges OUSD for LvUSD using multiple CRV3Metapools
