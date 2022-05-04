@@ -17,8 +17,11 @@ class ContractTestContext {
 
     // External contracts
     externalOUSD;
+    externalUSDT;
+    external3CRV;
+    external3Pool;
 
-    async setup () {
+    async setup() {
         [this.owner, this.addr1, this.addr2, this.treasurySigner] = await ethers.getSigners();
 
         const contractCDP = await ethers.getContractFactory("CDPosition");
@@ -27,7 +30,27 @@ class ContractTestContext {
         const contractExchanger = await ethers.getContractFactory("Exchanger");
         this.exchanger = await contractExchanger.deploy();
 
-        this.externalOUSD = new ethers.Contract(mainNetHelper.addressOUSD, mainNetHelper.abiOUSDToken, this.owner);
+        this.externalOUSD = await new ethers.Contract(
+            mainNetHelper.addressOUSD,
+            mainNetHelper.abiOUSDToken,
+            this.owner,
+        );
+        this.externalUSDT = await new ethers.Contract(
+            mainNetHelper.addressUSDT,
+            mainNetHelper.abiUSDTToken,
+            this.owner,
+        );
+        this.external3CRV = await new ethers.Contract(
+            mainNetHelper.address3CRV,
+            mainNetHelper.abi3CRVToken,
+            this.owner,
+        );
+        this.external3Pool = await new ethers.Contract(
+            mainNetHelper.addressCurve3Pool,
+            mainNetHelper.abiCurve3Pool,
+            this.owner,
+        );
+
         const contractVault = await ethers.getContractFactory("VaultOUSD");
         this.vault = await contractVault.deploy(this.externalOUSD.address, "VaultOUSD", "VOUSD");
         const contractLvUSD = await ethers.getContractFactory("LvUSDToken");
