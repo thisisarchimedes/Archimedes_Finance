@@ -6,6 +6,7 @@ class ContractTestContext {
     owner;
     addr1;
     addr2;
+    addr3;
     treasurySigner;
 
     // Archimedes contracts
@@ -19,7 +20,7 @@ class ContractTestContext {
     externalOUSD;
 
     async setup () {
-        [this.owner, this.addr1, this.addr2, this.treasurySigner] = await ethers.getSigners();
+        [this.owner, this.addr1, this.addr2, this.treasurySigner, this.addr3] = await ethers.getSigners();
 
         const contractCDP = await ethers.getContractFactory("CDPosition");
         this.cdp = await contractCDP.deploy();
