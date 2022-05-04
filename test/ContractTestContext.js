@@ -20,6 +20,8 @@ class ContractTestContext {
     externalUSDT;
     external3CRV;
     external3Pool;
+    externalCurveFactory;
+    externalCurveZap;
 
     async setup() {
         [this.owner, this.addr1, this.addr2, this.treasurySigner] = await ethers.getSigners();
@@ -50,6 +52,16 @@ class ContractTestContext {
             mainNetHelper.abiCurve3Pool,
             this.owner,
         );
+        this.externalCurveFactory = await new ethers.Contract(
+            mainNetHelper.addressCurveFactory,
+            mainNetHelper.abiCurveFactory,
+            this.owner,
+        );
+        this.externalCurveZap = await new ethers.Contract(
+            mainNetHelper.addressCurveZap,
+            mainNetHelper.abiCurveZap,
+            this.owner,
+        );
 
         const contractVault = await ethers.getContractFactory("VaultOUSD");
         this.vault = await contractVault.deploy(this.externalOUSD.address, "VaultOUSD", "VOUSD");
@@ -65,8 +77,13 @@ class ContractTestContext {
             this.exchanger.address,
             this.treasurySigner.address,
         );
+
+        this.externalLvUSDPool = await mainNetHelper.createCurveMetapool3CRV(this.lvUSD, this.owner);
+
         // Post init contracts
-        await this.exchanger.init(this.lvUSD.address, this.coordinator.address);
+        // address tokenLvUSD, address tokenCoordinator, address pool3CrvLvUSD
+        await this.exchanger.initialize(this.lvUSD.address, this.coordinator.address, this.externalLvUSDPool.address);
+        console.log("Setup complete.");
     }
 }
 
