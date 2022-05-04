@@ -10,7 +10,7 @@ async function printBalances(address, r) {
     const _usdt = await r.externalUSDT.balanceOf(address);
     const _3crv = await r.external3CRV.balanceOf(address);
     console.log(
-        "ether:" +
+        ">>> ether:" +
             parseInt(ethers.utils.formatEther(_eth)).toFixed(1) +
             " lvusd:" +
             parseInt(ethers.utils.formatUnits(_lvusd, 18)).toFixed(1) +
@@ -30,49 +30,41 @@ describe("Exchanger Test suit", function () {
     before(async function () {
         mainnetHelper.helperResetNetwork(mainnetHelper.defaultBlockNumber);
         [owner, user1, user2, ...users] = await ethers.getSigners();
-
         r = new ContractTestContext();
         await r.setup();
-
         // Output test
 
         // Object under test
         exchanger = r.exchanger;
 
-        // CurveZapper used for deposits
-        const curveZap = new ethers.Contract(mainnetHelper.addressCurveZap, mainnetHelper.abiCurveZap, owner);
-
         // Mint some LvUSD to owner
-        await r.lvUSD.mint(owner.address, ethers.utils.parseUnits("1000", "ether"));
-        console.log("minted LvUSD");
+        await r.lvUSD.mint(owner.address, ethers.utils.parseEther("1000"));
+        console.log("Minted 1000 LvUSD");
         await printBalances(owner.address, r);
 
-        // Exchange 10 ETH to USDT
-        const balanceUSDT = await mainnetHelper.helperSwapETHWithUSDT(owner, ethers.utils.parseEther("5000"));
-        console.log("swapped ETH => USDT");
-        console.log(balanceUSDT);
+        // Exchange 2 ETH to USDT
+        const balanceUSDT = await mainnetHelper.helperSwapETHWithUSDT(owner, ethers.utils.parseEther("2"));
+        console.log("Swapped 2 ETH => ~" + parseFloat(ethers.utils.formatUnits(balanceUSDT, 6)).toFixed(2) + " USDT");
+        // await printBalances(owner.address, r);
+
+        // Exchange some USDT for 3CRV
+        const USDTliquidity = balanceUSDT.div(2);
+        await r.externalUSDT.approve(r.externalLvUSDPool.address, ethers.constants.MaxUint256);
+        console.log("Approved LvUSDPool: USDT");
+        // amount of [dai, usdc, usdt]. we deposit usdt, so [0,0,x]
+        console.log("underlying:", await r.externalCurveFactory.get_underlying_balances(r.externalLvUSDPool.address));
+        // _pool (address), _deposit_amounts (uint256[4]), _min_mint_amount (uint256)
+        await r.externalUSDT.approve(r.externalCurveZap.address, ethers.constants.MaxUint256);
+        console.log(await r.externalCurveZap);
+        await r.externalCurveZap.add_liquidity(r.externalLvUSDPool.address, [0, 0, USDTliquidity, 0], 0);
+        console.log(
+            "Added liquidity: ~" + parseFloat(ethers.utils.formatUnits(USDTliquidity, 6)).toFixed(2) + "USDT into pool",
+        );
         await printBalances(owner.address, r);
 
-        // Exchange some USDT to 3CRV
-        const amount = balanceUSDT.div(2);
-        console.log(amount);
-        await r.externalUSDT.approve(mainnetHelper.addressCurve3Pool, ethers.constants.MaxUint256);
-        console.log("Approved USDT => 3CRV");
-        await r.external3Pool.add_liquidity([0, 0, amount], 1);
-        console.log("Swapped USDT => 3CRV");
-        await printBalances(owner.address, r);
-
-        // Create a Curve Meta Pool
-        const metapoolLvUSD = await mainnetHelper.createCurveMetapool3CRV(r.lvUSD, owner);
-
-        // Fund the new Meta Pool
         console.log(
             "get_underlying_balances() of pool:",
-            await new ethers.Contract(
-                mainnetHelper.addressCurveFactory,
-                mainnetHelper.abiCurveFactory,
-                owner,
-            ).get_underlying_balances(metapoolLvUSD.address),
+            await r.externalCurveFactory.get_underlying_balances(r.externalLvUSDPool.address),
         );
 
         /**
@@ -96,13 +88,15 @@ describe("Exchanger Test suit", function () {
 
     describe("Exchanges", function () {
         it("Should swap LvUSD for OUSD", async function () {
-            await exchanger.xLvUSDforOUSD(100, owner.address);
+            // amount, to, minimum required
+            await exchanger.xLvUSDforOUSD(100, owner.address, 0);
             expect(await LvUSD.balanceOf(owner.address)).to.eq(900);
         });
         it("Should swap OUSD for LvUSD", async function () {
             // @param: amount OUSD
             // @param: minAmount returned LVUSD
             // await exchanger.xOUSDforLvUSD(100, 90);
+            // amount, to, minimum required
             // expect(await LvUSD.balanceOf(owner.address)).to.eq(0);
         });
     });
