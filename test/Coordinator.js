@@ -171,10 +171,10 @@ describe("Coordinator Test suit", function () {
                 const leverageAmount = addr1CollateralAmount;
                 let depositedOUSDBeforeLeverage;
                 let sharesTotalSupplyBeforeLeverage;
-                let currentBorrowedLvUSDInPosition;
+                let borrowedLvUSDInPositionBeforeLeverage;
                 before(async function () {
                     /// Get initial state
-                    currentBorrowedLvUSDInPosition = await r.cdp.getLvUSDBorrowed(nftIdFirstPosition);
+                    borrowedLvUSDInPositionBeforeLeverage = await r.cdp.getLvUSDBorrowed(nftIdFirstPosition);
                     /// Test artifact only, Once exchanger is functional we can use the exchange and
                     /// transfer OUSD directly to coordinator
                     await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, leverageAmount);
@@ -185,7 +185,7 @@ describe("Coordinator Test suit", function () {
                 });
                 it("Should have increase borrowed amount on CDP for NFT", async function () {
                     expect(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)).to.equal(
-                        currentBorrowedLvUSDInPosition.add(leverageAmount));
+                        borrowedLvUSDInPositionBeforeLeverage.add(leverageAmount));
                 });
                 it("Should have increased OUSD deposited in vault", async function () {
                     expect(await r.vault.totalAssets()).to.equal(leverageAmount.add(depositedOUSDBeforeLeverage));
@@ -194,11 +194,15 @@ describe("Coordinator Test suit", function () {
                     expect(await r.vault.maxRedeem(sharesOwnerAddress)).to.gt(
                         sharesTotalSupplyBeforeLeverage);
                 });
-                it("Should have increased deposited OUSD in CDPosition", async function () {
+                it("Should have increased deposited (or totalOUSD) OUSD in CDPosition", async function () {
+                    const existingOUSDBeforeLeverage = addr1CollateralAmount;
                     expect(await r.cdp.getOUSDTotal(nftIdFirstPosition))
-                        .to.equal(leverageAmount.add(addr1CollateralAmount));
+                        .to.equal(leverageAmount.add(existingOUSDBeforeLeverage));
                 });
                 it("Should have update CDPosition with shares", async function () {
+                    // When getting leveraged OUSD and depositing it into Vault, shares are not always one to one
+                    // (based on a math calculation in Vault). The value beloew is what we expect to
+                    // get at this state of the vault
                     const numberOfSharesFromLeverage = ethers.BigNumber.from("750000000000000000");
                     expect(await r.cdp.getShares(nftIdFirstPosition))
                         .to.equal(numberOfSharesFromLeverage.add(addr1CollateralAmount));
