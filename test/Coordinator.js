@@ -31,6 +31,7 @@ describe("Coordinator Test suit", function () {
         // shares to be minted and create a new CDP entry with valid values
         const addr1CollateralAmount = ethers.utils.parseEther("1");
         const addr2CollateralAmount = ethers.utils.parseEther("2");
+        const combinedCollateralAmount = addr1CollateralAmount.add(addr2CollateralAmount);
         /* Shares and assets always increase by the same amount in our vault (both are equal) because
            only one user (coordinator) is depositing. Each time a deposit takes place the shares for the
            deposit are stored in CDPosition. Therefore the amount of shares is equal to the collateral: */
@@ -80,7 +81,6 @@ describe("Coordinator Test suit", function () {
                 );
             });
 
-            const combinedCollateralAmount = addr1CollateralAmount.add(addr2CollateralAmount);
             it("Should have increased vault balance on OUSD by second collateral amount", async function () {
                 const balance = await r.externalOUSD.balanceOf(r.vault.address);
                 expect(balance).to.equal(combinedCollateralAmount);
@@ -168,7 +168,9 @@ describe("Coordinator Test suit", function () {
             });
 
             describe("Get leveraged OUSD for position", function () {
-                const leverageAmount = collateralAmount;
+                const leverageAmount = addr1CollateralAmount;
+                let depositedOUSDBeforeLeverage;
+                let sharesTotalSupplyBeforeLeverage;
                 let currentBorrowedLvUSDInPosition;
                 before(async function () {
                     /// Get initial state
@@ -177,6 +179,8 @@ describe("Coordinator Test suit", function () {
                     /// transfer OUSD directly to coordinator
                     await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, leverageAmount);
                     // method under test
+                    depositedOUSDBeforeLeverage = await r.vault.totalAssets();
+                    sharesTotalSupplyBeforeLeverage = await r.vault.maxRedeem(sharesOwnerAddress);
                     await coordinator.getLeveragedOUSD(nftIdFirstPosition, leverageAmount, sharesOwnerAddress);
                 });
                 it("Should have increase borrowed amount on CDP for NFT", async function () {
@@ -184,16 +188,21 @@ describe("Coordinator Test suit", function () {
                         currentBorrowedLvUSDInPosition.add(leverageAmount));
                 });
                 it("Should have increased OUSD deposited in vault", async function () {
-                    expect(await r.vault.totalAssets()).to.equal(leverageAmount.add(collateralAmount));
+                    expect(await r.vault.totalAssets()).to.equal(leverageAmount.add(depositedOUSDBeforeLeverage));
                 });
                 it("Should have minted (more) shares to owner address", async function () {
-                    expect(await r.vault.maxRedeem(sharesOwnerAddress)).to.equal(
-                        leverageAmount.add(collateralAmount));
+                    expect(await r.vault.maxRedeem(sharesOwnerAddress)).to.gt(
+                        sharesTotalSupplyBeforeLeverage);
                 });
                 it("Should have increased deposited OUSD in CDPosition", async function () {
-                    expect(await r.cdp.getOUSDTotal(nftIdFirstPosition)).to.equal(leverageAmount.add(collateralAmount));
+                    expect(await r.cdp.getOUSDTotal(nftIdFirstPosition))
+                        .to.equal(leverageAmount.add(addr1CollateralAmount));
                 });
-                /// Add test for shares
+                it("Should have update CDPosition with shares", async function () {
+                    const numberOfSharesFromLeverage = ethers.BigNumber.from("750000000000000000");
+                    expect(await r.cdp.getShares(nftIdFirstPosition))
+                        .to.equal(numberOfSharesFromLeverage.add(addr1CollateralAmount));
+                });
             });
         });
     });

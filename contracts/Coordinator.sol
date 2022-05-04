@@ -88,8 +88,8 @@ contract Coordinator is ICoordinator {
     function _borrowUnderNFT(uint256 _nftId, uint256 _amount) internal {
         IERC20(_tokenLvUSD).transfer(_tokenExchanger, _amount);
         CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amount);
-   
     }
+
     function repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) external override {
         require(
             CDPosition(_tokenCDP).getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay,
@@ -123,9 +123,9 @@ contract Coordinator is ICoordinator {
         /// TODO - call exchanger to exchange fund. For now, assume we got a one to one exchange rate
         uint256 ousdAmountExchanged = _amountToLeverage;
 
-        VaultOUSD(_tokenVaultOUSD).deposit(ousdAmountExchanged, _sharesOwner);
+        uint256 sharesFromDeposit = VaultOUSD(_tokenVaultOUSD).deposit(ousdAmountExchanged, _sharesOwner);
 
-        /// TODO : update shares on CDP
+        CDPosition(_tokenCDP).addSharesToPosition(_nftId, sharesFromDeposit);
         CDPosition(_tokenCDP).depositOUSDtoPosition(_nftId, ousdAmountExchanged);
     }
 
