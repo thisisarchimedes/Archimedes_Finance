@@ -7,6 +7,6 @@ import "hardhat/console.sol";
 /// @dev CDP creates and destroy NFT and address positions. It keep tracks of how many tokens user has borrowed.
 /// It keeps track of how much interest each position accrue
 /// @notice This contract (will be) proxy upgradable
-contract LeverageEngine {
+contract LeverageAllocator {
     constructor() {}
 }

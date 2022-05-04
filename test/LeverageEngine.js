@@ -10,6 +10,6 @@ describe("LeverageEngine test suit", async function () {
     });
 
     it("Should exist", async function () {
-        console.log(leverageEngine);
+        await expect(leverageEngine).to.not.be.undefined;
     });
 });
