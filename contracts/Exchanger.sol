@@ -29,6 +29,7 @@ contract Exchanger is IExchanger {
     /* 3Crv Pool */
     IStableSwapPool internal constant _pool3CrvOUSD = IStableSwapPool(0x87650D7bbfC3A9F10587d7778206671719d9910D);
     /* NOTE: Since LvUSD doesn't exist yet, we use the FEI/Crv3 pool. */
+    /// TODO init with pool address!
     IStableSwapPool internal constant _pool3CrvLvUSD = IStableSwapPool(0x06cb22615BA53E60D67Bf6C341a0fD5E718E1655);
 
     /**
@@ -57,7 +58,10 @@ contract Exchanger is IExchanger {
         min = expected3Crv.mul(95).div(100);
         console.log("min (95%):", min);
         // indexToken in, indexToken out, amount, minimum
-        uint256 recieved3Crv = _pool3CrvLvUSD.exchange(0, 1, amount, min);
+        console.log(_pool3CrvLvUSD.coins(0)); // fei ???
+        console.log(_pool3CrvLvUSD.coins(1)); // 3crv
+        console.log(_pool3CrvLvUSD.coins(2));
+        uint256 recieved3Crv = _pool3CrvLvUSD.exchange(1, 0, amount, min);
         console.log("recieved 3rc", recieved3Crv);
 
         /** 0 = OUSD, 1 = 3Crv
