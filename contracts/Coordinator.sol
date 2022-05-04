@@ -19,6 +19,7 @@ contract Coordinator is ICoordinator {
     address internal _tokenCDP;
     address internal _treasuryAddress;
     address internal _tokenOUSD;
+    address internal _tokenExchanger;
 
     uint256 internal _originationFeeRate = 5 ether / 100;
     uint256 internal _globalCollateralRate = 90; // in percentage
@@ -29,13 +30,15 @@ contract Coordinator is ICoordinator {
         address tokenVaultOUSD,
         address tokenCDP,
         address tokenOUSD,
+        address tokenExchanger,
         address treasuryAddress
     ) {
         _tokenLvUSD = tokenLvUSD;
         _tokenVaultOUSD = tokenVaultOUSD;
         _tokenCDP = tokenCDP;
-        _treasuryAddress = treasuryAddress;
         _tokenOUSD = tokenOUSD;
+        _tokenExchanger = tokenExchanger;
+        _treasuryAddress = treasuryAddress;
 
         // approve VaultOUSD address to spend on behalf of coordinator
         IERC20(_tokenOUSD).approve(_tokenVaultOUSD, type(uint256).max);
@@ -65,25 +68,32 @@ contract Coordinator is ICoordinator {
     /* Privileged functions: Executive */
 
     function depositCollateralUnderNFT(
-        uint256 nftId,
-        uint256 amount,
-        address sharesOwner
+        uint256 _nftId,
+        uint256 _amountInOUSD,
+        address _sharesOwner
     ) external override {
         /// Transfer collateral to vault, mint shares to shares owner
-        uint256 shares = VaultOUSD(_tokenVaultOUSD).deposit(amount, sharesOwner);
+        uint256 shares = VaultOUSD(_tokenVaultOUSD).deposit(_amountInOUSD, _sharesOwner);
         // create CDP position with collateral
-        CDPosition(_tokenCDP).createPosition(nftId, amount);
-        CDPosition(_tokenCDP).addSharesToPosition(nftId, shares);
+        CDPosition(_tokenCDP).createPosition(_nftId, _amountInOUSD);
+        CDPosition(_tokenCDP).addSharesToPosition(_nftId, shares);
     }
 
     function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
 
-    function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override {
-        IERC20(_tokenLvUSD).transfer(_tokenVaultOUSD, _amount);
-        CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amount);
+    function borrowUnderNFT(uint256 _nftId, uint256 _amountLvUSDToBorrow) external override {
+        IERC20(_tokenLvUSD).transfer(_tokenExchanger, _amountLvUSDToBorrow);
+        CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amountLvUSDToBorrow);
     }
 
-    function repayUnderNFT(uint256 _nftId, uint256 _amount) external override notImplementedYet {}
+    function repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) external override {
+        require(
+            CDPosition(_tokenCDP).getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay,
+            "Coordinator : Cannot repay more lvUSD then is borrowed"
+        );
+        IERC20(_tokenLvUSD).transferFrom(_tokenExchanger, address(this), _amountLvUSDToRepay);
+        CDPosition(_tokenCDP).repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
+    }
 
     function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
 

@@ -125,10 +125,11 @@ describe("Coordinator Test suit", function () {
                 await coordinator.borrowUnderNFT(nftIdFirstPosition, lvUSDAmountToBorrow);
             });
             it("Should transfer lvUSD to vaults address", async function () {
-                /// general note - "used" lvUSD is assigned to vault
-                expect(await r.lvUSD.balanceOf(r.vault.address)).to.equal(lvUSDAmountToBorrow);
+                /// general note - "borrowed" lvUSD is assigned to exchanger
+                expect(await r.lvUSD.balanceOf(r.exchanger.address)).to.equal(lvUSDAmountToBorrow);
             });
             it("Should decrease coordinator lvUSD balance", async function () {
+                /// we expect coordinator to have 98 ethers since we started with 100 ether lvUSD and borrowed 2 ethers
                 expect(await r.lvUSD.balanceOf(coordinator.address)).to.equal(ethers.utils.parseEther("98"));
             });
             it("Should update CDP with borrowed lvUSD", async function () {
@@ -140,6 +141,31 @@ describe("Coordinator Test suit", function () {
                         coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("200")),
                     ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
                 });
+
+            describe("Repay lvUSD for position", function () {
+                const lvUSDAmountToRepayInTwoParts = ethers.utils.parseEther("1");
+                before(async function () {
+                    // method under test
+                    await coordinator.repayUnderNFT(nftIdFirstPosition, lvUSDAmountToRepayInTwoParts);
+                });
+                it("Should transfer lvUSD to coordinator address", async function () {
+                    /// we expect coordinator to have 98 ethers since we started with 100 ether lvUSD and
+                    /// borrowed 2 ethers and also repayed 1 ether
+                    expect(await r.lvUSD.balanceOf(coordinator.address)).to.equal(ethers.utils.parseEther("99"));
+                });
+                it("Should decrease Vault's lvUSD balance", async function () {
+                    // Exchanger should still have half the lvUSD under it
+                    expect(await r.lvUSD.balanceOf(r.exchanger.address)).to.equal(lvUSDAmountToRepayInTwoParts);
+                });
+                it("Should update CDP with repayed lvUSD", async function () {
+                    expect(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)).to.equal(lvUSDAmountToRepayInTwoParts);
+                });
+                /// add test for when we try to repay more then we have
+                it("Should revert if trying to repay more then borrowed lvUSD", async function () {
+                    await expect(coordinator.repayUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("100")))
+                        .to.be.revertedWith("Coordinator : Cannot repay more lvUSD then is borrowed");
+                });
+            });
         });
     });
 
