@@ -6,6 +6,7 @@ import {IERC4626} from "../contracts/interfaces/IERC4626.sol";
 import {VaultOUSD} from "../contracts/VaultOUSD.sol";
 import {CDPosition} from "../contracts/CDPosition.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Exchanger} from "../contracts/Exchanger.sol";
 
 import "hardhat/console.sol";
 
@@ -81,9 +82,13 @@ contract Coordinator is ICoordinator {
 
     function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
 
-    function borrowUnderNFT(uint256 _nftId, uint256 _amountLvUSDToBorrow) external override {
-        IERC20(_tokenLvUSD).transfer(_tokenExchanger, _amountLvUSDToBorrow);
-        CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amountLvUSDToBorrow);
+    function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override {
+        _borrowUnderNFT(_nftId, _amount);
+    }
+
+    function _borrowUnderNFT(uint256 _nftId, uint256 _amount) internal {
+        IERC20(_tokenLvUSD).transfer(_tokenExchanger, _amount);
+        CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amount);
     }
 
     function repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) external override {
@@ -93,6 +98,37 @@ contract Coordinator is ICoordinator {
         );
         IERC20(_tokenLvUSD).transferFrom(_tokenExchanger, address(this), _amountLvUSDToRepay);
         CDPosition(_tokenCDP).repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
+    }
+
+    function getLeveragedOUSD(
+        uint256 _nftId,
+        uint256 _amountToLeverage,
+        address _sharesOwner
+    ) external override {
+        /* Flow
+          1. basic sanity checks 
+          2. borrow lvUSD
+          3. call exchanger to exchange lvUSD. Exchanged OUSD will be under Coordinator address.  Save exchanged OUSD value 
+          4. deposit OUSD funds in Vault
+          5. Update CDP totalOUSD and shares for nft position
+        */
+
+        uint256 ousdPrinciple = CDPosition(_tokenCDP).getOUSDPrinciple(_nftId);
+        require(
+            _amountToLeverage <= getAllowedLeverageForPosition(ousdPrinciple, _maxNumberOfCycles),
+            "Cannot get more leverage then max allowed leverage"
+        );
+
+        // borrowUnderNFT transfer lvUSD from Coordinator to Exchanger + mark borrowed lvUSD in CDP under nft ID
+        _borrowUnderNFT(_nftId, _amountToLeverage);
+
+        /// TODO - call exchanger to exchange fund. For now, assume we got a one to one exchange rate
+        uint256 ousdAmountExchanged = Exchanger(_tokenExchanger).xLvUSDforOUSD(_amountToLeverage, address(this));
+
+        uint256 sharesFromDeposit = VaultOUSD(_tokenVaultOUSD).deposit(ousdAmountExchanged, _sharesOwner);
+
+        CDPosition(_tokenCDP).addSharesToPosition(_nftId, sharesFromDeposit);
+        CDPosition(_tokenCDP).depositOUSDtoPosition(_nftId, ousdAmountExchanged);
     }
 
     function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
