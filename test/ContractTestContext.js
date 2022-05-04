@@ -6,6 +6,7 @@ class ContractTestContext {
     owner;
     addr1;
     addr2;
+    addr3;
     treasurySigner;
 
     // Archimedes contracts
@@ -13,15 +14,19 @@ class ContractTestContext {
     cdp;
     vault;
     lvUSD;
+    exchanger;
 
     // External contracts
     externalOUSD;
 
     async setup () {
-        [this.owner, this.addr1, this.addr2, this.treasurySigner] = await ethers.getSigners();
+        [this.owner, this.addr1, this.addr2, this.treasurySigner, this.addr3] = await ethers.getSigners();
 
         const contractCDP = await ethers.getContractFactory("CDPosition");
         this.cdp = await contractCDP.deploy();
+
+        const contractExchanger = await ethers.getContractFactory("Exchanger");
+        this.exchanger = await contractExchanger.deploy();
 
         this.externalOUSD = new ethers.Contract(mainNetHelper.addressOUSD, mainNetHelper.abiOUSDToken, this.owner);
         const contractVault = await ethers.getContractFactory("VaultOUSD");
@@ -35,8 +40,11 @@ class ContractTestContext {
             this.vault.address,
             this.cdp.address,
             this.externalOUSD.address,
+            this.exchanger.address,
             this.treasurySigner.address,
         );
+        // Post init contracts
+        await this.exchanger.init(this.lvUSD.address, this.coordinator.address);
     }
 }
 
