@@ -43,4 +43,16 @@ contract Exchanger {
         // return minRequiredLvUSD;
         return  (minRequiredLvUSD, amountOUSD - minRequiredLvUSD);
     }
+
+    /**
+     * @dev Exchanges LvUSD for OUSD using multiple CRV3Metapools
+     * returns amount of OUSD
+     * - MUST emit an event
+     * NOTE: There is no guarantee of a 1:1 exchange ratio
+     */
+    function xLvUSDforOUSD(uint256 amountLvUSD, address to) external view returns (uint256) {
+        /// TODO: change mock implementation
+        console.log("Exchanging %s lvUSD to OUSD, assigning funds to address %s", amountLvUSD, to);
+        return amountLvUSD;
+    }
 }

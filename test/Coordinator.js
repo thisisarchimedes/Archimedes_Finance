@@ -171,6 +171,7 @@ describe("Coordinator Test suit", function () {
             let depositedOUSDBeforeLeverage;
             describe("Get leveraged OUSD for position", function () {
                 const leverageAmount = addr1CollateralAmount;
+
                 let sharesTotalSupplyBeforeLeverage;
                 let borrowedLvUSDInPositionBeforeLeverage;
                 before(async function () {

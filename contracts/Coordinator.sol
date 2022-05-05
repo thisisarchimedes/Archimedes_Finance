@@ -8,7 +8,7 @@ import {CDPosition} from "../contracts/CDPosition.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Exchanger} from "../contracts/Exchanger.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol"
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "hardhat/console.sol";
 
@@ -16,7 +16,7 @@ import "hardhat/console.sol";
 /// @dev is in charge of overall flow of creating positions and unwinding positions
 /// It manages keeping tracks of fund in vault, updating CDP as needed and transferring lvUSD inside the system
 /// It is controlled (and called) by the leverage engine
-contract Coordinator is ICoordinator {
+contract Coordinator is ICoordinator, ReentrancyGuard {
     using SafeERC20 for IERC20;
     address internal _tokenLvUSD;
     address internal _tokenVaultOUSD;
@@ -107,12 +107,11 @@ contract Coordinator is ICoordinator {
         CDPosition(_tokenCDP).repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
     }
 
-    // TODO : Add re enttence card
     function getLeveragedOUSD(
         uint256 _nftId,
         uint256 _amountToLeverage,
         address _sharesOwner
-    ) external override nonReentrant(){
+    ) external override nonReentrant {
         /* Flow
           1. basic sanity checks 
           2. borrow lvUSD
@@ -144,7 +143,7 @@ contract Coordinator is ICoordinator {
         uint256 _nftId,
         address _userAddress,
         address _sharesOwner
-    ) external override nonReentrant(){
+    ) external override nonReentrant {
         /* Flow
             1. sanity checks as needed
             2. get amount of shares for position
