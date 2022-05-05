@@ -2,7 +2,6 @@ const { expect, assert } = require("chai");
 const { ethers } = require("hardhat");
 const mainnetHelper = require("./MainnetHelper");
 const { ContractTestContext } = require("./ContractTestContext");
-const { toUtf8Bytes } = require("ethers/lib/utils");
 
 describe("Coordinator Test suit", function () {
     let r;

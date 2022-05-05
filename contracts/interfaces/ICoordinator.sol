@@ -53,7 +53,6 @@ interface ICoordinator {
         uint256 _amountInOUSD,
         address _sharesOwner
     ) external;
-    
 
     /// @dev withdraw OUSD under NFT ID
     ///
