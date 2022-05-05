@@ -96,10 +96,10 @@ contract Exchanger is IExchanger {
      * NOTE: There is no gaurnatee of a 1:1 exchange ratio
      */
     function xOUSDforLvUSD(
-        uint256 amount,
+        uint256 amountOUSD,
         address to,
         uint256 minRequired
-    ) external override returns (uint256) {
-        return 0;
+    ) external override returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
+        return (0, 0);
     }
 }
