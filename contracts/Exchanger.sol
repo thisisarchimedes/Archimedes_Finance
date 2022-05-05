@@ -10,7 +10,11 @@ contract Exchanger {
     /// @dev initialize Vault
     /// @param _tokenLvUSD lvUSD contract address
     /// @param _tokenCoordinator Coordinator contract address
-    function init(address _tokenLvUSD, address _tokenCoordinator, address _tokenOUSD) external {
+    function init(
+        address _tokenLvUSD,
+        address _tokenCoordinator,
+        address _tokenOUSD
+    ) external {
         IERC20(_tokenLvUSD).approve(_tokenCoordinator, type(uint256).max);
         IERC20(_tokenOUSD).approve(_tokenCoordinator, type(uint256).max);
     }
@@ -38,21 +42,14 @@ contract Exchanger {
         uint256 amountOUSD,
         address to,
         uint256 minRequiredLvUSD
-    ) external  view returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
-        console.log("Exchanging%s OUSD for min %slvUSD, assigning funds to address %s", amountOUSD, minRequiredLvUSD, to);
+    ) external view returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
+        console.log(
+            "Exchanging%s OUSD for min %slvUSD, assigning funds to address %s",
+            amountOUSD,
+            minRequiredLvUSD,
+            to
+        );
         // return minRequiredLvUSD;
-        return  (minRequiredLvUSD, amountOUSD - minRequiredLvUSD);
-    }
-
-    /**
-     * @dev Exchanges LvUSD for OUSD using multiple CRV3Metapools
-     * returns amount of OUSD
-     * - MUST emit an event
-     * NOTE: There is no guarantee of a 1:1 exchange ratio
-     */
-    function xLvUSDforOUSD(uint256 amountLvUSD, address to) external view returns (uint256) {
-        /// TODO: change mock implementation
-        console.log("Exchanging %s lvUSD to OUSD, assigning funds to address %s", amountLvUSD, to);
-        return amountLvUSD;
+        return (minRequiredLvUSD, amountOUSD - minRequiredLvUSD);
     }
 }
