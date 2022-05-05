@@ -28,6 +28,18 @@ class ContractTestContext {
         const contractExchanger = await ethers.getContractFactory("Exchanger");
         this.exchanger = await contractExchanger.deploy();
 
+        const leverageEngine = await ethers.getContractFactory("LeverageEngine");
+        this.leverageEngine = await leverageEngine.deploy(this.owner.address);
+
+        const leverageAllocator = await ethers.getContractFactory("LeverageAllocator");
+        this.leverageAllocator = await leverageAllocator.deploy();
+
+        const positionToken = await ethers.getContractFactory("PositionToken");
+        this.positionToken = await positionToken.deploy();
+
+        const parameterStore = await ethers.getContractFactory("ParameterStore");
+        this.parameterStore = await parameterStore.deploy();
+
         this.externalOUSD = new ethers.Contract(mainNetHelper.addressOUSD, mainNetHelper.abiOUSDToken, this.owner);
         const contractVault = await ethers.getContractFactory("VaultOUSD");
         this.vault = await contractVault.deploy(this.externalOUSD.address, "VaultOUSD", "VOUSD");
@@ -44,6 +56,13 @@ class ContractTestContext {
             this.treasurySigner.address,
         );
         // Post init contracts
+
+        await this.leverageEngine.init(
+            this.coordinator.address,
+            this.positionToken.address,
+            this.parameterStore.address,
+            this.leverageAllocator.address,
+        );
         await this.exchanger.init(this.lvUSD.address, this.coordinator.address);
     }
 }
