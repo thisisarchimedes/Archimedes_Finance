@@ -53,6 +53,7 @@ interface ICoordinator {
         uint256 _amountInOUSD,
         address _sharesOwner
     ) external;
+    
 
     /// @dev withdraw OUSD under NFT ID
     ///
@@ -88,6 +89,16 @@ interface ICoordinator {
     function getLeveragedOUSD(
         uint256 _nftId,
         uint256 _amountToLeverage,
+        address _sharesOwner
+    ) external;
+
+    /// @dev unwind position by repaying lvUSD debt using existing OUSD funds in position
+    /// @param _nftId NFT ID
+    /// @param _userAddress address to transfer leftover OUSD to
+    /// @param _sharesOwner address of shares owner (position don't own shares, just has a value on how much shares it should get)
+    function unwindLeveragedOUSD(
+        uint256 _nftId,
+        address _userAddress,
         address _sharesOwner
     ) external;
 

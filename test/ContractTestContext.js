@@ -44,7 +44,7 @@ class ContractTestContext {
             this.treasurySigner.address,
         );
         // Post init contracts
-        await this.exchanger.init(this.lvUSD.address, this.coordinator.address);
+        await this.exchanger.init(this.lvUSD.address, this.coordinator.address, this.externalOUSD.address);
     }
 }
 
