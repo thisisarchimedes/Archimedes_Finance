@@ -244,10 +244,12 @@ describe("Coordinator Test suit", function () {
                     it("Should have deleted CDP position", async function () {
                         /// a view method does not revert but just throw an exception.
                         try {
-                            expect(await r.cdp.getOUSDPrinciple(nftIdFirstPosition)).to.equal(0);
+                            await r.cdp.getOUSDPrinciple(nftIdFirstPosition);
                             assert.fail("Error - Getting CDP OUSD Principle on a deleted position must throw exception");
                         } catch (e) {}
                     });
+
+                    // TODO : Once exchanger is up, need to check that lvUSD was returned to coordinator address
                 });
             });
         });

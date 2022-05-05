@@ -169,7 +169,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         /// TODO: add slippage protection
         (uint256 exchangedLvUSD, uint256 remainingOUSD) = Exchanger(_tokenExchanger).xOUSDforLvUSD(
             redeemedOUSD,
-            _tokenExchanger,
+            address(this),
             borrowedLvUSD
         );
 
