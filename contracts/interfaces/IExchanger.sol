@@ -25,5 +25,5 @@ interface IExchanger {
         uint256 amountOUSD,
         address to,
         uint256 minRequired
-    ) external returns (uint256);
+    ) external returns (uint256 lvUSDReturned, uint256 remainingOUSD);
 }
