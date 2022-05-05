@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 const mainnetHelper = require("./MainnetHelper");
 const { ContractTestContext } = require("./ContractTestContext");
 
-async function printBalances(address, r) {
+async function printBalances (address, r) {
     const _eth = await ethers.provider.getBalance(address);
     const _lvusd = await r.lvUSD.balanceOf(address);
     const _ousd = await r.externalOUSD.balanceOf(address);

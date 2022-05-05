@@ -24,7 +24,7 @@ class ContractTestContext {
     externalCurveFactory;
     externalCurveZap;
 
-    async setup() {
+    async setup () {
         [this.owner, this.addr1, this.addr2, this.treasurySigner, this.addr3] = await ethers.getSigners();
 
         const contractCDP = await ethers.getContractFactory("CDPosition");
