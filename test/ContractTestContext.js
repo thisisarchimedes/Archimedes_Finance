@@ -24,7 +24,7 @@ class ContractTestContext {
     externalCurveFactory;
     externalCurveZap;
 
-    async setup () {
+    async setup() {
         [this.owner, this.addr1, this.addr2, this.treasurySigner, this.addr3] = await ethers.getSigners();
 
         const contractCDP = await ethers.getContractFactory("CDPosition");
@@ -33,37 +33,7 @@ class ContractTestContext {
         const contractExchanger = await ethers.getContractFactory("Exchanger");
         this.exchanger = await contractExchanger.deploy();
 
-        this.externalOUSD = await new ethers.Contract(
-            mainNetHelper.addressOUSD,
-            mainNetHelper.abiOUSDToken,
-            this.owner,
-        );
-        this.externalUSDT = await new ethers.Contract(
-            mainNetHelper.addressUSDT,
-            mainNetHelper.abiUSDTToken,
-            this.owner,
-        );
-        this.external3CRV = await new ethers.Contract(
-            mainNetHelper.address3CRV,
-            mainNetHelper.abi3CRVToken,
-            this.owner,
-        );
-        this.external3Pool = await new ethers.Contract(
-            mainNetHelper.addressCurve3Pool,
-            mainNetHelper.abiCurve3Pool,
-            this.owner,
-        );
-        this.externalCurveFactory = await new ethers.Contract(
-            mainNetHelper.addressCurveFactory,
-            mainNetHelper.abiCurveFactory,
-            this.owner,
-        );
-        this.externalCurveZap = await new ethers.Contract(
-            mainNetHelper.addressCurveZap,
-            mainNetHelper.abiCurveZap,
-            this.owner,
-        );
-
+        this.externalOUSD = new ethers.Contract(mainNetHelper.addressOUSD, mainNetHelper.abiOUSDToken, this.owner);
         const contractVault = await ethers.getContractFactory("VaultOUSD");
         this.vault = await contractVault.deploy(this.externalOUSD.address, "VaultOUSD", "VOUSD");
         const contractLvUSD = await ethers.getContractFactory("LvUSDToken");
@@ -78,12 +48,9 @@ class ContractTestContext {
             this.exchanger.address,
             this.treasurySigner.address,
         );
-
-        this.externalLvUSDPool = await mainNetHelper.createCurveMetapool3CRV(this.lvUSD, this.owner);
-
         // Post init contracts
         // address tokenLvUSD, address tokenCoordinator, address pool3CrvLvUSD
-        await this.exchanger.initialize(this.lvUSD.address, this.coordinator.address, this.externalLvUSDPool.address);
+        await this.exchanger.initialize(this.lvUSD.address, this.coordinator.address, this.lvUSD.address);
         console.log("Setup complete.");
     }
 }
