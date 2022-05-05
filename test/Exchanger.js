@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 const mainnetHelper = require("./MainnetHelper");
 const { ContractTestContext } = require("./ContractTestContext");
 
-async function printBalances (address, r) {
+async function printBalances(address, r) {
     const _eth = await ethers.provider.getBalance(address);
     const _lvusd = await r.lvUSD.balanceOf(address);
     const _ousd = await r.externalOUSD.balanceOf(address);
@@ -49,48 +49,56 @@ describe("Exchanger Test suit", function () {
 
         // Exchange some USDT for 3CRV
         const USDTliquidity = balanceUSDT.div(2);
-        await r.externalUSDT.approve(r.externalLvUSDPool.address, ethers.constants.MaxUint256);
-        console.log("Approved LvUSDPool: USDT");
-        // amount of [dai, usdc, usdt]. we deposit usdt, so [0,0,x]
-        console.log("underlying:", await r.externalCurveFactory.get_underlying_balances(r.externalLvUSDPool.address));
-        // _pool (address), _deposit_amounts (uint256[4]), _min_mint_amount (uint256)
-        await r.externalUSDT.approve(r.externalCurveZap.address, ethers.constants.MaxUint256);
-        console.log(await r.externalCurveZap);
-        await r.externalCurveZap.add_liquidity(r.externalLvUSDPool.address, [0, 0, USDTliquidity, 0], 0);
-        console.log(
-            "Added liquidity: ~" + parseFloat(ethers.utils.formatUnits(USDTliquidity, 6)).toFixed(2) + "USDT into pool",
-        );
-        await printBalances(owner.address, r);
 
-        console.log(
-            "get_underlying_balances() of pool:",
-            await r.externalCurveFactory.get_underlying_balances(r.externalLvUSDPool.address),
-        );
+        /// ///////////
+        /// ///////////
+        /// Copied as a template from MainnetHelper
+        /// ///////////
+        /// ///////////
+        /*
+        const indexTripoolUSDT = 0;
+        const indexTripoolWETH9 = 2;
+        const indexCurveOUSDOUSD = 0;
+        const indexCurveOUSD3CRV = 1;
 
-        /**
-         * @param _pool: Address of the pool to deposit into.
-         * @param _deposit_amounts: List of amounts of underlying coins to deposit. Amounts correspond to the tokens at the same index locations within Factory.get_underlying_coins.
-         * @param _min_mint_amount: Minimum amount of LP tokens to mint from the deposit.
-         * @param _receiver: Optional address that receives the LP tokens. If not specified, they are sent to the caller.
-         * @dev Returns the amount of LP tokens that were minted in the deposit.
-         */
+        // loading WETH9 contract
+        const weth9 = new ethers.Contract(mainnetHelper.addressWETH9, mainnetHelper.abiWETH9Token, owner);
+        // loading USDT contract
+        const usdtToken = new ethers.Contract(mainnetHelper.addressUSDT, mainnetHelper.abiUSDTToken, owner);
+        // loading Tripool2 contract
+        const triPool = new ethers.Contract(mainnetHelper.addressCurveTripool2, mainnetHelper.abiCurveTripool2, owner);
 
-        /** example
-         * amounts = [1e18, 1e18, 1e6, 1e6]
-         * expected = zap.calc_token_amount(pool, amounts, True) * 0.99
-         * zap.add_liquidity(pool, amounts, expected, {'from': alice})
-         */
-        /// calc_token_amount(_amounts: uint256[2], _is_deposit: bool)
-        // await curveZap.calc_token_amount(metapoolLvUSD.address, [0, 0, 0, balanceUSDT], 0);
-        // console.log("zapped");
-        // console.log("USDT balance:", await lvUSD.balanceOf(owner.address));
+        // Verify we got the correct TriPool connected (verifying USDT and WETH addresses)
+        let ret = await triPool.coins(indexTripoolUSDT);
+        expect(ret).to.equal(mainnetHelper.addressUSDT);
+        ret = await triPool.coins(indexTripoolWETH9);
+        expect(ret).to.equal(mainnetHelper.addressWETH9);
+
+        /// /////////// 1. ETH->WETH9 //////////////
+        // read current signer balance from WETH9 contract (so we can validate increase later)
+        let weth9Balance = await weth9.balanceOf(owner.address);
+        // ETH->WETH @ WETH9 (becuase looks like tripool only deals with WETH)
+        await weth9.deposit({ value: 60 });
+        // read balance again and make sure it increased
+        expect(await weth9.balanceOf(owner.address)).to.gt(weth9Balance);
+        weth9Balance = await weth9.balanceOf(owner.address);
+
+        /// /////////// 2. WETH->USDT //////////////
+        // approve tripool to spend WETH9 on behalf of owner
+        await weth9.approve(mainnetHelper.addressCurveTripool2, 999);
+        // get user balance
+        let usdtBalance = await usdtToken.balanceOf(owner.address);
+        await triPool.exchange(indexTripoolWETH9, indexTripoolUSDT, 2, 1);
+    */
     });
 
     describe("Exchanges", function () {
         it("Should swap LvUSD for OUSD", async function () {
             // amount, to, minimum required
+            /*
             await exchanger.xLvUSDforOUSD(100, owner.address, 0);
             expect(await LvUSD.balanceOf(owner.address)).to.eq(900);
+            */
         });
         it("Should swap OUSD for LvUSD", async function () {
             // @param: amount OUSD

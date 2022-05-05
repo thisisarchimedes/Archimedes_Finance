@@ -33,7 +33,28 @@ class ContractTestContext {
         const contractExchanger = await ethers.getContractFactory("Exchanger");
         this.exchanger = await contractExchanger.deploy();
 
+        // Tokens
         this.externalOUSD = new ethers.Contract(mainNetHelper.addressOUSD, mainNetHelper.abiOUSDToken, this.owner);
+        this.externalUSDT = new ethers.Contract(mainNetHelper.addressUSDT, mainNetHelper.abiUSDTToken, this.owner);
+        this.external3CRV = new ethers.Contract(mainNetHelper.address3CRV, mainNetHelper.abi3CRVToken, this.owner);
+
+        // Curve Contracts
+        this.external3Pool = new ethers.Contract(
+            mainNetHelper.addressCurve3Pool,
+            mainNetHelper.abiCurve3Pool,
+            this.owner,
+        );
+        this.externalCurveFactory = new ethers.Contract(
+            mainNetHelper.addressCurveFactory,
+            mainNetHelper.abiCurveFactory,
+            this.owner,
+        );
+        this.externalCurveZap = new ethers.Contract(
+            mainNetHelper.addressCurveZap,
+            mainNetHelper.abiCurveZap,
+            this.owner,
+        );
+
         const contractVault = await ethers.getContractFactory("VaultOUSD");
         this.vault = await contractVault.deploy(this.externalOUSD.address, "VaultOUSD", "VOUSD");
         const contractLvUSD = await ethers.getContractFactory("LvUSDToken");
@@ -48,10 +69,18 @@ class ContractTestContext {
             this.exchanger.address,
             this.treasurySigner.address,
         );
+
+        this.externalLvUSDPool = await mainNetHelper.createCurveMetapool3CRV(this.lvUSD, this.owner);
+        this.LVUSDMETAPOOL = new ethers.Contract(
+            this.externalLvUSDPool.address,
+            mainNetHelper.abiCurve3Pool,
+            this.owner,
+        );
+
         // Post init contracts
         // address tokenLvUSD, address tokenCoordinator, address pool3CrvLvUSD
-        await this.exchanger.initialize(this.lvUSD.address, this.coordinator.address, this.lvUSD.address);
-        console.log("Setup complete.");
+        await this.exchanger.initialize(this.lvUSD.address, this.coordinator.address, this.externalLvUSDPool.address);
+        // console.log("Setup complete.");
     }
 }
 
