@@ -1,4 +1,3 @@
-const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const mainnetHelper = require("./MainnetHelper");
 const { ContractTestContext } = require("./ContractTestContext");
@@ -30,6 +29,7 @@ describe("Exchanger Test suit", function () {
     before(async function () {
         mainnetHelper.helperResetNetwork(mainnetHelper.defaultBlockNumber);
         [owner, user1, user2, ...users] = await ethers.getSigners();
+
         r = new ContractTestContext();
         await r.setup();
         // Output test
@@ -42,54 +42,43 @@ describe("Exchanger Test suit", function () {
         console.log("Minted 1000 LvUSD");
         await printBalances(owner.address, r);
 
-        // Exchange 2 ETH to USDT
-        const balanceUSDT = await mainnetHelper.helperSwapETHWithUSDT(owner, ethers.utils.parseEther("2"));
-        console.log("Swapped 2 ETH => ~" + parseFloat(ethers.utils.formatUnits(balanceUSDT, 6)).toFixed(2) + " USDT");
-        // await printBalances(owner.address, r);
+        // Exchange 2 ETH to 3CRV
+        const balance3CRV = await mainnetHelper.helperSwapETHWith3CRV(owner, ethers.utils.parseEther("4"));
+        console.log("Swapped 2 ETH => ~" + parseFloat(ethers.utils.formatUnits(balance3CRV, 18)).toFixed(2) + " 3CRV");
+        await printBalances(owner.address, r);
 
-        // Exchange some USDT for 3CRV
-        const USDTliquidity = balanceUSDT.div(2);
+        const addressMetapool = await mainnetHelper.createCurveMetapool3CRV(r.lvUSD, owner);
 
-        /// ///////////
-        /// ///////////
-        /// Copied as a template from MainnetHelper
-        /// ///////////
-        /// ///////////
-        /*
-        const indexTripoolUSDT = 0;
-        const indexTripoolWETH9 = 2;
-        const indexCurveOUSDOUSD = 0;
-        const indexCurveOUSD3CRV = 1;
+        ///
+        ///
+        // loading pool contract
+        const pool = new ethers.Contract(addressMetapool, mainnetHelper.abiCurve3Pool, owner);
+        // approve pool to spend 3crv on behalf of owner
+        await r.external3CRV.approve(addressMetapool, balance3CRV);
 
-        // loading WETH9 contract
-        const weth9 = new ethers.Contract(mainnetHelper.addressWETH9, mainnetHelper.abiWETH9Token, owner);
-        // loading USDT contract
-        const usdtToken = new ethers.Contract(mainnetHelper.addressUSDT, mainnetHelper.abiUSDTToken, owner);
-        // loading Tripool2 contract
-        const triPool = new ethers.Contract(mainnetHelper.addressCurveTripool2, mainnetHelper.abiCurveTripool2, owner);
+        // Exchange USDT->3CRV
+        console.log("before");
+        await pool.add_liquidity([0, 0, balance3CRV], 1);
+        console.log("after");
 
-        // Verify we got the correct TriPool connected (verifying USDT and WETH addresses)
-        let ret = await triPool.coins(indexTripoolUSDT);
-        expect(ret).to.equal(mainnetHelper.addressUSDT);
-        ret = await triPool.coins(indexTripoolWETH9);
-        expect(ret).to.equal(mainnetHelper.addressWETH9);
+        expect(await r.external3CRV.balanceOf(owner.address)).to.lt(balance3CRV);
 
-        /// /////////// 1. ETH->WETH9 //////////////
-        // read current signer balance from WETH9 contract (so we can validate increase later)
-        let weth9Balance = await weth9.balanceOf(owner.address);
-        // ETH->WETH @ WETH9 (becuase looks like tripool only deals with WETH)
-        await weth9.deposit({ value: 60 });
-        // read balance again and make sure it increased
-        expect(await weth9.balanceOf(owner.address)).to.gt(weth9Balance);
-        weth9Balance = await weth9.balanceOf(owner.address);
+        ///
+        ///
+        ///
 
-        /// /////////// 2. WETH->USDT //////////////
-        // approve tripool to spend WETH9 on behalf of owner
-        await weth9.approve(mainnetHelper.addressCurveTripool2, 999);
-        // get user balance
-        let usdtBalance = await usdtToken.balanceOf(owner.address);
-        await triPool.exchange(indexTripoolWETH9, indexTripoolUSDT, 2, 1);
-    */
+        await r.external3CRV.approve(pool1.address, ethers.constants.MaxUint256);
+        await r.lvUSD.approve(pool1.address, ethers.constants.MaxUint256);
+        console.log("Approved pool1 to spend 3crv & lvUSD");
+        console.log("pool1 A():", await pool1.A());
+        console.log("pool1 coins[0]", await pool1.coins(0)); // lvUSD
+        console.log("pool1 coins[1]", await pool1.coins(1)); // CRV
+        console.log("pool1 totalSupply()", await pool1.totalSupply()); // CRV
+
+        amounts = [0, balance3CRV.div(2)];
+
+        await pool1.add_liquidity(amounts, 0, owner.address);
+        console.log("???");
     });
 
     describe("Exchanges", function () {

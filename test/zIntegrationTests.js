@@ -51,7 +51,8 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
     // Deploy using the Meta-Pool Factory:
     // https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry
     it("Should deploy lvUSD/3CRV pool with correct A value", async function () {
-        const pool = await helper.createCurveMetapool3CRV(lvUSD, signer);
+        const addressPool = await helper.createCurveMetapool3CRV(lvUSD, signer);
+        const pool = await ethers.getContractAt(helper.abiStableSwap, addressPool, signer);
         expect(await pool.A()).to.eq(1337);
     });
 

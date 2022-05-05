@@ -10,7 +10,7 @@ const {
     abiCurveFactory,
     abi3CRVToken,
     abiCurve3Pool,
-    abi3PoolImplementation,
+    abiStableSwap,
 } = require("../ABIs");
 
 // grab the private api key from the private repo
@@ -21,12 +21,13 @@ const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY
 const addressCurveTripool2 = "0xd51a44d3fae010294c616388b506acda1bfaae46";
 const addressUSDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 const addressWETH9 = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
-const addressCurveZap = "0xA79828DF1850E8a3A3064576f380D90aECDD3359";
+const address3CrvZap = "0xA79828DF1850E8a3A3064576f380D90aECDD3359";
 const addressCurveFactory = "0xB9fC157394Af804a3578134A6585C0dc9cc990d4";
 const addressCurve3Pool = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 const addressCurveOUSDPool = "0x87650D7bbfC3A9F10587d7778206671719d9910D";
 const addressOUSD = "0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86";
 const address3CRV = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
+const addressStableSwap = "0x5F890841f657d90E081bAbdB532A05996Af79Fe6";
 
 const indexTripoolUSDT = 0;
 const indexTripoolWETH9 = 2;
@@ -60,20 +61,9 @@ async function createCurveMetapool3CRV(token, signer) {
     // We deployed a 3CRV/lvUSD pool - so we ask Curve Factory to look for pools that can deal with USDT/lvUSD
     // In the future this will be a fixed index we can query instead
     const poolAddress = await factoryCurveMetapool.find_pool_for_coins(addressUSDT, token.address);
-    // Return the pool object
-    // console.log("Deployed metapool at address:" + poolAddress);
-    return await getMetapool(poolAddress, signer);
-}
-
-// Gets the Metapool by address
-// Returns a 3CRVMetapool instance
-// We use the 3CRV Base Pool, so we can assume the correct ABI as given in docs:
-// https://curve.readthedocs.io/factory-pools.html#implementation-contracts
-// @param address: address of the metapool
-// @param user: signer or provider used to interact with pool (owner can write)
-async function getMetapool(address, user) {
-    // We assume its a 3CRV metapool, so we use the 3pool implementation abi
-    return await ethers.getContractAt(abi3PoolImplementation, address, user);
+    // Return the pool address
+    console.log("Deployed metapool at address:" + poolAddress);
+    return poolAddress;
 }
 
 async function helperResetNetwork(lockBlock) {
@@ -229,18 +219,18 @@ module.exports = {
     helperSwapETHWith3CRV,
     helperSwapETHWithOUSD,
     createCurveMetapool3CRV,
-    getMetapool,
 
     /* addresses */
     addressCurveTripool2,
     addressUSDT,
     addressWETH9,
-    addressCurveZap,
+    address3CrvZap,
     addressCurveFactory,
     addressCurve3Pool,
     addressCurveOUSDPool,
     addressOUSD,
     address3CRV,
+    addressStableSwap,
 
     /* ABIs */
     abiOUSDToken,
@@ -252,7 +242,7 @@ module.exports = {
     abiCurveFactory,
     abi3CRVToken,
     abiCurve3Pool,
-    abi3PoolImplementation,
+    abiStableSwap,
 
     /* other */
     indexTripoolUSDT,

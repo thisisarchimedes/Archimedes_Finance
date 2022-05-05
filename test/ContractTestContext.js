@@ -50,7 +50,7 @@ class ContractTestContext {
             this.owner,
         );
         this.externalCurveZap = new ethers.Contract(
-            mainNetHelper.addressCurveZap,
+            mainNetHelper.address3CrvZap,
             mainNetHelper.abiCurveZap,
             this.owner,
         );
@@ -70,16 +70,9 @@ class ContractTestContext {
             this.treasurySigner.address,
         );
 
-        this.externalLvUSDPool = await mainNetHelper.createCurveMetapool3CRV(this.lvUSD, this.owner);
-        this.LVUSDMETAPOOL = new ethers.Contract(
-            this.externalLvUSDPool.address,
-            mainNetHelper.abiCurve3Pool,
-            this.owner,
-        );
-
         // Post init contracts
-        // address tokenLvUSD, address tokenCoordinator, address pool3CrvLvUSD
-        await this.exchanger.initialize(this.lvUSD.address, this.coordinator.address, this.externalLvUSDPool.address);
+        // address tokenLvUSD, address tokenCoordinator, address pool3CrvLvUSD (addressZero for now to debug)
+        await this.exchanger.initialize(this.lvUSD.address, this.coordinator.address, ethers.constants.AddressZero);
         // console.log("Setup complete.");
     }
 }
