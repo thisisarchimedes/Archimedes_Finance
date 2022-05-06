@@ -67,6 +67,6 @@ export class ContractTestContext {
             this.parameterStore.address,
             this.leverageAllocator.address,
         );
-        await this.exchanger.init(this.lvUSD.address, this.coordinator.address);
+        await this.exchanger.init(this.lvUSD.address, this.coordinator.address, this.externalOUSD.address);
     }
 }

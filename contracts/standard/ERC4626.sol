@@ -33,10 +33,7 @@ abstract contract ERC4626 is ERC20, IERC4626 {
     function convertToShares(uint256 assets) public view virtual override returns (uint256 shares) {
         uint256 supply = totalSupply();
 
-        return
-            (assets == 0 || supply == 0)
-                ? (assets * 10**decimals()) / 10**_asset.decimals()
-                : (assets * supply) / totalAssets();
+        return (assets == 0 || supply == 0) ? (assets * 10**decimals()) / 10**_asset.decimals() : (assets * supply) / totalAssets();
     }
 
     /** @dev See {IERC4262-convertToAssets} */
