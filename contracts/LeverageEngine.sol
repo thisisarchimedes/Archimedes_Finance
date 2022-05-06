@@ -6,7 +6,6 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {ICoordinator} from "./interfaces/ICoordinator.sol";
-import {ICoordinator} from "./interfaces/ICoordinator.sol";
 import {PositionToken} from "./PositionToken.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import {LeverageAllocator} from "./LeverageAllocator.sol";

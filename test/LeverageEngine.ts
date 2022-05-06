@@ -1,6 +1,6 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
-const { ContractTestContext } = require("./ContractTestContext");
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { ContractTestContext } from "./ContractTestContext";
 
 describe("LeverageEngine test suit", async function () {
     let r;
