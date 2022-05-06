@@ -1,5 +1,4 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 describe("LeverageAllocator test suit", async function () {
@@ -10,6 +9,6 @@ describe("LeverageAllocator test suit", async function () {
     });
 
     it("Should exist", async function () {
-        await expect(leverageAllocator).to.not.be.undefined;
+        await expect(r.leverageAllocator).to.not.be.undefined;
     });
 });
