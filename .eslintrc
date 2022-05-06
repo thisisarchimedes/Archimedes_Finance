@@ -1,6 +1,12 @@
 {
-    "extends": ["standard"],
-    "plugins": ["mocha"],
+    "extends": [
+        "standard",
+        "plugin:@typescript-eslint/recommended",
+    ],
+    "plugins": [
+        "mocha",
+        "@typescript-eslint"
+    ],
     "env": {
         "browser": true,
         "node": true,
@@ -15,6 +21,7 @@
         "usePlugin": false,
         "extendEnvironment": false
     },
+    "parser": "@typescript-eslint/parser",
     "rules": {
         // Strict mode
         "strict": ["error", "global"],

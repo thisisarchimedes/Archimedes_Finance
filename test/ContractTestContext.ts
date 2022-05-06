@@ -1,7 +1,7 @@
-const { ethers } = require("hardhat");
-const mainNetHelper = require("./MainnetHelper");
+import { ethers } from "hardhat";
+import { addressOUSD, abiOUSDToken } from "./MainnetHelper";
 
-class ContractTestContext {
+export class ContractTestContext {
     // addresses for different roles
     owner;
     addr1;
@@ -15,6 +15,10 @@ class ContractTestContext {
     vault;
     lvUSD;
     exchanger;
+    leverageEngine;
+    leverageAllocator;
+    positionToken;
+    parameterStore;
 
     // External contracts
     externalOUSD;
@@ -40,7 +44,7 @@ class ContractTestContext {
         const parameterStore = await ethers.getContractFactory("ParameterStore");
         this.parameterStore = await parameterStore.deploy();
 
-        this.externalOUSD = new ethers.Contract(mainNetHelper.addressOUSD, mainNetHelper.abiOUSDToken, this.owner);
+        this.externalOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, this.owner);
         const contractVault = await ethers.getContractFactory("VaultOUSD");
         this.vault = await contractVault.deploy(this.externalOUSD.address, "VaultOUSD", "VOUSD");
         const contractLvUSD = await ethers.getContractFactory("LvUSDToken");
@@ -66,7 +70,3 @@ class ContractTestContext {
         await this.exchanger.init(this.lvUSD.address, this.coordinator.address, this.externalOUSD.address);
     }
 }
-
-module.exports = {
-    ContractTestContext,
-};

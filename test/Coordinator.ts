@@ -1,7 +1,8 @@
-const { expect, assert } = require("chai");
-const { ethers } = require("hardhat");
-const mainnetHelper = require("./MainnetHelper");
-const { ContractTestContext } = require("./ContractTestContext");
+
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { helperResetNetwork, helperSwapETHWithOUSD, defaultBlockNumber } from "./MainnetHelper";
+import { ContractTestContext } from "./ContractTestContext";
 
 describe("Coordinator Test suit", function () {
     let r;
@@ -12,7 +13,7 @@ describe("Coordinator Test suit", function () {
     const nftIdAddr2Position = 15426;
 
     before(async function () {
-        mainnetHelper.helperResetNetwork(mainnetHelper.defaultBlockNumber);
+        helperResetNetwork(defaultBlockNumber);
 
         r = new ContractTestContext();
         await r.setup();
@@ -22,8 +23,8 @@ describe("Coordinator Test suit", function () {
         coordinator = r.coordinator;
         sharesOwnerAddress = coordinator.address;
 
-        await mainnetHelper.helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseEther("5.0"));
-        await mainnetHelper.helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("5.0"));
+        await helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseEther("5.0"));
+        await helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("5.0"));
     });
 
     describe("Deposit collateral into new NFT position", function () {
@@ -103,7 +104,7 @@ describe("Coordinator Test suit", function () {
             it("Vault should contain the correct number of shares and assets after a rebase event", async function () {
                 const rebaseAmount = ethers.utils.parseEther("1");
                 /* simulate rebase by transferring from random new address: */
-                await mainnetHelper.helperSwapETHWithOUSD(r.addr3, rebaseAmount);
+                await helperSwapETHWithOUSD(r.addr3, rebaseAmount);
                 await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, rebaseAmount);
                 /* shares should stay the same since no address called deposit into the vault: */
                 const totalShares = await r.vault.totalSupply();
