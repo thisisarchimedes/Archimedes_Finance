@@ -38,6 +38,7 @@ const defaultBlockNumber = 14720215;
 // @param signer: Signer used to deploy / own the pool
 // returns pool object of the newly created CurveMetaPool
 async function createCurveMetapool3CRV (token, signer) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore CurvePool Factory
     const factoryCurveMetapool = new ethers.Contract(addressCurveFactory, abiCurveFactory, signer);
     const tokenName = await token.symbol();
@@ -102,6 +103,7 @@ async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     const weth9 = new ethers.Contract(addressWETH9, abiWETH9Token, destUser);
     // loading USDT contract
     const usdtToken = new ethers.Contract(addressUSDT, abiUSDTToken, destUser);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore loading Tripool2 contract
     const triPool = new ethers.Contract(addressCurveTripool2, abiCurveTripool2, destUser);
 
@@ -158,8 +160,10 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
 
     // loading USDT contract
     const tokenUSDT = new ethers.Contract(addressUSDT, abiUSDTToken, destUser);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore loading 3CRV token contract
     const token3CRV = new ethers.Contract(address3CRV, abi3CRVToken, destUser);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore loading 3Pool pool contract
     const contractCurve3Pool = new ethers.Contract(addressCurve3Pool, abiCurve3Pool, destUser);
 
@@ -192,10 +196,12 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
 async function helperSwapETHWithOUSD (destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore loading USDT contract
     const token3CRV = new ethers.Contract(address3CRV, abi3CRVToken, destUser);
     // loading OUSD token contract
     const tokenOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, destUser);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore loading OUSD Swapper contract
     const contractCurveOUSDPool = new ethers.Contract(addressCurveOUSDPool, abiCurveOUSDPool, destUser);
 
