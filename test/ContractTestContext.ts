@@ -1,7 +1,8 @@
-const { ethers } = require("hardhat");
-const mainNetHelper = require("./MainnetHelper");
+import { ContractFactory } from "ethers";
+import { ethers } from "hardhat";
+import { addressOUSD, abiOUSDToken } from "./MainnetHelper";
 
-async function getContractFactories (factoryNames) {
+async function getContractFactories (factoryNames: string[]): Promise<{ [K: string]: ContractFactory }> {
     const contracts = await Promise.all(
         factoryNames.map(factoryName => ethers.getContractFactory(factoryName)),
     );
@@ -11,7 +12,7 @@ async function getContractFactories (factoryNames) {
     }), {});
 }
 
-class ContractTestContext {
+export class ContractTestContext {
     // addresses for different roles
     owner;
     addr1;
@@ -25,6 +26,10 @@ class ContractTestContext {
     vault;
     lvUSD;
     exchanger;
+    leverageEngine;
+    leverageAllocator;
+    positionToken;
+    parameterStore;
 
     // External contracts
     externalOUSD;
@@ -44,7 +49,7 @@ class ContractTestContext {
             "Coordinator",
         ]);
 
-        this.externalOUSD = new ethers.Contract(mainNetHelper.addressOUSD, mainNetHelper.abiOUSDToken, this.owner);
+        this.externalOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, this.owner);
 
         [
             this.cdp,
@@ -87,7 +92,3 @@ class ContractTestContext {
         ]);
     }
 }
-
-module.exports = {
-    ContractTestContext,
-};

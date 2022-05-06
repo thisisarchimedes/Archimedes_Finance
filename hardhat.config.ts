@@ -1,10 +1,10 @@
-require("@nomiclabs/hardhat-waffle");
-require("@tenderly/hardhat-tenderly");
-
-const { task } = require("hardhat/config");
+import "@nomiclabs/hardhat-waffle";
+import "@tenderly/hardhat-tenderly";
+import { task } from "hardhat/config";
+import dotenv from "dotenv";
 
 // grab the private api key from the private repo
-require("dotenv").config({ path: "secrets/alchemy.env" });
+dotenv.config({ path: "secrets/alchemy.env" });
 
 const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
 

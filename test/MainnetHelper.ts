@@ -1,6 +1,6 @@
-const { ethers, network } = require("hardhat");
-const { expect } = require("chai");
-const {
+import { ethers, network } from "hardhat";
+import { expect } from "chai";
+import {
     abiOUSDToken,
     abiCurveOUSDPool,
     abiCurveTripool2,
@@ -10,11 +10,11 @@ const {
     abi3CRVToken,
     abiCurve3Pool,
     abi3PoolImplementation,
-} = require("../ABIs");
+} from "./ABIs";
+import dotenv from "dotenv";
 
 // grab the private api key from the private repo
-require("dotenv").config({ path: "secrets/alchemy.env" });
-const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
+dotenv.config({ path: "secrets/alchemy.env" });
 
 /* CONTRACT ADDRESSES ON MAINNET */
 const addressCurveTripool2 = "0xd51a44d3fae010294c616388b506acda1bfaae46";
@@ -30,6 +30,7 @@ const indexTripoolUSDT = 0;
 const indexTripoolWETH9 = 2;
 const indexCurveOUSDOUSD = 0;
 const indexCurveOUSD3CRV = 1;
+const defaultBlockNumber = 14720215;
 
 /* helper functions */
 // Spin up a Curve Meta Pool that uses 3CRV
@@ -37,7 +38,8 @@ const indexCurveOUSD3CRV = 1;
 // @param signer: Signer used to deploy / own the pool
 // returns pool object of the newly created CurveMetaPool
 async function createCurveMetapool3CRV (token, signer) {
-    // CurvePool Factory
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore CurvePool Factory
     const factoryCurveMetapool = new ethers.Contract(addressCurveFactory, abiCurveFactory, signer);
     const tokenName = await token.symbol();
     const poolSymbol = tokenName + "3CRV";
@@ -74,6 +76,7 @@ async function getMetapool (address, user) {
 }
 
 async function helperResetNetwork (lockBlock) {
+    const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
     // Reset hardhat mainnet fork
     await network.provider.request({
         method: "hardhat_reset",
@@ -100,7 +103,8 @@ async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     const weth9 = new ethers.Contract(addressWETH9, abiWETH9Token, destUser);
     // loading USDT contract
     const usdtToken = new ethers.Contract(addressUSDT, abiUSDTToken, destUser);
-    // loading Tripool2 contract
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore loading Tripool2 contract
     const triPool = new ethers.Contract(addressCurveTripool2, abiCurveTripool2, destUser);
 
     // Verify we got the correct TriPool connected (verifying USDT and WETH addresses)
@@ -156,9 +160,11 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
 
     // loading USDT contract
     const tokenUSDT = new ethers.Contract(addressUSDT, abiUSDTToken, destUser);
-    // loading 3CRV token contract
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore loading 3CRV token contract
     const token3CRV = new ethers.Contract(address3CRV, abi3CRVToken, destUser);
-    // loading 3Pool pool contract
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore loading 3Pool pool contract
     const contractCurve3Pool = new ethers.Contract(addressCurve3Pool, abiCurve3Pool, destUser);
 
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
@@ -190,11 +196,13 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
 async function helperSwapETHWithOUSD (destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
-    // loading USDT contract
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore loading USDT contract
     const token3CRV = new ethers.Contract(address3CRV, abi3CRVToken, destUser);
     // loading OUSD token contract
     const tokenOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, destUser);
-    // loading OUSD Swapper contract
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore loading OUSD Swapper contract
     const contractCurveOUSDPool = new ethers.Contract(addressCurveOUSDPool, abiCurveOUSDPool, destUser);
 
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
@@ -219,7 +227,9 @@ async function helperSwapETHWithOUSD (destUser, ethAmountToSwap) {
     return balanceOUSD;
 }
 
-module.exports = {
+export {
+    defaultBlockNumber,
+
     /* helper functions */
     helperResetNetwork,
     helperSwapETHWithUSDT,

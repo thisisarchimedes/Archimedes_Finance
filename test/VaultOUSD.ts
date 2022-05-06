@@ -1,6 +1,11 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
-const MainnetHelper = require("./MainnetHelper");
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import {
+    helperResetNetwork,
+    addressOUSD,
+    abiOUSDToken,
+    helperSwapETHWithOUSD,
+} from "./MainnetHelper";
 
 const getDecimal = (naturalNumber) => {
     return ethers.utils.parseEther(naturalNumber.toString());
@@ -19,15 +24,15 @@ describe("VaultOUSD test suit", function () {
     const interestIntoVault = 10;
     before(async function () {
         [owner, addr1, addr2] = await ethers.getSigners();
-        MainnetHelper.helperResetNetwork(14533286);
-        tokenOUSD = new ethers.Contract(MainnetHelper.addressOUSD, MainnetHelper.abiOUSDToken, owner);
+        helperResetNetwork(14533286);
+        tokenOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, owner);
         const contractVault = await ethers.getContractFactory("VaultOUSD");
         tokenVault = await contractVault.deploy(tokenOUSD.address, "VaultOUSD", "VOUSD");
 
         // Mint initial amount on OUSD token, will be used by all tests
-        await MainnetHelper.helperSwapETHWithOUSD(addr1, ethers.utils.parseEther("1.0"));
-        await MainnetHelper.helperSwapETHWithOUSD(addr2, ethers.utils.parseEther("1.0"));
-        await MainnetHelper.helperSwapETHWithOUSD(owner, ethers.utils.parseEther("1.0"));
+        await helperSwapETHWithOUSD(addr1, ethers.utils.parseEther("1.0"));
+        await helperSwapETHWithOUSD(addr2, ethers.utils.parseEther("1.0"));
+        await helperSwapETHWithOUSD(owner, ethers.utils.parseEther("1.0"));
         sharesOwnerAddress = owner.address;
 
         // deposit OUSD as a user (that gets shares) into vault. Shares goes to owner, not user.
@@ -40,7 +45,7 @@ describe("VaultOUSD test suit", function () {
     describe("Addr1 and addr2 signer deposited OUSD into vault", function () {
         it("Should return OUSD to be Vault's asset", async function () {
             const vaultAsset = await tokenVault.asset();
-            expect(vaultAsset).to.equal(MainnetHelper.addressOUSD);
+            expect(vaultAsset).to.equal(addressOUSD);
         });
 
         it("Should have an updated total assets sum after deposit", async function () {
