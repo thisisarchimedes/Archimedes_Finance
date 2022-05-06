@@ -58,10 +58,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     }
 
     function changeGlobalCollateralRate(uint256 _newGlobalCollateralRate) external override {
-        require(
-            _newGlobalCollateralRate <= 100 && _newGlobalCollateralRate > 0,
-            "_globalCollateralRate must be a number between 1 and 100"
-        );
+        require(_newGlobalCollateralRate <= 100 && _newGlobalCollateralRate > 0, "_globalCollateralRate must be a number between 1 and 100");
         _globalCollateralRate = _newGlobalCollateralRate;
     }
 
@@ -83,7 +80,22 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         CDPosition(_tokenCDP).addSharesToPosition(_nftId, shares);
     }
 
-    function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
+    function withdrawCollateralUnderNFT(
+        uint256 _nftId,
+        uint256 _amount,
+        address _to
+    ) external override {
+        _withdrawCollateralUnderNFT(_nftId, _amount, _to);
+    }
+
+    function _withdrawCollateralUnderNFT(
+        uint256 _nftId,
+        uint256 _amount,
+        address _to
+    ) external override {
+        require(_amount == CDPosition(_tokenCDP).)
+        
+    }
 
     function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override {
         _borrowUnderNFT(_nftId, _amount);
@@ -99,10 +111,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     }
 
     function _repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) internal {
-        require(
-            CDPosition(_tokenCDP).getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay,
-            "Coordinator : Cannot repay more lvUSD then is borrowed"
-        );
+        require(CDPosition(_tokenCDP).getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay, "Coordinator : Cannot repay more lvUSD then is borrowed");
         IERC20(_tokenLvUSD).transferFrom(_tokenExchanger, address(this), _amountLvUSDToRepay);
         CDPosition(_tokenCDP).repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
     }
@@ -160,18 +169,10 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
         require(numberOfSharesInPosition > 0, "Cannot unwind a position with no shares");
 
-        uint256 redeemedOUSD = VaultOUSD(_tokenVaultOUSD).redeem(
-            numberOfSharesInPosition,
-            _tokenExchanger,
-            _sharesOwner
-        );
+        uint256 redeemedOUSD = VaultOUSD(_tokenVaultOUSD).redeem(numberOfSharesInPosition, _tokenExchanger, _sharesOwner);
 
         /// TODO: add slippage protection
-        (uint256 exchangedLvUSD, uint256 remainingOUSD) = Exchanger(_tokenExchanger).xOUSDforLvUSD(
-            redeemedOUSD,
-            address(this),
-            borrowedLvUSD
-        );
+        (uint256 exchangedLvUSD, uint256 remainingOUSD) = Exchanger(_tokenExchanger).xOUSDforLvUSD(redeemedOUSD, address(this), borrowedLvUSD);
 
         _repayUnderNFT(_nftId, exchangedLvUSD);
 
