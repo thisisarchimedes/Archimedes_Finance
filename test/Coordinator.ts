@@ -1,5 +1,5 @@
 
-import { expect } from "chai";
+import { assert, expect } from "chai";
 import { ethers } from "hardhat";
 import { helperResetNetwork, helperSwapETHWithOUSD, defaultBlockNumber } from "./MainnetHelper";
 import { ContractTestContext } from "./ContractTestContext";
