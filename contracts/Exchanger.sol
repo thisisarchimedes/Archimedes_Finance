@@ -43,12 +43,7 @@ contract Exchanger {
         address to,
         uint256 minRequiredLvUSD
     ) external view returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
-        console.log(
-            "Exchanging%s OUSD for min %slvUSD, assigning funds to address %s",
-            amountOUSD,
-            minRequiredLvUSD,
-            to
-        );
+        console.log("Exchanging%s OUSD for min %slvUSD, assigning funds to address %s", amountOUSD, minRequiredLvUSD, to);
         // return minRequiredLvUSD;
         return (minRequiredLvUSD, amountOUSD - minRequiredLvUSD);
     }
