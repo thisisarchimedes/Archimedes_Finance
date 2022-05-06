@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 describe("LeverageAllocator test suit", async function () {
-    let leverageAllocator;
+    let r: ContractTestContext;
 
-    beforeEach(async () => {
-        const laContract = await ethers.getContractFactory("LeverageAllocator");
-        leverageAllocator = await laContract.deploy();
+    before(async () => {
+        r = await buildContractTestContext();
     });
 
     it("Should exist", async function () {

@@ -1,5 +1,10 @@
-import "@nomiclabs/hardhat-waffle";
 import "@tenderly/hardhat-tenderly";
+
+// typechain imports:
+import "@typechain/hardhat";
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
+
 import { task } from "hardhat/config";
 import dotenv from "dotenv";
 
@@ -24,9 +29,8 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-module.exports = {
+export default {
     solidity: "0.8.13",
-
     networks: {
         hardhat: {
             forking: {
@@ -37,5 +41,13 @@ module.exports = {
                 url: "http://127.0.0.1:8545",
             },
         },
+    },
+    typechain: {
+        outDir: "types",
+        target: "ethers-v5",
+        // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
+        alwaysGenerateOverloads: false,
+        // optional array of glob patterns with external artifacts to process (for example external libs from node_modules)
+        externalArtifacts: ["externalArtifacts/*.json"],
     },
 };

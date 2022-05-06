@@ -1,15 +1,14 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { helperResetNetwork, defaultBlockNumber } from "./MainnetHelper";
-import { ContractTestContext } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 describe("ContractTestContext", function () {
-    let contractTestContext;
+    let contractTestContext: ContractTestContext;
 
     before(async function () {
         helperResetNetwork(defaultBlockNumber);
-        contractTestContext = new ContractTestContext();
-        await contractTestContext.setup();
+        contractTestContext = await buildContractTestContext();
     });
 
     describe("When context is initialized", () => {

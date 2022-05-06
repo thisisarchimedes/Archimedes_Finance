@@ -1,7 +1,7 @@
 import { helperResetNetwork, helperSwapETHWithOUSD, createCurveMetapool3CRV } from "./MainnetHelper";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { ContractTestContext } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 /* Integration tests start here */
 
@@ -10,15 +10,14 @@ let contractARCHToken;
 describe("Setting the stage: Getting some OUSD and deploying our contracts", function () {
     let signer;
     let user;
-    let r;
+    let r: ContractTestContext;
     let lvUSD;
 
     before(async function () {
         // Reset network before integration tests
         helperResetNetwork(14533286);
         // Setup & deploy contracts
-        r = new ContractTestContext();
-        await r.setup();
+        r = await buildContractTestContext();
         lvUSD = r.lvUSD;
     });
 
