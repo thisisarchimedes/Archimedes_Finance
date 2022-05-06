@@ -1,13 +1,13 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
-const mainnetHelper = require("./MainnetHelper");
-const { ContractTestContext } = require("./ContractTestContext");
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { helperResetNetwork, defaultBlockNumber } from "./MainnetHelper";
+import { ContractTestContext } from "./ContractTestContext";
 
 describe("ContractTestContext", function () {
     let contractTestContext;
 
     before(async function () {
-        mainnetHelper.helperResetNetwork(mainnetHelper.defaultBlockNumber);
+        helperResetNetwork(defaultBlockNumber);
         contractTestContext = new ContractTestContext();
         await contractTestContext.setup();
     });

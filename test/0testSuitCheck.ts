@@ -1,9 +1,10 @@
-const { ethers } = require("hardhat");
-const { expect } = require("chai");
-const helper = require("./MainnetHelper");
+import { Signer } from "ethers";
+import { ethers } from "hardhat";
+import { expect } from "chai";
+import { addressUSDT, abiUSDTToken } from "./MainnetHelper";
 
 describe("Checking test suit state before running unit tests", function () {
-    let signer;
+    let signer: Signer;
 
     beforeEach(async function () {
         // get signers
@@ -12,8 +13,8 @@ describe("Checking test suit state before running unit tests", function () {
 
     it("Ensure mainnet fork is running", async function () {
         // loading USDT contract
-        const usdtToken = new ethers.Contract(helper.addressUSDT, helper.abiUSDTToken, signer);
-        expect(usdtToken.address).to.equal(helper.addressUSDT);
+        const usdtToken = new ethers.Contract(addressUSDT, abiUSDTToken, signer);
+        expect(usdtToken.address).to.equal(addressUSDT);
 
         // check decimals (USDT has 6 decimals)
         const decimals = await usdtToken.decimals();

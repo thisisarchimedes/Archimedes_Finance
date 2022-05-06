@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "hardhat";
 
 const getEighteenDecimal = (naturalNumber) => {
     return ethers.utils.parseEther(naturalNumber.toString());
