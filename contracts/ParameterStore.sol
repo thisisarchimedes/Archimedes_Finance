@@ -63,4 +63,8 @@ contract ParameterStore {
         }
         return leverageAmount;
     }
+
+    function calculateOriginationFee(uint256 leverageAmount) public view returns (uint256) {
+        return (_originationFeeRate * leverageAmount) / 1 ether;
+    }
 }

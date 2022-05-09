@@ -14,6 +14,24 @@ describe("ParameterStore test suit", async function () {
         parameterStore = r.parameterStore;
     });
 
+    describe("Calculate origination fees", function () {
+        it("Should calculate correct fee", async function () {
+            const leverageAmount = ethers.utils.parseEther("1000");
+            const calculatedFee = await parameterStore.calculateOriginationFee(leverageAmount);
+            expect(calculatedFee).to.equal(ethers.utils.parseEther("50"));
+        });
+        it("Should calculate correct fee with really big numbers", async function () {
+            const leverageAmount = ethers.utils.parseEther("10000000000");
+            const calculatedFee = await parameterStore.calculateOriginationFee(leverageAmount);
+            expect(calculatedFee).to.equal(ethers.utils.parseEther("500000000"));
+        });
+        it("Should calculate correct fee with small numbers ", async function () {
+            const leverageAmount = ethers.utils.parseEther("10");
+            const calculatedFee = await parameterStore.calculateOriginationFee(leverageAmount);
+            expect(calculatedFee).to.equal(ethers.utils.parseEther("0.5"));
+        });
+    });
+
     describe("Treasury address tests", function () {
         it("should have updated treasury address", async function () {
             const newTreasurySigner = ethers.Wallet.createRandom();
