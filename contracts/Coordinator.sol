@@ -61,6 +61,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
     /* Privileged functions: Executive */
 
+    // Note: Expects funds to be under coordinator already
     function depositCollateralUnderNFT(
         uint256 _nftId,
         uint256 _amountInOUSD,
@@ -137,7 +138,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
         /// TODO - call exchanger to exchange fund. For now, assume we got a one to one exchange rate
         uint256 ousdAmountExchanged = _exchanger.xLvUSDforOUSD(_amountToLeverage, address(this));
-
+        console.log("Sol:Coord: Trying to deposit %s into vault", ousdAmountExchanged);
         uint256 sharesFromDeposit = _vault.deposit(ousdAmountExchanged, _sharesOwner);
 
         _cdp.addSharesToPosition(_nftId, sharesFromDeposit);
