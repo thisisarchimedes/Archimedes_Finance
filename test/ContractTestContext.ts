@@ -110,6 +110,15 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.leverageAllocator.address,
         ),
         context.exchanger.init(context.lvUSD.address, context.coordinator.address, context.externalOUSD.address),
+        context.coordinator.init(
+            this.lvUSD.address,
+            this.vault.address,
+            this.cdp.address,
+            this.externalOUSD.address,
+            this.exchanger.address,
+            this.parameterStore.address,
+        ),
+        context.parameterStore.init(this.treasurySigner.address),
     ]);
 
     return context;
