@@ -51,3 +51,5 @@ tenderly.yaml
 ##########
 
 secrets/
+
+types/
