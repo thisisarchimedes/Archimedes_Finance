@@ -25,7 +25,7 @@ describe("LeverageEngine test suit", async function () {
                     r.parameterStore.address,
                     r.leverageAllocator.address,
                 ),
-            ).to.be.revertedWith("Caller is not admin");
+            ).to.be.revertedWith("onlyAdmin: Caller is not admin");
         });
     });
 
