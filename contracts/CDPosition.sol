@@ -64,10 +64,7 @@ contract CDPosition {
     /// @param nftID NFT position to update
     /// @param lvUSDAmountToRepay amount to remove fom position's existing borrowed lvUSD sum
     function repayLvUSDToPosition(uint256 nftID, uint256 lvUSDAmountToRepay) external nftIDMustExist(nftID) {
-        require(
-            _nftCDP[nftID].lvUSDBorrowed >= lvUSDAmountToRepay,
-            "lvUSD Borrowed amount must be greater or equal than amount to repay"
-        );
+        require(_nftCDP[nftID].lvUSDBorrowed >= lvUSDAmountToRepay, "lvUSD Borrowed amount must be greater or equal than amount to repay");
         _nftCDP[nftID].lvUSDBorrowed -= lvUSDAmountToRepay;
     }
 
@@ -82,10 +79,7 @@ contract CDPosition {
     /// @param nftID NFT position to update
     /// @param oUSDAmountToWithdraw amount to remove to position's existing deposited sum
     function withdrawOUSDFromPosition(uint256 nftID, uint256 oUSDAmountToWithdraw) external nftIDMustExist(nftID) {
-        require(
-            _nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw,
-            "OUSD total amount must be greater or equal than amount to withdraw"
-        );
+        require(_nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw, "OUSD total amount must be greater or equal than amount to withdraw");
         _nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
     }
 

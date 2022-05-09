@@ -49,18 +49,11 @@ export class ContractTestContext {
         this.vault = await contractVault.deploy(this.externalOUSD.address, "VaultOUSD", "VOUSD");
         const contractLvUSD = await ethers.getContractFactory("LvUSDToken");
         this.lvUSD = await contractLvUSD.deploy();
+
         const contractCoordinator = await ethers.getContractFactory("Coordinator");
+        this.coordinator = await contractCoordinator.deploy();
 
-        this.coordinator = await contractCoordinator.deploy(
-            this.lvUSD.address,
-            this.vault.address,
-            this.cdp.address,
-            this.externalOUSD.address,
-            this.exchanger.address,
-            this.treasurySigner.address,
-        );
         // Post init contracts
-
         await this.leverageEngine.init(
             this.coordinator.address,
             this.positionToken.address,
@@ -68,5 +61,15 @@ export class ContractTestContext {
             this.leverageAllocator.address,
         );
         await this.exchanger.init(this.lvUSD.address, this.coordinator.address, this.externalOUSD.address);
+        await this.coordinator.init(
+            this.lvUSD.address,
+            this.vault.address,
+            this.cdp.address,
+            this.externalOUSD.address,
+            this.exchanger.address,
+            this.parameterStore.address,
+        );
+
+        await this.parameterStore.init(this.treasurySigner.address);
     }
 }

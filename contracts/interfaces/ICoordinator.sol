@@ -8,37 +8,6 @@ interface ICoordinator {
     // - OUSD Vault contract address
     /*===============================================*/
 
-    /* Privileged functions: Governor */
-
-    /// @dev change origination fee
-    ///
-    /// How much off principle is taken as protocol fees, each time lvUSD is borrowed
-    /// Should emit an event
-    ///
-    /// @param newFeeRate in percentage
-    function changeOriginationFeeRate(uint256 newFeeRate) external;
-
-    /// @dev get origination fee number
-    ///
-    function getOriginationFeeRate() external view returns (uint256);
-
-    /// @dev update EOA of treasury. EOA is multi-sig.
-    ///
-    /// @param newTreasuryAddress new EOA address of treasury
-    function changeTreasuryAddress(address newTreasuryAddress) external;
-
-    /// @dev update globalCollateralRate
-    /// @param _newGlobalCollateralRate value to set globalCollateralRate
-    function changeGlobalCollateralRate(uint256 _newGlobalCollateralRate) external;
-
-    /// @dev update maxNumberOfCycles
-    /// @param _newMaxNumberOfCycles value to set maxNumberOfCycles
-    function changeMaxNumberOfCycles(uint256 _newMaxNumberOfCycles) external;
-
-    /// @dev get treasury address.
-    ///
-    function getTreasuryAddress() external view returns (address);
-
     /* Privileged functions: Executive */
 
     /// @dev deposit OUSD under NFT ID
@@ -59,12 +28,14 @@ interface ICoordinator {
     /// User withdraw OUSD from the contract
     ///
     /// @param _nftId the position token id
-    /// @param _amount sum to withdraw
+    /// @param _amount OUSD amount
     /// @param _to address to transfer principle to
+    /// @param _from address to withdraw OUSD funds from
     function withdrawCollateralUnderNFT(
         uint256 _nftId,
         uint256 _amount,
-        address _to
+        address _to,
+        address _from
     ) external;
 
     /// @dev Borrow lvUSD under NFT ID
