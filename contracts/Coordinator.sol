@@ -88,7 +88,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         address _to,
         address _from
     ) internal {
-        /// TODO: take fees 
+        /// TODO: take fees
         _ousd.safeTransferFrom(_from, _to, _amount);
         _cdp.withdrawOUSDFromPosition(_nftId, _amount);
     }
