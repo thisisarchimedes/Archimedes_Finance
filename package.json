@@ -8,10 +8,10 @@
     },
     "scripts": {
         "test": "hardhat test",
-        "lint": "npm run lint:js && npm run lint:sol",
-        "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
-        "lint:js": "eslint . --ext .ts",
-        "lint:js:fix": "eslint --fix .",
+        "lint": "npm run lint:ts && npm run lint:sol",
+        "lint:fix": "npm run lint:ts:fix && npm run lint:sol:fix",
+        "lint:ts": "eslint . --ext .ts",
+        "lint:ts:fix": "eslint --fix .",
         "lint:sol": "solhint contracts/**/*.sol && prettier --check \"contracts/**/*.sol\"",
         "lint:sol:fix": "solhint contracts/**/*.sol --fix && prettier --write \"contracts/**/*.sol\""
     },
