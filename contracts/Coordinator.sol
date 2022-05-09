@@ -25,6 +25,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     address internal _addressOUSD;
     address internal _addressExchanger;
 
+
     VaultOUSD internal _vault;
     CDPosition internal _cdp;
     Exchanger internal _exchanger;
@@ -176,6 +177,40 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
         /// Note : leverage engine still need to make sure the delete the NFT itself in positionToken
         _cdp.deletePosition(_nftId);
+    }
+
+    function unwindLeveragedOUSD(
+        uint256 _nftId,
+        address _userAddress,
+        address _sharesOwner
+    ) external override nonReentrant {
+        /* Flow
+            1. sanity checks as needed
+            2. get amount of shares for position
+            3. redeem shares for OUSD (from vault), OUSD is assigned to exchanger 
+            4. exchange as much OUSD as needed to cover lvUSD debt (do we want to exchange principle as well?) 
+                    // slippage of 0.2% is ok, if dont - revert! 
+            5. repay lvUSD
+            6. return what OUSD is left to _userAddress
+            7. delete CDP position 
+        */
+
+        uint256 numberOfSharesInPosition = CDPosition(_tokenCDP).getShares(_nftId);
+        uint256 borrowedLvUSD = CDPosition(_tokenCDP).getLvUSDBorrowed(_nftId);
+
+        require(numberOfSharesInPosition > 0, "Cannot unwind a position with no shares");
+
+        uint256 redeemedOUSD = VaultOUSD(_tokenVaultOUSD).redeem(numberOfSharesInPosition, _tokenExchanger, _sharesOwner);
+
+        /// TODO: add slippage protection
+        (uint256 exchangedLvUSD, uint256 remainingOUSD) = Exchanger(_tokenExchanger).xOUSDforLvUSD(redeemedOUSD, address(this), borrowedLvUSD);
+
+        _repayUnderNFT(_nftId, exchangedLvUSD);
+
+        IERC20(_tokenOUSD).safeTransferFrom(_tokenExchanger, _userAddress, remainingOUSD);
+
+        /// Note : leverage engine still need to make sure the delete the NFT itself in positionToken
+        CDPosition(_tokenCDP).deletePosition(_nftId);
     }
 
     function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
