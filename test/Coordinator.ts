@@ -263,32 +263,6 @@ describe("Coordinator Test suit", function () {
     });
 
     describe("allowed leverage tests", function () {
-        describe("Get and update leverage related values", function () {
-            it("Should have default value for globalCollateralRate", async function () {
-                expect(await r.coordinator.getGlobalCollateralRate()).to.equal(90);
-            });
-
-            it("Should have default value for maxNumberOfCycles", async function () {
-                expect(await r.coordinator.getMaxNumberOfCycles()).to.equal(10);
-            });
-
-            it("Should update globalCollateralRate", async function () {
-                await r.coordinator.changeGlobalCollateralRate(80);
-                expect(await r.coordinator.getGlobalCollateralRate()).to.equal(80);
-            });
-
-            it("Should revert if new globalCollateralRate is higher then 100", async function () {
-                await expect(r.coordinator.changeGlobalCollateralRate(120)).to.revertedWith(
-                    "globalCollateralRate must be a number between 1 and 100",
-                );
-            });
-
-            it("Should update maxNumberOfCycles", async function () {
-                await r.coordinator.changeMaxNumberOfCycles(12);
-                expect(await r.coordinator.getMaxNumberOfCycles()).to.equal(12);
-            });
-        });
-
         describe("Calculate allowed leverage", function () {
             beforeEach(async function () {
                 /// values are not being reset on mainnet fork after describe/it so need to reset to default

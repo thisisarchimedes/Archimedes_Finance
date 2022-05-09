@@ -71,6 +71,8 @@ export class ContractTestContext {
             contracts.LvUSDToken.deploy(),
         ]);
 
+        this.coordinator = await contracts.Coordinator.deploy();
+
         // Post init contracts
         await Promise.all([
             this.leverageEngine.init(
@@ -81,11 +83,13 @@ export class ContractTestContext {
             ),
             this.exchanger.init(this.lvUSD.address, this.coordinator.address, this.externalOUSD.address),
             this.parameterStore.init(this.treasurySigner.address),
-            await this.coordinator.init(this.lvUSD.address,
+            this.coordinator.init(
+                this.lvUSD.address,
                 this.vault.address,
                 this.cdp.address,
                 this.externalOUSD.address,
                 this.exchanger.address,
+                this.parameterStore.address,
             ),
         ]);
     }
