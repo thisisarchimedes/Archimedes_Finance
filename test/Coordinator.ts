@@ -266,8 +266,8 @@ describe("Coordinator Test suit", function () {
         describe("Calculate allowed leverage", function () {
             beforeEach(async function () {
                 /// values are not being reset on mainnet fork after describe/it so need to reset to default
-                await r.coordinator.changeGlobalCollateralRate(90);
-                await r.coordinator.changeMaxNumberOfCycles(10);
+                await r.parameterStore.changeGlobalCollateralRate(90);
+                await r.parameterStore.changeMaxNumberOfCycles(10);
             });
             it("Should return zero if no cycles", async function () {
                 expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 0)).to.equal(
