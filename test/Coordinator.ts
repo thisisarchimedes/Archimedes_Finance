@@ -70,11 +70,9 @@ describe("Coordinator Test suit", function () {
             expect(await r.cdp.getShares(nftIdAddr1Position)).to.equal(addr1CollateralAmount);
         });
 
-        // describe("Withdraw collateral From NFT", async function () {
-        //     before(async function () {
-        //         await coordinator.withdrawCollateralUnderNFT
-        //     })
-        // })
+        describe("Withdraw collateral From NFT", async function () {
+            /// TODO: Add tests, waiting for next PR as I need to add fees to method
+        });
 
         describe("Separate deposits made by another user", function () {
             before(async function () {
