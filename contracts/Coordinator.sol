@@ -5,6 +5,7 @@ import {ICoordinator} from "../contracts/interfaces/ICoordinator.sol";
 import {IERC4626} from "../contracts/interfaces/IERC4626.sol";
 import {VaultOUSD} from "../contracts/VaultOUSD.sol";
 import {CDPosition} from "../contracts/CDPosition.sol";
+import {ParameterStore} from "./ParameterStore.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Exchanger} from "../contracts/Exchanger.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -18,52 +19,44 @@ import "hardhat/console.sol";
 /// It is controlled (and called) by the leverage engine
 contract Coordinator is ICoordinator, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address internal _tokenLvUSD;
-    address internal _tokenVaultOUSD;
-    address internal _tokenCDP;
-    address internal _treasuryAddress;
-    address internal _tokenOUSD;
-    address internal _tokenExchanger;
+    address internal _addressLvUSD;
+    address internal _addressVaultOUSD;
+    address internal _addressCDP;
+    address internal _addressOUSD;
+    address internal _addressExchanger;
 
-    uint256 internal _originationFeeRate = 5 ether / 100;
-    uint256 internal _globalCollateralRate = 90; // in percentage
-    uint256 internal _maxNumberOfCycles = 10;
+    VaultOUSD internal _vault;
+    CDPosition internal _cdp;
+    Exchanger internal _exchanger;
+    IERC20 internal _lvUSD;
+    IERC20 internal _ousd;
+    ParameterStore internal _paramStore;
 
-    constructor(
-        address tokenLvUSD,
-        address tokenVaultOUSD,
-        address tokenCDP,
-        address tokenOUSD,
-        address tokenExchanger,
-        address treasuryAddress
-    ) {
-        _tokenLvUSD = tokenLvUSD;
-        _tokenVaultOUSD = tokenVaultOUSD;
-        _tokenCDP = tokenCDP;
-        _tokenOUSD = tokenOUSD;
-        _tokenExchanger = tokenExchanger;
-        _treasuryAddress = treasuryAddress;
+    constructor() {}
+
+    function init(
+        address addressLvUSD,
+        address addressVaultOUSD,
+        address addressCDP,
+        address addressOUSD,
+        address addressExchanger,
+        address addressParamStore
+    ) external nonReentrant {
+        _addressLvUSD = addressLvUSD;
+        _addressVaultOUSD = addressVaultOUSD;
+        _addressCDP = addressCDP;
+        _addressOUSD = addressOUSD;
+        _addressExchanger = addressExchanger;
+
+        _vault = VaultOUSD(_addressVaultOUSD);
+        _cdp = CDPosition(_addressCDP);
+        _exchanger = Exchanger(_addressExchanger);
+        _lvUSD = IERC20(_addressLvUSD);
+        _ousd = IERC20(_addressOUSD);
+        _paramStore = ParameterStore(addressParamStore);
 
         // approve VaultOUSD address to spend on behalf of coordinator
-        IERC20(_tokenOUSD).approve(_tokenVaultOUSD, type(uint256).max);
-    }
-
-    /* Privileged functions: Governor */
-    function changeOriginationFeeRate(uint256 newFeeRate) external override {
-        _originationFeeRate = newFeeRate;
-    }
-
-    function changeTreasuryAddress(address newTreasuryAddress) external override {
-        _treasuryAddress = newTreasuryAddress;
-    }
-
-    function changeGlobalCollateralRate(uint256 _newGlobalCollateralRate) external override {
-        require(_newGlobalCollateralRate <= 100 && _newGlobalCollateralRate > 0, "_globalCollateralRate must be a number between 1 and 100");
-        _globalCollateralRate = _newGlobalCollateralRate;
-    }
-
-    function changeMaxNumberOfCycles(uint256 _newMaxNumberOfCycles) external override {
-        _maxNumberOfCycles = _newMaxNumberOfCycles;
+        _ousd.safeApprove(_addressVaultOUSD, type(uint256).max);
     }
 
     /* Privileged functions: Executive */
@@ -74,21 +67,42 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         address _sharesOwner
     ) external override {
         /// Transfer collateral to vault, mint shares to shares owner
-        uint256 shares = VaultOUSD(_tokenVaultOUSD).deposit(_amountInOUSD, _sharesOwner);
+        uint256 shares = _vault.deposit(_amountInOUSD, _sharesOwner);
         // create CDP position with collateral
-        CDPosition(_tokenCDP).createPosition(_nftId, _amountInOUSD);
-        CDPosition(_tokenCDP).addSharesToPosition(_nftId, shares);
+        _cdp.createPosition(_nftId, _amountInOUSD);
+        _cdp.addSharesToPosition(_nftId, shares);
     }
 
-    function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external override notImplementedYet {}
+    function withdrawCollateralUnderNFT(
+        uint256 _nftId,
+        uint256 _amount,
+        address _to
+    ) external override nonReentrant {
+        _withdrawCollateralUnderNFT(_nftId, _amount, _to);
+    }
+
+    function _withdrawCollateralUnderNFT(
+        uint256 _nftId,
+        uint256 _amount,
+        address _to
+    ) internal {
+        /// Method makes sure ousd recorded balance transfer
+        uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
+        _ousd.safeTransferFrom(_addressExchanger, _to, _amount);
+        require(
+            _ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount,
+            "Coordinator : Revert since OUSD transfer to user is not correct with OUSD balanceOf"
+        );
+        _cdp.withdrawOUSDFromPosition(_nftId, _amount);
+    }
 
     function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override {
         _borrowUnderNFT(_nftId, _amount);
     }
 
     function _borrowUnderNFT(uint256 _nftId, uint256 _amount) internal {
-        IERC20(_tokenLvUSD).transfer(_tokenExchanger, _amount);
-        CDPosition(_tokenCDP).borrowLvUSDFromPosition(_nftId, _amount);
+        _lvUSD.transfer(_addressExchanger, _amount);
+        _cdp.borrowLvUSDFromPosition(_nftId, _amount);
     }
 
     function repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) external override {
@@ -96,9 +110,9 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     }
 
     function _repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) internal {
-        require(CDPosition(_tokenCDP).getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay, "Coordinator : Cannot repay more lvUSD then is borrowed");
-        IERC20(_tokenLvUSD).transferFrom(_tokenExchanger, address(this), _amountLvUSDToRepay);
-        CDPosition(_tokenCDP).repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
+        require(_cdp.getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay, "Coordinator : Cannot repay more lvUSD then is borrowed");
+        _lvUSD.transferFrom(_addressExchanger, address(this), _amountLvUSDToRepay);
+        _cdp.repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
     }
 
     function getLeveragedOUSD(
@@ -115,9 +129,9 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
           /// TOOD : take origination fees from the exchanged OUSD (after exchange)
         */
 
-        uint256 ousdPrinciple = CDPosition(_tokenCDP).getOUSDPrinciple(_nftId);
+        uint256 ousdPrinciple = _cdp.getOUSDPrinciple(_nftId);
         require(
-            _amountToLeverage <= getAllowedLeverageForPosition(ousdPrinciple, _maxNumberOfCycles),
+            _amountToLeverage <= _paramStore.getAllowedLeverageForPosition(ousdPrinciple, _paramStore.getMaxNumberOfCycles()),
             "Cannot get more leverage then max allowed leverage"
         );
 
@@ -125,12 +139,12 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
         /// TODO - call exchanger to exchange fund. For now, assume we got a one to one exchange rate
-        uint256 ousdAmountExchanged = Exchanger(_tokenExchanger).xLvUSDforOUSD(_amountToLeverage, address(this));
+        uint256 ousdAmountExchanged = _exchanger.xLvUSDforOUSD(_amountToLeverage, address(this));
 
-        uint256 sharesFromDeposit = VaultOUSD(_tokenVaultOUSD).deposit(ousdAmountExchanged, _sharesOwner);
+        uint256 sharesFromDeposit = _vault.deposit(ousdAmountExchanged, _sharesOwner);
 
-        CDPosition(_tokenCDP).addSharesToPosition(_nftId, sharesFromDeposit);
-        CDPosition(_tokenCDP).depositOUSDtoPosition(_nftId, ousdAmountExchanged);
+        _cdp.addSharesToPosition(_nftId, sharesFromDeposit);
+        _cdp.depositOUSDtoPosition(_nftId, ousdAmountExchanged);
     }
 
     function unwindLeveragedOUSD(
@@ -149,22 +163,23 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
             7. delete CDP position 
         */
 
-        uint256 numberOfSharesInPosition = CDPosition(_tokenCDP).getShares(_nftId);
-        uint256 borrowedLvUSD = CDPosition(_tokenCDP).getLvUSDBorrowed(_nftId);
+        uint256 numberOfSharesInPosition = _cdp.getShares(_nftId);
+        uint256 borrowedLvUSD = _cdp.getLvUSDBorrowed(_nftId);
 
         require(numberOfSharesInPosition > 0, "Cannot unwind a position with no shares");
 
-        uint256 redeemedOUSD = VaultOUSD(_tokenVaultOUSD).redeem(numberOfSharesInPosition, _tokenExchanger, _sharesOwner);
+        uint256 redeemedOUSD = _vault.redeem(numberOfSharesInPosition, _addressExchanger, _sharesOwner);
 
         /// TODO: add slippage protection
-        (uint256 exchangedLvUSD, uint256 remainingOUSD) = Exchanger(_tokenExchanger).xOUSDforLvUSD(redeemedOUSD, address(this), borrowedLvUSD);
+        (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.xOUSDforLvUSD(redeemedOUSD, address(this), borrowedLvUSD);
 
         _repayUnderNFT(_nftId, exchangedLvUSD);
 
-        IERC20(_tokenOUSD).safeTransferFrom(_tokenExchanger, _userAddress, remainingOUSD);
+        // transferring funds from exchanger to user
+        _withdrawCollateralUnderNFT(_nftId, remainingOUSD, _userAddress);
 
         /// Note : leverage engine still need to make sure the delete the NFT itself in positionToken
-        CDPosition(_tokenCDP).deletePosition(_nftId);
+        _cdp.deletePosition(_nftId);
     }
 
     function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
@@ -178,45 +193,15 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     /* Privileged functions: Anyone */
 
     function addressOfLvUSDToken() external view override returns (address) {
-        return _tokenLvUSD;
+        return _addressLvUSD;
     }
 
     function addressOfVaultOUSDToken() external view override returns (address) {
-        return _tokenVaultOUSD;
-    }
-
-    function getOriginationFeeRate() external view override returns (uint256) {
-        return _originationFeeRate;
-    }
-
-    function getTreasuryAddress() public view override returns (address) {
-        return _treasuryAddress;
-    }
-
-    function getGlobalCollateralRate() external view returns (uint256) {
-        return _globalCollateralRate;
-    }
-
-    function getMaxNumberOfCycles() external view returns (uint256) {
-        return _maxNumberOfCycles;
+        return _addressVaultOUSD;
     }
 
     modifier notImplementedYet() {
         revert("Method not implemented yet");
         _;
-    }
-
-    /// Method returns the allowed leverage for principle and number of cycles
-    /// Return value does not include principle!
-    /// must be public as we need to access it in contract
-    function getAllowedLeverageForPosition(uint256 principle, uint256 numberOfCycles) public view returns (uint256) {
-        require(numberOfCycles <= _maxNumberOfCycles, "Number of cycles must be lower then allowed max");
-        uint256 leverageAmount = 0;
-        uint256 cyclePrinciple = principle;
-        for (uint256 i = 0; i < numberOfCycles; i++) {
-            cyclePrinciple = (cyclePrinciple * _globalCollateralRate) / 100;
-            leverageAmount += cyclePrinciple;
-        }
-        return leverageAmount;
     }
 }
