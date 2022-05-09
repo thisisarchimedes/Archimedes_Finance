@@ -76,20 +76,23 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     function withdrawCollateralUnderNFT(
         uint256 _nftId,
         uint256 _amount,
-        address _to,
-        address _from
+        address _to
     ) external override nonReentrant {
-        _withdrawCollateralUnderNFT(_nftId, _amount, _to, _from);
+        _withdrawCollateralUnderNFT(_nftId, _amount, _to);
     }
 
     function _withdrawCollateralUnderNFT(
         uint256 _nftId,
         uint256 _amount,
-        address _to,
-        address _from
+        address _to
     ) internal {
-        /// TODO: take fees
-        _ousd.safeTransferFrom(_from, _to, _amount);
+        /// Method makes sure ousd recorded balance transfer
+        uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
+        _ousd.safeTransferFrom(_addressExchanger, _to, _amount);
+        require(
+            _ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount,
+            "Coordinator : Revert since OUSD transfer to user is not correct with OUSD balanceOf"
+        );
         _cdp.withdrawOUSDFromPosition(_nftId, _amount);
     }
 
@@ -172,7 +175,8 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
         _repayUnderNFT(_nftId, exchangedLvUSD);
 
-        _withdrawCollateralUnderNFT(_nftId, remainingOUSD, _userAddress, _addressExchanger);
+        // transferring funds from exchanger to user
+        _withdrawCollateralUnderNFT(_nftId, remainingOUSD, _userAddress);
 
         /// Note : leverage engine still need to make sure the delete the NFT itself in positionToken
         _cdp.deletePosition(_nftId);

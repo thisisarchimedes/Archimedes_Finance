@@ -30,12 +30,10 @@ interface ICoordinator {
     /// @param _nftId the position token id
     /// @param _amount OUSD amount
     /// @param _to address to transfer principle to
-    /// @param _from address to withdraw OUSD funds from
     function withdrawCollateralUnderNFT(
         uint256 _nftId,
         uint256 _amount,
-        address _to,
-        address _from
+        address _to
     ) external;
 
     /// @dev Borrow lvUSD under NFT ID
