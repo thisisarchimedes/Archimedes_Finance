@@ -72,6 +72,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         context.parameterStore,
         context.vault,
         context.lvUSD,
+        context.coordinator,
     ] = await Promise.all([
         contracts.CDPosition.deploy(),
         contracts.Exchanger.deploy(),
@@ -81,6 +82,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         contracts.ParameterStore.deploy(),
         contracts.VaultOUSD.deploy(context.externalOUSD.address, "VaultOUSD", "VOUSD"),
         contracts.LvUSDToken.deploy(),
+        contracts.Coordinator.deploy(),
     ]) as [
         CDPosition,
         Exchanger,
@@ -89,17 +91,9 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         PositionToken,
         ParameterStore,
         VaultOUSD,
-        LvUSDToken
+        LvUSDToken,
+        Coordinator
     ];
-
-    context.coordinator = await contracts.Coordinator.deploy(
-        context.lvUSD.address,
-        context.vault.address,
-        context.cdp.address,
-        context.externalOUSD.address,
-        context.exchanger.address,
-        context.treasurySigner.address,
-    ) as Coordinator;
 
     // Post init contracts
     await Promise.all([
