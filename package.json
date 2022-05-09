@@ -7,13 +7,14 @@
         "test": "test"
     },
     "scripts": {
-        "test": "hardhat test",
         "lint": "npm run lint:ts && npm run lint:sol",
         "lint:fix": "npm run lint:ts:fix && npm run lint:sol:fix",
         "lint:ts": "eslint . --ext .ts",
         "lint:ts:fix": "eslint --fix .",
         "lint:sol": "solhint contracts/**/*.sol && prettier --check \"contracts/**/*.sol\"",
-        "lint:sol:fix": "solhint contracts/**/*.sol --fix && prettier --write \"contracts/**/*.sol\""
+        "lint:sol:fix": "solhint contracts/**/*.sol --fix && prettier --write \"contracts/**/*.sol\"",
+        "test": "npm run typechain && hardhat test",
+        "typechain": "npx hardhat typechain"
     },
     "repository": {
         "type": "git",
