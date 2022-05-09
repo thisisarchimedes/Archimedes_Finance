@@ -11,7 +11,7 @@ describe("Coordinator Test suit", function () {
     let coordinator;
     const nftIdAddr1Position = 35472;
     const nftIdAddr2Position = 15426;
-    // can probably change to before all?
+
     before(async function () {
         helperResetNetwork(defaultBlockNumber);
 
