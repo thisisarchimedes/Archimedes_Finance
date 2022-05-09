@@ -49,4 +49,18 @@ contract ParameterStore {
     function changeMaxNumberOfCycles(uint256 _newMaxNumberOfCycles) external {
         _maxNumberOfCycles = _newMaxNumberOfCycles;
     }
+
+    /// Method returns the allowed leverage for principle and number of cycles
+    /// Return value does not include principle!
+    /// must be public as we need to access it in contract
+    function getAllowedLeverageForPosition(uint256 principle, uint256 numberOfCycles) public view returns (uint256) {
+        require(numberOfCycles <= _maxNumberOfCycles, "Number of cycles must be lower then allowed max");
+        uint256 leverageAmount = 0;
+        uint256 cyclePrinciple = principle;
+        for (uint256 i = 0; i < numberOfCycles; i++) {
+            cyclePrinciple = (cyclePrinciple * _globalCollateralRate) / 100;
+            leverageAmount += cyclePrinciple;
+        }
+        return leverageAmount;
+    }
 }

@@ -259,39 +259,4 @@ describe("Coordinator Test suit", function () {
             });
         });
     });
-
-    describe("allowed leverage tests", function () {
-        describe("Calculate allowed leverage", function () {
-            beforeEach(async function () {
-                /// values are not being reset on mainnet fork after describe/it so need to reset to default
-                await r.parameterStore.changeGlobalCollateralRate(90);
-                await r.parameterStore.changeMaxNumberOfCycles(10);
-            });
-            it("Should return zero if no cycles", async function () {
-                expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 0)).to.equal(
-                    ethers.utils.parseEther("0"),
-                );
-            });
-            it("Should calculate allowed leverage for 2 cycles", async function () {
-                expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 2)).to.equal(
-                    ethers.utils.parseEther("171"),
-                );
-            });
-            it("Should calculate allowed leverage for 3 cycles", async function () {
-                expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 3)).to.equal(
-                    ethers.utils.parseEther("243.9"),
-                );
-            });
-            it("Should calculate allowed leverage for 5 cycles", async function () {
-                expect(await r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 5)).to.equal(
-                    ethers.utils.parseEther("368.559"),
-                );
-            });
-            it("Should revert if number of cycles is bigger then allowed max", async function () {
-                await expect(
-                    r.coordinator.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 20),
-                ).to.be.revertedWith("Number of cycles must be lower then allowed max");
-            });
-        });
-    });
 });

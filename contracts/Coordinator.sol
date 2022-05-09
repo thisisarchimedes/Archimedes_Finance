@@ -128,7 +128,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
         uint256 ousdPrinciple = _cdp.getOUSDPrinciple(_nftId);
         require(
-            _amountToLeverage <= getAllowedLeverageForPosition(ousdPrinciple, _paramStore.getMaxNumberOfCycles()),
+            _amountToLeverage <= _paramStore.getAllowedLeverageForPosition(ousdPrinciple, _paramStore.getMaxNumberOfCycles()),
             "Cannot get more leverage then max allowed leverage"
         );
 
@@ -199,19 +199,5 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     modifier notImplementedYet() {
         revert("Method not implemented yet");
         _;
-    }
-
-    /// Method returns the allowed leverage for principle and number of cycles
-    /// Return value does not include principle!
-    /// must be public as we need to access it in contract
-    function getAllowedLeverageForPosition(uint256 principle, uint256 numberOfCycles) public view returns (uint256) {
-        require(numberOfCycles <= _paramStore.getMaxNumberOfCycles(), "Number of cycles must be lower then allowed max");
-        uint256 leverageAmount = 0;
-        uint256 cyclePrinciple = principle;
-        for (uint256 i = 0; i < numberOfCycles; i++) {
-            cyclePrinciple = (cyclePrinciple * _paramStore.getGlobalCollateralRate()) / 100;
-            leverageAmount += cyclePrinciple;
-        }
-        return leverageAmount;
     }
 }
