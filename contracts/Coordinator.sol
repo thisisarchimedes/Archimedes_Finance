@@ -61,6 +61,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
     /* Privileged functions: Executive */
 
+    // Note: Expects funds to be under coordinator already
     function depositCollateralUnderNFT(
         uint256 _nftId,
         uint256 _amountInOUSD,
@@ -126,7 +127,6 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
           3. call exchanger to exchange lvUSD. Exchanged OUSD will be under Coordinator address.  Save exchanged OUSD value 
           4. deposit OUSD funds in Vault
           5. Update CDP totalOUSD and shares for nft position
-          /// TOOD : take origination fees from the exchanged OUSD (after exchange)
         */
 
         uint256 ousdPrinciple = _cdp.getOUSDPrinciple(_nftId);
@@ -138,13 +138,13 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         // borrowUnderNFT transfer lvUSD from Coordinator to Exchanger + mark borrowed lvUSD in CDP under nft ID
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
-        /// TODO - call exchanger to exchange fund. For now, assume we got a one to one exchange rate
         uint256 ousdAmountExchanged = _exchanger.xLvUSDforOUSD(_amountToLeverage, address(this));
-
-        uint256 sharesFromDeposit = _vault.deposit(ousdAmountExchanged, _sharesOwner);
+        uint256 feeTaken = _takeOriginationFee(ousdAmountExchanged);
+        uint256 positionLeveragedOUSDAfterFees = ousdAmountExchanged - feeTaken;
+        uint256 sharesFromDeposit = _vault.deposit(positionLeveragedOUSDAfterFees, _sharesOwner);
 
         _cdp.addSharesToPosition(_nftId, sharesFromDeposit);
-        _cdp.depositOUSDtoPosition(_nftId, ousdAmountExchanged);
+        _cdp.depositOUSDtoPosition(_nftId, positionLeveragedOUSDAfterFees);
     }
 
     function unwindLeveragedOUSD(
@@ -189,6 +189,12 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     function borrowUnderAddress(uint256 _amount) external override notImplementedYet {}
 
     function repayUnderAddress(uint256 _amount) external override notImplementedYet {}
+
+    function _takeOriginationFee(uint256 _leveragedOUSDAmount) internal returns (uint256 fee) {
+        uint256 _fee = _paramStore.calculateOriginationFee(_leveragedOUSDAmount);
+        _ousd.safeTransfer(_paramStore.getTreasuryAddress(), _fee);
+        return _fee;
+    }
 
     /* Privileged functions: Anyone */
 

@@ -57,5 +57,13 @@
 
         "promise/always-return": "off",
         "promise/avoid-new": "off"
-    }
+    },
+    "overrides": [
+        {
+            "files": ["test/*.ts"],
+            "rules": {
+                "no-unused-expressions": "off"
+            }
+        }
+    ]
 }
