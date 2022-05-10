@@ -10,7 +10,7 @@ describe("LeverageEngine test suit", async function () {
     });
 
     it("Should exist", async function () {
-        await expect(r.leverageEngine).to.not.be.undefined;
+        expect(r.leverageEngine).to.not.be.undefined;
     });
 
     describe("admin role", async function () {
