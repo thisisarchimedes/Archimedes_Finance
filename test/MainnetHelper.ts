@@ -240,6 +240,7 @@ export {
     helperSwapETHWith3CRV,
     helperSwapETHWithOUSD,
     createCurveMetapool3CRV,
+    getMetapool,
 
     /* addresses */
     addressCurveTripool2,

@@ -1,4 +1,4 @@
-import { helperResetNetwork, helperSwapETHWithOUSD, createCurveMetapool3CRV } from "./MainnetHelper";
+import { helperResetNetwork, helperSwapETHWithOUSD, createCurveMetapool3CRV, getMetapool } from "./MainnetHelper";
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
@@ -50,7 +50,8 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
     // Deploy using the Meta-Pool Factory:
     // https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry
     it("Should deploy lvUSD/3CRV pool with correct A value", async function () {
-        const pool = await createCurveMetapool3CRV(lvUSD, signer);
+        const addressPool = await createCurveMetapool3CRV(lvUSD, signer);
+        const pool = await getMetapool(addressPool, signer);
         expect(await pool.A()).to.eq(1337);
     });
 
