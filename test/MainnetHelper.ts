@@ -2,6 +2,7 @@ import { ethers, network } from "hardhat";
 import { expect } from "chai";
 import {
     abiOUSDToken,
+    abiUSDDToken,
     abiCurveOUSDPool,
     abiCurveUSDDPool,
     abiCurveTripool2,
@@ -104,7 +105,7 @@ async function helperSwapETHwithUSDD (destUser, ethAmountToSwap) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore loading USDT contract
     const token3CRV = new ethers.Contract(address3CRV, abi3CRVToken, destUser);
-    // loading OUSD token contract
+    // loading USDD token contract
     const tokenUSDD = new ethers.Contract(addressUSDD, abiUSDDToken, destUser);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore loading USDD Swapper contract. Metapools use the same ABI
@@ -114,24 +115,25 @@ async function helperSwapETHwithUSDD (destUser, ethAmountToSwap) {
 
     const balance3CRV = helperSwapETHWith3CRV(destUser, ethAmountToSwap);
 
-    /// /////////// 2. USDT->OUSD with OUSD contract //////////////
+    /// /////////// 2. USDT->USDD with USDD contract //////////////
 
-    // approve Curve OUSD pool to spend 3CRV on behalf of destUser
+    // approve Curve USDD pool to spend 3CRV on behalf of destUser
     await token3CRV.approve(contractCurveUSDDPool, balance3CRV);
 
     // get user balance
     let balanceUSDD = await tokenUSDD.balanceOf(destUser.address);
 
-    // Exchange USDT->OUSD
+    // Exchange USDT->USDD .. same indexes as OUSD
     await contractCurveUSDDPool.exchange(indexCurveOUSD3CRV, indexCurveOUSDOUSD, balance3CRV, 1);
 
     // read balance again and make sure it increased
     expect(await tokenUSDD.balanceOf(destUser.address)).to.gt(balanceUSDD);
-    balanceUSDD = await tokenOUSD.balanceOf(destUser.address);
+    balanceUSDD = await tokenUSDD.balanceOf(destUser.address);
 
     return balanceUSDD;
 }
-async function helperSwapUSDDwith3CRV {}
+
+async function helperSwapUSDDwith3CRV () {}
 
 /*
     Fork is starting us with plenty of ETH so
@@ -277,6 +279,7 @@ export {
     helperSwapETHWithUSDT,
     helperSwapETHWith3CRV,
     helperSwapETHWithOUSD,
+    helperSwapETHwithUSDD,
     createCurveMetapool3CRV,
     getMetapool,
 
