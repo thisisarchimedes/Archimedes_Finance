@@ -1,6 +1,6 @@
 // We import Chai to use its asserting functions here.
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "hardhat";
 
 // TODO create separate test constants file to load in multiple test
 const zeroAddress = ethers.constants.AddressZero;
@@ -61,7 +61,7 @@ describe("Arch Token test suit", function () {
             });
 
             it("Should NOT be able to transfer() more than total supply", async function () {
-                const amount = expectedTotalSupply + 1;
+                const amount = expectedTotalSupply.add(1);
                 await expect(token.transfer(user1.address, amount)).to.be.revertedWith(
                     "ERC20: transfer amount exceeds balance",
                 );

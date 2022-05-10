@@ -1,6 +1,6 @@
-const { ethers } = require("hardhat");
+import { ethers } from "hardhat";
 // We import Chai to use its asserting functions here.
-const { expect } = require("chai");
+import { expect } from "chai";
 
 describe("LvUSD contract test suit", function () {
     const tokenSupply = 1000000;

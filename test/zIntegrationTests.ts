@@ -1,7 +1,7 @@
-const helper = require("./MainnetHelper");
-const { ethers } = require("hardhat");
-const { expect } = require("chai");
-const { ContractTestContext } = require("./ContractTestContext");
+import { helperResetNetwork, helperSwapETHWithOUSD, createCurveMetapool3CRV } from "./MainnetHelper";
+import { ethers } from "hardhat";
+import { expect } from "chai";
+import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 /* Integration tests start here */
 
@@ -10,15 +10,14 @@ let contractARCHToken;
 describe("Setting the stage: Getting some OUSD and deploying our contracts", function () {
     let signer;
     let user;
-    let r;
+    let r: ContractTestContext;
     let lvUSD;
 
     before(async function () {
         // Reset network before integration tests
-        helper.helperResetNetwork(14533286);
+        helperResetNetwork(14533286);
         // Setup & deploy contracts
-        r = new ContractTestContext();
-        await r.setup();
+        r = await buildContractTestContext();
         lvUSD = r.lvUSD;
     });
 
@@ -28,7 +27,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
     });
 
     it("Should do a basic ETH<>OUSD swap", async function () {
-        await helper.helperSwapETHWithOUSD(user, ethers.utils.parseEther("3.0"));
+        await helperSwapETHWithOUSD(user, ethers.utils.parseEther("3.0"));
     });
 
     it("Should deploy lvUSD ERC-20 contract", async function () {
@@ -51,8 +50,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
     // Deploy using the Meta-Pool Factory:
     // https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry
     it("Should deploy lvUSD/3CRV pool with correct A value", async function () {
-        const addressPool = await helper.createCurveMetapool3CRV(lvUSD, signer);
-        const pool = await ethers.getContractAt(helper.abiStableSwap, addressPool, signer);
+        const pool = await createCurveMetapool3CRV(lvUSD, signer);
         expect(await pool.A()).to.eq(1337);
     });
 

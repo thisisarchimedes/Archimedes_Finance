@@ -8,59 +8,33 @@ interface ICoordinator {
     // - OUSD Vault contract address
     /*===============================================*/
 
-    /* Privileged functions: Governor */
-
-    /// @dev change origination fee
-    ///
-    /// How much off principle is taken as protocol fees, each time lvUSD is borrowed
-    /// Should emit an event
-    ///
-    /// @param newFeeRate in percentage
-    function changeOriginationFeeRate(uint256 newFeeRate) external;
-
-    /// @dev get origination fee number
-    ///
-    function getOriginationFeeRate() external view returns (uint256);
-
-    /// @dev update EOA of treasury. EOA is multi-sig.
-    ///
-    /// @param newTreasuryAddress new EOA address of treasury
-    function changeTreasuryAddress(address newTreasuryAddress) external;
-
-    /// @dev update globalCollateralRate
-    /// @param _newGlobalCollateralRate value to set globalCollateralRate
-    function changeGlobalCollateralRate(uint256 _newGlobalCollateralRate) external;
-
-    /// @dev update maxNumberOfCycles
-    /// @param _newMaxNumberOfCycles value to set maxNumberOfCycles
-    function changeMaxNumberOfCycles(uint256 _newMaxNumberOfCycles) external;
-
-    /// @dev get treasury address.
-    ///
-    function getTreasuryAddress() external view returns (address);
-
     /* Privileged functions: Executive */
 
     /// @dev deposit OUSD under NFT ID
     ///
     /// User sends OUSD to the contract. OUSD is written under NFT ID
     ///
-    /// @param nftId the Archimedes ERC-721 token id
-    /// @param amount the amount of OUSD sent to Archimedes
-    /// @param sharesOwner who to send shares to
+    /// @param _nftId the Archimedes ERC-721 token id
+    /// @param _amountInOUSD the amount of OUSD sent to Archimedes
+    /// @param _sharesOwner who to send shares to
     function depositCollateralUnderNFT(
-        uint256 nftId,
-        uint256 amount,
-        address sharesOwner
+        uint256 _nftId,
+        uint256 _amountInOUSD,
+        address _sharesOwner
     ) external;
 
     /// @dev withdraw OUSD under NFT ID
     ///
     /// User withdraw OUSD from the contract
     ///
-    /// @param amount sum to withdraw
-    /// @param nftId the position token id
-    function withdrawCollateralUnderNFT(uint256 amount, uint256 nftId) external;
+    /// @param _nftId the position token id
+    /// @param _amount OUSD amount
+    /// @param _to address to transfer principle to
+    function withdrawCollateralUnderNFT(
+        uint256 _nftId,
+        uint256 _amount,
+        address _to
+    ) external;
 
     /// @dev Borrow lvUSD under NFT ID
     ///
@@ -68,18 +42,38 @@ interface ICoordinator {
     /// Need to check collaterallization ratio
     /// Need to collect origination fee and sent them to vault
     ///
-    /// @param _amount the amount of lvUSD requested
+    /// @param _amountLvUSDToBorrow the amount of lvUSD requested
     /// @param _nftId the Archimedes ERC-721 token id
-    function borrowUnderNFT(uint256 _nftId, uint256 _amount) external;
+    function borrowUnderNFT(uint256 _nftId, uint256 _amountLvUSDToBorrow) external;
 
     /// @dev Repay lvUSD under NFT ID
     ///
     /// User repay lvUSD against the OUSD deposited as collateral
     /// Need to check collaterallization ratio
     ///
-    /// @param _amount the amount of lvUSD requested
+    /// @param _amountLvUSDToRepay the amount of lvUSD requested
     /// @param _nftId the Archimedes ERC-721 token id
-    function repayUnderNFT(uint256 _nftId, uint256 _amount) external;
+    function repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) external;
+
+    /// @dev borrow lvUSD and exchange it for OUSD
+    /// @param _nftId NFT ID
+    /// @param _amountToLeverage amount to borrow
+    /// @param _sharesOwner address to apply shares to
+    function getLeveragedOUSD(
+        uint256 _nftId,
+        uint256 _amountToLeverage,
+        address _sharesOwner
+    ) external;
+
+    /// @dev unwind position by repaying lvUSD debt using existing OUSD funds in position
+    /// @param _nftId NFT ID
+    /// @param _userAddress address to transfer leftover OUSD to
+    /// @param _sharesOwner address of shares owner (position don't own shares, just has a value on how much shares it should get)
+    function unwindLeveragedOUSD(
+        uint256 _nftId,
+        address _userAddress,
+        address _sharesOwner
+    ) external;
 
     /* Non-privileged functions */
     /// TODO: Should this be accessed by admin only or not? <<<<

@@ -1,10 +1,15 @@
-require("@nomiclabs/hardhat-waffle");
-require("@tenderly/hardhat-tenderly");
+import "@tenderly/hardhat-tenderly";
 
-const { task } = require("hardhat/config");
+// typechain imports:
+import "@typechain/hardhat";
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
+
+import { task } from "hardhat/config";
+import dotenv from "dotenv";
 
 // grab the private api key from the private repo
-require("dotenv").config({ path: "secrets/alchemy.env" });
+dotenv.config({ path: "secrets/alchemy.env" });
 
 const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
 
@@ -24,9 +29,8 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-module.exports = {
+export default {
     solidity: "0.8.13",
-
     networks: {
         hardhat: {
             forking: {
@@ -37,5 +41,13 @@ module.exports = {
                 url: "http://127.0.0.1:8545",
             },
         },
+    },
+    typechain: {
+        outDir: "types",
+        target: "ethers-v5",
+        // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
+        alwaysGenerateOverloads: false,
+        // optional array of glob patterns with external artifacts to process (for example external libs from node_modules)
+        externalArtifacts: ["externalArtifacts/*.json"],
     },
 };
