@@ -1,16 +1,15 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { helperResetNetwork, defaultBlockNumber } from "./MainnetHelper";
-import { ContractTestContext } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 describe("ParameterStore test suit", async function () {
     let parameterStore;
-    let r;
+    let r: ContractTestContext;
 
     before(async () => {
         helperResetNetwork(defaultBlockNumber);
-        r = new ContractTestContext();
-        await r.setup();
+        r = await buildContractTestContext();
         parameterStore = r.parameterStore;
     });
 

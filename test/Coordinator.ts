@@ -2,21 +2,21 @@
 import { assert, expect } from "chai";
 import { ethers } from "hardhat";
 import { helperResetNetwork, helperSwapETHWithOUSD, defaultBlockNumber } from "./MainnetHelper";
-import { ContractTestContext } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
+import type { Coordinator } from "../types/contracts";
 
 describe("Coordinator Test suit", function () {
-    let r;
+    let r: ContractTestContext;
     let endUserSigner;
-    let sharesOwnerAddress;
-    let coordinator;
+    let sharesOwnerAddress: string;
+    let coordinator: Coordinator;
     const nftIdAddr1Position = 35472;
     const nftIdAddr2Position = 15426;
 
     before(async function () {
         helperResetNetwork(defaultBlockNumber);
 
-        r = new ContractTestContext();
-        await r.setup();
+        r = await buildContractTestContext();
 
         endUserSigner = r.addr1;
         // Object under test

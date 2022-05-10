@@ -1,13 +1,12 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { ContractTestContext } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 describe("LeverageEngine test suit", async function () {
-    let r;
+    let r: ContractTestContext;
 
     before(async () => {
-        r = new ContractTestContext();
-        await r.setup();
+        r = await buildContractTestContext();
     });
 
     it("Should exist", async function () {
