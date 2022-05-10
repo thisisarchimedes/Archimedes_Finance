@@ -272,8 +272,7 @@ describe("Coordinator Test suit", function () {
         before(async function () {
             // start with a clean setup
             helperResetNetwork(defaultBlockNumber);
-            r = new ContractTestContext();
-            await r.setup();
+            r = await buildContractTestContext();
             endUserSigner = r.addr1;
             coordinator = r.coordinator;
             sharesOwnerAddress = coordinator.address;
