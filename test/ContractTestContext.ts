@@ -1,6 +1,10 @@
 import { Contract, ContractFactory } from "ethers";
 import { ethers } from "hardhat";
-import { addressOUSD, abiOUSDToken } from "./MainnetHelper";
+import {
+    addressOUSD, abiOUSDToken,
+    addressUSDT, abiUSDTToken,
+    address3CRV, abi3CRVToken,
+} from "./MainnetHelper";
 import type {
     Coordinator,
     CDPosition,
@@ -42,6 +46,8 @@ export type ContractTestContext = {
     parameterStore: ParameterStore;
     // External contracts
     externalOUSD: Contract;
+    externalUSDT: Contract;
+    external3CRV: Contract;
 }
 
 export async function buildContractTestContext (): Promise<ContractTestContext> {
@@ -62,6 +68,8 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
     ]);
 
     context.externalOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, context.owner);
+    context.externalUSDT = new ethers.Contract(addressUSDT, abiUSDTToken, context.owner);
+    context.external3CRV = new ethers.Contract(address3CRV, abi3CRVToken, context.owner);
 
     [
         context.cdp,

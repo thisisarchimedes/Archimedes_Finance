@@ -10,7 +10,7 @@ import {
     abiCurveFactory,
     abi3CRVToken,
     abiCurve3Pool,
-    abiStableSwap
+    abiStableSwap,
 } from "./ABIs";
 import dotenv from "dotenv";
 
@@ -100,7 +100,7 @@ async function helperResetNetwork (lockBlock) {
     1. Convert ETH to WETH (because this is what Curve is working with)
     2. WETH->USDT on TriCrypto2@Curve
 */
-async function helperSwapETHWithUSDT(destUser, ethAmountToSwap) {
+async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // loading WETH9 contract
@@ -159,7 +159,7 @@ async function helperSwapETHWithUSDT(destUser, ethAmountToSwap) {
     2. WETH->USDT on TriCrypto2@Curve
     3. Deposit USDT with 3Pool to get some 3CRV
 */
-async function helperSwapETHWith3CRV(destUser, ethAmountToSwap) {
+async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // loading USDT contract
@@ -197,7 +197,7 @@ async function helperSwapETHWith3CRV(destUser, ethAmountToSwap) {
     2. WETH->USDT on TriCrypto2@Curve
     3. USDT->OUSD with OUSD contract
 */
-async function helperSwapETHWithOUSD(destUser, ethAmountToSwap) {
+async function helperSwapETHWithOUSD (destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
