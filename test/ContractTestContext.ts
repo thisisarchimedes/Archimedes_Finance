@@ -11,7 +11,7 @@ import type {
     PositionToken,
     ParameterStore,
 } from "../types/contracts";
-import type { LvUSDToken } from "../types/contracts/LvUsdToken.sol";
+import type { LvUSDToken } from "../types/contracts/LvUSDToken";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 async function getContractFactories (factoryNames: string[]): Promise<{ [K: string]: ContractFactory }> {
@@ -72,6 +72,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         context.parameterStore,
         context.vault,
         context.lvUSD,
+        context.coordinator,
     ] = await Promise.all([
         contracts.CDPosition.deploy(),
         contracts.Exchanger.deploy(),
@@ -81,6 +82,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         contracts.ParameterStore.deploy(),
         contracts.VaultOUSD.deploy(context.externalOUSD.address, "VaultOUSD", "VOUSD"),
         contracts.LvUSDToken.deploy(),
+        contracts.Coordinator.deploy(),
     ]) as [
         CDPosition,
         Exchanger,
@@ -89,17 +91,9 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         PositionToken,
         ParameterStore,
         VaultOUSD,
-        LvUSDToken
+        LvUSDToken,
+        Coordinator
     ];
-
-    context.coordinator = await contracts.Coordinator.deploy(
-        context.lvUSD.address,
-        context.vault.address,
-        context.cdp.address,
-        context.externalOUSD.address,
-        context.exchanger.address,
-        context.treasurySigner.address,
-    ) as Coordinator;
 
     // Post init contracts
     await Promise.all([
@@ -110,6 +104,15 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.leverageAllocator.address,
         ),
         context.exchanger.init(context.lvUSD.address, context.coordinator.address, context.externalOUSD.address),
+        context.coordinator.init(
+            context.lvUSD.address,
+            context.vault.address,
+            context.cdp.address,
+            context.externalOUSD.address,
+            context.exchanger.address,
+            context.parameterStore.address,
+        ),
+        context.parameterStore.init(context.treasurySigner.address),
     ]);
 
     return context;
