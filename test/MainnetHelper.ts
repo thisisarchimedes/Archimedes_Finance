@@ -3,6 +3,7 @@ import { expect } from "chai";
 import {
     abiOUSDToken,
     abiCurveOUSDPool,
+    abiCurveUSDDPool,
     abiCurveTripool2,
     abiUSDTToken,
     abiWETH9Token,
@@ -25,6 +26,7 @@ const address3CrvZap = "0xA79828DF1850E8a3A3064576f380D90aECDD3359";
 const addressCurveFactory = "0xB9fC157394Af804a3578134A6585C0dc9cc990d4";
 const addressCurve3Pool = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 const addressCurveOUSDPool = "0x87650D7bbfC3A9F10587d7778206671719d9910D";
+const addressCurveUSDDPool = "0xe6b5CC1B4b47305c58392CE3D359B10282FC36Ea";
 const addressOUSD = "0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86";
 const address3CRV = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
 const addressStableSwap = "0x5F890841f657d90E081bAbdB532A05996Af79Fe6";
@@ -94,6 +96,41 @@ async function helperResetNetwork (lockBlock) {
         ],
     });
 }
+
+async function helperSwapETHwithUSDD (destUser, ethAmountToSwap) {
+    /// /////////// Loading some contracts //////////////
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore loading USDT contract
+    const token3CRV = new ethers.Contract(address3CRV, abi3CRVToken, destUser);
+    // loading OUSD token contract
+    const tokenUSDD = new ethers.Contract(addressUSDD, abiUSDDToken, destUser);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore loading USDD Swapper contract. Metapools use the same ABI
+    const contractCurveUSDDPool = new ethers.Contract(addressCurveUSDDPool, abiCurveUSDDPool, destUser);
+
+    /// /////////// 1. ETH->USDT on Curve /////////////////////////
+
+    const balance3CRV = helperSwapETHWith3CRV(destUser, ethAmountToSwap);
+
+    /// /////////// 2. USDT->OUSD with OUSD contract //////////////
+
+    // approve Curve OUSD pool to spend 3CRV on behalf of destUser
+    await token3CRV.approve(contractCurveUSDDPool, balance3CRV);
+
+    // get user balance
+    let balanceUSDD = await tokenUSDD.balanceOf(destUser.address);
+
+    // Exchange USDT->OUSD
+    await contractCurveUSDDPool.exchange(indexCurveOUSD3CRV, indexCurveOUSDOUSD, balance3CRV, 1);
+
+    // read balance again and make sure it increased
+    expect(await tokenUSDD.balanceOf(destUser.address)).to.gt(balanceUSDD);
+    balanceUSDD = await tokenOUSD.balanceOf(destUser.address);
+
+    return balanceUSDD;
+}
+async function helperSwapUSDDwith3CRV {}
 
 /*
     Fork is starting us with plenty of ETH so
