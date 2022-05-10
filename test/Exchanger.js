@@ -48,37 +48,6 @@ describe("Exchanger Test suit", function () {
         await printBalances(owner.address, r);
 
         const addressMetapool = await mainnetHelper.createCurveMetapool3CRV(r.lvUSD, owner);
-
-        ///
-        ///
-        // loading pool contract
-        const pool = new ethers.Contract(addressMetapool, mainnetHelper.abiCurve3Pool, owner);
-        // approve pool to spend 3crv on behalf of owner
-        await r.external3CRV.approve(addressMetapool, balance3CRV);
-
-        // Exchange USDT->3CRV
-        console.log("before");
-        await pool.add_liquidity([0, 0, balance3CRV], 1);
-        console.log("after");
-
-        expect(await r.external3CRV.balanceOf(owner.address)).to.lt(balance3CRV);
-
-        ///
-        ///
-        ///
-
-        await r.external3CRV.approve(pool1.address, ethers.constants.MaxUint256);
-        await r.lvUSD.approve(pool1.address, ethers.constants.MaxUint256);
-        console.log("Approved pool1 to spend 3crv & lvUSD");
-        console.log("pool1 A():", await pool1.A());
-        console.log("pool1 coins[0]", await pool1.coins(0)); // lvUSD
-        console.log("pool1 coins[1]", await pool1.coins(1)); // CRV
-        console.log("pool1 totalSupply()", await pool1.totalSupply()); // CRV
-
-        amounts = [0, balance3CRV.div(2)];
-
-        await pool1.add_liquidity(amounts, 0, owner.address);
-        console.log("???");
     });
 
     describe("Exchanges", function () {
