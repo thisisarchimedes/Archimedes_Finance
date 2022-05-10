@@ -77,7 +77,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         contracts.CDPosition.deploy(),
         contracts.Exchanger.deploy(),
         contracts.LeverageEngine.deploy(context.owner.address),
-        contracts.LeverageAllocator.deploy(),
+        contracts.LeverageAllocator.deploy(context.owner.address),
         contracts.PositionToken.deploy(),
         contracts.ParameterStore.deploy(),
         contracts.VaultOUSD.deploy(context.externalOUSD.address, "VaultOUSD", "VOUSD"),

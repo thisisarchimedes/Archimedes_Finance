@@ -10,6 +10,6 @@ describe("PositionToken test suit", async function () {
     });
 
     it("Should exist", async function () {
-        await expect(positionToken).to.not.be.undefined;
+        expect(positionToken).to.not.be.undefined;
     });
 });

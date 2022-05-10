@@ -31,7 +31,7 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     LeverageAllocator internal _leverageAllocator;
 
     modifier onlyAdmin() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
+        require(hasRole(ADMIN_ROLE, msg.sender), "onlyAdmin: Caller is not admin");
         _;
     }
 
