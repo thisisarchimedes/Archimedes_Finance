@@ -113,6 +113,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.parameterStore.address,
         ),
         context.parameterStore.init(context.treasurySigner.address),
+        context.vault.init(context.treasurySigner.address, context.externalOUSD.address),
     ]);
 
     return context;

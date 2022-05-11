@@ -9,6 +9,7 @@ contract ParameterStore {
     uint256 internal _maxNumberOfCycles = 10;
     uint256 internal _originationFeeRate = 5 ether / 100;
     uint256 internal _globalCollateralRate = 90; // in percentage
+    uint256 internal _rebaseFeeRate = 10 ether / 100; // meaning 10%
     address internal _treasuryAddress;
 
     constructor() {}
@@ -48,6 +49,10 @@ contract ParameterStore {
 
     function changeMaxNumberOfCycles(uint256 _newMaxNumberOfCycles) external {
         _maxNumberOfCycles = _newMaxNumberOfCycles;
+    }
+
+    function getRebaseFeeRate() public view returns (uint256) {
+        return _rebaseFeeRate;
     }
 
     /// Method returns the allowed leverage for principle and number of cycles
