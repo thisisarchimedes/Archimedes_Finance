@@ -11,9 +11,7 @@
     "strictNullChecks": true,
     "noImplicitReturns": true,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "allowJs": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["./scripts", "./test", "./deploy/**/*"],
   "exclude": ["node_modules"],
