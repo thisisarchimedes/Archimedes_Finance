@@ -75,8 +75,7 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     /// @param cycles How many leverage cycles to do
     function createLeveragedPosition(uint256 ousdPrinciple, uint256 cycles) external expectInitialized nonReentrant {
         require(cycles <= _parameterStore.getMaxNumberOfCycles(), "Number of cycles must be lower then allowed max");
-        _positionId = _positionToken.safeMint(msg.sender);
-        console.log("_positionId", _positionId);
+        _positionToken.safeMint(msg.sender);
         // _coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount, sharesOwnerAddress);
         // _coordinator.getLeveragedOUSD(endToEndTestNFTId, leverageToGetForPosition, sharesOwnerAddress);
     }

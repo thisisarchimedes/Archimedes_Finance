@@ -9,7 +9,7 @@ describe("LeverageEngine test suit", async function () {
         r = await buildContractTestContext();
     });
 
-    it("Should exist", async function () {
+    it("Should be built properly by ContractTestContext", async function () {
         expect(r.leverageEngine).to.not.be.undefined;
     });
 
@@ -49,8 +49,8 @@ describe("LeverageEngine test suit", async function () {
 
     describe("destroyLeveragedPosition", async function () {
         it("Should fail if the caller is not the positionToken owner", async function () {
-            await r.positionToken.mint(r.addr1.address, 1234);
-            await expect(r.leverageEngine.destroyLeveragedPosition(1234)).to.be.revertedWith(
+            const transaction = await r.positionToken.safeMint(r.addr1.address);
+            await expect(r.leverageEngine.destroyLeveragedPosition(transaction.value)).to.be.revertedWith(
                 "Caller address does not own this position token",
             );
         });

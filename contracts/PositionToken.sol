@@ -14,6 +14,8 @@ contract PositionToken is ERC721, ERC721Burnable, AccessControl {
 
     Counters.Counter private _tokenIdCounter;
 
+    address private _leverageEngineAddress;
+
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant EXECUTIVE_ROLE = keccak256("EXECUTIVE_ROLE");
 
@@ -25,7 +27,7 @@ contract PositionToken is ERC721, ERC721Burnable, AccessControl {
     }
 
     modifier onlyExecutive() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "onlyMinter: Caller is not executive");
+        require(hasRole(EXECUTIVE_ROLE, msg.sender), "onlyExecutive: Caller is not executive");
         _;
     }
 
@@ -40,15 +42,21 @@ contract PositionToken is ERC721, ERC721Burnable, AccessControl {
 
     function init(address leverageEngine) public onlyAdmin {
         _setupRole(EXECUTIVE_ROLE, leverageEngine);
+        _leverageEngineAddress = leverageEngine;
         _initialized = true;
     }
 
     /* Privileged functions: Executive */
-    function safeMint(address to) public onlyExecutive returns (uint256) {
+    function safeMint(address to) public expectInitialized onlyExecutive {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
-        return tokenId;
+        _setApprovalForAll(to, _leverageEngineAddress, true);
+    }
+
+    /* override burn to only allow executive to burn positionToken */
+    function burn(uint256 tokenId) public override(ERC721Burnable) expectInitialized onlyExecutive {
+        super.burn(tokenId);
     }
 
     /* Override required by Solidity: */

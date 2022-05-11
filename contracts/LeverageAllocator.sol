@@ -20,7 +20,6 @@ contract LeverageAllocator is ReentrancyGuard, AccessControl {
 
     /// @dev set the admin address to contract deployer
     constructor(address admin) {
-        console.log("admin address", admin);
         _setupRole(ADMIN_ROLE, admin);
     }
 
