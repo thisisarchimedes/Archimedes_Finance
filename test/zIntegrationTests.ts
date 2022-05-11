@@ -26,12 +26,12 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
         [signer, user] = await ethers.getSigners();
     });
 
-    it("Should do a basic ETH<>USDD swap", async function () {
-        await helperSwapETHwithUSDD(user, ethers.utils.parseEther("3.0"));
-    });
-
     it("Should do a basic ETH<>OUSD swap", async function () {
         await helperSwapETHWithOUSD(user, ethers.utils.parseEther("3.0"));
+    });
+
+    it("Should do a basic ETH<>USDD swap", async function () {
+        await helperSwapETHwithUSDD(user, ethers.utils.parseEther("3.0"));
     });
 
     it("Should deploy lvUSD ERC-20 contract", async function () {
@@ -56,7 +56,6 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
     it("Should deploy lvUSD/3CRV pool with correct A value", async function () {
         const addressPool = await createCurveMetapool3CRV(lvUSD, signer);
         const pool = await getMetapool(addressPool, signer);
-        console.log(pool);
         expect(await pool.A()).to.eq(1337);
     });
 

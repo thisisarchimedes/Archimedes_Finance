@@ -105,35 +105,47 @@ async function helperSwapETHwithUSDD (destUser, ethAmountToSwap) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore loading USDT contract
     const token3CRV = new ethers.Contract(address3CRV, abi3CRVToken, destUser);
-    // loading USDD token contract
+    // loading OUSD token contract
+    const tokenOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, destUser);
     const tokenUSDD = new ethers.Contract(addressUSDD, abiUSDDToken, destUser);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore loading USDD Swapper contract. Metapools use the same ABI
+    // @ts-ignore loading OUSD Swapper contract
+    const contractCurveOUSDPool = new ethers.Contract(addressCurveOUSDPool, abiCurveOUSDPool, destUser);
+    // @ts-ignore loading OUSD Swapper contract
     const contractCurveUSDDPool = new ethers.Contract(addressCurveUSDDPool, abiCurveUSDDPool, destUser);
 
-    /// /////////// 1. ETH->USDT on Curve /////////////////////////
+    console.log("contracts loaded");
+
+    /// /////////// 1. ETH->3CRV on Curve /////////////////////////
 
     const balance3CRV = helperSwapETHWith3CRV(destUser, ethAmountToSwap);
+    console.log("swapped eth for 3crv");
 
-    /// /////////// 2. USDT->USDD with USDD contract //////////////
+    /// /////////// 2. 3CRV->OUSD with USDD contract //////////////
 
-    // approve Curve USDD pool to spend 3CRV on behalf of destUser
-    await token3CRV.approve(contractCurveUSDDPool, balance3CRV);
+    // approve Curve OUSD pool to spend 3CRV on behalf of destUser
+    await token3CRV.approve(addressCurveOUSDPool, balance3CRV);
+    await token3CRV.approve(addressCurveUSDDPool, balance3CRV);
+    console.log("approved both OUSD and USDD");
 
+        // Exchange USDT->OUSD
+        await contractCurveOUSDPool.exchange(indexCurveOUSD3CRV, indexCurveOUSDOUSD, balance3CRV, 1);
+        await contractCurveUSDDPool.exchange(indexCurveOUSD3CRV, indexCurveOUSDOUSD, balance3CRV, 1);
+    
     // get user balance
-    let balanceUSDD = await tokenUSDD.balanceOf(destUser.address);
+    let balanceOUSD = await tokenOUSD.balanceOf(destUser.address);
+    console.log("balance ousd", balanceOUSD);
 
-    // Exchange USDT->USDD .. same indexes as OUSD
-    await contractCurveUSDDPool.exchange(indexCurveOUSD3CRV, indexCurveOUSDOUSD, balance3CRV, 1);
+    // let balanceUSDD = await tokenUSDD.balanceOf(destUser.address, { gasLimit: 3000000 });
+    let balanceUSDD = await tokenUSDD.balanceOf(destUser.address);
+    console.log("balance usdd", balanceUSDD);
 
     // read balance again and make sure it increased
-    expect(await tokenUSDD.balanceOf(destUser.address)).to.gt(balanceUSDD);
-    balanceUSDD = await tokenUSDD.balanceOf(destUser.address);
+    expect(await tokenOUSD.balanceOf(destUser.address)).to.gt(balanceOUSD);
+    balanceOUSD = await tokenOUSD.balanceOf(destUser.address);
 
-    return balanceUSDD;
+    return balanceOUSD;
 }
-
-async function helperSwapUSDDwith3CRV () {}
 
 /*
     Fork is starting us with plenty of ETH so
