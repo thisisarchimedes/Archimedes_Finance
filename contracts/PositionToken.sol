@@ -3,20 +3,56 @@ pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {ERC721Burnable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract PositionToken is ERC721, ERC721Burnable {
-    constructor() ERC721("PositionToken", "PNT") {}
+contract PositionToken is ERC721, ERC721Burnable, AccessControl {
+    using Counters for Counters.Counter;
 
-    /* Privileged functions: Executive  */
+    Counters.Counter private _tokenIdCounter;
 
-    /// @dev Mints NFT tokens to a recipient.
-    ///
-    /// This function reverts if the caller does not have the minter role.
-    ///
-    /// @param _recipient the account to mint tokens to.
-    function mint(address _recipient, uint256 tokenId) external {
-        _mint(_recipient, tokenId);
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant EXECUTIVE_ROLE = keccak256("EXECUTIVE_ROLE");
+
+    bool internal _initialized = false;
+
+    modifier onlyAdmin() {
+        require(hasRole(ADMIN_ROLE, msg.sender), "onlyAdmin: Caller is not admin");
+        _;
+    }
+
+    modifier onlyExecutive() {
+        require(hasRole(ADMIN_ROLE, msg.sender), "onlyMinter: Caller is not executive");
+        _;
+    }
+
+    modifier expectInitialized() {
+        require(_initialized, "expectInitialized: contract is not initialized");
+        _;
+    }
+
+    constructor(address admin) ERC721("PositionToken", "PNT") {
+        _setupRole(ADMIN_ROLE, admin);
+    }
+
+    function init(address leverageEngine) public onlyAdmin {
+        _setupRole(EXECUTIVE_ROLE, leverageEngine);
+        _initialized = true;
+    }
+
+    /* Privileged functions: Executive */
+    function safeMint(address to) public onlyExecutive returns (uint256) {
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(to, tokenId);
+        return tokenId;
+    }
+
+    /* Override required by Solidity: */
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }
