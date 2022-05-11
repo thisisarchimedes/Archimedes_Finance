@@ -46,13 +46,4 @@ describe("LeverageEngine test suit", async function () {
             );
         });
     });
-
-    describe("destroyLeveragedPosition", async function () {
-        it("Should fail if the caller is not the positionToken owner", async function () {
-            const transaction = await r.positionToken.safeMint(r.addr1.address);
-            await expect(r.leverageEngine.destroyLeveragedPosition(transaction.value)).to.be.revertedWith(
-                "Caller address does not own this position token",
-            );
-        });
-    });
 });
