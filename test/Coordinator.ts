@@ -295,7 +295,7 @@ describe("Coordinator Test suit", function () {
                 leverageToGetForPosition);
             await r.lvUSD.mint(coordinator.address, mintedLvUSDAmount);
 
-            /// Complete create position cycle from coordinator perfective
+            /// Complete create position cycle from coordinator perspective
             await coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount, sharesOwnerAddress);
             /// Doing 5 cycles for this position
             await coordinator.getLeveragedOUSD(endToEndTestNFTId, leverageToGetForPosition, sharesOwnerAddress);
