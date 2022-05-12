@@ -38,6 +38,8 @@ const indexTripoolWETH9 = 2;
 const indexCurveOUSDOUSD = 0;
 const indexCurveOUSD3CRV = 1;
 const defaultBlockNumber = 14720215;
+const indexCurveLvUSDlvUSD = 0;
+const indexCurveLvUSD3CRV = 1;
 
 /* helper functions */
 // Spin up a Curve Meta Pool that uses 3CRV
@@ -106,7 +108,7 @@ async function helperSwapETHwithUSDD (destUser, ethAmountToSwap, r) {
     // @ts-ignore loading USDT contract
     const token3CRV = new ethers.Contract(address3CRV, abi3CRVToken, destUser);
     // loading OUSD token contract
-    console.log("address of lvUSD %s", r.lvUSD.address);
+    // console.log("address of lvUSD %s", r.lvUSD.address);
     const lvUSD = new ethers.Contract(r.lvUSD.address, abiOUSDToken, destUser);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore loading OUSD Swapper contract
@@ -115,113 +117,61 @@ async function helperSwapETHwithUSDD (destUser, ethAmountToSwap, r) {
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
 
     const balance3CRV = await helperSwapETHWith3CRV(destUser, ethAmountToSwap);
-    console.log("balance of owner's 3CRV %s", await token3CRV.balanceOf(destUser.address));
+    // console.log("balance of owner's 3CRV %s", await token3CRV.balanceOf(destUser.address));
     /// /////////// 2. USDT->OUSD with OUSD contract //////////////
 
     /// // Create pool of 3CRV/lvUSD
     const addressPool = await createCurveMetapool3CRV(lvUSD, destUser);
-    console.log("Address of 3CRV/lvUSD %s", addressPool);
+    // console.log("Address of 3CRV/lvUSD %s", addressPool);
 
     const pool = await getMetapool(addressPool, destUser);
-    console.log("A() of 3CRV/lvUSD pool", await pool.A());
+    // console.log("A() of 3CRV/lvUSD pool", await pool.A());
 
     // console.log("pool.functions", pool.functions);
 
     // output indexes of coins
-    console.log("coins(0)", await pool.coins(0)); // lvUSD
-    console.log("coins(1)", await pool.coins(1)); // 3CRV
+    // console.log("coins(0)", await pool.coins(0)); // lvUSD
+    // console.log("coins(1)", await pool.coins(1)); // 3CRV
+
+    await lvUSD.mint(destUser.address, ethers.utils.parseEther("10.0"));
 
     await token3CRV.approve(addressPool, balance3CRV);
-    await lvUSD.mint(destUser.address, ethers.utils.parseEther("3.0"));
     await lvUSD.approve(addressPool, ethers.utils.parseEther("3.0"));
-    console.log("DestUser lvUSD tokens %s and allownce of pool is %s", await lvUSD.balanceOf(destUser.address),
-        await lvUSD.allowance(destUser.address, addressPool));
+    // console.log("DestUser lvUSD tokens %s and allownce of pool is %s", ethers.utils.formatUnits(await lvUSD.balanceOf(destUser.address)), ethers.utils.formatUnits(await lvUSD.allowance(destUser.address, addressPool)));
 
-    console.log("user balance LPToken before add_liq %s", await pool.balanceOf(destUser.address));
+    console.log("user balance LPToken before add_liq %s", ethers.utils.formatUnits(await pool.balanceOf(destUser.address)));
 
-    const amountSwappedLPTokens = await pool.add_liquidity([ethers.utils.parseEther("3.0"), ethers.utils.parseEther("3.0")], 1, destUser.address);
-    // console.log("amountSwappedLPTokens %s", amountSwappedLPTokens);
+    await pool.add_liquidity([ethers.utils.parseEther("2.0"), ethers.utils.parseEther("2.0")], 1, destUser.address);
 
-    console.log("user balance LPToken after add_liq %s", await pool.balanceOf(destUser.address));
+    console.log("user balance LPToken after add_liq %s", ethers.utils.formatUnits(await pool.balanceOf(destUser.address)));
+
+    const calc = await pool.calc_token_amount([ethers.utils.parseEther("2.0"), ethers.utils.parseEther("2.0")], true);
+    console.log("calc", calc);
+
+    // console.log("before ex: lvusd in pool:", ethers.utils.formatUnits(await lvUSD.balanceOf(addressPool)));
+    // console.log("before ex: 3crv  in pool:", ethers.utils.formatUnits(await token3CRV.balanceOf(addressPool)));
+    // console.log("before ex: lvusd user has:", ethers.utils.formatUnits(await lvUSD.balanceOf(destUser.address)));
+    // console.log("before ex: 3crv  user has:", ethers.utils.formatUnits(await token3CRV.balanceOf(destUser.address)));
+
     /// coin 0 is lvUSD
     /// coin 1 is 3crv
-    const lvUSDCoinIndex = 0;
-    const crvCoinIndex = 1;
-    /**
-    * Performs an exchange between two tokens.
-    * i: Index value of the token to send.
-    * j: Index value of the token to receive.
-    * dx: The amount of i being exchanged.
-    * min_dy: The minimum amount of j to receive. If the swap would result in less, the transaction will revert.
-    * _receiver: An optional address that will receive j. If not given, defaults to the caller.
-    * Returns the amount of j received in the exchange.
-    * expected = pool.get_dy(0, 1, 10**18) * 0.99
-    * pool.exchange(0, 1, 10**18, expected, {'from': alice})
-     */
-    await contractCurveOUSDPool.exchange(lvUSDCoinIndex, crvCoinIndex, ethers.utils.parseEther("1.0"), 1);
-    console.log("endUser got %s 3crv", token3CRV.balanceOf(destUser.address));
 
-    /*  ENDDDDDDDDD */
-    // // approve Curve OUSD pool to spend 3CRV on behalf of destUser
-    // await token3CRV.approve(addressCurveOUSDPool, balance3CRV);
+    // console.log("Before exchange: balance of pool lvUSD %s and CRV %s", ethers.utils.formatUnits(await pool.balances(0)), ethers.utils.formatUnits(await pool.balances(1)));
 
-    // // get user balance
-    // let balanceOUSD = await lvUSD.balanceOf(destUser.address);
-
-    // // Exchange USDT->OUSD
-    // await contractCurveOUSDPool.exchange(indexCurveOUSD3CRV, indexCurveOUSDOUSD, balance3CRV, 1);
-
-    // // read balance again and make sure it increased
-    // expect(await lvUSD.balanceOf(destUser.address)).to.gt(balanceOUSD);
-    // balanceOUSD = await lvUSD.balanceOf(destUser.address);
-
-    // return balanceOUSD;
-
-    // /// /////////// Loading some contracts //////////////
-
-    // // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // // @ts-ignore loading USDT contract
-    // const token3CRV = new ethers.Contract(address3CRV, abi3CRVToken, destUser);
-    // // loading OUSD token contract
-    // const tokenOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, destUser);
-    // const tokenUSDD = new ethers.Contract(addressUSDD, abiUSDDToken, destUser);
-    // // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // // @ts-ignore loading OUSD Swapper contract
-    // const contractCurveOUSDPool = new ethers.Contract(addressCurveOUSDPool, abiCurveOUSDPool, destUser);
-    // // @ts-ignore loading OUSD Swapper contract
-    // const contractCurveUSDDPool = new ethers.Contract(addressCurveUSDDPool, abiCurveUSDDPool, destUser);
-
-    // console.log("contracts loaded");
-
-    // /// /////////// 1. ETH->3CRV on Curve /////////////////////////
-
-    // const balance3CRV = helperSwapETHWith3CRV(destUser, ethAmountToSwap);
-    // console.log("swapped eth for 3crv");
-
-    // /// /////////// 2. 3CRV->OUSD with USDD contract //////////////
-
-    // // approve Curve OUSD pool to spend 3CRV on behalf of destUser
-    // await token3CRV.approve(addressCurveOUSDPool, balance3CRV);
-    // await token3CRV.approve(addressCurveUSDDPool, balance3CRV);
-    // console.log("approved both OUSD and USDD");
-
-    // // Exchange USDT->OUSD
-    // await contractCurveOUSDPool.exchange(indexCurveOUSD3CRV, indexCurveOUSDOUSD, balance3CRV, 1);
-    // await contractCurveUSDDPool.exchange(indexCurveOUSD3CRV, indexCurveOUSDOUSD, balance3CRV, 1);
-
-    // // get user balance
-    // let balanceOUSD = await tokenOUSD.balanceOf(destUser.address);
-    // console.log("balance ousd", balanceOUSD);
-
-    // // let balanceUSDD = await tokenUSDD.balanceOf(destUser.address, { gasLimit: 3000000 });
-    // let balanceUSDD = await tokenUSDD.balanceOf(destUser.address);
-    // console.log("balance usdd", balanceUSDD);
-
-    // // read balance again and make sure it increased
-    // expect(await tokenOUSD.balanceOf(destUser.address)).to.gt(balanceOUSD);
-    // balanceOUSD = await tokenOUSD.balanceOf(destUser.address);
-
-    // return balanceOUSD;
+    // Cannot remove more than 50% of the remaining pool
+    // await pool.exchange1(indexCurveLvUSD3CRV, indexCurveLvUSDlvUSD, ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.4"));
+    await pool.exchange(
+        indexCurveLvUSDlvUSD,
+        indexCurveLvUSD3CRV,
+        ethers.utils.parseEther("1.0000000"),
+        ethers.utils.parseEther("0.01"),
+        destUser.address,
+    );
+    // console.log("after ex:  lvusd in pool:", ethers.utils.formatUnits(await lvUSD.balanceOf(addressPool)));
+    // console.log("after ex:  3crv  in pool:", ethers.utils.formatUnits(await token3CRV.balanceOf(addressPool)));
+    // console.log("after ex:  lvusd user has:", ethers.utils.formatUnits(await lvUSD.balanceOf(destUser.address)));
+    // console.log("after ex:  3crv  user has:", ethers.utils.formatUnits(await token3CRV.balanceOf(destUser.address)));
+    // console.log("After exchange: balance of pool lvUSD %s and CRV %s", ethers.utils.formatUnits(await pool.balances(0)), ethers.utils.formatUnits((await pool.balances(1))));
 }
 
 /*
@@ -362,7 +312,6 @@ async function helperSwapETHWithOUSD (destUser, ethAmountToSwap) {
 
 export {
     defaultBlockNumber,
-
     /* helper functions */
     helperResetNetwork,
     helperSwapETHWithUSDT,
@@ -371,7 +320,6 @@ export {
     helperSwapETHwithUSDD,
     createCurveMetapool3CRV,
     getMetapool,
-
     /* addresses */
     addressCurveTripool2,
     addressUSDT,
@@ -383,7 +331,6 @@ export {
     addressOUSD,
     address3CRV,
     addressStableSwap,
-
     /* ABIs */
     abiOUSDToken,
     abiCurveOUSDPool,
@@ -395,7 +342,6 @@ export {
     abi3CRVToken,
     abiCurve3Pool,
     abiStableSwap,
-
     /* other */
     indexTripoolUSDT,
     indexTripoolWETH9,
