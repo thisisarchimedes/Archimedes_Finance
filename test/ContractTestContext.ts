@@ -78,7 +78,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         contracts.Exchanger.deploy(),
         contracts.LeverageEngine.deploy(context.owner.address),
         contracts.LeverageAllocator.deploy(context.owner.address),
-        contracts.PositionToken.deploy(),
+        contracts.PositionToken.deploy(context.owner.address),
         contracts.ParameterStore.deploy(),
         contracts.VaultOUSD.deploy(context.externalOUSD.address, "VaultOUSD", "VOUSD"),
         contracts.LvUSDToken.deploy(),
@@ -113,6 +113,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.parameterStore.address,
         ),
         context.parameterStore.init(context.treasurySigner.address),
+        context.positionToken.init(context.leverageEngine.address),
     ]);
 
     return context;
