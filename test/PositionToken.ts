@@ -15,7 +15,7 @@ describe("PositionToken test suit", function () {
             ptContract = await ethers.getContractFactory("PositionToken");
         });
 
-        it("Should be built properly by ContractTestContextt", async function () {
+        it("Should be built properly by ContractTestContext", async function () {
             expect(r.positionToken).to.not.be.undefined;
         });
 
@@ -68,10 +68,6 @@ describe("PositionToken test suit", function () {
             expect(await r.positionToken.ownerOf(secondTokenId)).to.equal(secondTokenOwnerAddress);
         });
 
-        it("Should not be mintable from an address other than LeverageEngine", async function () {
-            expect(r.positionToken).to.not.be.undefined;
-        });
-
         it("Should fail to burn if not executive", async function () {
             const burnPromise = r.positionToken.connect(secondTokenOwner).burn(firstTokenId);
             await expect(burnPromise).to.be.revertedWith("onlyExecutive: Caller is not executive");
@@ -85,9 +81,8 @@ describe("PositionToken test suit", function () {
         it("Should allow executive to burn any token", async function () {
             await r.positionToken.burn(firstTokenId);
             await r.positionToken.burn(secondTokenId);
-            /* should revert since token has been burned */
-            await expect(r.positionToken.burn(firstTokenId)).to.be.revertedWith("ERC721: operator query for nonexistent token");
-            await expect(r.positionToken.burn(secondTokenId)).to.be.revertedWith("ERC721: operator query for nonexistent token");
+            expect(await r.positionToken.exists(firstTokenId)).to.be.false;
+            expect(await r.positionToken.exists(secondTokenId)).to.be.false;
         });
 
         it("Should continue to increment id properly after tokens have been burned", async function () {

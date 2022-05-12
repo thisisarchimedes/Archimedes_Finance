@@ -12,9 +12,9 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 contract PositionToken is ERC721, ERC721Burnable, AccessControl {
     using Counters for Counters.Counter;
 
-    Counters.Counter private _tokenIdCounter;
+    Counters.Counter private _positionTokenIdCounter;
 
-    address private _leverageEngineAddress;
+    address private _addressLeverageEngine;
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant EXECUTIVE_ROLE = keccak256("EXECUTIVE_ROLE");
@@ -42,21 +42,26 @@ contract PositionToken is ERC721, ERC721Burnable, AccessControl {
 
     function init(address leverageEngine) public onlyAdmin {
         _setupRole(EXECUTIVE_ROLE, leverageEngine);
-        _leverageEngineAddress = leverageEngine;
+        _addressLeverageEngine = leverageEngine;
         _initialized = true;
     }
 
     /* Privileged functions: Executive */
-    function safeMint(address to) public expectInitialized onlyExecutive {
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
-        _safeMint(to, tokenId);
-        _setApprovalForAll(to, _leverageEngineAddress, true);
+    function safeMint(address to) public expectInitialized onlyExecutive returns (uint256 positionTokenId) {
+        positionTokenId = _positionTokenIdCounter.current();
+        _positionTokenIdCounter.increment();
+        _safeMint(to, positionTokenId);
+        _setApprovalForAll(to, _addressLeverageEngine, true);
+        return positionTokenId;
     }
 
     /* override burn to only allow executive to burn positionToken */
-    function burn(uint256 tokenId) public override(ERC721Burnable) expectInitialized onlyExecutive {
-        super.burn(tokenId);
+    function burn(uint256 positionTokenId) public override(ERC721Burnable) expectInitialized onlyExecutive {
+        super.burn(positionTokenId);
+    }
+
+    function exists(uint256 positionTokenId) public view expectInitialized onlyExecutive returns (bool) {
+        return _exists(positionTokenId);
     }
 
     /* Override required by Solidity: */
