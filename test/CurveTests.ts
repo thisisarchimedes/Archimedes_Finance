@@ -1,12 +1,8 @@
-import { ethers, network } from "hardhat";
+import { ethers } from "hardhat";
 import { expect } from "chai";
 import { helperResetNetwork, helperSwapETHWith3CRV } from "./MainnetHelper";
 import { createMetapool, getMetapool, fundMetapool, setupMetapool, exchangeLvUSDfor3CRV, exchange3CRVfor3LvUSD } from "./CurveHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-
-/* Integration tests start here */
-
-let contractARCHToken;
 
 describe("CurveHelper Test Suite", function () {
     let owner;
@@ -16,51 +12,70 @@ describe("CurveHelper Test Suite", function () {
     let lvUSD;
     let token3CRV;
 
-    before(async function () {
+    beforeEach(async function () {
         // Reset network before integration tests
         helperResetNetwork(14533286);
         // Setup & deploy contracts
         r = await buildContractTestContext();
         lvUSD = r.lvUSD;
         token3CRV = r.external3CRV;
-        // get signers
         [owner, user1, user2] = await ethers.getSigners();
+        // Mint 200 ETH of LvUSD for owner
+        await lvUSD.mint(owner.address, ethers.utils.parseEther("200.0"));
+        // Swap 200 ETH of 3CRV for owner
+        await helperSwapETHWith3CRV(owner, ethers.utils.parseEther("200.0"));
     });
 
-    beforeEach(async function () {
-        // Reset network before integration tests
-        helperResetNetwork(14533286);
-        // Setup & deploy contracts
-        r = await buildContractTestContext();
-        // Mint 10 ETH of LvUSD
-        await lvUSD.mint(owner.address, ethers.utils.parseEther("100.0"));
-        // Mint 10 ETH of 3CRV
-        await helperSwapETHWith3CRV(owner, ethers.utils.parseEther("100.0"));
+    it("Initialize test funds", async function () {
+        // Make sure "owner" has funds needed for testing from "beforeEach" section
+        expect(await lvUSD.balanceOf(owner.address)).to.eq(ethers.utils.parseEther("200.0"));
+        expect(await token3CRV.balanceOf(owner.address)).gt(0);
     });
 
-    it("Should create a 3CRV+LvUSD metapool", async function () {
+    it("Should create a 3CRV+LvUSD Metapool", async function () {
         let poolAddress = ethers.constants.AddressZero;
         poolAddress = await createMetapool(lvUSD, owner);
         expect(poolAddress).to.not.equal(ethers.constants.AddressZero);
     });
 
     it("Should get values of a Metapool", async function () {
-        const pool = await getMetapool(await createMetapool(lvUSD, owner), owner);
-        expect(await pool.A()).to.eq(1337);
+        const token = lvUSD;
+        const pool = await getMetapool(await createMetapool(token, owner), owner);
+        // coins[0] is our token.
+        // coins[1] is the basepool (3crv)
+        expect(await pool.coins(0)).to.eq(token.address);
     });
 
     it("Should fund a Metapool", async function () {
         const addressPool = await createMetapool(lvUSD, owner);
-        // (addressPool, [amountToken1, amountToken2], owner)
-        await fundMetapool(addressPool, [ethers.utils.parseEther("8.0"), ethers.utils.parseEther("7.0")], owner, r);
-        expect(await lvUSD.balanceOf(addressPool)).to.eq(ethers.utils.parseEther("8.0"));
-        expect(await token3CRV.balanceOf(addressPool)).to.eq(ethers.utils.parseEther("7.0"));
+        const pool = await getMetapool(addressPool, owner);
+        const amountLvUSD = ethers.utils.parseEther("5.0");
+        const amount3CRV = ethers.utils.parseEther("6.0");
+        /**
+         * @dev fundMetapool(address, [amount1, amount2], signer)
+         * @param address: pool address
+         * @param amount1: amount of pool.coins(0) to add into the pool
+         * @param amount2: amount of pool.coins(1) to add into the pool
+         * @dev in our case amount1 = LvUSD & amount2 = 3crv
+         */
+        await fundMetapool(addressPool, [amountLvUSD, amount3CRV], owner, r);
+        // Check LvUSD
+        expect(await lvUSD.balanceOf(addressPool)).to.eq(amountLvUSD);
+        expect(await pool.balances(0)).to.eq(amountLvUSD);
+        // Check 3CRV
+        expect(await token3CRV.balanceOf(addressPool)).to.eq(amount3CRV);
+        expect(await pool.balances(1)).to.eq(amount3CRV);
     });
 
     it("Should setup (create and fund) a Metapool", async function () {
-        const pool = await setupMetapool([ethers.utils.parseEther("20.0"), ethers.utils.parseEther("20.0")], owner, r);
-        expect(await pool.A()).to.eq(1337);
-        expect(await lvUSD.balanceOf(pool.address)).to.eq(ethers.utils.parseEther("20.0"));
+        const fundedAmount = ethers.utils.parseEther("100.0");
+        /** Create and fund a lvusd/3crv Metapool
+         * funds the pool with hardcoded 100 ETH of LvUSD & 3CRV
+         * @dev fundMetapool(signer, ContractContextTest)
+         */
+        const pool = await setupMetapool(owner, r);
+        expect(await pool.balances(0)).to.eq(fundedAmount);
+        expect(await pool.balances(1)).to.eq(fundedAmount);
     });
 
     it("Should exchange X for Y", async function () {});
