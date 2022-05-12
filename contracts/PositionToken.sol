@@ -40,14 +40,14 @@ contract PositionToken is ERC721, ERC721Burnable, AccessControl {
         _setupRole(ADMIN_ROLE, admin);
     }
 
-    function init(address leverageEngine) public onlyAdmin {
+    function init(address leverageEngine) external onlyAdmin {
         _setupRole(EXECUTIVE_ROLE, leverageEngine);
         _addressLeverageEngine = leverageEngine;
         _initialized = true;
     }
 
     /* Privileged functions: Executive */
-    function safeMint(address to) public expectInitialized onlyExecutive returns (uint256 positionTokenId) {
+    function safeMint(address to) external expectInitialized onlyExecutive returns (uint256 positionTokenId) {
         positionTokenId = _positionTokenIdCounter.current();
         _positionTokenIdCounter.increment();
         _safeMint(to, positionTokenId);
@@ -60,7 +60,7 @@ contract PositionToken is ERC721, ERC721Burnable, AccessControl {
         super.burn(positionTokenId);
     }
 
-    function exists(uint256 positionTokenId) public view expectInitialized onlyExecutive returns (bool) {
+    function exists(uint256 positionTokenId) external view expectInitialized onlyExecutive returns (bool) {
         return _exists(positionTokenId);
     }
 
