@@ -90,7 +90,7 @@ describe("PositionToken test suit", function () {
             expect(await r.positionToken.ownerOf(thirdTokenId)).to.equal(thirdTokenOwnerAddress);
         });
 
-        it("Should only allow positionToken owner to transfer ownership", async function () {
+        it("Should allow positionToken owner to transfer ownership", async function () {
             const safeTransferAsThirdOwner = r.positionToken.connect(thirdTokenOwner)["safeTransferFrom(address,address,uint256)"];
             await safeTransferAsThirdOwner(
                 thirdTokenOwnerAddress,
@@ -98,6 +98,10 @@ describe("PositionToken test suit", function () {
                 thirdTokenId,
             );
             expect(await r.positionToken.ownerOf(thirdTokenId)).to.equal(secondTokenOwnerAddress);
+        });
+
+        it("Should not allow non owner to transfer positionToken", async function () {
+            const safeTransferAsThirdOwner = r.positionToken.connect(thirdTokenOwner)["safeTransferFrom(address,address,uint256)"];
             /* thirdTokenOwner no longer owner of thirdTokenId, should no longer be able to transfer: */
             await expect(
                 safeTransferAsThirdOwner(
