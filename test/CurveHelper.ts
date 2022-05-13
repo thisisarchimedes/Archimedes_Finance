@@ -34,7 +34,7 @@ function exchangeLvUSDfor3CRV (amountLvUSD, owner) { return true; }
 function exchange3CRVfor3LvUSD (amountLvUSD, owner) { return true; }
 
 /**  Creates & Funds a LvUSD/3CRV Metapool
- * funds pool with 100ETH of LvUSD & 100ETH of 3CRV
+ * funds pool with 100 LvUSD & 100 3CRV
  * @param owner: signer
  * @param r: instance: ContractContextTest
  */
