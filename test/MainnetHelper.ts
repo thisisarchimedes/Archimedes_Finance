@@ -25,7 +25,6 @@ const addressCurve3Pool = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 const addressCurveOUSDPool = "0x87650D7bbfC3A9F10587d7778206671719d9910D";
 const addressOUSD = "0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86";
 const address3CRV = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
-const addressStableSwap = "0x5F890841f657d90E081bAbdB532A05996Af79Fe6";
 
 const indexTripoolUSDT = 0;
 const indexTripoolWETH9 = 2;
@@ -232,6 +231,7 @@ async function helperSwapETHWithOUSD (destUser, ethAmountToSwap) {
 
 export {
     defaultBlockNumber,
+
     /* helper functions */
     helperResetNetwork,
     helperSwapETHWithUSDT,
@@ -239,6 +239,7 @@ export {
     helperSwapETHWithOUSD,
     createCurveMetapool3CRV,
     getMetapool,
+
     /* addresses */
     addressCurveTripool2,
     addressUSDT,
@@ -248,7 +249,7 @@ export {
     addressCurveOUSDPool,
     addressOUSD,
     address3CRV,
-    addressStableSwap,
+
     /* ABIs */
     abiOUSDToken,
     abiCurveOUSDPool,
