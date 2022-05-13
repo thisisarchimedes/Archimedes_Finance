@@ -33,8 +33,6 @@ export default {
     solidity: "0.8.13",
     networks: {
         hardhat: {
-            gas: 3000000000,
-            blockGasLimit: 3000000000,
             forking: {
                 url: alchemyUrl,
                 blockNumber: 14533286,
