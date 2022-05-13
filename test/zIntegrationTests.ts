@@ -1,4 +1,4 @@
-import { helperResetNetwork, helperSwapETHWithOUSD, createCurveMetapool3CRV } from "./MainnetHelper";
+import { helperResetNetwork, helperSwapETHWithOUSD } from "./MainnetHelper";
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
