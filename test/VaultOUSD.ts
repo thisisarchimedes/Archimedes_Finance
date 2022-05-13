@@ -3,7 +3,6 @@ import { ethers } from "hardhat";
 import {
     helperResetNetwork,
     addressOUSD,
-    abiOUSDToken,
     helperSwapETHWithOUSD,
     defaultBlockNumber,
 } from "./MainnetHelper";
@@ -18,10 +17,6 @@ const getFloatFromBigNum = (bigNumValue) => {
 };
 
 describe("VaultOUSD test suit", function () {
-    let owner;
-    let addr1;
-    let addr2;
-    let addr3;
     let sharesOwnerAddress;
     let r: ContractTestContext;
 

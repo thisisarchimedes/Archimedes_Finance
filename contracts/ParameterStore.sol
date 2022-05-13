@@ -51,8 +51,13 @@ contract ParameterStore {
         _maxNumberOfCycles = _newMaxNumberOfCycles;
     }
 
-    function getRebaseFeeRate() public view returns (uint256) {
+    function getRebaseFeeRate() external view returns (uint256) {
         return _rebaseFeeRate;
+    }
+
+    function changeRebaseFeeRate(uint256 _newRebaseFeeRate) external {
+        require(_newRebaseFeeRate < (100 ether) && _newRebaseFeeRate > (0 ether), "rebaseFeeRate must be a number between 1 and 99 (in 18 decimal)");
+        _rebaseFeeRate = _newRebaseFeeRate;
     }
 
     /// Method returns the allowed leverage for principle and number of cycles
