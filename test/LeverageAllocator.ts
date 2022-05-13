@@ -9,7 +9,7 @@ describe("LeverageAllocator test suit", async function () {
         r = await buildContractTestContext();
     });
 
-    it("Should exist", function () {
+    it("Should be built properly by ContractTestContext", function () {
         expect(r.leverageAllocator).to.not.be.undefined;
     });
 
