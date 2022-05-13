@@ -1,4 +1,3 @@
-import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 import {
     abiCurveFactory,
@@ -99,9 +98,11 @@ async function createAndFundMetapool (owner, r) {
 }
 
 // Swap LvUSD for 3CRV using the Metapool
+// TODO
 function exchangeLvUSDfor3CRV (amountLvUSD, owner) { return true; }
 
 // Swap 3CRV for LvUSD using the Metapool
+// TODO
 function exchange3CRVfor3LvUSD (amountLvUSD, owner) { return true; }
 
 export {
