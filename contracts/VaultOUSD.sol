@@ -8,12 +8,14 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IERC4626} from "../contracts/interfaces/IERC4626.sol";
 import {ERC4626} from "../contracts/standard/ERC4626.sol";
 import {ParameterStore} from "./ParameterStore.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 import "hardhat/console.sol";
 
 /// @title Archimedes OUSD vault
 /// @notice Vault holds OUSD managed by Archimedes under all positions.
 /// @notice It Uses ER4626 to mint shares for deposited OUSD.
-contract VaultOUSD is ERC4626 {
+contract VaultOUSD is ERC4626, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     ParameterStore internal _paramStore;
@@ -32,7 +34,7 @@ contract VaultOUSD is ERC4626 {
         _ousd = IERC20(_addressOUSD);
     }
 
-    function archimedesDeposit(uint256 assets, address receiver) external returns (uint256) {
+    function archimedesDeposit(uint256 assets, address receiver) external nonReentrant returns (uint256) {
         _takeRebaseFees();
         _assetsHandledByArchimedes += assets;
         return deposit(assets, receiver);
@@ -42,14 +44,14 @@ contract VaultOUSD is ERC4626 {
         uint256 shares,
         address receiver,
         address owner
-    ) external returns (uint256) {
+    ) external nonReentrant returns (uint256) {
         _takeRebaseFees();
         uint256 redeemedAmountInAssets = redeem(shares, receiver, owner);
         _assetsHandledByArchimedes -= redeemedAmountInAssets;
         return redeemedAmountInAssets;
     }
 
-    function takeRebaseFees() external {
+    function takeRebaseFees() external nonReentrant {
         _takeRebaseFees();
     }
 
