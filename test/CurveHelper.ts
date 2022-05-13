@@ -10,9 +10,6 @@ import {
     addressCurve3Pool,
 } from "./MainnetHelper";
 
-// grab the private api key from the private repo
-dotenv.config({ path: "secrets/alchemy.env" });
-
 /**  Adds liquidity to a Metapool
  * @param addressPool: address of the pool
  * @param amountToken1: amount (lvUSD)
