@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import dotenv from "dotenv";
 import {
     abiCurveFactory,
-    abiStableSwap,
+    abi3PoolImplementation,
 } from "./ABIs";
 import {
     addressCurveFactory,
@@ -89,7 +89,7 @@ async function createMetapool (token, signer) {
 */
 async function getMetapool (address, signer) {
     // We assume its a 3CRV metapool, so we use the 3pool implementation abi
-    return await ethers.getContractAt(abiStableSwap, address, signer);
+    return await ethers.getContractAt(abi3PoolImplementation, address, signer);
 }
 
 export {

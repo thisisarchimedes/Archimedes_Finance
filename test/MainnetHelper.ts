@@ -9,7 +9,7 @@ import {
     abiCurveFactory,
     abi3CRVToken,
     abiCurve3Pool,
-    abiStableSwap,
+    abi3PoolImplementation,
 } from "./ABIs";
 import dotenv from "dotenv";
 
@@ -75,7 +75,7 @@ async function createCurveMetapool3CRV (token, signer) {
 // @param user: signer or provider used to interact with pool (owner can write)
 async function getMetapool (address, user) {
     // We assume its a 3CRV metapool, so we use the 3pool implementation abi
-    return await ethers.getContractAt(abiStableSwap, address, user);
+    return await ethers.getContractAt(abi3PoolImplementation, address, user);
 }
 
 async function helperResetNetwork (lockBlock) {
@@ -258,7 +258,7 @@ export {
     abiCurveFactory,
     abi3CRVToken,
     abiCurve3Pool,
-    abiStableSwap,
+    abi3PoolImplementation,
     /* other */
     indexTripoolUSDT,
     indexTripoolWETH9,
