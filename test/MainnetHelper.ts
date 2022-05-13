@@ -6,7 +6,6 @@ import {
     abiCurveTripool2,
     abiUSDTToken,
     abiWETH9Token,
-    abiCurveZap,
     abiCurveFactory,
     abi3CRVToken,
     abiCurve3Pool,
@@ -240,7 +239,6 @@ export {
     helperSwapETHWithUSDT,
     helperSwapETHWith3CRV,
     helperSwapETHWithOUSD,
-    helperSwapETHwithUSDD,
     createCurveMetapool3CRV,
     getMetapool,
     /* addresses */
@@ -260,7 +258,6 @@ export {
     abiCurveTripool2,
     abiUSDTToken,
     abiWETH9Token,
-    abiCurveZap,
     abiCurveFactory,
     abi3CRVToken,
     abiCurve3Pool,
