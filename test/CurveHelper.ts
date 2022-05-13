@@ -77,7 +77,6 @@ async function createMetapool (token, signer) {
     // In the future this will be a fixed index we can query instead
     const poolAddress = await factoryCurveMetapool.find_pool_for_coins(address3CRV, token.address);
     // Return the pool address
-    // console.log("Deployed metapool at address:" + poolAddress);
     return poolAddress;
 }
 

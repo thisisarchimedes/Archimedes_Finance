@@ -20,7 +20,6 @@ dotenv.config({ path: "secrets/alchemy.env" });
 const addressCurveTripool2 = "0xd51a44d3fae010294c616388b506acda1bfaae46";
 const addressUSDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 const addressWETH9 = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
-const address3CrvZap = "0xA79828DF1850E8a3A3064576f380D90aECDD3359";
 const addressCurveFactory = "0xB9fC157394Af804a3578134A6585C0dc9cc990d4";
 const addressCurve3Pool = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 const addressCurveOUSDPool = "0x87650D7bbfC3A9F10587d7778206671719d9910D";
@@ -65,7 +64,6 @@ async function createCurveMetapool3CRV (token, signer) {
     // In the future this will be a fixed index we can query instead
     const poolAddress = await factoryCurveMetapool.find_pool_for_coins(addressUSDT, token.address);
     // Return the pool address
-    console.log("Deployed metapool at address:" + poolAddress);
     return poolAddress;
 }
 
@@ -245,7 +243,6 @@ export {
     addressCurveTripool2,
     addressUSDT,
     addressWETH9,
-    address3CrvZap,
     addressCurveFactory,
     addressCurve3Pool,
     addressCurveOUSDPool,
