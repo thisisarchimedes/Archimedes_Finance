@@ -84,9 +84,7 @@ describe("CurveHelper Test Suite", function () {
         const pool = await createAndFundMetapool(owner, r);
         expect(await pool.balances(0)).to.eq(initalAmount);
         expect(await pool.balances(1)).to.eq(initalAmount);
-        console.log("mult 1");
         await fundMetapool(pool.address, [addedAmount, addedAmount], owner, r);
-        console.log("mult 2");
         expect(await pool.balances(0)).to.eq(initalAmount.add(addedAmount));
         expect(await pool.balances(1)).to.eq(initalAmount.add(addedAmount));
     });
