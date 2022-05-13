@@ -69,7 +69,8 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
 
     context.externalOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, context.owner);
     context.externalUSDT = new ethers.Contract(addressUSDT, abiUSDTToken, context.owner);
-    // @ts-ignore loading 3CRV token contract
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     context.external3CRV = new ethers.Contract(address3CRV, abi3CRVToken, context.owner);
 
     [

@@ -31,10 +31,10 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
 }
 
 // Swap LvUSD for 3CRV using the Metapool
-async function exchangeLvUSDfor3CRV (amountLvUSD, owner) {}
+function exchangeLvUSDfor3CRV (amountLvUSD, owner) { return true; }
 
 // Swap 3CRV for LvUSD using the Metapool
-async function exchange3CRVfor3LvUSD (amountLvUSD, owner) {}
+function exchange3CRVfor3LvUSD (amountLvUSD, owner) { return true; }
 
 /**  Creates & Funds a LvUSD/3CRV Metapool
  * funds pool with 100ETH of LvUSD & 100ETH of 3CRV
