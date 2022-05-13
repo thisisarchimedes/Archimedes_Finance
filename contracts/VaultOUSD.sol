@@ -8,6 +8,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IERC4626} from "../contracts/interfaces/IERC4626.sol";
 import {ERC4626} from "../contracts/standard/ERC4626.sol";
 import {ParameterStore} from "./ParameterStore.sol";
+import "hardhat/console.sol";
 
 /// @title Archimedes OUSD vault
 /// @notice Vault holds OUSD managed by Archimedes under all positions.
@@ -88,20 +89,14 @@ contract VaultOUSD is ERC4626 {
             feesToHandle = assestsInVaultBeforeCollectingFees - assestsHandledByArchimedes = 870 - 770 = 100
             we have 100 to take fees from, the rest is kep in the vault, not as deposited. let say we take 10% fee
             we log that we handled 90$ in rebase - we can mark them as assests deposited
-        
-
-
-
 
         */
-        /// TODO: Change this to rebaseFees in param store (ie add another param)
         uint256 unhandledRebasePayment = totalAssets() - _assetsHandledByArchimedes;
         uint256 feeToCollect = (unhandledRebasePayment * _paramStore.getRebaseFeeRate()) / 1 ether;
         uint256 handledRebaseValueToKeepInVault = unhandledRebasePayment - feeToCollect;
 
-        _ousd.safeTransfer(_paramStore.getTreasuryAddress(), feeToCollect);
+        _ousd.transfer(_paramStore.getTreasuryAddress(), feeToCollect);
 
         _assetsHandledByArchimedes += handledRebaseValueToKeepInVault;
-        // uint256 assestsInVaultAfterRebase = totalAssets();
     }
 }

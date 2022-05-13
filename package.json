@@ -15,6 +15,7 @@
         "lint:sol": "solhint contracts/**/*.sol && prettier --check \"contracts/**/*.sol\"",
         "lint:sol:fix": "solhint contracts/**/*.sol --fix && prettier --write \"contracts/**/*.sol\"",
         "test": "npm run clean && npm run typechain && hardhat test",
+        "simptest": "hardhat test",
         "typechain": "npx hardhat typechain"
     },
     "repository": {

@@ -11,7 +11,7 @@ import type {
     PositionToken,
     ParameterStore,
 } from "../types/contracts";
-import type { LvUSDToken } from "../types/contracts/LvUSDToken";
+import type { LvUSDToken } from "../types/contracts/LvUsdToken.sol";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 async function getContractFactories (factoryNames: string[]): Promise<{ [K: string]: ContractFactory }> {
@@ -112,8 +112,8 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.exchanger.address,
             context.parameterStore.address,
         ),
+        context.vault.init(context.parameterStore.address, context.externalOUSD.address),
         context.parameterStore.init(context.treasurySigner.address),
-        context.vault.init(context.treasurySigner.address, context.externalOUSD.address),
     ]);
 
     return context;
