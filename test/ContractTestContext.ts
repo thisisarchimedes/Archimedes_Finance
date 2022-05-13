@@ -11,7 +11,7 @@ import type {
     PositionToken,
     ParameterStore,
 } from "../types/contracts";
-import type { LvUSDToken } from "../types/contracts/LvUsdToken.sol";
+import type { LvUSDToken } from "../types/contracts/LvUSDToken";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 async function getContractFactories (factoryNames: string[]): Promise<{ [K: string]: ContractFactory }> {
