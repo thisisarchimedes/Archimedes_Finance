@@ -42,14 +42,14 @@ soljson*
 artifacts/
 cache/
 node_modules/
+types/
 
 .idea
 .vscode
+*.code-workspace
 tenderly.yaml
 
 # Github #
 ##########
 
 secrets/
-
-types/

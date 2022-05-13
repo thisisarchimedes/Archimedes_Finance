@@ -19,6 +19,7 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     bool internal _initialized = false;
+    uint256 internal _positionId;
 
     address internal _addressCoordinator;
     address internal _addressPositionToken;
@@ -70,9 +71,9 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     /// User sends OUSD to the contract.
     /// We mint NFT, assign to msg.sender and do the leverage cycles
     ///
-    /// @param principle the amount of OUSD sent to Archimedes
+    /// @param ousdPrinciple the amount of OUSD sent to Archimedes
     /// @param cycles How many leverage cycles to do
-    function createLeveragedPosition(uint256 principle, uint256 cycles) external expectInitialized nonReentrant {
+    function createLeveragedPosition(uint256 ousdPrinciple, uint256 cycles) external expectInitialized nonReentrant {
         require(cycles <= _parameterStore.getMaxNumberOfCycles(), "Number of cycles must be lower then allowed max");
     }
 
@@ -82,8 +83,8 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     /// must check that the msg.sender owns the NFT
     /// provide msg.sender address to coordinator destroy position
     ///
-    /// @param nftId the nft ID
-    function destroyLeveragedPosition(uint256 nftId) external expectInitialized nonReentrant {
-        require(_positionToken.ownerOf(nftId) == msg.sender, "Caller address does not own this position token");
+    /// @param positionId the NFT ID of the position
+    function destroyLeveragedPosition(uint256 positionId) external expectInitialized nonReentrant {
+        require(_positionToken.ownerOf(positionId) == msg.sender, "Caller address does not own this position token");
     }
 }
