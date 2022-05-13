@@ -80,9 +80,8 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
         const onePercent = calc.div(100);
         const expected = calc.sub(onePercent);
         await pool.add_liquidity([amountLvUSD, amount3CRV], expected, owner.address);
-    }
+    } else {
     // otherwise, its a brand new empty pool so we deposit directly
-    else {
         await pool.add_liquidity([amountLvUSD, amount3CRV], 1, owner.address);
     }
 }
