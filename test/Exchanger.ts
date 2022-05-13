@@ -15,7 +15,7 @@ describe("Exchanger Test suit", function () {
     let pool;
 
     beforeEach(async function () {
-        // Reset network before integration tests
+        // Reset network before tests
         helperResetNetwork(defaultBlockNumber);
 
         [owner, user1, user2] = await ethers.getSigners();
