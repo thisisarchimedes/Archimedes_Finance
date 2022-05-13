@@ -1,5 +1,5 @@
+import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
-import dotenv from "dotenv";
 import {
     abiCurveFactory,
     abi3PoolImplementation,
@@ -10,52 +10,19 @@ import {
     addressCurve3Pool,
 } from "./MainnetHelper";
 
-/**  Adds liquidity to a Metapool
- * @param addressPool: address of the pool
- * @param amountToken1: amount (lvUSD)
- * @param amountToken2: amount (3crv)
- * @param owner: signer
- * @param r: instance: ContractContextTest
- */
-async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
-    const token3CRV = r.external3CRV;
-    const lvUSD = r.lvUSD;
-    await token3CRV.approve(addressPool, ethers.constants.MaxUint256);
-    await lvUSD.approve(addressPool, ethers.constants.MaxUint256);
-    const pool = await getMetapool(addressPool, owner);
-    // coin[0] += 8, coin[1] +=7
-    await pool.add_liquidity([amountLvUSD, amount3CRV], 1, owner.address);
-}
-
-// Swap LvUSD for 3CRV using the Metapool
-function exchangeLvUSDfor3CRV (amountLvUSD, owner) { return true; }
-
-// Swap 3CRV for LvUSD using the Metapool
-function exchange3CRVfor3LvUSD (amountLvUSD, owner) { return true; }
-
-/**  Creates & Funds a LvUSD/3CRV Metapool
- * funds pool with 100 LvUSD & 100 3CRV
- * @param owner: signer
- * @param r: instance: ContractContextTest
- */
-async function setupMetapool (owner, r) {
-    const lvUSD = r.lvUSD;
-    const addressPool = await createMetapool(lvUSD, owner);
-    await fundMetapool(addressPool, [ethers.utils.parseEther("100.0"), ethers.utils.parseEther("100.0")], owner, r);
-    return await getMetapool(addressPool, owner);
-}
-
 /** Create a Curve Meta Pool that uses 3CRV
 * @param token: ERC20 token balanced in the pool
-* @param signer: Signer used to deploy / own the pool
+* @param owner: Signer used to deploy / own the pool
 * returns address of the new pool
 */
-async function createMetapool (token, signer) {
+async function createMetapool (token, owner) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore CurvePool Factory
-    const factoryCurveMetapool = new ethers.Contract(addressCurveFactory, abiCurveFactory, signer);
+    const factoryCurveMetapool = new ethers.Contract(addressCurveFactory, abiCurveFactory, owner);
     const tokenName = await token.symbol();
     const poolSymbol = tokenName + "3CRV";
+    const poolA = 1337;
+    const poolFee = 4000000;
 
     // examples on Mainnet:
     // https://etherscan.io/address/0xB9fC157394Af804a3578134A6585C0dc9cc990d4?method=Deploy_metapool~de7fe3bf
@@ -68,7 +35,7 @@ async function createMetapool (token, signer) {
     * @param _A: Amplification coefficient
     * @param _fee: Trade fee, given as an integer with 1e10 precision.
     */
-    await factoryCurveMetapool.deploy_metapool(addressCurve3Pool, tokenName, poolSymbol, token.address, 1337, 4000000);
+    await factoryCurveMetapool.deploy_metapool(addressCurve3Pool, tokenName, poolSymbol, token.address, poolA, poolFee);
     // https://curve.readthedocs.io/factory-deployer.html#Factory.find_pool_for_coins
     // We deployed a 3CRV/lvUSD pool - so we ask Curve Factory to look for pools that can deal with USDT/lvUSD
     // In the future this will be a fixed index we can query instead
@@ -89,12 +56,62 @@ async function getMetapool (address, signer) {
     return await ethers.getContractAt(abi3PoolImplementation, address, signer);
 }
 
+/**  Adds liquidity to a Metapool
+ * @param addressPool: address of the pool
+ * @param amountToken1: amount (lvUSD)
+ * @param amountToken2: amount (3crv)
+ * @param owner: signer
+ * @param r: instance: ContractContextTest
+ */
+async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
+    const token3CRV = r.external3CRV;
+    const lvUSD = r.lvUSD;
+    await token3CRV.approve(addressPool, amount3CRV);
+    await lvUSD.approve(addressPool, amountLvUSD);
+    const pool = await getMetapool(addressPool, owner);
+    const balanceLvUSD = await pool.balances(0);
+    const balance3CRV = await pool.balances(1);
+    console.log("balances %sLvUSD, %s3CRV:", balanceLvUSD, balance3CRV);
+    // if the pool is NOT empty we calculated expected amount of minted LP
+    if (balanceLvUSD > 0 && balance3CRV > 0) {
+        // https://curve.readthedocs.io/factory-pools.html#getting-pool-info
+        const calc = await pool.calc_token_amount([amountLvUSD, amount3CRV], true);
+        // allows for 1% slippage by requiring only 99%
+        const onePercent = calc.div(100);
+        const expected = calc.sub(onePercent);
+        await pool.add_liquidity([amountLvUSD, amount3CRV], expected, owner.address);
+    }
+    // otherwise, its a brand new empty pool so we deposit directly
+    else {
+        await pool.add_liquidity([amountLvUSD, amount3CRV], 1, owner.address);
+    }
+}
+
+/**  Creates & Funds a LvUSD/3CRV Metapool
+ * funds pool with 100 LvUSD & 100 3CRV
+ * @param owner: signer
+ * @param r: instance: ContractContextTest
+ */
+async function createAndFundMetapool (owner, r) {
+    const lvUSD = r.lvUSD;
+    const addressPool = await createMetapool(lvUSD, owner);
+    await fundMetapool(addressPool, [ethers.utils.parseEther("100.0"), ethers.utils.parseEther("100.0")], owner, r);
+    const pool = await getMetapool(addressPool, owner);
+    return pool;
+}
+
+// Swap LvUSD for 3CRV using the Metapool
+function exchangeLvUSDfor3CRV (amountLvUSD, owner) { return true; }
+
+// Swap 3CRV for LvUSD using the Metapool
+function exchange3CRVfor3LvUSD (amountLvUSD, owner) { return true; }
+
 export {
     /* helper functions */
     createMetapool,
     getMetapool,
     fundMetapool,
-    setupMetapool,
+    createAndFundMetapool,
     exchangeLvUSDfor3CRV,
     exchange3CRVfor3LvUSD,
 };
