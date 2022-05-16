@@ -75,6 +75,18 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     /// @param cycles How many leverage cycles to do
     function createLeveragedPosition(uint256 ousdPrinciple, uint256 cycles) external expectInitialized nonReentrant {
         require(cycles <= _parameterStore.getMaxNumberOfCycles(), "Number of cycles must be lower then allowed max");
+        // validation:
+        // user has enough leverage allocated
+
+        // // call leverageAllocator.useAvailableLvUSD
+        // uint256 positionTokenId = _positionToken.safeMint(msg.sender);
+        // // 1. needs to transfer ousd funds from user to coordinator. needs to call .approve leverageEngine to move funds
+        // // coordinator needs to change to depositCollateralUnderNFT to assume coordinator as shares owner. Yotam adding task
+        // _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple);
+        // uint256 allowedLeverageForPosition = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
+        // // coordinator needs to change to getLeveragedOUSD to assume coordinator as shares owner. Yotam adding task
+        // _coordinator.getLeveragedOUSD(positionTokenId, allowedLeverageForPosition);
+        // return positionTokenId // can web3 await this, parse logs, get the positionTokenId and display for user?
     }
 
     /// @dev deposit OUSD under NFT ID
@@ -86,5 +98,9 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     /// @param positionId the NFT ID of the position
     function destroyLeveragedPosition(uint256 positionId) external expectInitialized nonReentrant {
         require(_positionToken.ownerOf(positionId) == msg.sender, "Caller address does not own this position token");
+        // coordinator needs to change to unwindLeveragedOUSD to assume coordinator as shares owner. Yotam adding task
+        // _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
+        // _positionToken.burn()
+        // funds will go to user address
     }
 }
