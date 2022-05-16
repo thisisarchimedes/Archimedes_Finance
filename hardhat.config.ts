@@ -5,6 +5,8 @@ import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 
+import "hardhat-watcher";
+
 import { task } from "hardhat/config";
 import dotenv from "dotenv";
 
@@ -21,6 +23,16 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     for (const account of accounts) {
         console.log(account.address);
     }
+});
+
+task("test:watch", "For hardhat watch to run tests on save for both test and sol files", async (taskArgs: { path: string }, hre) => {
+    /* testFiles is always an array of one file: */
+    let { path } = taskArgs;
+    if (path.match(/\.sol$/)) {
+        path = path.replace(/^contracts\/([^.]+).sol$/, "test/$1.ts");
+        console.log(`Running matching test ${path} for changed Solidity file ${taskArgs.path}`);
+    }
+    hre.run("test", { testFiles: [path] });
 });
 
 // You need to export an object to set up your config
@@ -49,5 +61,12 @@ export default {
         alwaysGenerateOverloads: false,
         // optional array of glob patterns with external artifacts to process (for example external libs from node_modules)
         externalArtifacts: ["externalArtifacts/*.json"],
+    },
+    watcher: {
+        test: {
+            tasks: [{ command: "test:watch", params: { path: "{path}" } }],
+            files: ["./test/**/*", "./contracts/**/*"],
+            verbose: true,
+        },
     },
 };

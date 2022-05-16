@@ -14,8 +14,11 @@
         "lint:ts:fix": "eslint --fix .",
         "lint:sol": "solhint contracts/**/*.sol && prettier --check \"contracts/**/*.sol\"",
         "lint:sol:fix": "solhint contracts/**/*.sol --fix && prettier --write \"contracts/**/*.sol\"",
-        "test": "npm run clean && npm run typechain && hardhat test",
-        "typechain": "npx hardhat typechain"
+        "test:ci": "npm run clean && npm run typechain && npm run test",
+        "test": "hardhat test",
+        "test:watch": "hardhat watch test",
+        "typechain": "npx hardhat typechain",
+        "typechain:watch": "hardhat watch typechain"
     },
     "repository": {
         "type": "git",
