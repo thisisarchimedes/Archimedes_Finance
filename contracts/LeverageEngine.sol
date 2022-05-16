@@ -5,6 +5,8 @@ import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+import "./AccessController.sol";
 import {ICoordinator} from "./interfaces/ICoordinator.sol";
 import {PositionToken} from "./PositionToken.sol";
 import {ParameterStore} from "./ParameterStore.sol";
@@ -15,10 +17,7 @@ import {LeverageAllocator} from "./LeverageAllocator.sol";
 //   any method that has nonReentrant modifier cannot call another method with nonReentrant.
 // - onlyOwner: only ownwer can call
 //   https://github.com/NAOS-Finance/NAOS-Formation/blob/master/contracts/FormationV2.sol
-contract LeverageEngine is ReentrancyGuard, AccessControl {
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-
-    bool internal _initialized = false;
+contract LeverageEngine is ReentrancyGuard, AccessController {
     uint256 internal _positionId;
 
     address internal _addressCoordinator;
@@ -31,20 +30,7 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     ParameterStore internal _parameterStore;
     LeverageAllocator internal _leverageAllocator;
 
-    modifier onlyAdmin() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "onlyAdmin: Caller is not admin");
-        _;
-    }
-
-    modifier expectInitialized() {
-        require(_initialized, "expectInitialized: contract is not initialized");
-        _;
-    }
-
-    /// @dev set the admin address to contract deployer
-    constructor(address admin) {
-        _setupRole(ADMIN_ROLE, admin);
-    }
+    constructor(address admin) AccessController(admin) {}
 
     /// @dev set the addresses for Coordinator, PositionToken, ParameterStore
     function init(
@@ -52,7 +38,7 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
         address addressPositionToken,
         address addressParameterStore,
         address addressLeverageAllocator
-    ) external nonReentrant onlyAdmin {
+    ) public onlyAdmin {
         _addressCoordinator = addressCoordinator;
         _coordinator = ICoordinator(addressCoordinator);
         _addressPositionToken = addressPositionToken;
@@ -61,7 +47,7 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
         _parameterStore = ParameterStore(_addressParameterStore);
         _addressLeverageAllocator = addressLeverageAllocator;
         _leverageAllocator = LeverageAllocator(_addressLeverageAllocator);
-        _initialized = true;
+        super._init();
     }
 
     /* Non-privileged functions */
@@ -75,6 +61,9 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     /// @param cycles How many leverage cycles to do
     function createLeveragedPosition(uint256 ousdPrinciple, uint256 cycles) external expectInitialized nonReentrant {
         require(cycles <= _parameterStore.getMaxNumberOfCycles(), "Number of cycles must be lower then allowed max");
+        _positionToken.safeMint(msg.sender);
+        // _coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount, sharesOwnerAddress);
+        // _coordinator.getLeveragedOUSD(endToEndTestNFTId, leverageToGetForPosition, sharesOwnerAddress);
     }
 
     /// @dev deposit OUSD under NFT ID

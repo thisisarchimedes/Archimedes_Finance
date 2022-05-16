@@ -2,9 +2,12 @@
 pragma solidity 0.8.13;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {AccessController} from "./AccessController.sol";
 import "hardhat/console.sol";
 
-contract Exchanger {
+contract Exchanger is AccessController {
+    constructor(address admin) AccessController(admin) {}
+
     /* Privileged functions: Admin */
 
     /// @dev initialize Vault
@@ -14,9 +17,10 @@ contract Exchanger {
         address _tokenLvUSD,
         address _tokenCoordinator,
         address _tokenOUSD
-    ) external {
+    ) external onlyAdmin {
         IERC20(_tokenLvUSD).approve(_tokenCoordinator, type(uint256).max);
         IERC20(_tokenOUSD).approve(_tokenCoordinator, type(uint256).max);
+        super._init();
     }
 
     /**

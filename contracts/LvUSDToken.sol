@@ -3,6 +3,7 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {AccessController} from "./AccessController.sol";
 
 /// @title lvUSD token
 ///
@@ -10,7 +11,9 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 ///
 /// TODO: add access control and roles
 ///
-contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), ReentrancyGuard {
+contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), ReentrancyGuard, AccessController {
+    constructor(address admin) AccessController(admin) {}
+
     /// @dev Sets the address of the current minter contract
     /// Timelocked function (set candidate and change owner after 17,280 blocks ~3 days)
     /// Emits MinterSet

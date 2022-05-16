@@ -7,65 +7,35 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessController} from "./AccessController.sol";
 
-contract PositionToken is ERC721, ERC721Burnable, AccessControl {
+contract PositionToken is ERC721, ERC721Burnable, AccessController {
     using Counters for Counters.Counter;
 
     Counters.Counter private _positionTokenIdCounter;
 
-    address private _addressLeverageEngine;
-
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    bytes32 public constant EXECUTIVE_ROLE = keccak256("EXECUTIVE_ROLE");
-
-    bool internal _initialized = false;
-
-    modifier onlyAdmin() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "onlyAdmin: Caller is not admin");
-        _;
-    }
-
-    modifier onlyExecutive() {
-        require(hasRole(EXECUTIVE_ROLE, msg.sender), "onlyExecutive: Caller is not executive");
-        _;
-    }
-
-    modifier expectInitialized() {
-        require(_initialized, "expectInitialized: contract is not initialized");
-        _;
-    }
-
-    constructor(address admin) ERC721("PositionToken", "PNT") {
-        _setupRole(ADMIN_ROLE, admin);
-    }
-
-    function init(address leverageEngine) external onlyAdmin {
-        _setupRole(EXECUTIVE_ROLE, leverageEngine);
-        _addressLeverageEngine = leverageEngine;
-        _initialized = true;
-    }
+    constructor(address admin) ERC721("PositionToken", "PNT") AccessController(admin) {}
 
     /* Privileged functions: Executive */
-    function safeMint(address to) external expectInitialized onlyExecutive returns (uint256 positionTokenId) {
+    function safeMint(address to) external onlyExecutive returns (uint256 positionTokenId) {
         positionTokenId = _positionTokenIdCounter.current();
         _positionTokenIdCounter.increment();
         _safeMint(to, positionTokenId);
-        _setApprovalForAll(to, _addressLeverageEngine, true);
+        _setApprovalForAll(to, _getAddressExecutive(), true);
         return positionTokenId;
     }
 
     /* override burn to only allow executive to burn positionToken */
-    function burn(uint256 positionTokenId) public override(ERC721Burnable) expectInitialized onlyExecutive {
+    function burn(uint256 positionTokenId) public override(ERC721Burnable) onlyExecutive {
         super.burn(positionTokenId);
     }
 
-    function exists(uint256 positionTokenId) external view expectInitialized onlyExecutive returns (bool) {
+    function exists(uint256 positionTokenId) external view onlyExecutive returns (bool) {
         return _exists(positionTokenId);
     }
 
     /* Override required by Solidity: */
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessController) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
