@@ -122,6 +122,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.exchanger.address,
             context.parameterStore.address,
         ),
+        context.vault.init(context.parameterStore.address, context.externalOUSD.address),
         context.parameterStore.init(context.treasurySigner.address),
         context.positionToken.init(context.leverageEngine.address),
     ]);

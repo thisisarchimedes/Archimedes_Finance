@@ -31,6 +31,18 @@ describe("ParameterStore test suit", async function () {
         });
     });
 
+    describe("Rebase fee rate tests", function () {
+        it("Should have default rebase rate fee", async function () {
+            const rebaseRate = await parameterStore.getRebaseFeeRate();
+            expect(rebaseRate).to.equal(ethers.utils.parseEther("0.1"));
+        });
+        it("Should be able to change default value", async function () {
+            const newRebaseRateValue = ethers.utils.parseEther("0.5");
+            await parameterStore.changeRebaseFeeRate(newRebaseRateValue);
+            expect(await parameterStore.getRebaseFeeRate()).to.equal(newRebaseRateValue);
+        });
+    });
+
     describe("Treasury address tests", function () {
         it("should have updated treasury address", async function () {
             const newTreasurySigner = ethers.Wallet.createRandom();

@@ -19,6 +19,7 @@
         "test:watch": "hardhat typechain && hardhat watch test",
         "typechain": "hardhat typechain",
         "typechain:watch": "hardhat watch typechain"
+
     },
     "repository": {
         "type": "git",
