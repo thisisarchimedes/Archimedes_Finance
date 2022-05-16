@@ -151,6 +151,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
             context.exchanger.address,
             context.parameterStore.address,
         ),
+        context.vault.init(context.parameterStore.address, context.externalOUSD.address),
         context.parameterStore.init(context.treasurySigner.address),
     ]);
 

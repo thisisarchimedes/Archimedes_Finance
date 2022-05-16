@@ -1,14 +1,19 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext, buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 import {
     helperResetNetwork,
     addressOUSD,
     helperSwapETHWithOUSD,
+    defaultBlockNumber,
 } from "./MainnetHelper";
 
 const getDecimal = (naturalNumber) => {
     return ethers.utils.parseEther(naturalNumber.toString());
+};
+
+const getFloatFromBigNum = (bigNumValue) => {
+    return parseFloat(ethers.utils.formatEther(bigNumValue));
 };
 
 describe("VaultOUSD test suit", function () {
@@ -19,7 +24,7 @@ describe("VaultOUSD test suit", function () {
     const addr2Deposit = 20;
     const interestIntoVault = 10;
     before(async function () {
-        helperResetNetwork(14533286);
+        helperResetNetwork(defaultBlockNumber);
         r = await buildContractTestContext();
 
         // Mint initial amount on OUSD token, will be used by all tests
@@ -32,12 +37,20 @@ describe("VaultOUSD test suit", function () {
 
         // deposit OUSD as a user (that gets shares) into vault. Shares goes to owner, not user.
         await r.externalOUSD.connect(r.addr1).approve(r.vault.address, getDecimal(addr1Deposit));
-        await r.vault.connect(r.addr1).deposit(getDecimal(addr1Deposit), sharesOwnerAddress);
+        await r.vault.connect(r.addr1).archimedesDeposit(getDecimal(addr1Deposit), sharesOwnerAddress);
         await r.externalOUSD.connect(r.addr2).approve(r.vault.address, getDecimal(addr2Deposit));
-        await r.vault.connect(r.addr2).deposit(getDecimal(addr2Deposit), sharesOwnerAddress);
+        await r.vault.connect(r.addr2).archimedesDeposit(getDecimal(addr2Deposit), sharesOwnerAddress);
     });
 
+    async function setupAndResetState () {
+        helperResetNetwork(defaultBlockNumber);
+    }
+
     describe("Addr1 and addr2 signer deposited OUSD into vault", function () {
+        before(async function () {
+            await setupAndResetState();
+        });
+
         it("Should return OUSD to be Vault's asset", async function () {
             const vaultAsset = await r.vault.asset();
             expect(vaultAsset).to.equal(addressOUSD);
@@ -79,6 +92,35 @@ describe("VaultOUSD test suit", function () {
                     getDecimal(addr1Deposit + addr2Deposit + interestIntoVault),
                 );
             });
+        });
+    });
+
+    describe("Test collecting rebase fees", function () {
+        before(async function () {
+            await setupAndResetState();
+        });
+
+        it("Should transfer fee to treasury on rebase event", async function () {
+            await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseEther("10.0"));
+            await r.vault.takeRebaseFees();
+            const treasuryBalanceInNatural = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.treasurySigner.address));
+            expect(treasuryBalanceInNatural).to.equal(1);
+        });
+        it("Should have previous assets in vault plus rebase minus fee", async function () {
+            const assetsInVaultAfterRebase = getFloatFromBigNum(await r.vault.totalAssets());
+            expect(assetsInVaultAfterRebase).to.equal(addr1Deposit + addr2Deposit + 9);
+        });
+        it("Should NOT transfer funds to treasury on a redeem", async function () {
+            await r.vault.archimedesRedeem(getDecimal(addr1Deposit / 2), r.addr1.address, sharesOwnerAddress);
+            const treasuryBalanceInNatural = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.treasurySigner.address));
+            expect(treasuryBalanceInNatural).to.equal(1);
+        });
+        it("Should transfer fee to treasury on (another) rebase event", async function () {
+            await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseEther("20.0"));
+            await r.vault.takeRebaseFees();
+            const treasuryBalanceInNatural = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.treasurySigner.address));
+            /// expect to have previous fee and current fee and previous fee
+            expect(treasuryBalanceInNatural).to.equal(3);
         });
     });
 });
