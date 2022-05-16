@@ -5,11 +5,7 @@ import { buildContractTestContext, ContractTestContext } from "./ContractTestCon
 
 /* Integration tests start here */
 
-let contractARCHToken;
-
-describe("Setting the stage: Getting some OUSD and deploying our contracts", function () {
-    let signer;
-    let user;
+describe("zIntegrationTests: Setting the stage: Getting some OUSD and deploying our contracts", function () {
     let r: ContractTestContext;
     let lvUSD;
 
@@ -21,13 +17,8 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
         lvUSD = r.lvUSD;
     });
 
-    beforeEach(async function () {
-        // get signers
-        [signer, user] = await ethers.getSigners();
-    });
-
     it("Should do a basic ETH<>OUSD swap", async function () {
-        await helperSwapETHWithOUSD(user, ethers.utils.parseEther("3.0"));
+        await helperSwapETHWithOUSD(r.addr1, ethers.utils.parseEther("3.0"));
     });
 
     it("Should deploy lvUSD ERC-20 contract", async function () {
@@ -36,14 +27,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
     });
 
     it("Should deploy ARCH token ERC-20 contract", async function () {
-        // deploying ARCH contract
-        // NOTE: we don't have ARCH token contract yet - so we use lvUSD as a mock here.
-        // TBD: replace when we implement ARCH
-        const factoryARCHToken = await ethers.getContractFactory("LvUSDToken");
-        contractARCHToken = await factoryARCHToken.deploy();
-        await contractARCHToken.deployed();
-
         // running simple check - calling decimals to ensure contract was deployed
-        expect(await contractARCHToken.decimals()).to.equal(18);
+        expect(await r.lvUSD.decimals()).to.equal(18);
     });
 });
