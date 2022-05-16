@@ -1,6 +1,10 @@
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
-import { addressOUSD, abiOUSDToken } from "./MainnetHelper";
+import {
+    addressOUSD, abiOUSDToken,
+    addressUSDT, abiUSDTToken,
+    address3CRV, abi3CRVToken,
+} from "./MainnetHelper";
 import type {
     Coordinator,
     CDPosition,
@@ -71,6 +75,8 @@ export type ContractTestContext = ArchContracts & {
     treasurySigner: SignerWithAddress;
     // External contracts
     externalOUSD: Contract;
+    externalUSDT: Contract;
+    external3CRV: Contract;
 }
 
 export const signers = ethers.getSigners();
@@ -91,6 +97,10 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     } as ContractRolesWithDefaults;
 
     context.externalOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, context.owner);
+    context.externalUSDT = new ethers.Contract(addressUSDT, abiUSDTToken, context.owner);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    context.external3CRV = new ethers.Contract(address3CRV, abi3CRVToken, context.owner);
 
     const contracts = await deployContracts<ArchContracts>({
         cdp: ["CDPosition"],
