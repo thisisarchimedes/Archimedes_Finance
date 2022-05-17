@@ -144,11 +144,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         _cdp.depositOUSDtoPosition(_nftId, positionLeveragedOUSDAfterFees);
     }
 
-    function unwindLeveragedOUSD(
-        uint256 _nftId,
-        address _userAddress,
-        address _sharesOwner
-    ) external override nonReentrant {
+    function unwindLeveragedOUSD(uint256 _nftId, address _userAddress) external override nonReentrant {
         /* Flow
             1. sanity checks as needed
             2. get amount of shares for position
@@ -165,7 +161,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
         require(numberOfSharesInPosition > 0, "Cannot unwind a position with no shares");
 
-        uint256 redeemedOUSD = _vault.redeem(numberOfSharesInPosition, _addressExchanger, _sharesOwner);
+        uint256 redeemedOUSD = _vault.redeem(numberOfSharesInPosition, _addressExchanger, address(this));
 
         /// TODO: add slippage protection
         (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.xOUSDforLvUSD(redeemedOUSD, address(this), borrowedLvUSD);

@@ -87,7 +87,7 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
         _leverageAllocator.useAvailableLvUSD(msg.sender, lvUSDAmount);
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple, msg.sender);
-        // _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
+        _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
         return positionTokenId;
     }
 

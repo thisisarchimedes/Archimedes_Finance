@@ -76,6 +76,10 @@ describe("LeverageEngine test suit", async function () {
                 await r.leverageAllocator.setAddressToLvUSDAvailable(r.owner.address, availableLvUSD);
                 await r.lvUSD.mint(r.coordinator.address, ethers.utils.parseEther("100"));
                 allowedLvUSDForPosition = await r.parameterStore.getAllowedLeverageForPosition(principle, maxCycles);
+
+                const tempFakeExchangerAddr = r.addr2;
+                await helperSwapETHWithOUSD(tempFakeExchangerAddr, ethers.utils.parseEther("8.0"));
+                await r.externalOUSD.connect(tempFakeExchangerAddr).transfer(r.coordinator.address, allowedLvUSDForPosition);
                 await r.leverageEngine.createLeveragedPosition(principle, maxCycles);
             });
 
