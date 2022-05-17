@@ -8,7 +8,7 @@ describe("ParameterStore test suit", async function () {
     let r: ContractTestContext;
 
     before(async () => {
-        helperResetNetwork(defaultBlockNumber);
+        await helperResetNetwork(defaultBlockNumber);
         r = await buildContractTestContext();
         parameterStore = r.parameterStore;
     });

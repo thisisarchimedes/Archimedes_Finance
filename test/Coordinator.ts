@@ -14,7 +14,7 @@ describe("Coordinator Test suit", function () {
     const nftIdAddr2Position = 15426;
 
     before(async function () {
-        helperResetNetwork(defaultBlockNumber);
+        await helperResetNetwork(defaultBlockNumber);
 
         r = await buildContractTestContext();
 
@@ -273,7 +273,7 @@ describe("Coordinator Test suit", function () {
         let depositedLeveragedOUSD;
         before(async function () {
             // start with a clean setup
-            helperResetNetwork(defaultBlockNumber);
+            await helperResetNetwork(defaultBlockNumber);
             r = await buildContractTestContext();
             endUserSigner = r.addr1;
             coordinator = r.coordinator;

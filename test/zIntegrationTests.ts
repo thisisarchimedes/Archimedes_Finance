@@ -15,7 +15,7 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
 
     before(async function () {
         // Reset network before integration tests
-        helperResetNetwork(14533286);
+        await helperResetNetwork(14533286);
         // Setup & deploy contracts
         r = await buildContractTestContext();
         lvUSD = r.lvUSD;

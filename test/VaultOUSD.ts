@@ -25,7 +25,7 @@ describe("VaultOUSD test suit", function () {
     const interestIntoVault = 10;
 
     async function setupAndResetState () {
-        helperResetNetwork(defaultBlockNumber);
+        await helperResetNetwork(defaultBlockNumber);
 
         r = await buildContractTestContext();
         sharesOwnerAddress = r.owner.address;
