@@ -5,11 +5,12 @@ import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract PositionToken is ERC721, ERC721Burnable, AccessControl {
+contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessControl {
     using Counters for Counters.Counter;
 
     Counters.Counter private _positionTokenIdCounter;
@@ -64,8 +65,16 @@ contract PositionToken is ERC721, ERC721Burnable, AccessControl {
         return _exists(positionTokenId);
     }
 
-    /* Override required by Solidity: */
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl) returns (bool) {
+    /* Overrides required by Solidity: */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override(ERC721, ERC721Enumerable) {
+        return super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl, ERC721Enumerable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }

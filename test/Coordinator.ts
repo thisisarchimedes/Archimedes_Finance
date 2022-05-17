@@ -23,8 +23,10 @@ describe("Coordinator Test suit", function () {
         coordinator = r.coordinator;
         sharesOwnerAddress = coordinator.address;
 
-        await helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseEther("5.0"));
-        await helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("5.0"));
+        await Promise.all([
+            helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseEther("5.0")),
+            helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("5.0"))],
+        );
     });
 
     describe("Deposit collateral into new NFT position", function () {
