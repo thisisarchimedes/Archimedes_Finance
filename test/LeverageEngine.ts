@@ -77,8 +77,7 @@ describe("LeverageEngine test suit", async function () {
                 await r.externalOUSD.approve(r.coordinator.address, ethers.utils.parseEther("10"));
                 await r.leverageAllocator.setAddressToLvUSDAvailable(r.owner.address, availableLvUSD);
                 balanceOUSD = await r.externalOUSD.balanceOf(r.owner.address);
-                console.log({ balanceOUSD });
-                console.log({ principle });
+                await r.lvUSD.mint(r.coordinator.address, ethers.utils.parseEther("100"));
                 allowedLvUSDForPosition = await r.parameterStore.getAllowedLeverageForPosition(principle, maxCycles);
                 await r.leverageEngine.createLeveragedPosition(principle, maxCycles);
             });

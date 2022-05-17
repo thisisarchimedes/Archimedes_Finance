@@ -58,12 +58,7 @@ interface ICoordinator {
     /// @dev borrow lvUSD and exchange it for OUSD
     /// @param _nftId NFT ID
     /// @param _amountToLeverage amount to borrow
-    /// @param _sharesOwner address to apply shares to
-    function getLeveragedOUSD(
-        uint256 _nftId,
-        uint256 _amountToLeverage,
-        address _sharesOwner
-    ) external;
+    function getLeveragedOUSD(uint256 _nftId, uint256 _amountToLeverage) external;
 
     /// @dev unwind position by repaying lvUSD debt using existing OUSD funds in position
     /// @param _nftId NFT ID

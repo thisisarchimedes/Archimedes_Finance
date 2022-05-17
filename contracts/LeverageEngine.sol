@@ -83,20 +83,11 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     /// @param ousdPrinciple the amount of OUSD sent to Archimedes
     /// @param cycles How many leverage cycles to do
     function createLeveragedPosition(uint256 ousdPrinciple, uint256 cycles) external expectInitialized nonReentrant returns (uint256) {
-        // validation:
-        // user has enough leverage allocated
-        // // call leverageAllocator.useAvailableLvUSD
         uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
-        console.log("lvUSDAmount", lvUSDAmount);
-        console.log("ousdPrinciple", ousdPrinciple);
         _leverageAllocator.useAvailableLvUSD(msg.sender, lvUSDAmount);
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
-        console.log("balance", _ousd.balanceOf(msg.sender));
-
-        // coordinator needs to change to depositCollateralUnderNFT to assume coordinator as shares owner. Yotam adding task
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple, msg.sender);
-        // coordinator needs to change to getLeveragedOUSD to assume coordinator as shares owner. Yotam adding task
-        // _coordinator.getLeveragedOUSD(positionTokenId, allowedLeverageForPosition);
+        // _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
         return positionTokenId;
     }
 

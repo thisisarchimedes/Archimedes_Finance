@@ -117,11 +117,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         _cdp.repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
     }
 
-    function getLeveragedOUSD(
-        uint256 _nftId,
-        uint256 _amountToLeverage,
-        address _sharesOwner
-    ) external override nonReentrant {
+    function getLeveragedOUSD(uint256 _nftId, uint256 _amountToLeverage) external override nonReentrant {
         /* Flow
           1. basic sanity checks 
           2. borrow lvUSD
@@ -142,7 +138,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         uint256 ousdAmountExchanged = _exchanger.xLvUSDforOUSD(_amountToLeverage, address(this));
         uint256 feeTaken = _takeOriginationFee(ousdAmountExchanged);
         uint256 positionLeveragedOUSDAfterFees = ousdAmountExchanged - feeTaken;
-        uint256 sharesFromDeposit = _vault.deposit(positionLeveragedOUSDAfterFees, _sharesOwner);
+        uint256 sharesFromDeposit = _vault.deposit(positionLeveragedOUSDAfterFees, address(this));
 
         _cdp.addSharesToPosition(_nftId, sharesFromDeposit);
         _cdp.depositOUSDtoPosition(_nftId, positionLeveragedOUSDAfterFees);
