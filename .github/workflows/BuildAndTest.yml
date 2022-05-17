@@ -44,7 +44,7 @@ jobs:
               run: npm run lint
 
             - name: Run project tests
-              run: npm run test
+              run: npm run test:ci
 
             - name: Compile contracts
               run: npx hardhat compile
