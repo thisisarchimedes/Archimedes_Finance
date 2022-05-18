@@ -24,12 +24,6 @@ describe("CurveHelper Test Suite", function () {
         await helperSwapETHWith3CRV(owner, ethers.utils.parseEther("200.0"));
     });
 
-    it("Initialize test funds", async function () {
-        // Make sure "owner" has funds needed for testing from "beforeEach" section
-        expect(await lvUSD.balanceOf(owner.address)).to.eq(ethers.utils.parseEther("200.0"));
-        expect(await token3CRV.balanceOf(owner.address)).gt(0);
-    });
-
     it("Should create a 3CRV+LvUSD Metapool", async function () {
         let poolAddress = ethers.constants.AddressZero;
         poolAddress = await createMetapool(lvUSD, owner);
@@ -47,8 +41,10 @@ describe("CurveHelper Test Suite", function () {
     it("Should fund a Metapool", async function () {
         const addressPool = await createMetapool(lvUSD, owner);
         const pool = await getMetapool(addressPool, owner);
-        const amountLvUSD = ethers.utils.parseEther("5.0");
-        const amount3CRV = ethers.utils.parseEther("6.0");
+        const amountLvUSDBefore = await pool.balances(0);
+        const amountLvUSDtoFund = ethers.utils.parseEther("5.0");
+        const amount3CRVBefore = await pool.balances(1);
+        const amount3CRVtoFund = ethers.utils.parseEther("6.0");
         /**
          * @dev fundMetapool(address, [amount1, amount2], signer)
          * @param address: pool address
@@ -56,37 +52,39 @@ describe("CurveHelper Test Suite", function () {
          * @param amount2: amount of pool.coins(1) to add into the pool
          * @dev in our case amount1 = LvUSD & amount2 = 3crv
          */
-        await fundMetapool(addressPool, [amountLvUSD, amount3CRV], owner, r);
+        await fundMetapool(addressPool, [amountLvUSDtoFund, amount3CRVtoFund], owner, r);
         // Check LvUSD
-        expect(await lvUSD.balanceOf(addressPool)).to.eq(amountLvUSD);
-        expect(await pool.balances(0)).to.eq(amountLvUSD);
+        expect(await pool.balances(0)).to.be.gt(amountLvUSDBefore);
         // Check 3CRV
-        expect(await token3CRV.balanceOf(addressPool)).to.eq(amount3CRV);
-        expect(await pool.balances(1)).to.eq(amount3CRV);
+        expect(await pool.balances(1)).to.be.gt(amount3CRVBefore);
     });
 
     it("Should createAndFundMetapool() in one function", async function () {
-        // fundedAmount of 100 is hardcoded in helper
-        const fundedAmount = ethers.utils.parseEther("100.0");
+        // fundedAmount of 200 is hardcoded in helper
+        const fundedAmount = ethers.utils.parseEther("200.0");
         /** Create and fund a lvusd/3crv Metapool
          * funds the pool with hardcoded 100 ETH of LvUSD & 3CRV
          * @dev fundMetapool(signer, ContractContextTest)
          */
         const pool = await createAndFundMetapool(owner, r);
+        // console.log("balances %s, %s", await pool.balances(0), await pool.balances(1));
         expect(await pool.balances(0)).to.eq(fundedAmount);
         expect(await pool.balances(1)).to.eq(fundedAmount);
     });
 
     it("Should be able to fund a Metapool multiple times", async function () {
-        // fundedAmount of 100 is hardcoded in helper
-        const initalAmount = ethers.utils.parseEther("100.0");
+        // fundedAmount of 200 is hardcoded in helper
+        const initalAmount = ethers.utils.parseEther("200.0");
         const addedAmount = ethers.utils.parseEther("4.0");
         const pool = await createAndFundMetapool(owner, r);
         expect(await pool.balances(0)).to.eq(initalAmount);
         expect(await pool.balances(1)).to.eq(initalAmount);
         await fundMetapool(pool.address, [addedAmount, addedAmount], owner, r);
-        expect(await pool.balances(0)).to.eq(initalAmount.add(addedAmount));
-        expect(await pool.balances(1)).to.eq(initalAmount.add(addedAmount));
+        const newBal = await pool.balances(0);
+        expect(await pool.balances(0)).to.be.gt(initalAmount);
+        expect(await pool.balances(1)).to.be.gt(initalAmount);
+        await fundMetapool(pool.address, [addedAmount, addedAmount], owner, r);
+        expect(await pool.balances(0)).to.be.gt(newBal);
     });
 
     it("Should exchange X for Y", async function () {
