@@ -7,7 +7,7 @@ describe("ContractTestContext", function () {
     let contractTestContext: ContractTestContext;
 
     before(async function () {
-        helperResetNetwork(defaultBlockNumber);
+        await helperResetNetwork(defaultBlockNumber);
         contractTestContext = await buildContractTestContext();
     });
 

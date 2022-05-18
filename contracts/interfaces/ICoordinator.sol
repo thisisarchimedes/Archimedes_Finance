@@ -16,12 +16,7 @@ interface ICoordinator {
     ///
     /// @param _nftId the Archimedes ERC-721 token id
     /// @param _amountInOUSD the amount of OUSD sent to Archimedes
-    /// @param _sharesOwner who to send shares to
-    function depositCollateralUnderNFT(
-        uint256 _nftId,
-        uint256 _amountInOUSD,
-        address _sharesOwner
-    ) external;
+    function depositCollateralUnderNFT(uint256 _nftId, uint256 _amountInOUSD) external;
 
     /// @dev withdraw OUSD under NFT ID
     ///
@@ -58,22 +53,12 @@ interface ICoordinator {
     /// @dev borrow lvUSD and exchange it for OUSD
     /// @param _nftId NFT ID
     /// @param _amountToLeverage amount to borrow
-    /// @param _sharesOwner address to apply shares to
-    function getLeveragedOUSD(
-        uint256 _nftId,
-        uint256 _amountToLeverage,
-        address _sharesOwner
-    ) external;
+    function getLeveragedOUSD(uint256 _nftId, uint256 _amountToLeverage) external;
 
     /// @dev unwind position by repaying lvUSD debt using existing OUSD funds in position
     /// @param _nftId NFT ID
     /// @param _userAddress address to transfer leftover OUSD to
-    /// @param _sharesOwner address of shares owner (position don't own shares, just has a value on how much shares it should get)
-    function unwindLeveragedOUSD(
-        uint256 _nftId,
-        address _userAddress,
-        address _sharesOwner
-    ) external;
+    function unwindLeveragedOUSD(uint256 _nftId, address _userAddress) external;
 
     /* Non-privileged functions */
     /// TODO: Should this be accessed by admin only or not? <<<<
