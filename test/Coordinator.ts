@@ -40,9 +40,6 @@ describe("Coordinator Test suit", function () {
             // transfer OUSD from user to coordinator address
             // (this will happen in leverage engine in full Archimedes flow)
             await r.externalOUSD.approve(r.coordinator.address, ethers.utils.parseEther("10"));
-            const endUserSignerOUSDAmount = await r.externalOUSD.balanceOf(endUserSigner.address);
-            // expect(endUserSignerOUSDAmount).to.equal(addr1CollateralAmount);
-            console.log("args", nftIdAddr1Position, addr1CollateralAmount, endUserSigner.address, endUserSignerOUSDAmount);
             await coordinator.depositCollateralUnderNFT(nftIdAddr1Position, addr1CollateralAmount, endUserSigner.address, {
                 gasLimit: 3000000,
             });
@@ -290,12 +287,9 @@ describe("Coordinator Test suit", function () {
             await r.lvUSD.mint(r.coordinator.address, mintedLvUSDAmount);
             /// Complete create position cycle from coordinator perspective
             await r.externalOUSD.approve(r.coordinator.address, collateralAmount);
-            const coordinatorBalance = await r.externalOUSD.balanceOf(r.coordinator.address);
-            console.log({ coordinatorBalance });
             await r.coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount, endUserSigner.address);
             /// Doing 5 cycles for this position
             await r.coordinator.getLeveragedOUSD(endToEndTestNFTId, leverageToGetForPosition);
-            console.log("done before");
         });
 
         it("Should have updated CDP with values for leveraged position", async function () {
