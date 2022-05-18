@@ -13,7 +13,7 @@ import {
 } from "./ABIs";
 import dotenv from "dotenv";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { BigNumberish } from "ethers";
+import { BigNumber } from "ethers";
 
 // grab the private api key from the private repo
 dotenv.config({ path: "secrets/alchemy.env" });
@@ -152,7 +152,7 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     2. WETH->USDT on TriCrypto2@Curve
     3. USDT->OUSD with OUSD contract
 */
-async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSwap: BigNumberish) {
+async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSwap: BigNumber) {
     /// /////////// Loading some contracts //////////////
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
