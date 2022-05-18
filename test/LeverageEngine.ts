@@ -77,6 +77,7 @@ describe("LeverageEngine test suit", async function () {
                 await r.lvUSD.mint(r.coordinator.address, ethers.utils.parseEther("100"));
                 allowedLvUSDForPosition = await r.parameterStore.getAllowedLeverageForPosition(principle, maxCycles);
 
+                // For test purpose only, assign leveraged OUSD to coordinator (exchanger will do this from borrowed lvUSD once its up)
                 const tempFakeExchangerAddr = r.addr2;
                 await helperSwapETHWithOUSD(tempFakeExchangerAddr, ethers.utils.parseEther("8.0"));
                 await r.externalOUSD.connect(tempFakeExchangerAddr).transfer(r.coordinator.address, allowedLvUSDForPosition);
