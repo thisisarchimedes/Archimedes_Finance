@@ -16,12 +16,7 @@ interface ICoordinator {
     ///
     /// @param _nftId the Archimedes ERC-721 token id
     /// @param _amountInOUSD the amount of OUSD sent to Archimedes
-    /// @param _from who to deposit funds from
-    function depositCollateralUnderNFT(
-        uint256 _nftId,
-        uint256 _amountInOUSD,
-        address _from
-    ) external;
+    function depositCollateralUnderNFT(uint256 _nftId, uint256 _amountInOUSD) external;
 
     /// @dev withdraw OUSD under NFT ID
     ///

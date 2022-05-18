@@ -62,12 +62,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     /* Privileged functions: Executive */
 
     // Note: Expects funds to be under coordinator already
-    function depositCollateralUnderNFT(
-        uint256 _nftId,
-        uint256 _amountInOUSD,
-        address _from
-    ) external override {
-        _ousd.transferFrom(_from, address(this), _amountInOUSD);
+    function depositCollateralUnderNFT(uint256 _nftId, uint256 _amountInOUSD) external override {
         /// Transfer collateral to vault, mint shares to shares owner
         uint256 shares = _vault.deposit(_amountInOUSD, address(this));
         // create CDP position with collateral

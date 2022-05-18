@@ -74,7 +74,7 @@ describe("LeverageEngine test suit", async function () {
                 r = await buildContractTestContext();
                 maxCycles = await r.parameterStore.getMaxNumberOfCycles();
                 const totalOUSD = await helperSwapETHWithOUSD(r.owner, principle);
-                await r.externalOUSD.approve(r.coordinator.address, totalOUSD);
+                await r.externalOUSD.approve(r.leverageEngine.address, totalOUSD);
                 await r.leverageAllocator.setAddressToLvUSDAvailable(r.owner.address, availableLvUSD);
                 await r.lvUSD.mint(r.coordinator.address, ethers.utils.parseEther("100"));
                 allowedLvUSDForPosition = await r.parameterStore.getAllowedLeverageForPosition(totalOUSD, maxCycles);
