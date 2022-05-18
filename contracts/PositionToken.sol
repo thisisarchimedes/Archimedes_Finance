@@ -3,14 +3,15 @@ pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {ERC721Burnable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessControl {
+contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessControl, ReentrancyGuard {
     using Counters for Counters.Counter;
 
     Counters.Counter private _positionTokenIdCounter;
@@ -41,14 +42,14 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
         _setupRole(ADMIN_ROLE, admin);
     }
 
-    function init(address leverageEngine) external onlyAdmin {
+    function init(address leverageEngine) external nonReentrant onlyAdmin {
         _setupRole(EXECUTIVE_ROLE, leverageEngine);
         _addressLeverageEngine = leverageEngine;
         _initialized = true;
     }
 
     /* Privileged functions: Executive */
-    function safeMint(address to) external expectInitialized onlyExecutive returns (uint256 positionTokenId) {
+    function safeMint(address to) external nonReentrant expectInitialized onlyExecutive returns (uint256 positionTokenId) {
         positionTokenId = _positionTokenIdCounter.current();
         _positionTokenIdCounter.increment();
         _safeMint(to, positionTokenId);
@@ -57,7 +58,7 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
     }
 
     /* override burn to only allow executive to burn positionToken */
-    function burn(uint256 positionTokenId) public override(ERC721Burnable) expectInitialized onlyExecutive {
+    function burn(uint256 positionTokenId) public override(ERC721Burnable) nonReentrant expectInitialized onlyExecutive {
         super.burn(positionTokenId);
     }
 
