@@ -64,29 +64,36 @@ describe("LeverageEngine test suit", async function () {
         });
 
         describe("Successful position creation", async function () {
-            const principle = ethers.utils.parseEther("1");
-            const availableLvUSD = ethers.utils.parseEther("10");
+            const principle = ethers.utils.parseEther("0.005");
+            const availableLvUSD = ethers.utils.parseEther("100000");
             let maxCycles: BigNumber;
             let allowedLvUSDForPosition: BigNumber;
 
             before(async function () {
+                await helperResetNetwork(defaultBlockNumber);
+                r = await buildContractTestContext();
                 maxCycles = await r.parameterStore.getMaxNumberOfCycles();
-                await helperSwapETHWithOUSD(r.owner, principle);
-                await r.externalOUSD.approve(r.coordinator.address, ethers.utils.parseEther("10"));
+                const totalOUSD = await helperSwapETHWithOUSD(r.owner, principle);
+                await r.externalOUSD.approve(r.coordinator.address, totalOUSD);
                 await r.leverageAllocator.setAddressToLvUSDAvailable(r.owner.address, availableLvUSD);
                 await r.lvUSD.mint(r.coordinator.address, ethers.utils.parseEther("100"));
-                allowedLvUSDForPosition = await r.parameterStore.getAllowedLeverageForPosition(principle, maxCycles);
+                allowedLvUSDForPosition = await r.parameterStore.getAllowedLeverageForPosition(totalOUSD, maxCycles);
 
                 // For test purpose only, assign leveraged OUSD to coordinator (exchanger will do this from borrowed lvUSD once its up)
                 const tempFakeExchangerAddr = r.addr2;
-                await helperSwapETHWithOUSD(tempFakeExchangerAddr, ethers.utils.parseEther("10"));
+                await helperSwapETHWithOUSD(tempFakeExchangerAddr, allowedLvUSDForPosition);
                 await r.externalOUSD.connect(tempFakeExchangerAddr).transfer(r.coordinator.address, allowedLvUSDForPosition);
-                await r.leverageEngine.createLeveragedPosition(principle, maxCycles);
+                await r.leverageEngine.createLeveragedPosition(totalOUSD, maxCycles);
             });
 
             it("Should use allocated lvUSD", async function () {
                 const remainingLvUSD = await r.leverageAllocator.getAddressToLvUSDAvailable(r.owner.address);
                 expect(remainingLvUSD).to.equal(availableLvUSD.sub(allowedLvUSDForPosition));
+            });
+
+            it("Should move OUSD funds out of the user's wallet", async function () {
+                const balance = await r.externalOUSD.balanceOf(r.owner.address);
+                expect(balance).to.equal(0);
             });
 
             it("Should mint a PositionToken to the users address", async function () {
