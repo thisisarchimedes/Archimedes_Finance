@@ -39,8 +39,9 @@ describe("Coordinator Test suit", function () {
         before(async function () {
             // transfer OUSD from user to coordinator address
             // (this will happen in leverage engine in full Archimedes flow)
-            await r.externalOUSD.approve(r.coordinator.address, ethers.utils.parseEther("10"));
-            await coordinator.depositCollateralUnderNFT(nftIdAddr1Position, addr1CollateralAmount, endUserSigner.address, {
+            await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, addr1CollateralAmount);
+            expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr1CollateralAmount);
+            await coordinator.depositCollateralUnderNFT(nftIdAddr1Position, addr1CollateralAmount, {
                 gasLimit: 3000000,
             });
         });
@@ -80,7 +81,7 @@ describe("Coordinator Test suit", function () {
                 expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr2CollateralAmount);
 
                 await coordinator.depositCollateralUnderNFT(
-                    nftIdAddr2Position, addr2CollateralAmount, r.owner.address, { gasLimit: 3000000 },
+                    nftIdAddr2Position, addr2CollateralAmount, { gasLimit: 3000000 },
                 );
             });
 
@@ -283,11 +284,12 @@ describe("Coordinator Test suit", function () {
             /// 1. Transfer OUSD principle from user to coordinator address (simulate leverage engine task when creating position)
             /// 2. For test purpose only, assign leveraged OUSD to coordinator (exchanger will do this from borrowed lvUSD once its up)
             /// 3. Mint enough lvUSD under coordinator address to get leveraged OUSD (via lvUSD borrowing)
+            await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, collateralAmount);
             await r.externalOUSD.connect(tempFakeExchangerAddr).transfer(r.coordinator.address, leverageToGetForPosition);
             await r.lvUSD.mint(r.coordinator.address, mintedLvUSDAmount);
             /// Complete create position cycle from coordinator perspective
             await r.externalOUSD.approve(r.coordinator.address, collateralAmount);
-            await r.coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount, endUserSigner.address);
+            await r.coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount);
             /// Doing 5 cycles for this position
             await r.coordinator.getLeveragedOUSD(endToEndTestNFTId, leverageToGetForPosition);
         });
