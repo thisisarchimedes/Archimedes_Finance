@@ -98,10 +98,6 @@ describe("LeverageEngine test suit", async function () {
                 /* this is the first positionToken minted so its id should be 0 */
                 expect(positionTokenId).to.equal(0);
             });
-
-            it("Should transfer OUSD equal to principle to the Coordinator for processing", async function () {
-
-            });
         });
     });
 });

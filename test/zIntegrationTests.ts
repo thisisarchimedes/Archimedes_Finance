@@ -9,7 +9,6 @@ let contractARCHToken;
 
 describe("Setting the stage: Getting some OUSD and deploying our contracts", function () {
     let signer;
-    let user;
     let r: ContractTestContext;
     let lvUSD;
 
@@ -23,11 +22,11 @@ describe("Setting the stage: Getting some OUSD and deploying our contracts", fun
 
     beforeEach(async function () {
         // get signers
-        [signer, user] = await ethers.getSigners();
+        [signer] = await ethers.getSigners();
     });
 
     it("Should do a basic ETH<>OUSD swap", async function () {
-        await helperSwapETHWithOUSD(user, ethers.utils.parseEther("3.0"));
+        await helperSwapETHWithOUSD(signer, ethers.utils.parseEther("3.0"));
     });
 
     it("Should deploy lvUSD ERC-20 contract", async function () {
