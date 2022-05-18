@@ -153,6 +153,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             addressCurveOUSDPool,
         ),
 
+        context.vault.init(context.parameterStore.address, context.externalOUSD.address),
         context.parameterStore.init(context.treasurySigner.address),
         context.positionToken.init(context.leverageEngine.address),
     ]);
