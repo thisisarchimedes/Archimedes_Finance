@@ -2,22 +2,29 @@
 pragma solidity 0.8.13;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ICurveFiCurve} from "./interfaces/iCurveFi.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IExchanger} from "./interfaces/IExchanger.sol";
+import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import "hardhat/console.sol";
 
-contract Exchanger {
+/// @title Exchanger
+/// @dev is in charge of interacting with the CurveFi pools
+contract Exchanger is IExchanger {
+    using SafeERC20 for IERC20;
 
-    address internal _addressParameterStore;
-    ParameterStore internal _parameterStore;
+    address internal _addressCoordinator;
+    address internal _addressLvUSD;
+    address internal _addressOUSD;
+    address internal _address3CRV;
+    IERC20 internal _lvusd;
+    IERC20 internal _ousd;
+    IERC20 internal _3crv;
     ICurveFiCurve internal _poolLvUSD3CRV;
     ICurveFiCurve internal _poolOUSD3CRV;
-    address internal _tokenLvUSD;
-    address internal _tokenOUSD;
-    address internal _tokenCoordinator;
-    address internal _poolLvUSD3CRV;
-    address internal _poolOUSD3CRV;
-    uint256 internal _minimumExchangeAmount;
+    ParameterStore internal _paramStore;
+
+    // TODO should slippage be in ParamStore?
     uint256 internal _slippage;
     bool internal _initialized = false;
 
@@ -26,38 +33,50 @@ contract Exchanger {
      TODO: user should be able to override and force a trade
      * @dev expressed as a percentage
      * 100 would require a perfect 1:1 swap
+     * 90 allows at most, 1:.9 swaps
+     * TODO make getter and setter for this or put in ParamStore
      */
-    uint256 public curveMinimumSwapPercentage;
+    uint256 internal _curveGuardPercentage;
 
-    constructor () {
-        curveMinimumSwapPercentage = 90; // 90%
-        _slippage = 2; // 2%
-    }
+    constructor() {}
 
     /** initialize Exchanger
-     * @param tokenLvUSD lvUSD ERC20 contract address
-     * @param tokenOUSD OUSD ERC20 contract address
-     * @param tokenCoordinator Coordinator contract address
-     * @param poolLvUSD3CRV 3CRV+LvUSD pool address
-     * @param poolOUSD3CRV 3CRV+OUSD pool address
+     * @param addressParameterStore ParameterStore address
+     * @param addressCoordinator Coordinator contract address
+     * @param addressLvUSD lvUSD ERC20 contract address
+     * @param addressOUSD OUSD ERC20 contract address
+     * @param address3CRV 3CRV ERC20 contract address
+     * @param addressPoolLvUSD3CRV 3CRV+LvUSD pool address
+     * @param addressPoolOUSD3CRV 3CRV+OUSD pool address
      */
     function init(
         address addressParameterStore,
-        address tokenLvUSD,
-        address tokenOUSD,
-        address tokenCoordinator,
-        address poolLvUSD3CRV,
-        address poolOUSD3CRV
+        address addressCoordinator,
+        address addressLvUSD,
+        address addressOUSD,
+        address address3CRV,
+        address addressPoolLvUSD3CRV,
+        address addressPoolOUSD3CRV
     ) external {
-        _addressParameterStore = addressParameterStore;
-        _parameterStore = ParameterStore(_addressParameterStore);
-        _tokenLvUSD = tokenLvUSD;
-        _tokenOUSD = tokenOUSD;
-        _tokenCoordinator = tokenCoordinator;
-        _poolLvUSD3CRV = ICurveFiCurve(poolLvUSD3CRV);
-        _poolOUSD3CRV = ICurveFiCurve(poolOUSD3CRV);
-        IERC20(tokenLvUSD).approve(_tokenCoordinator, type(uint256).max);
-        IERC20(tokenOUSD).approve(_tokenCoordinator, type(uint256).max);
+        _paramStore = ParameterStore(addressParameterStore);
+        _addressCoordinator = addressCoordinator;
+
+        _addressLvUSD = addressLvUSD;
+        _addressOUSD = addressOUSD;
+        _address3CRV = address3CRV;
+
+        _lvusd = IERC20(_addressLvUSD);
+        _ousd = IERC20(_addressOUSD);
+        _3crv = IERC20(_address3CRV);
+
+        _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
+        _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
+
+        // approve Coordinator address to spend on behalf of exchanger
+        _lvusd.safeApprove(_addressCoordinator, type(uint256).max);
+        _ousd.safeApprove(_addressCoordinator, type(uint256).max);
+        _curveGuardPercentage = 90; // 90%
+        _slippage = 2; // 2%
         _initialized = true;
     }
 
@@ -66,59 +85,15 @@ contract Exchanger {
      * returns amount of OUSD
      * - MUST emit an event
      * NOTE: There is no guarantee of a 1:1 exchange ratio
-     * Minimum is 90% * 90%
+     * Minimum is 90% * 90%  / _curveGuardPercentage * _curveGuardPercentage
      */
-    function xLvUSDforOUSD(uint256 amountLvUSD, address to) external view returns (uint256) {
-        /// TODO: Change this to an event later
+    function xLvUSDforOUSD(uint256 amountLvUSD, address to) external returns (uint256) {
+        console.log("amountLvUSD to exchange in xLvUSDforOUSD", amountLvUSD);
+        uint256 returned3CRV = _xLvUSDfor3CRV(amountLvUSD, _addressCoordinator);
+        console.log("Returned 3CRV from xLvUSDforOUSD", returned3CRV);
+        uint256 returnedOUSD = _x3CRVforOUSD(returned3CRV, _addressCoordinator);
+        console.log("Returned OUSD from xLvUSDforOUSD", returnedOUSD);
         console.log("Exchanging %s lvUSD to OUSD, assigning funds to address %s", amountLvUSD, to);
-
-        uint256 memory _amountLvUSDtoExchange = amountLvUSD;
-
-        uint256 memory _expected3CRV;
-        uint256 memory _minimum3CRV;
-        uint256 memory _returned3CRV;
-
-        uint256 memory _expectedOUSD;
-        uint256 memory _minimum3OUSD;
-        uint256 memory _returnedOUSD;
-
-        // Set sanity check / guard rail values:
-        // This protect users. Make sure the swapped amount is within our accepted range
-        // By default curveMinimumSwapPercentage is 90%, which allows 10% skew between stables
-        uint256 memory _required3CRV = (_amountLvUSDtoExchange * curveMinimumSwapPercentage) / 100;
-        uint256 memory _requiredOUSD = (_minimum3CRV * curveMinimumSwapPercentage) / 100;
-
-        // Verify Exchanger has enough LvUSD to use
-        require(_amountLvUSDtoExchange <= IERC20(_tokenLvUSD).balanceOf(address(this)), "Insufficient LvUSD in Exchanger.");
-
-        // Preview the exchange to get expected amount of 3CRV
-        _expected3CRV = _poolLvUSD3CRV.get_dy(0, 1, _amountLvUSDtoExchange);
-
-        // TODO allow user to force this even if pool is imbalanced!
-        require(_expected3CRV >= _minimum3CRV, "LvUSD Curve pool too imbalanced.");
-
-        // Set minimum accounting for slippage 
-        // (100 - 2) / 100 = 98%
-        _minimum3CRV = (_expected3CRV * (100 - _slippage)) / 100;
-
-        // Exchange LvUSD for 3CRV:
-        _returned3CRV = _poolLvUSD3CRV.exchange(0, 1, _amountLvUSDtoExchange, _minimum3CRV);
-
-        /// TODO repeat for OUSD
-        // 3) Go to OUSD/3CRV pool and exchange 3CRV for OUSD:
-        // check OUSD/3CRV pool is in balance:
-        uint256 memory expectedOUSD = _poolOUSD3CRV.get_dy(0, 1, returned3CRV);
-        // TODO allow user to force this even if pool is imbalanced!
-        // Guard rail in case the curve pool is skewed
-        uint256 memory minRequiredOUSD = (returned3CRV * curveMinimumSwapPercentage) / 100;
-        require(expectedOUSD >= minRequiredOUSD, "OUSD Curve pool too imbalanced.");
-
-        // 4) Go to OUSD/3CRV pool and exchange 3CRV for OUSD:
-        uint256 memory returnedOUSD = _poolOUSD3CRV.exchange(0, 1, returned3CRV, expectedOUSD)
-
-        //5) Move returnedOUSD to correct place - "to" address:
-        // user _receiver (overloaded) or just transfer
-
         return returnedOUSD;
     }
 
@@ -134,7 +109,7 @@ contract Exchanger {
         uint256 amountOUSD,
         address to,
         uint256 minRequiredLvUSD
-    ) external view returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
+    ) external returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
         // Check we have the funds >= amountOUSD
         console.log("Exchanging%s OUSD for min %slvUSD, assigning funds to address %s", amountOUSD, minRequiredLvUSD, to);
 
@@ -155,13 +130,80 @@ contract Exchanger {
         return (minRequiredLvUSD, amountOUSD - minRequiredLvUSD);
     }
 
-    function getCurveMinimumRatio() public view returns (uint256) {
-        return _curveMinimumRatio;
+    /** Exchange using the CurveFi LvUSD/3CRV Metapool
+     * @param amountLvUSD amount of LvUSD to exchange
+     * @param to address to send exchanged 3CRV to
+     */
+    function _xLvUSDfor3CRV(uint256 amountLvUSD, address to) internal returns (uint256) {
+        /**
+         * @param _amountLvUSD amount of LvUSD we are exchanging
+         * @param _expected3CRV uses get_dy() to estimate amount the exchange will give us
+         * @param _minimum3CRV mimimum accounting for slippage. (_expected3CRV * slippage)
+         * @param _returned3CRV amount we actually get from the pool
+         */
+        uint256 _amountLvUSD = amountLvUSD;
+        uint256 _expected3CRV;
+        uint256 _minimum3CRV;
+        uint256 _returned3CRV;
+
+        // Verify Exchanger has enough LvUSD to use
+        require(_amountLvUSD <= IERC20(_lvusd).balanceOf(address(this)), "Insufficient LvUSD in Exchanger.");
+
+        // Estimate expected amount of 3CRV
+        // get_dy(indexCoinSend, indexCoinRec, amount)
+        _expected3CRV = _poolLvUSD3CRV.get_dy(0, 1, _amountLvUSD);
+
+        // Make sure pool isn't too bent
+        // TODO allow user to override this protection
+        require(_expected3CRV >= (_amountLvUSD * _curveGuardPercentage) / 100, "LvUSD pool too imbalanced.");
+        // TODO auto balance if pool is bent
+
+        // Set minimum required accounting for slippage
+        _minimum3CRV = (_expected3CRV * (100 - _slippage)) / 100;
+
+        // Exchange LvUSD for 3CRV:
+        _returned3CRV = _poolLvUSD3CRV.exchange(0, 1, _amountLvUSD, _minimum3CRV, to);
+
+        return _returned3CRV;
     }
 
-    function changeCurveMinimumRatio(uint256 newCurveMinimumRatio) external {
-        require(newCurveMinimumRatio <= 100, "Ratio must be less than or equal to 100");
-        _curveMinimumRatio = newCurveMinimumRatio;
+    function xLvUSDfor3CRV(uint256 amountLvUSD, address to) external returns (uint256) {
+        return _xLvUSDfor3CRV(amountLvUSD, to);
     }
 
+    /** Exchange using the CurveFi OUSD/3CRV Metapool
+     * @param amount3CRV amount of LvUSD to exchange
+     * @param to address to send exchanged 3CRV to
+     */
+    function _x3CRVforOUSD(uint256 amount3CRV, address to) internal returns (uint256) {
+        /**
+         * @param _amount3CRV amount of 3CRV we are exchanging
+         * @param _expectedOUSD uses get_dy() to estimate amount the exchange will give us
+         * @param _minimumOUSD mimimum accounting for slippage. (_expectedOUSD * slippage)
+         */
+        uint256 _amount3CRV = amount3CRV;
+        uint256 _expectedOUSD;
+        uint256 _minimumOUSD;
+
+        // Verify Exchanger has enough LvUSD to use
+        require(_amount3CRV <= IERC20(_3crv).balanceOf(address(this)), "Insufficient 3CRV in Exchanger.");
+
+        // Estimate expected amount of 3CRV
+        _expectedOUSD = _poolOUSD3CRV.get_dy(0, 1, _amount3CRV);
+
+        // Make sure pool isn't too bent
+        // TODO allow user to override this protection
+        require(_expectedOUSD >= (_amount3CRV * _curveGuardPercentage) / 100, "3CRV pool too imbalanced.");
+        // TODO auto balance if pool is bent
+
+        // Set minimum required accounting for slippage
+        _minimumOUSD = (_expectedOUSD * (100 - _slippage)) / 100;
+
+        // Exchange LvUSD for 3CRV:
+        return _poolOUSD3CRV.exchange(0, 1, _amount3CRV, _minimumOUSD, to);
+    }
+
+    function x3CRVforOUSD(uint256 amount3CRV, address to) external returns (uint256) {
+        return _x3CRVforOUSD(amount3CRV, to);
+    }
 }
