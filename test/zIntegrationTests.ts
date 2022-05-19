@@ -1,5 +1,5 @@
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { parseEther, formatEther } from "ethers/lib/utils";
+import { parseUnits, formatUnits } from "ethers/lib/utils";
 import { expect } from "chai";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 import { helperResetNetwork, helperSwapETHWithOUSD, defaultBlockNumber, helperSwapETHWith3CRV } from "./MainnetHelper";
@@ -8,21 +8,22 @@ import { createAndFundMetapool, fundMetapool } from "./CurveHelper";
 let r: ContractTestContext;
 let owner: SignerWithAddress;
 let user: SignerWithAddress;
-let pretenderOUSDSigner : SignerWithAddress;
+let pretendOUSDRebaseSigner : SignerWithAddress;
 let lvUSD3CRVPoolInstance;
 
 const userOUSDPrinciple = 100;
 const initialFundsInPool = 700;
 const initialCoordinatorLvUSDBalance = 10000;
+const initialUserLevAllocation = 10000;
 
 let adminInitial3CRVBalance: number;
 
-function parseEtherNum (num) {
-    return parseEther(num.toString());
+function parseUnitsNum (num) {
+    return parseUnits(num.toString());
 }
 
 function getFloatFromBigNum (bigNumValue) {
-    return parseFloat(formatEther(bigNumValue));
+    return parseFloat(formatUnits(bigNumValue));
 }
 
 async function printPoolState (poolInstance) {
@@ -41,31 +42,37 @@ async function setupEnvForIntegrationTests () {
     r = await buildContractTestContext();
     owner = r.owner;
     user = r.addr1;
-    pretenderOUSDSigner = r.addr3;
+    pretendOUSDRebaseSigner = r.addr3;
 
     /* ====== Setup accounts and funds ===========
     expected state:
-    - admin has 1000 lvUSD and 1000 3CRV tokens, to fund pool
-    - User has 100 OUSD to use as principle
-    - pretenderOUSDSigner, which will act as OUSD rebase agent, has 500 OUSD
-    - Coordinator gets initialCoordinatorLvUSDBalance of lvUSD so it can use it when getting leverage.
+    - admin has 1000 lvUSD and 10 ethereum worth of 3CRV tokens, to fund pool
+    - User has 1 ethereum worth (about 2000 OUSDs)  to use as principle
+    - pretenderOUSDSigner, which will act as OUSD rebase agent, has 10 ethereum worth (about 20k OUSD)
     */
 
     // Prep owner accounts with funds needed to fund pool
-    await r.lvUSD.mint(await owner.getAddress(), parseEther("1000.0"));
+    await r.lvUSD.mint(await owner.getAddress(), parseUnits("1000.0"));
 
     // will take 10 ethereum tokens and transfer it to their dollar value of 3CRV
-    await helperSwapETHWith3CRV(owner, parseEther("10.0"));
+    await helperSwapETHWith3CRV(owner, parseUnits("10.0"));
 
     adminInitial3CRVBalance = getFloatFromBigNum(await r.external3CRV.balanceOf(await owner.getAddress()));
     // Get User some OUSD for principle
-    await helperSwapETHWithOUSD(user, parseEther("1.0"));
+    await helperSwapETHWithOUSD(user, parseUnits("1.0"));
 
     // Fund pretenderOUSDSigner with OUSD
-    await helperSwapETHWithOUSD(pretenderOUSDSigner, parseEther("10.0"));
+    await helperSwapETHWithOUSD(pretendOUSDRebaseSigner, parseUnits("10.0"));
 
+    /* ====== admin manual processes ======
+    Expected state:
+        - User gets lots of leverage allocation
+        - Coordinator gets initialCoordinatorLvUSDBalance of lvUSD so it can use it when getting leverage.
+    */
+
+    await r.leverageAllocator.setAddressToLvUSDAvailable(await user.getAddress(), parseUnitsNum(initialUserLevAllocation));
     // mint some lvUSD and pass it to coordinator. That lvUSD will be used by coordinator as needed to take leverage
-    await r.lvUSD.mint(await r.coordinator.address, parseEtherNum(initialCoordinatorLvUSDBalance));
+    await r.lvUSD.mint(await r.coordinator.address, parseUnitsNum(initialCoordinatorLvUSDBalance));
 
     /* ====== Setup Pools ===========
     expected state:
@@ -74,11 +81,7 @@ async function setupEnvForIntegrationTests () {
     */
 
     lvUSD3CRVPoolInstance = await createAndFundMetapool(owner, r);
-    await fundMetapool(lvUSD3CRVPoolInstance.address, [parseEther("600.0"), parseEther("600.0")], owner, r);
-
-    /* ====== setup allocation ===== */
-    /// Give plenty of  leverage allocation at this point
-    await r.leverageAllocator.setAddressToLvUSDAvailable(await user.getAddress(), 10000);
+    await fundMetapool(lvUSD3CRVPoolInstance.address, [parseUnits("600.0"), parseUnits("600.0")], owner, r);
 }
 
 describe("Test suit for setting up the stage", function () {
@@ -91,13 +94,8 @@ describe("Test suit for setting up the stage", function () {
         expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
     });
 
-    it("Should have initialCoordinatorLvUSDBalance lvUSD balance under coordinator", async function () {
-        const coordinatorLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
-        expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
-    });
-
     it("Should have setup OUSD pretender with OUSD to spend ", async function () {
-        const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretenderOUSDSigner.getAddress()));
+        const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretendOUSDRebaseSigner.getAddress()));
         /// since we are exchanging 10 ethereum for the dollar value of token, price is not set. Checking for a reasonable value
         expect(pretenderOUSDbalance).to.greaterThan(1000);
     });
@@ -111,8 +109,8 @@ describe("Test suit for setting up the stage", function () {
         printPoolState(lvUSD3CRVPoolInstance);
         const lvUSDCoinsInPool = await lvUSD3CRVPoolInstance.balances(0);
         const crvCoinsInPool = await lvUSD3CRVPoolInstance.balances(1);
-        expect(lvUSDCoinsInPool).to.eq(parseEtherNum(initialFundsInPool));
-        expect(crvCoinsInPool).to.eq(parseEtherNum(initialFundsInPool));
+        expect(lvUSDCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
+        expect(crvCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
     });
 
     it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
@@ -126,6 +124,6 @@ describe("Test suit for setting up the stage", function () {
     });
 
     it("Should have set a big leverage allocation for user", async function () {
-        expect(await r.leverageAllocator.getAddressToLvUSDAvailable(await user.getAddress())).to.equal(10000);
+        expect(await r.leverageAllocator.getAddressToLvUSDAvailable(await user.getAddress())).to.equal(parseUnitsNum(initialUserLevAllocation));
     });
 });
