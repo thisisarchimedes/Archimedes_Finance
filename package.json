@@ -15,11 +15,11 @@
         "lint:sol": "solhint contracts/**/*.sol && prettier --check \"contracts/**/*.sol\"",
         "lint:sol:fix": "solhint contracts/**/*.sol --fix && prettier --write \"contracts/**/*.sol\"",
         "test:ci": "npm run clean && npm run typechain && npm run test",
+        "console": "ts-node console.ts",
         "test": "hardhat test",
         "test:watch": "hardhat typechain && hardhat watch test",
         "typechain": "hardhat typechain",
         "typechain:watch": "hardhat watch typechain"
-
     },
     "repository": {
         "type": "git",
