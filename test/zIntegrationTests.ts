@@ -48,7 +48,7 @@ async function setupEnvForIntegrationTests () {
     expected state:
     - admin has 1000 lvUSD and 10 ethereum worth of 3CRV tokens, to fund pool
     - User has 1 ethereum worth (about 2000 OUSDs)  to use as principle
-    - pretenderOUSDSigner, which will act as OUSD rebase agent, has 10 ethereum worth (about 20k OUSD)
+    - pretendOUSDRebaseSigner, which will act as OUSD rebase agent, has 10 ethereum worth (about 20k OUSD)
     */
 
     // Prep owner accounts with funds needed to fund pool
@@ -61,7 +61,7 @@ async function setupEnvForIntegrationTests () {
     // Get User some OUSD for principle
     await helperSwapETHWithOUSD(user, parseUnits("1.0"));
 
-    // Fund pretenderOUSDSigner with OUSD
+    // Fund pretendOUSDRebaseSigner with OUSD
     await helperSwapETHWithOUSD(pretendOUSDRebaseSigner, parseUnits("10.0"));
 
     /* ====== admin manual processes ======
