@@ -36,6 +36,7 @@
 ehthumbs.db
 Thumbs.db
 soljson*
+ts-node
 
 # Hardhat #
 ###########

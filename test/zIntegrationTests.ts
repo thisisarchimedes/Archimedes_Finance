@@ -3,15 +3,13 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
-/* Integration tests start here */
-
-describe("zIntegrationTests: Setting the stage: Getting some OUSD and deploying our contracts", function () {
+describe("Integration tests: Setting the stage: Getting some OUSD and deploying our contracts", function () {
     let r: ContractTestContext;
     let lvUSD;
 
     before(async function () {
         // Reset network before integration tests
-        helperResetNetwork(14533286);
+        await helperResetNetwork(14533286);
         // Setup & deploy contracts
         r = await buildContractTestContext();
         lvUSD = r.lvUSD;

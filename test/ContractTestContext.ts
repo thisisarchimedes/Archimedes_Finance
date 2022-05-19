@@ -141,6 +141,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
             context.positionToken.address,
             context.parameterStore.address,
             context.leverageAllocator.address,
+            context.externalOUSD.address,
         ),
         context.exchanger.init(context.lvUSD.address, context.coordinator.address, context.externalOUSD.address),
         context.coordinator.init(

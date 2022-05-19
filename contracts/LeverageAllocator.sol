@@ -31,7 +31,8 @@ contract LeverageAllocator is ReentrancyGuard, AccessController {
 
     /// @dev verify the address has requested lvUSD to use and reduce allocation by amount
     function useAvailableLvUSD(address addr, uint256 amount) external nonReentrant returns (uint256) {
-        require(_getAddressToLvUSDAvailable(addr) >= amount, "useAvailableLvUSD: amount is greater than available lvUSD allocation");
+        uint256 availableLvUSD = _getAddressToLvUSDAvailable(addr);
+        require(availableLvUSD >= amount, "useAvailableLvUSD: amount is greater than available lvUSD allocation");
         _addressToLvUSDAvailable[addr] -= amount;
         return _addressToLvUSDAvailable[addr];
     }
