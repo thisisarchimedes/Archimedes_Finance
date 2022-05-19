@@ -53,7 +53,7 @@ describe("LeverageEngine test suit", async function () {
 
     it("Should revert if cycles is greater than global max cycles", async function () {
         const maxCycles = await r.parameterStore.getMaxNumberOfCycles();
-        const promise = r.leverageEngine.createLeveragedPosition(ethers.utils.parseEther("1"), maxCycles.add(1));
+        const promise = r.leverageEngine.createLeveragedPosition(ethers.utils.parseUnits("1"), maxCycles.add(1));
         await expect(promise).to.be.revertedWith("Number of cycles must be lower then allowed max");
     });
 
@@ -63,8 +63,8 @@ describe("LeverageEngine test suit", async function () {
     });
 
     describe("After successful position creation", async function () {
-        const principle = ethers.utils.parseEther("0.005");
-        const availableLvUSD = ethers.utils.parseEther("100000");
+        const principle = ethers.utils.parseUnits("0.005");
+        const availableLvUSD = ethers.utils.parseUnits("100000");
         let maxCycles: BigNumber;
         let allowedLvUSDForPosition: BigNumber;
         let positionTokenId: BigNumber;
@@ -76,7 +76,7 @@ describe("LeverageEngine test suit", async function () {
             const totalOUSD = await helperSwapETHWithOUSD(r.owner, principle);
             await r.externalOUSD.approve(r.leverageEngine.address, totalOUSD);
             await r.leverageAllocator.setAddressToLvUSDAvailable(r.owner.address, availableLvUSD);
-            await r.lvUSD.mint(r.coordinator.address, ethers.utils.parseEther("100"));
+            await r.lvUSD.mint(r.coordinator.address, ethers.utils.parseUnits("100"));
             allowedLvUSDForPosition = await r.parameterStore.getAllowedLeverageForPosition(totalOUSD, maxCycles);
 
             // For test purpose only, assign leveraged OUSD to coordinator (exchanger will do this from borrowed lvUSD once its up)
