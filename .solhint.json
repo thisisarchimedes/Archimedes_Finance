@@ -1,5 +1,7 @@
 {
+    "extends": "solhint:recommended",
     "rules": {
+        "compiler-version": ["error","^0.8.0"],
         "no-unused-vars": "error",
         "const-name-snakecase": "error",
         "contract-name-camelcase": "error",
@@ -9,6 +11,8 @@
         "modifier-name-mixedcase": "error",
         "private-vars-leading-underscore": "error",
         "var-name-mixedcase": "error",
-        "imports-on-top": "error"
+        "imports-on-top": "error",
+        "reentrancy": "error",
+        "func-visibility": ["error",{"ignoreConstructors":true}]
     }
 }
