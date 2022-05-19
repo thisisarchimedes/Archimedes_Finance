@@ -101,7 +101,6 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     /// @param positionTokenId the NFT ID of the position
     function unwindLeveragedPosition(uint256 positionTokenId) external expectInitialized nonReentrant {
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller address does not own this position token");
-        // coordinator needs to change to unwindLeveragedOUSD to assume coordinator as shares owner. Yotam adding task
         _positionToken.burn(positionTokenId);
         _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
     }
