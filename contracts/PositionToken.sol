@@ -62,7 +62,7 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
         super.burn(positionTokenId);
     }
 
-    function exists(uint256 positionTokenId) external view expectInitialized onlyExecutive returns (bool) {
+    function exists(uint256 positionTokenId) external view expectInitialized returns (bool) {
         return _exists(positionTokenId);
     }
 
