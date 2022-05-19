@@ -68,31 +68,49 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
     await token3CRV.approve(addressPool, amount3CRV);
     await lvUSD.approve(addressPool, amountLvUSD);
     const pool = await getMetapool(addressPool, owner);
-    const balanceLvUSD = await pool.balances(0);
-    const balance3CRV = await pool.balances(1);
+    console.log("before poolbalance");
+    let balanceLvUSD = await pool.balances(0, {
+        gasLimit: 3000000,
+    });
+    console.log("after poolbalance");
+    let balance3CRV = await pool.balances(1, {
+        gasLimit: 3000000,
+    });
     // if the pool is NOT empty we calculated expected amount of minted LP
     if (balanceLvUSD > 0 && balance3CRV > 0) {
         // https://curve.readthedocs.io/factory-pools.html#getting-pool-info
         const calc = await pool.calc_token_amount([amountLvUSD, amount3CRV], true);
+
         // allows for 1% slippage by requiring only 99%
         const onePercent = calc.div(100);
         const expected = calc.sub(onePercent);
         await pool.add_liquidity([amountLvUSD, amount3CRV], expected, owner.address);
     } else {
-    // otherwise, its a brand new empty pool so we deposit directly
+        // otherwise, its a brand new empty pool so we deposit directly
         await pool.add_liquidity([amountLvUSD, amount3CRV], 1, owner.address);
     }
+    balanceLvUSD = await pool.balances(0, {
+        gasLimit: 3000000,
+    });
+    balance3CRV = await pool.balances(1, {
+        gasLimit: 3000000,
+    });
+    // console.log("fundMetapool end balances:");
+    // console.log("balanceLvUSD:", balanceLvUSD);
+    // console.log("lvusdBalOf():", await r.lvUSD.balanceOf(pool.address));
+    // console.log("balance3CRV :", balance3CRV);
+    // console.log("3CRVBalOf() :", await r.external3CRV.balanceOf(pool.address));
 }
 
 /**  Creates & Funds a LvUSD/3CRV Metapool
- * funds pool with 100 LvUSD & 100 3CRV
+ * funds pool with 200 LvUSD & 200 3CRV
  * @param owner: signer
  * @param r: instance: ContractContextTest
  */
 async function createAndFundMetapool (owner, r) {
     const lvUSD = r.lvUSD;
     const addressPool = await createMetapool(lvUSD, owner);
-    await fundMetapool(addressPool, [ethers.utils.parseEther("100.0"), ethers.utils.parseEther("100.0")], owner, r);
+    await fundMetapool(addressPool, [ethers.utils.parseEther("200.0"), ethers.utils.parseEther("200.0")], owner, r);
     const pool = await getMetapool(addressPool, owner);
     return pool;
 }

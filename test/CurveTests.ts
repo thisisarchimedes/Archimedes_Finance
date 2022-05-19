@@ -18,10 +18,6 @@ describe("CurveHelper Test Suite", function () {
         lvUSD = r.lvUSD;
         token3CRV = r.external3CRV;
         owner = r.owner;
-        // Mint 200 ETH of LvUSD for owner
-        await lvUSD.mint(owner.address, ethers.utils.parseEther("200.0"));
-        // Swap 200 ETH of 3CRV for owner
-        await helperSwapETHWith3CRV(owner, ethers.utils.parseEther("200.0"));
     });
 
     it("Should create a 3CRV+LvUSD Metapool", async function () {

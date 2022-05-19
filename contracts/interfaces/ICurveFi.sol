@@ -86,7 +86,7 @@ interface ICurveFiCurve {
         uint256[2] calldata _balances
     ) external view returns (uint256);
 
-    function exchange1(
+    function exchange(
         int128 i,
         int128 j,
         uint256 dx,

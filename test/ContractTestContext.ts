@@ -1,4 +1,5 @@
 import { Contract, ContractFactory } from "ethers";
+import { parseEther, formatEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 import {
     addressOUSD, abiOUSDToken,
@@ -108,13 +109,24 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         Coordinator
     ];
 
-    // The LVUSD/3CRV pool needs money, so we will fund ourselves with the required amount
-    // These balances will be used entirely to fund the pool and end as they were before
-    // Mint 200 ETH of LvUSD for owner
-    await context.lvUSD.mint(context.owner.address, ethers.utils.parseEther("200.0"));
-    // Swap 200 ETH of 3CRV for owner
-    await helperSwapETHWith3CRV(context.owner, ethers.utils.parseEther("200.0"));
-    const CurveLvUSDPool = await createAndFundMetapool(context.owner, context);
+    // Give owner some tokens
+    await context.lvUSD.mint(context.owner.address, ethers.utils.parseEther("1000.0"));
+    await helperSwapETHWith3CRV(context.owner, ethers.utils.parseEther("3.0"));
+
+    // Create a LVUSD3CRV pool and fund with 200 (hardcoded in CurveHelper) of each token
+    const curveLvUSDPool = await createAndFundMetapool(context.owner, context);
+
+    // console.log("pool functions", curveLvUSDPool.functions);
+    function getFloatFromBigNum (bigNumValue) {
+        return parseFloat(formatEther(bigNumValue));
+    }
+    await context.lvUSD.approve(curveLvUSDPool.address, ethers.utils.parseEther("1000"));
+    const amntLVUSD = ethers.utils.parseEther("10");
+    const min3CRV = ethers.utils.parseEther("1.0");
+    // console.log("get_virtual_price", getFloatFromBigNum(await curveLvUSDPool.get_virtual_price()));
+    console.log("owner lvusd balance before:", getFloatFromBigNum(await context.lvUSD.balanceOf(context.owner.address)));
+    await curveLvUSDPool.exchange(0, 1, amntLVUSD, min3CRV, context.owner.address);
+    console.log("owner lvusd balance after:", getFloatFromBigNum(await context.lvUSD.balanceOf(context.owner.address)));
 
     // Post init contracts
     await Promise.all([
@@ -149,7 +161,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.lvUSD.address,
             context.externalOUSD.address,
             context.external3CRV.address,
-            CurveLvUSDPool.address,
+            curveLvUSDPool.address,
             addressCurveOUSDPool,
         ),
 

@@ -182,6 +182,7 @@ describe("Coordinator Test suit", function () {
                 before(async function () {
                     /// Get initial state
                     borrowedLvUSDInPositionBeforeLeverage = await r.cdp.getLvUSDBorrowed(nftIdFirstPosition);
+                    console.log("borrowedLvUSDInPositionBeforeLeverage", borrowedLvUSDInPositionBeforeLeverage);
                     /// Test artifact only, Once exchanger is functional we can use the exchange and
                     /// transfer OUSD directly to coordinator
                     await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, leverageAmount);
@@ -189,6 +190,8 @@ describe("Coordinator Test suit", function () {
                     depositedOUSDBeforeLeverage = await r.vault.totalAssets();
                     originationFee = await r.parameterStore.calculateOriginationFee(leverageAmount);
                     sharesTotalSupplyBeforeLeverage = await r.vault.maxRedeem(sharesOwnerAddress);
+                    // we need more lvusd for exchanger
+                    await r.lvUSD.mint(coordinator.address, ethers.utils.parseEther("100"));
                     await coordinator.getLeveragedOUSD(nftIdFirstPosition, leverageAmount, sharesOwnerAddress);
                 });
                 it("Should have increase borrowed amount on CDP for NFT", async function () {
