@@ -12,7 +12,7 @@ describe("CurveHelper Test Suite", function () {
 
     beforeEach(async function () {
         // Reset network before integration tests
-        helperResetNetwork(defaultBlockNumber);
+        await helperResetNetwork(defaultBlockNumber);
         // Setup & deploy contracts
         r = await buildContractTestContext();
         lvUSD = r.lvUSD;

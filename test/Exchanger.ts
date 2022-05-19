@@ -12,7 +12,7 @@ describe("Exchanger Test suit", function () {
 
     beforeEach(async function () {
         // Reset network before tests
-        helperResetNetwork(defaultBlockNumber);
+        await helperResetNetwork(defaultBlockNumber);
 
         // Setup & deploy contracts
         r = await buildContractTestContext();
