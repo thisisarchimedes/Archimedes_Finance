@@ -68,11 +68,9 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
     await token3CRV.approve(addressPool, amount3CRV);
     await lvUSD.approve(addressPool, amountLvUSD);
     const pool = await getMetapool(addressPool, owner);
-    console.log("before poolbalance");
     let balanceLvUSD = await pool.balances(0, {
         gasLimit: 3000000,
     });
-    console.log("after poolbalance");
     let balance3CRV = await pool.balances(1, {
         gasLimit: 3000000,
     });
@@ -95,11 +93,6 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
     balance3CRV = await pool.balances(1, {
         gasLimit: 3000000,
     });
-    // console.log("fundMetapool end balances:");
-    // console.log("balanceLvUSD:", balanceLvUSD);
-    // console.log("lvusdBalOf():", await r.lvUSD.balanceOf(pool.address));
-    // console.log("balance3CRV :", balance3CRV);
-    // console.log("3CRVBalOf() :", await r.external3CRV.balanceOf(pool.address));
 }
 
 /**  Creates & Funds a LvUSD/3CRV Metapool

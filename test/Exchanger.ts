@@ -13,11 +13,9 @@ describe("Exchanger Test suit", function () {
     beforeEach(async function () {
         // Reset network before tests
         helperResetNetwork(defaultBlockNumber);
-        console.log("buildContractTestContext...");
 
         // Setup & deploy contracts
         r = await buildContractTestContext();
-        console.log("buildContractTestContext complete");
         lvUSD = r.lvUSD;
         ousd = r.externalOUSD;
         owner = r.owner;
@@ -29,21 +27,18 @@ describe("Exchanger Test suit", function () {
 
     describe("Exchanges", function () {
         // TODO
-        // it("Should swap OUSD for LvUSD", async function () {
-        //     const balanceLvUSD = await lvUSD.balanceOf(owner.address);
-        //     const balanceOUSD = await ousd.balanceOf(owner.address);
-        //     console.log("owner balance lvusd, ousd: %s, %s", balanceLvUSD, balanceOUSD);
-        //     const returnedLvUSD = await exchanger.xOUSDforLvUSD(ethers.utils.parseEther("3.0"), owner.address);
-        //     console.log("returnedLvUSD", returnedLvUSD);
-        // });
+        // it("Should swap OUSD for LvUSD", async function () {});
         // TODO
         it("Should swap LvUSD for OUSD", async function () {
-            console.log("lvusd dec", await lvUSD.decimals());
-            const balanceLvUSD = await lvUSD.balanceOf(owner.address);
-            const balanceOUSD = await ousd.balanceOf(owner.address);
-            console.log("owner balance lvusd, ousd: %s, %s", balanceLvUSD, balanceOUSD);
-            const returnedOUSD = await exchanger.xLvUSDforOUSD(ethers.utils.parseEther("3.0"), owner.address);
-            console.log("returnedOUSD", returnedOUSD);
+            const startingBalanceLvUSD = await lvUSD.balanceOf(exchanger.address);
+            const amountLvUSDToExchange = ethers.utils.parseEther("3.0");
+
+            // make sure we have LvUSD to exchange
+            expect(startingBalanceLvUSD).gt(0);
+
+            await exchanger.xLvUSDforOUSD(amountLvUSDToExchange, owner.address);
+            const endingBalanceLvUSD = await lvUSD.balanceOf(exchanger.address);
+            expect(endingBalanceLvUSD).eq(startingBalanceLvUSD.sub(amountLvUSDToExchange));
         });
     });
 });

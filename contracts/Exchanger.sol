@@ -96,12 +96,10 @@ contract Exchanger is IExchanger {
      * Minimum is 90% * 90%  / _curveGuardPercentage * _curveGuardPercentage
      */
     function xLvUSDforOUSD(uint256 amountLvUSD, address to) external returns (uint256) {
-        console.log("inside xLvUSDforOUSD");
         uint256 _amountLvUSD = amountLvUSD;
         address _to = to;
         uint256 returned3CRV = _xLvUSDfor3CRV(_amountLvUSD, _to);
-        // uint256 returnedOUSD = _x3CRVforOUSD(returned3CRV, _to);
-        console.log("Exchanging %s lvUSD to OUSD, assigning funds to address %s", _amountLvUSD, _to);
+        // TODO change to event
         return returned3CRV;
     }
 
@@ -150,51 +148,31 @@ contract Exchanger is IExchanger {
          * @param _returned3CRV amount we actually get from the pool
          * @param _guard3CRV sanity check to protect user
          */
-        console.log("before setup");
         uint256 _amountLvUSD = amountLvUSD;
         address _to = to;
         uint256 _expected3CRV;
         uint256 _minimum3CRV;
         uint256 _returned3CRV;
         uint256 _guard3CRV = (_amountLvUSD * _curveGuardPercentage) / 100;
-        console.log("after setup");
-
-        // Debug check balance in pool
-        console.log("===== AMNT =====");
-        console.log("lvusd to be exchanged  :", _amountLvUSD);
-        console.log("===== POOL =====");
-        console.log("coin(0).balanceOf(pool):", _lvusd.balanceOf(_addressPoolLvUSD3CRV));
-        console.log("coin(1).balanceOf(pool):", _3crv.balanceOf(_addressPoolLvUSD3CRV));
-        console.log("===== EXCH =====");
-        console.log("_lvusd.balanceOf(exch) :", _lvusd.balanceOf(address(this)));
-        console.log("_3crv.balanceOf(exch)  :", _3crv.balanceOf(address(this)));
 
         // Verify Exchanger has enough LvUSD to use
-        console.log("REQ _amountLvUSD <= balance   : %s, %s", _amountLvUSD, _lvusd.balanceOf(address(this)));
         require(_amountLvUSD <= _lvusd.balanceOf(address(this)), "Insufficient LvUSD in Exchanger.");
 
         // Estimate expected amount of 3CRV
         // get_dy(indexCoinSend, indexCoinRec, amount)
-        console.log("before get_dy");
         _expected3CRV = _poolLvUSD3CRV.get_dy(0, 1, _amountLvUSD);
-        console.log("_expected3CRV", _expected3CRV);
 
         // Set minimum required accounting for slippage
-        console.log("before calc min");
         _minimum3CRV = (_expected3CRV * (100 - _slippage)) / 100;
-        console.log("after calc min");
 
         // Make sure pool isn't too bent
         // TODO allow user to override this protection
         // TODO auto balance if pool is bent
-        // console.log("REQ _minimum3CRV >= _guard3CRV: %s, %s", _minimum3CRV, _guard3CRV);
         require(_minimum3CRV >= _guard3CRV, "LvUSD pool too imbalanced.");
 
         // Exchange LvUSD for 3CRV:
-        console.log("_amountLvUSD, _minimum3CRV    : %s, %s", _amountLvUSD, _minimum3CRV);
-        _returned3CRV = _poolLvUSD3CRV.exchange(0, 1, 2 * 10**18, 1 * 10**18);
+        _returned3CRV = _poolLvUSD3CRV.exchange(0, 1, _amountLvUSD, _minimum3CRV);
 
-        console.log("_returned3CRV", _returned3CRV);
         return _returned3CRV;
     }
 
