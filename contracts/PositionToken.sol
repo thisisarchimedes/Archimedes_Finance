@@ -10,6 +10,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {AccessController} from "./AccessController.sol";
 
 contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessController, ReentrancyGuard {
     using Counters for Counters.Counter;
@@ -18,8 +19,7 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
 
     constructor(address admin) ERC721("PositionToken", "PNT") AccessController(admin) {}
 
-    function init() {
-        _addressLeverageEngine = leverageEngine;
+    function init() external {
         super._init();
     }
 
@@ -40,6 +40,17 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
     function exists(uint256 positionTokenId) external view expectInitialized returns (bool) {
         return _exists(positionTokenId);
     }
+
+    // mapping(address => uint256) private shares;
+
+    // function b() external {
+    //     uint256 amount = shares[msg.sender];
+    //     shares[msg.sender] = 0;
+    //     bool a = msg.sender.send(amount);
+    //     if (a) {
+    //         shares[msg.sender] = 0;
+    //     }
+    // }
 
     /* Overrides required by Solidity: */
     function _beforeTokenTransfer(
