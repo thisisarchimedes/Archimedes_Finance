@@ -9,7 +9,7 @@ import {
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 const getDecimal = (naturalNumber) => {
-    return ethers.utils.parseEther(naturalNumber.toString());
+    return ethers.utils.parseUnits(naturalNumber.toString());
 };
 
 const getFloatFromBigNum = (bigNumValue) => {
@@ -31,10 +31,10 @@ describe("VaultOUSD test suit", function () {
         sharesOwnerAddress = r.owner.address;
 
         // Mint initial amount on OUSD token, will be used by all tests
-        await helperSwapETHWithOUSD(r.addr1, ethers.utils.parseEther("1.0"));
-        await helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("1.0"));
-        await helperSwapETHWithOUSD(r.addr3, ethers.utils.parseEther("2.0"));
-        await helperSwapETHWithOUSD(r.owner, ethers.utils.parseEther("1.0"));
+        await helperSwapETHWithOUSD(r.addr1, ethers.utils.parseUnits("1.0"));
+        await helperSwapETHWithOUSD(r.addr2, ethers.utils.parseUnits("1.0"));
+        await helperSwapETHWithOUSD(r.addr3, ethers.utils.parseUnits("2.0"));
+        await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("1.0"));
 
         // deposit OUSD as a user (that gets shares) into vault. Shares goes to owner, not user.
         await r.externalOUSD.connect(r.addr1).approve(r.vault.address, getDecimal(addr1Deposit));
@@ -98,7 +98,7 @@ describe("VaultOUSD test suit", function () {
         });
 
         it("Should transfer fee to treasury on rebase event", async function () {
-            await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseEther("10.0"));
+            await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseUnits("10.0"));
             await r.vault.takeRebaseFees();
             const treasuryBalanceInNatural = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.treasurySigner.address));
             expect(treasuryBalanceInNatural).to.equal(1);
@@ -113,7 +113,7 @@ describe("VaultOUSD test suit", function () {
             expect(treasuryBalanceInNatural).to.equal(1);
         });
         it("Should transfer fee to treasury on (another) rebase event", async function () {
-            await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseEther("20.0"));
+            await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseUnits("20.0"));
             await r.vault.takeRebaseFees();
             const treasuryBalanceInNatural = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.treasurySigner.address));
             /// expect to have previous fee and current fee and previous fee

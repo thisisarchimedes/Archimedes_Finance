@@ -33,13 +33,13 @@ describe("LeverageAllocator test suit", async function () {
 
     it("Should revert if attempting to use more than allocated amount", async function () {
         await expect(
-            r.leverageAllocator.useAvailableLvUSD(r.addr1.address, ethers.utils.parseEther("2")),
+            r.leverageAllocator.useAvailableLvUSD(r.addr1.address, ethers.utils.parseUnits("2")),
         ).to.be.revertedWith("useAvailableLvUSD: amount is greater than available lvUSD allocation");
     });
 
     it("Should successfully use allocated amount without affecting other address amounts", async function () {
-        const expectedRemainingAmount = ethers.utils.parseEther("0");
-        const transaction = await r.leverageAllocator.useAvailableLvUSD(r.addr1.address, ethers.utils.parseEther("1"));
+        const expectedRemainingAmount = ethers.utils.parseUnits("0");
+        const transaction = await r.leverageAllocator.useAvailableLvUSD(r.addr1.address, ethers.utils.parseUnits("1"));
         await expect(transaction.value).to.equal(expectedRemainingAmount);
         const remainingAmount = await r.leverageAllocator.getAddressToLvUSDAvailable(r.addr1.address);
         expect(remainingAmount).to.equal(expectedRemainingAmount);
