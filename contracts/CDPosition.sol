@@ -19,8 +19,6 @@ contract CDPosition is AccessController {
         uint256 shares; // Total vault shares allocated to this position
     }
 
-    constructor(address admin) AccessController(admin) {}
-
     uint256 internal _globalCollateralRate;
 
     mapping(uint256 => CDP) internal _nftCDP;
@@ -40,6 +38,8 @@ contract CDPosition is AccessController {
         require(_nftCDP[nftID].lvUSDBorrowed == 0, "lvUSD borrowed must be zero");
         _;
     }
+
+    constructor(address admin) AccessController(admin) {}
 
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Update both principle and total with OUSDPrinciple
