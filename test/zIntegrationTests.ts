@@ -12,11 +12,12 @@ let pretendOUSDRebaseSigner : SignerWithAddress;
 let lvUSD3CRVPoolInstance;
 
 const userOUSDPrinciple = 100;
-const initialFundsInPool = 700;
+const initialFundsInPool = 800;
 const initialCoordinatorLvUSDBalance = 10000;
 const initialUserLevAllocation = 10000;
 
 let adminInitial3CRVBalance: number;
+let ownerLvUSDBalanceBeforeFunding: number;
 
 function parseUnitsNum (num) {
     return parseUnits(num.toString());
@@ -79,8 +80,8 @@ async function setupEnvForIntegrationTests () {
     - lvUSD/3CRV pool is set up and is funded with 700 tokens each
       (createAndFundMetapool funds pool with 100 tokens, second call adds 600 more)
     */
-
-    lvUSD3CRVPoolInstance = await createAndFundMetapool(owner, r);
+    ownerLvUSDBalanceBeforeFunding = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
+    lvUSD3CRVPoolInstance = r.curveLvUSDPool;
     await fundMetapool(lvUSD3CRVPoolInstance.address, [parseUnits("600.0"), parseUnits("600.0")], owner, r);
 }
 
@@ -112,10 +113,9 @@ describe("Test suit for setting up the stage", function () {
         expect(lvUSDCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
         expect(crvCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
     });
-
     it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
         const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
-        expect(adminLvUSDBalance).to.equal(300);
+        expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
     });
 
     it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
