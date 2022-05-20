@@ -1,5 +1,4 @@
 import { Contract, ContractFactory } from "ethers";
-import { parseEther, formatEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 import {
     addressOUSD, abiOUSDToken,
@@ -52,6 +51,7 @@ export type ContractTestContext = {
     externalOUSD: Contract;
     externalUSDT: Contract;
     external3CRV: Contract;
+    curveLvUSDPool: Contract;
 }
 
 export async function buildContractTestContext (): Promise<ContractTestContext> {
@@ -109,17 +109,14 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         Coordinator
     ];
 
-    // Give owner some tokens
+    // Give context.owner some funds:
     await context.lvUSD.mint(context.owner.address, ethers.utils.parseEther("1000.0"));
     await helperSwapETHWith3CRV(context.owner, ethers.utils.parseEther("3.0"));
 
-    // Create a LVUSD3CRV pool and fund with 200 (hardcoded in CurveHelper) of each token
-    const curveLvUSDPool = await createAndFundMetapool(context.owner, context);
-
-    await context.lvUSD.approve(curveLvUSDPool.address, ethers.utils.parseEther("1000"));
-    const amntLVUSD = ethers.utils.parseEther("10");
-    const min3CRV = ethers.utils.parseEther("1.0");
-    await curveLvUSDPool.exchange(0, 1, amntLVUSD, min3CRV, context.owner.address);
+    // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token
+    context.curveLvUSDPool = await createAndFundMetapool(context.owner, context);
+    // Setup pool with approval
+    await context.lvUSD.approve(context.curveLvUSDPool.address, ethers.utils.parseEther("1000"));
 
     // Post init contracts
     await Promise.all([
@@ -155,7 +152,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.lvUSD.address,
             context.externalOUSD.address,
             context.external3CRV.address,
-            curveLvUSDPool.address,
+            context.curveLvUSDPool.address,
             addressCurveOUSDPool,
         ),
 
