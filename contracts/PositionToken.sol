@@ -6,22 +6,17 @@ import "hardhat/console.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {ERC721Burnable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {AccessController} from "./AccessController.sol";
 
-contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessController, ReentrancyGuard {
+contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessController {
     using Counters for Counters.Counter;
 
     Counters.Counter private _positionTokenIdCounter;
 
     constructor(address admin) ERC721("PositionToken", "PNT") AccessController(admin) {}
 
-    function init() external {
-        super._init();
-    }
+    function init() external initializer onlyAdmin {}
 
     /* Privileged functions: Executive */
     function safeMint(address to) external onlyExecutive returns (uint256 positionTokenId) {

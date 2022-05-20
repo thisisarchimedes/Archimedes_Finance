@@ -18,7 +18,7 @@ import "hardhat/console.sol";
 /// @dev is in charge of overall flow of creating positions and unwinding positions
 /// It manages keeping tracks of fund in vault, updating CDP as needed and transferring lvUSD inside the system
 /// It is controlled (and called) by the leverage engine
-contract Coordinator is ICoordinator, ReentrancyGuard, AccessController {
+contract Coordinator is ICoordinator, AccessController {
     using SafeERC20 for IERC20;
     address internal _addressLvUSD;
     address internal _addressVaultOUSD;
@@ -42,7 +42,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard, AccessController {
         address addressOUSD,
         address addressExchanger,
         address addressParamStore
-    ) external nonReentrant onlyAdmin {
+    ) external nonReentrant initializer onlyAdmin {
         _addressLvUSD = addressLvUSD;
         _addressVaultOUSD = addressVaultOUSD;
         _addressCDP = addressCDP;
@@ -58,7 +58,6 @@ contract Coordinator is ICoordinator, ReentrancyGuard, AccessController {
 
         // approve VaultOUSD address to spend on behalf of coordinator
         _ousd.safeApprove(_addressVaultOUSD, type(uint256).max);
-        super._init();
     }
 
     /* Privileged functions: Executive */

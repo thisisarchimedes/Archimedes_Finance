@@ -17,10 +17,9 @@ contract Exchanger is AccessController {
         address _tokenLvUSD,
         address _tokenCoordinator,
         address _tokenOUSD
-    ) external onlyAdmin {
+    ) external initializer nonReentrant onlyAdmin {
         IERC20(_tokenLvUSD).approve(_tokenCoordinator, type(uint256).max);
         IERC20(_tokenOUSD).approve(_tokenCoordinator, type(uint256).max);
-        super._init();
     }
 
     /**

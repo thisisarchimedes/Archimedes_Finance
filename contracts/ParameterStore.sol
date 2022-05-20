@@ -15,9 +15,8 @@ contract ParameterStore is AccessController {
 
     constructor(address admin) AccessController(admin) {}
 
-    function init(address treasuryAddress) external onlyAdmin {
+    function init(address treasuryAddress) external initializer onlyAdmin {
         _treasuryAddress = treasuryAddress;
-        super._init();
     }
 
     function getMaxNumberOfCycles() external view returns (uint256) {

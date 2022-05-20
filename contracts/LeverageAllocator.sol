@@ -2,14 +2,12 @@
 pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {AccessController} from "./AccessController.sol";
 
 /// @title LeverageAllocator
 /// @dev Contract that tracks how much lvUSD is available for an address to be allocated
 /// @notice This contract (will be) proxy upgradable
-contract LeverageAllocator is ReentrancyGuard, AccessController {
+contract LeverageAllocator is AccessController {
     mapping(address => uint256) internal _addressToLvUSDAvailable;
 
     constructor(address admin) AccessController(admin) {}

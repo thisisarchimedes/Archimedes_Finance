@@ -19,7 +19,7 @@ describe("AccessController test suit", function () {
         });
 
         it("Should not allow non admin to init", async function () {
-            /* children with init should call _init internally which will trigger this error */
+            /* children with init need to add initializer modifier internally which will trigger this error */
             await expect(contextAsNonAdminPromise).to.be.revertedWith("onlyAdmin: Caller is not admin");
         });
     });

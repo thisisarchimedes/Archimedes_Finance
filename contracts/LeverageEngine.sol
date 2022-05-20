@@ -4,9 +4,7 @@ pragma solidity 0.8.13;
 import "hardhat/console.sol";
 
 import {AccessController} from "./AccessController.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {ICoordinator} from "./interfaces/ICoordinator.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {PositionToken} from "./PositionToken.sol";
 import {ParameterStore} from "./ParameterStore.sol";
@@ -17,7 +15,7 @@ import {LeverageAllocator} from "./LeverageAllocator.sol";
 //   any method that has nonReentrant modifier cannot call another method with nonReentrant.
 // - onlyOwner: only ownwer can call
 //   https://github.com/NAOS-Finance/NAOS-Formation/blob/master/contracts/FormationV2.sol
-contract LeverageEngine is ReentrancyGuard, AccessController {
+contract LeverageEngine is AccessController {
     uint256 internal _positionId;
 
     address internal _addressCoordinator;
@@ -41,7 +39,7 @@ contract LeverageEngine is ReentrancyGuard, AccessController {
         address addressParameterStore,
         address addressLeverageAllocator,
         address addressOUSD
-    ) external nonReentrant onlyAdmin {
+    ) external nonReentrant initializer onlyAdmin {
         _addressCoordinator = addressCoordinator;
         _coordinator = ICoordinator(addressCoordinator);
         _addressPositionToken = addressPositionToken;
@@ -52,7 +50,6 @@ contract LeverageEngine is ReentrancyGuard, AccessController {
         _leverageAllocator = LeverageAllocator(_addressLeverageAllocator);
         _addressOUSD = addressOUSD;
         _ousd = IERC20(_addressOUSD);
-        super._init();
     }
 
     /* Non-privileged functions */

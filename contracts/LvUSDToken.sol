@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessController} from "./AccessController.sol";
 
 /// @title lvUSD token
@@ -11,7 +10,7 @@ import {AccessController} from "./AccessController.sol";
 ///
 /// TODO: add access control and roles
 ///
-contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), ReentrancyGuard, AccessController {
+contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), AccessController {
     constructor(address admin) AccessController(admin) {}
 
     /// @dev Sets the address of the current minter contract
