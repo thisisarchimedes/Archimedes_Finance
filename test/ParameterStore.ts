@@ -85,7 +85,7 @@ describe("ParameterStore test suit", async function () {
 
         it("Should revert if new globalCollateralRate is higher then 100", async function () {
             await expect(parameterStore.changeGlobalCollateralRate(120)).to.revertedWith(
-                "globalCollateralRate must be a number between 1 and 100",
+                "New collateral rate out of range",
             );
         });
 
@@ -125,7 +125,7 @@ describe("ParameterStore test suit", async function () {
             it("Should revert if number of cycles is bigger then allowed max", async function () {
                 await expect(
                     parameterStore.getAllowedLeverageForPosition(ethers.utils.parseEther("100"), 20),
-                ).to.be.revertedWith("Number of cycles must be lower then allowed max");
+                ).to.be.revertedWith("Cycles greater than max allowed");
             });
         });
     });

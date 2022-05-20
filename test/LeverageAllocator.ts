@@ -19,7 +19,7 @@ describe("LeverageAllocator test suit", async function () {
 
         await expect(
             leverageAllocator.setAddressToLvUSDAvailable(r.addr2.address, 1234),
-        ).to.be.revertedWith("onlyAdmin: Caller is not admin");
+        ).to.be.revertedWith("onlyAdmin: Not admin");
     });
 
     it("Should allow admin to set available lvUSD allocation", async function () {
@@ -34,7 +34,7 @@ describe("LeverageAllocator test suit", async function () {
     it("Should revert if attempting to use more than allocated amount", async function () {
         await expect(
             r.leverageAllocator.useAvailableLvUSD(r.addr1.address, ethers.utils.parseEther("2")),
-        ).to.be.revertedWith("useAvailableLvUSD: amount is greater than available lvUSD allocation");
+        ).to.be.revertedWith("Insufficient lvUSD allocation");
     });
 
     it("Should successfully use allocated amount without affecting other address amounts", async function () {
