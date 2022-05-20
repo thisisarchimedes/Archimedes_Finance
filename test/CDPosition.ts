@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { buildContractTestContext } from "./ContractTestContext";
 
 const getEighteenDecimal = (naturalNumber) => {
-    return ethers.utils.parseEther(naturalNumber.toString());
+    return ethers.utils.parseUnits(naturalNumber.toString());
 };
 
 describe("CDPosition test suit", async function () {

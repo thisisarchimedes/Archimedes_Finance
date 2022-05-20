@@ -9,7 +9,7 @@ import {
 } from "./MainnetHelper";
 
 const getDecimal = (naturalNumber) => {
-    return ethers.utils.parseEther(naturalNumber.toString());
+    return ethers.utils.parseUnits(naturalNumber.toString());
 };
 
 const getFloatFromBigNum = (bigNumValue) => {
@@ -31,6 +31,7 @@ describe("VaultOUSD test suit", function () {
         await Promise.all([
             helperSwapETHWithOUSD(r.addr1, ethers.utils.parseEther("1.0")),
             helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("1.0")),
+            helperSwapETHWithOUSD(r.addr3, ethers.utils.parseUnits("2.0")),
             helperSwapETHWithOUSD(r.owner, ethers.utils.parseEther("1.0")),
         ]);
         sharesOwnerAddress = r.owner.address;
@@ -101,7 +102,7 @@ describe("VaultOUSD test suit", function () {
         });
 
         it("Should transfer fee to treasury on rebase event", async function () {
-            await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseEther("10.0"));
+            await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseUnits("10.0"));
             await r.vault.takeRebaseFees();
             const treasuryBalanceInNatural = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.treasurySigner.address));
             expect(treasuryBalanceInNatural).to.equal(1);
@@ -116,7 +117,7 @@ describe("VaultOUSD test suit", function () {
             expect(treasuryBalanceInNatural).to.equal(1);
         });
         it("Should transfer fee to treasury on (another) rebase event", async function () {
-            await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseEther("20.0"));
+            await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, ethers.utils.parseUnits("20.0"));
             await r.vault.takeRebaseFees();
             const treasuryBalanceInNatural = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.treasurySigner.address));
             /// expect to have previous fee and current fee and previous fee
