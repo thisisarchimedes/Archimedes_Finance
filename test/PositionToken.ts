@@ -22,7 +22,7 @@ describe("PositionToken test suit", function () {
         it("Should not allow non admin to init", async function () {
             const addr1PositionToken = await ptContract.deploy(r.addr1.address) as PositionToken;
             const initPromise = addr1PositionToken.init(r.addr2.address);
-            await expect(initPromise).to.be.revertedWith("onlyAdmin: Not admin");
+            await expect(initPromise).to.be.revertedWith("Caller is not admin");
         });
 
         it("Should not allow non executive to mint", async function () {
