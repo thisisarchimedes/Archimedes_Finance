@@ -127,29 +127,57 @@ contract Exchanger is IExchanger {
         uint256 _minRequiredLvUSD = minRequiredLvUSD;
         uint256 returned3CRV = _xOUSDfor3CRV(_amountOUSD, _to);
         uint256 returnedLvUSD = _x3CRVforLvUSD(returned3CRV, _to);
-
-        // PLANNING
-        // Check we have the funds >= amountOUSD
-
-        // 1) Check pool is in balance OUSD/3CRV
-        // expected3CRV = get_dy(0, 1, amountOUSD) > 90% OR REVERT
-
-        // 2) Go to OUSD/3CRV pool and exchange OUSD for 3CRV:
-        // returned3CRV = pool.exchange(0, 1, amountOUSD, expected3CRV)
-
-        // 3) Go to LvUSD/3CRV pool and exchange 3CRV for LvUSD:
-        // check LvUSD/3CRV pool is in balance:
-        // expectedLvUSD = get_dy(0, 1, returned3CRV) > minRequiredLvUSD OR REVERT "pool imbalanced" - emit event?
-
-        // 4) Go to LvUSD/3CRV pool and exchange 3CRV for LvUSD:
-        // returnedLvUSD = pool.exchange(0, 1, returned3CRV, minRequiredLvUSD)
-
-        // make sure ends up at "to" address
+        console.log("returnedLvUSD %s, _minRequiredLvUSD %s", returnedLvUSD, _minRequiredLvUSD);
+        require(returnedLvUSD >= _minRequiredLvUSD, "Pool imbalanced: not enough LvUSD");
         // TODO emit an event
         console.log("Exchanging%s OUSD for min %slvUSD, assigning funds to address %s", amountOUSD, minRequiredLvUSD, to);
-        // TODO REQ _minRequiredLvUSD
-        return returnedLvUSD;
-        // return (minRequiredLvUSD, amountOUSD - minRequiredLvUSD);
+        return (returnedLvUSD, remainingOUSD);
+    }
+
+    /** Exchange using the CurveFi OUSD/3CRV Metapool
+     * @param amountOUSD amount of OUSD to exchange
+     * @param to address to send exchanged 3CRV to
+     */
+    function _xOUSDfor3CRV(uint256 amountOUSD, address to) internal returns (uint256) {}
+
+    /** Exchange using the CurveFi LvUSD/3CRV Metapool
+     * @param amount3CRV amount of 3CRV to exchange
+     * @param to address to send exchanged 3CRV to
+     */
+    function _x3CRVforLvUSD(uint256 amount3CRV, address to) internal returns (uint256) {
+        /**
+         * @param _amount3CRV amount of 3CRV we are exchanging
+         * @param _expectedLvUSD uses get_dy() to estimate amount the exchange will give us
+         * @param _minimumLvUSD mimimum accounting for slippage. (_expectedOUSD * slippage)
+         * @param _returnedLvUSD amount we actually get from the pool
+         * @param _guardLvUSD sanity check to protect user
+         */
+        uint256 _amount3CRV = amount3CRV;
+        address _to = to;
+        uint256 _expectedLvUSD;
+        uint256 _minimumLvUSD;
+        uint256 _returnedLvUSD;
+        uint256 _guardLvUSD = (_amount3CRV * _curveGuardPercentage) / 100;
+
+        // Verify Exchanger has enough 3CRV to use
+        require(_amount3CRV <= _3crv.balanceOf(address(this)), "Insufficient 3CRV in Exchanger.");
+
+        // Estimate expected amount of 3CRV
+        // get_dy(indexCoinSend, indexCoinRec, amount)
+        _expectedLvUSD = _poolLvUSD3CRV.get_dy(1, 0, _amount3CRV);
+
+        // Set minimum required accounting for slippage
+        _minimumLvUSD = (_expectedLvUSD * (100 - _slippage)) / 100;
+
+        // Make sure pool isn't too bent
+        // TODO allow user to override this protection
+        // TODO auto balance if pool is bent
+        require(_minimumLvUSD >= _guardLvUSD, "LvUSD pool too imbalanced.");
+
+        // Exchange LvUSD for 3CRV:
+        _returnedLvUSD = _poolLvUSD3CRV.exchange(1, 0, _amount3CRV, _minimumLvUSD);
+
+        return _returnedLvUSD;
     }
 
     /** Exchange using the CurveFi LvUSD/3CRV Metapool
@@ -192,10 +220,6 @@ contract Exchanger is IExchanger {
         return _returned3CRV;
     }
 
-    function xLvUSDfor3CRV(uint256 amountLvUSD, address to) external returns (uint256) {
-        return _xLvUSDfor3CRV(amountLvUSD, to);
-    }
-
     /** Exchange using the CurveFi OUSD/3CRV Metapool
      * @param amount3CRV amount of LvUSD to exchange
      * @param to address to send exchanged 3CRV to
@@ -236,7 +260,20 @@ contract Exchanger is IExchanger {
         return _returnedOUSD;
     }
 
+    /** External wrappers for internal "helper swaps" */
+    function xLvUSDfor3CRV(uint256 amountLvUSD, address to) external returns (uint256) {
+        return _xLvUSDfor3CRV(amountLvUSD, to);
+    }
+
     function x3CRVforOUSD(uint256 amount3CRV, address to) external returns (uint256) {
         return _x3CRVforOUSD(amount3CRV, to);
+    }
+
+    function xOUSDfor3CRV(uint256 amount3CRV, address to) external returns (uint256) {
+        return _xOUSDfor3CRV(amount3CRV, to);
+    }
+
+    function x3CRVforLvUSD(uint256 amount3CRV, address to) external returns (uint256) {
+        return _x3CRVforLvUSD(amount3CRV, to);
     }
 }

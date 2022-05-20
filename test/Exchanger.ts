@@ -1,4 +1,4 @@
-import { helperResetNetwork, helperSwapETHWith3CRV, defaultBlockNumber } from "./MainnetHelper";
+import { helperResetNetwork, helperSwapETHWithOUSD, defaultBlockNumber } from "./MainnetHelper";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
@@ -9,6 +9,13 @@ describe("Exchanger Test suit", function () {
     let lvUSD;
     let exchanger;
     let ousd;
+
+    // Amount of LvUSD & OUSD exchanger starts with
+    const amountStarting = ethers.utils.parseEther("5.0");
+
+    // Amount of LvUSD / OUSD exchanged in tests
+    const amountToExchange = ethers.utils.parseEther("3.0");
+    const amountMinRequired = ethers.utils.parseEther("2.0");
 
     beforeEach(async function () {
         // Reset network before tests
@@ -21,33 +28,28 @@ describe("Exchanger Test suit", function () {
         owner = r.owner;
         exchanger = r.exchanger;
 
-        // Give the Exchanger some LvUSD
-        await r.lvUSD.mint(exchanger.address, ethers.utils.parseEther("100"));
+        // Fund exchanger
+        await lvUSD.mint(exchanger.address, amountStarting);
+        await helperSwapETHWithOUSD(owner, amountStarting);
+        ousd.transfer(exchanger.address, amountStarting);
     });
 
     describe("Exchanges", function () {
+        it("Tests should init with some funds", async function () {
+            expect(await lvUSD.balanceOf(exchanger.address)).eq(amountStarting);
+            expect(await ousd.balanceOf(exchanger.address)).eq(amountStarting);
+        });
         it("Should swap LvUSD for OUSD", async function () {
-            const startingBalanceLvUSD = await lvUSD.balanceOf(exchanger.address);
-            const amountLvUSDToExchange = ethers.utils.parseEther("3.0");
-
-            // make sure we have LvUSD to exchange
-            expect(startingBalanceLvUSD).gt(0);
-
-            await exchanger.xLvUSDforOUSD(amountLvUSDToExchange, owner.address);
-            const endingBalanceLvUSD = await lvUSD.balanceOf(exchanger.address);
-            expect(endingBalanceLvUSD).eq(startingBalanceLvUSD.sub(amountLvUSDToExchange));
+            await exchanger.xLvUSDforOUSD(amountToExchange, owner.address);
+            const finalBalance = await lvUSD.balanceOf(exchanger.address);
+            expect(finalBalance).eq(amountStarting.sub(amountToExchange));
+            expect(await ousd.balanceOf(exchanger.address)).gt(amountStarting);
         });
-
-        it("Should swap OUSD for LvUSD", async function () {
-            const startingBalanceOUSD = await ousd.balanceOf(exchanger.address);
-            const amountOUSDToExchange = ethers.utils.parseEther("3.0");
-
-            // make sure we have OUSD to exchange
-            expect(startingBalanceOUSD).gt(0);
-
-            await exchanger.xOUSDforLvUSD(amountOUSDToExchange, owner.address);
-            const endingBalanceOUSD = await ousd.balanceOf(exchanger.address);
-            expect(endingBalanceOUSD).eq(startingBalanceOUSD.sub(amountOUSDToExchange));
-        });
+        // it("Should swap OUSD for LvUSD", async function () {
+        //     await exchanger.xOUSDforLvUSD(amountToExchange, owner.address, amountMinRequired);
+        //     const finalBalance = await ousd.balanceOf(exchanger.address);
+        //     expect(finalBalance).eq(amountStarting.sub(amountToExchange));
+        //     expect(await lvUSD.balanceOf(exchanger.address)).gt(amountStarting);
+        // });
     });
 });
