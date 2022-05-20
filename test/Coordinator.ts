@@ -23,15 +23,15 @@ describe("Coordinator Test suit", function () {
         coordinator = r.coordinator;
         sharesOwnerAddress = coordinator.address;
 
-        await helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseEther("5.0"));
-        await helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("5.0"));
+        await helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseUnits("5.0"));
+        await helperSwapETHWithOUSD(r.addr2, ethers.utils.parseUnits("5.0"));
     });
 
     describe("Deposit collateral into new NFT position", function () {
         /// depositing collateral is expected to transfer funds to vault
         // shares to be minted and create a new CDP entry with valid values
-        const addr1CollateralAmount = ethers.utils.parseEther("1");
-        const addr2CollateralAmount = ethers.utils.parseEther("2");
+        const addr1CollateralAmount = ethers.utils.parseUnits("1");
+        const addr2CollateralAmount = ethers.utils.parseUnits("2");
         const combinedCollateralAmount = addr1CollateralAmount.add(addr2CollateralAmount);
         /* Shares and assets always increase by the same amount in our vault (both are equal) because
            only one user (coordinator) is depositing. Each time a deposit takes place the shares for the
@@ -105,7 +105,7 @@ describe("Coordinator Test suit", function () {
                 expect(await r.cdp.getShares(nftIdAddr2Position)).to.equal(addr2CollateralAmount);
             });
             it("Vault should contain the correct number of shares and assets after a rebase event", async function () {
-                const rebaseAmount = ethers.utils.parseEther("1");
+                const rebaseAmount = ethers.utils.parseUnits("1");
                 /* simulate rebase by transferring from random new address: */
                 await helperSwapETHWithOUSD(r.addr3, rebaseAmount);
                 await r.externalOUSD.connect(r.addr3).transfer(r.vault.address, rebaseAmount);
@@ -119,12 +119,12 @@ describe("Coordinator Test suit", function () {
         });
 
         describe("Borrow lvUSD for position", function () {
-            const lvUSDAmountToBorrow = ethers.utils.parseEther("2");
+            const lvUSDAmountToBorrow = ethers.utils.parseUnits("2");
             const nftIdFirstPosition = 35472;
 
             before(async function () {
                 // mint lvUSD to be borrowed, assign all minted lvUSD to coordinator as it will spend it
-                await r.lvUSD.mint(coordinator.address, ethers.utils.parseEther("100"));
+                await r.lvUSD.mint(coordinator.address, ethers.utils.parseUnits("100"));
                 // method under test
                 await coordinator.borrowUnderNFT(nftIdFirstPosition, lvUSDAmountToBorrow);
             });
@@ -134,7 +134,7 @@ describe("Coordinator Test suit", function () {
             });
             it("Should decrease coordinator lvUSD balance", async function () {
                 /// we expect coordinator to have 98 ethers since we started with 100 ether lvUSD and borrowed 2 ethers
-                expect(await r.lvUSD.balanceOf(coordinator.address)).to.equal(ethers.utils.parseEther("98"));
+                expect(await r.lvUSD.balanceOf(coordinator.address)).to.equal(ethers.utils.parseUnits("98"));
             });
             it("Should update CDP with borrowed lvUSD", async function () {
                 expect(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)).to.equal(lvUSDAmountToBorrow);
@@ -142,12 +142,12 @@ describe("Coordinator Test suit", function () {
             it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address",
                 async function () {
                     await expect(
-                        coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("200")),
+                        coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseUnits("200")),
                     ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
                 });
 
             describe("Repay lvUSD for position", function () {
-                const lvUSDAmountToRepayInTwoParts = ethers.utils.parseEther("1");
+                const lvUSDAmountToRepayInTwoParts = ethers.utils.parseUnits("1");
                 before(async function () {
                     // method under test
                     await coordinator.repayUnderNFT(nftIdFirstPosition, lvUSDAmountToRepayInTwoParts);
@@ -155,7 +155,7 @@ describe("Coordinator Test suit", function () {
                 it("Should transfer lvUSD to coordinator address", async function () {
                     /// we expect coordinator to have 98 ethers since we started with 100 ether lvUSD and
                     /// borrowed 2 ethers and also repayed 1 ether
-                    expect(await r.lvUSD.balanceOf(coordinator.address)).to.equal(ethers.utils.parseEther("99"));
+                    expect(await r.lvUSD.balanceOf(coordinator.address)).to.equal(ethers.utils.parseUnits("99"));
                 });
                 it("Should decrease Vault's lvUSD balance", async function () {
                     // Exchanger should still have half the lvUSD under it
@@ -166,7 +166,7 @@ describe("Coordinator Test suit", function () {
                 });
                 /// add test for when we try to repay more then we have
                 it("Should revert if trying to repay more then borrowed lvUSD", async function () {
-                    await expect(coordinator.repayUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("100")))
+                    await expect(coordinator.repayUnderNFT(nftIdFirstPosition, ethers.utils.parseUnits("100")))
                         .to.be.revertedWith("Repay must be less than borrowed");
                 });
             });
@@ -262,8 +262,8 @@ describe("Coordinator Test suit", function () {
 
     describe("Coordinator overview testing", function () {
         const endToEndTestNFTId = 34674675;
-        const collateralAmount = ethers.utils.parseEther("1000");
-        const mintedLvUSDAmount = ethers.utils.parseEther("100000");
+        const collateralAmount = ethers.utils.parseUnits("1000");
+        const mintedLvUSDAmount = ethers.utils.parseUnits("100000");
         let leverageToGetForPosition;
         let originationFeeAmount;
         let depositedLeveragedOUSD;
@@ -274,8 +274,8 @@ describe("Coordinator Test suit", function () {
             endUserSigner = r.owner;
             sharesOwnerAddress = r.coordinator.address;
             const tempFakeExchangerAddr = r.addr2;
-            await helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseEther("8.0"));
-            await helperSwapETHWithOUSD(tempFakeExchangerAddr, ethers.utils.parseEther("8.0"));
+            await helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseUnits("8.0"));
+            await helperSwapETHWithOUSD(tempFakeExchangerAddr, ethers.utils.parseUnits("8.0"));
             // Get some helpful values for tests
             leverageToGetForPosition = await r.parameterStore.getAllowedLeverageForPosition(collateralAmount, 5);
             originationFeeAmount = await r.parameterStore.calculateOriginationFee(leverageToGetForPosition);

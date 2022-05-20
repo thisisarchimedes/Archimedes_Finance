@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 const getEighteenDecimal = (naturalNumber) => {
-    return ethers.utils.parseEther(naturalNumber.toString());
+    return ethers.utils.parseUnits(naturalNumber.toString());
 };
 
 describe("CDPosition test suit", async function () {

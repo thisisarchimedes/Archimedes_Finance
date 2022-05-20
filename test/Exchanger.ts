@@ -18,9 +18,9 @@ describe("Exchanger Test suit", function () {
         owner = r.owner;
 
         // Mint 200 ETH of LvUSD for owner
-        await lvUSD.mint(owner.address, ethers.utils.parseEther("200.0"));
+        await lvUSD.mint(owner.address, ethers.utils.parseUnits("200.0"));
         // Swap 200 ETH of 3CRV for owner
-        await helperSwapETHWith3CRV(owner, ethers.utils.parseEther("200.0"));
+        await helperSwapETHWith3CRV(owner, ethers.utils.parseUnits("200.0"));
     });
 
     describe("Exchanges", function () {

@@ -19,14 +19,14 @@ describe("CurveHelper Test Suite", function () {
         token3CRV = r.external3CRV;
         owner = r.owner;
         // Mint 200 ETH of LvUSD for owner
-        await lvUSD.mint(owner.address, ethers.utils.parseEther("200.0"));
+        await lvUSD.mint(owner.address, ethers.utils.parseUnits("200.0"));
         // Swap 200 ETH of 3CRV for owner
-        await helperSwapETHWith3CRV(owner, ethers.utils.parseEther("200.0"));
+        await helperSwapETHWith3CRV(owner, ethers.utils.parseUnits("200.0"));
     });
 
     it("Initialize test funds", async function () {
         // Make sure "owner" has funds needed for testing from "beforeEach" section
-        expect(await lvUSD.balanceOf(owner.address)).to.eq(ethers.utils.parseEther("200.0"));
+        expect(await lvUSD.balanceOf(owner.address)).to.eq(ethers.utils.parseUnits("200.0"));
         expect(await token3CRV.balanceOf(owner.address)).gt(0);
     });
 
@@ -47,8 +47,8 @@ describe("CurveHelper Test Suite", function () {
     it("Should fund a Metapool", async function () {
         const addressPool = await createMetapool(lvUSD, owner);
         const pool = await getMetapool(addressPool, owner);
-        const amountLvUSD = ethers.utils.parseEther("5.0");
-        const amount3CRV = ethers.utils.parseEther("6.0");
+        const amountLvUSD = ethers.utils.parseUnits("5.0");
+        const amount3CRV = ethers.utils.parseUnits("6.0");
         /**
          * @dev fundMetapool(address, [amount1, amount2], signer)
          * @param address: pool address
@@ -67,7 +67,7 @@ describe("CurveHelper Test Suite", function () {
 
     it("Should createAndFundMetapool() in one function", async function () {
         // fundedAmount of 100 is hardcoded in helper
-        const fundedAmount = ethers.utils.parseEther("100.0");
+        const fundedAmount = ethers.utils.parseUnits("100.0");
         /** Create and fund a lvusd/3crv Metapool
          * funds the pool with hardcoded 100 ETH of LvUSD & 3CRV
          * @dev fundMetapool(signer, ContractContextTest)
@@ -79,8 +79,8 @@ describe("CurveHelper Test Suite", function () {
 
     it("Should be able to fund a Metapool multiple times", async function () {
         // fundedAmount of 100 is hardcoded in helper
-        const initalAmount = ethers.utils.parseEther("100.0");
-        const addedAmount = ethers.utils.parseEther("4.0");
+        const initalAmount = ethers.utils.parseUnits("100.0");
+        const addedAmount = ethers.utils.parseUnits("4.0");
         const pool = await createAndFundMetapool(owner, r);
         expect(await pool.balances(0)).to.eq(initalAmount);
         expect(await pool.balances(1)).to.eq(initalAmount);
