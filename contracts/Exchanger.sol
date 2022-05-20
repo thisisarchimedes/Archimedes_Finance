@@ -78,11 +78,14 @@ contract Exchanger is IExchanger {
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
 
         // approve Coordinator address to spend on behalf of exchanger
-        // TODO
         _lvusd.safeApprove(_addressCoordinator, type(uint256).max);
+        _ousd.safeApprove(_addressCoordinator, type(uint256).max);
+        // TODO these should NOT BE MAX VALUES
+        // Approve LvUSD pool
         _lvusd.safeApprove(_addressPoolLvUSD3CRV, type(uint256).max);
-        _ousd.safeApprove(_addressPoolOUSD3CRV, type(uint256).max);
         _3crv.safeApprove(_addressPoolLvUSD3CRV, type(uint256).max);
+        // approve OUSD pool
+        _ousd.safeApprove(_addressPoolOUSD3CRV, type(uint256).max);
         _3crv.safeApprove(_addressPoolOUSD3CRV, type(uint256).max);
         _curveGuardPercentage = 90; // 90%
         _slippage = 2; // 2%
@@ -100,8 +103,10 @@ contract Exchanger is IExchanger {
         uint256 _amountLvUSD = amountLvUSD;
         address _to = to;
         uint256 returned3CRV = _xLvUSDfor3CRV(_amountLvUSD, _to);
-        // TODO change to event
-        return returned3CRV;
+        uint256 returnedOUSD = _x3CRVforOUSD(returned3CRV, _to);
+        // TODO emit an event
+        console.log("xLvUSDforOUSD: swapped %s lvusd for %s ousd", amountLvUSD, returnedOUSD);
+        return returnedOUSD;
     }
 
     /**
@@ -117,8 +122,14 @@ contract Exchanger is IExchanger {
         address to,
         uint256 minRequiredLvUSD
     ) external returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
+        uint256 _amountOUSD = amountOUSD;
+        address _to = to;
+        uint256 _minRequiredLvUSD = minRequiredLvUSD;
+        uint256 returned3CRV = _xOUSDfor3CRV(_amountOUSD, _to);
+        uint256 returnedLvUSD = _x3CRVforLvUSD(returned3CRV, _to);
+
+        // PLANNING
         // Check we have the funds >= amountOUSD
-        console.log("Exchanging%s OUSD for min %slvUSD, assigning funds to address %s", amountOUSD, minRequiredLvUSD, to);
 
         // 1) Check pool is in balance OUSD/3CRV
         // expected3CRV = get_dy(0, 1, amountOUSD) > 90% OR REVERT
@@ -134,7 +145,11 @@ contract Exchanger is IExchanger {
         // returnedLvUSD = pool.exchange(0, 1, returned3CRV, minRequiredLvUSD)
 
         // make sure ends up at "to" address
-        return (minRequiredLvUSD, amountOUSD - minRequiredLvUSD);
+        // TODO emit an event
+        console.log("Exchanging%s OUSD for min %slvUSD, assigning funds to address %s", amountOUSD, minRequiredLvUSD, to);
+        // TODO REQ _minRequiredLvUSD
+        return returnedLvUSD;
+        // return (minRequiredLvUSD, amountOUSD - minRequiredLvUSD);
     }
 
     /** Exchange using the CurveFi LvUSD/3CRV Metapool
@@ -190,27 +205,35 @@ contract Exchanger is IExchanger {
          * @param _amount3CRV amount of 3CRV we are exchanging
          * @param _expectedOUSD uses get_dy() to estimate amount the exchange will give us
          * @param _minimumOUSD mimimum accounting for slippage. (_expectedOUSD * slippage)
+         * @param _returnedOUSD amount we actually get from the pool
+         * @param _guardOUSD sanity check to protect user
          */
         uint256 _amount3CRV = amount3CRV;
+        address _to = to;
         uint256 _expectedOUSD;
         uint256 _minimumOUSD;
+        uint256 _returnedOUSD;
+        uint256 _guardOUSD = (_amount3CRV * _curveGuardPercentage) / 100;
 
-        // Verify Exchanger has enough LvUSD to use
-        require(_amount3CRV <= IERC20(_3crv).balanceOf(address(this)), "Insufficient 3CRV in Exchanger.");
+        // Verify Exchanger has enough 3CRV to use
+        require(_amount3CRV <= _3crv.balanceOf(address(this)), "Insufficient 3CRV in Exchanger.");
 
         // Estimate expected amount of 3CRV
-        _expectedOUSD = _poolOUSD3CRV.get_dy(0, 1, _amount3CRV);
-
-        // Make sure pool isn't too bent
-        // TODO allow user to override this protection
-        require(_expectedOUSD >= (_amount3CRV * _curveGuardPercentage) / 100, "3CRV pool too imbalanced.");
-        // TODO auto balance if pool is bent
+        // get_dy(indexCoinSend, indexCoinRec, amount)
+        _expectedOUSD = _poolOUSD3CRV.get_dy(1, 0, _amount3CRV);
 
         // Set minimum required accounting for slippage
         _minimumOUSD = (_expectedOUSD * (100 - _slippage)) / 100;
 
+        // Make sure pool isn't too bent
+        // TODO allow user to override this protection
+        // TODO auto balance if pool is bent
+        require(_minimumOUSD >= _guardOUSD, "LvUSD pool too imbalanced.");
+
         // Exchange LvUSD for 3CRV:
-        return _poolOUSD3CRV.exchange(0, 1, _amount3CRV, _minimumOUSD);
+        _returnedOUSD = _poolOUSD3CRV.exchange(1, 0, _amount3CRV, _minimumOUSD);
+
+        return _returnedOUSD;
     }
 
     function x3CRVforOUSD(uint256 amount3CRV, address to) external returns (uint256) {

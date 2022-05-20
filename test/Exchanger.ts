@@ -26,9 +26,6 @@ describe("Exchanger Test suit", function () {
     });
 
     describe("Exchanges", function () {
-        // TODO
-        // it("Should swap OUSD for LvUSD", async function () {});
-        // TODO
         it("Should swap LvUSD for OUSD", async function () {
             const startingBalanceLvUSD = await lvUSD.balanceOf(exchanger.address);
             const amountLvUSDToExchange = ethers.utils.parseEther("3.0");
@@ -39,6 +36,18 @@ describe("Exchanger Test suit", function () {
             await exchanger.xLvUSDforOUSD(amountLvUSDToExchange, owner.address);
             const endingBalanceLvUSD = await lvUSD.balanceOf(exchanger.address);
             expect(endingBalanceLvUSD).eq(startingBalanceLvUSD.sub(amountLvUSDToExchange));
+        });
+
+        it("Should swap OUSD for LvUSD", async function () {
+            const startingBalanceOUSD = await ousd.balanceOf(exchanger.address);
+            const amountOUSDToExchange = ethers.utils.parseEther("3.0");
+
+            // make sure we have OUSD to exchange
+            expect(startingBalanceOUSD).gt(0);
+
+            await exchanger.xOUSDforLvUSD(amountOUSDToExchange, owner.address);
+            const endingBalanceOUSD = await ousd.balanceOf(exchanger.address);
+            expect(endingBalanceOUSD).eq(startingBalanceOUSD.sub(amountOUSDToExchange));
         });
     });
 });
