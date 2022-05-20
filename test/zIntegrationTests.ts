@@ -127,3 +127,22 @@ describe("Test suit for setting up the stage", function () {
         expect(await r.leverageAllocator.getAddressToLvUSDAvailable(await user.getAddress())).to.equal(parseUnitsNum(initialUserLevAllocation));
     });
 });
+
+describe("Test suit for getting leverage", function () {
+    const numberOfCycles = 2;
+    const userOUSDPrincipleInEighteenDecimal = parseUnitsNum(userOUSDPrinciple);
+
+    let leverageUserIsTaking: number;
+    let positionId: number;
+    before(async function () {
+        await setupEnvForIntegrationTests();
+        leverageUserIsTaking = getFloatFromBigNum(
+            await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleInEighteenDecimal, numberOfCycles));
+        console.log("Will take $ lev", leverageUserIsTaking);
+        positionId = await r.leverageEngine.createLeveragedPosition(userOUSDPrincipleInEighteenDecimal, numberOfCycles);
+    });
+
+    it("Should have created a position, starting with 1", async function () {
+        expect(positionId).to.equal(1);
+    });
+});
