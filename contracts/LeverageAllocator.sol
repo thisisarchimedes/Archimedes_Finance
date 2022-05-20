@@ -14,22 +14,13 @@ contract LeverageAllocator is ReentrancyGuard, AccessControl {
     mapping(address => uint256) internal _addressToLvUSDAvailable;
 
     modifier onlyAdmin() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "onlyAdmin: Caller is not admin");
+        require(hasRole(ADMIN_ROLE, msg.sender), "onlyAdmin: Not admin");
         _;
     }
 
     /// @dev set the admin address to contract deployer
     constructor(address admin) {
         _setupRole(ADMIN_ROLE, admin);
-    }
-
-    /// @dev get available lvUSD allocated to address
-    function _getAddressToLvUSDAvailable(address addr) internal view returns (uint256) {
-        return _addressToLvUSDAvailable[addr];
-    }
-
-    function getAddressToLvUSDAvailable(address addr) external view returns (uint256) {
-        return _getAddressToLvUSDAvailable(addr);
     }
 
     /// @dev admin can use to manually override available lvUSD for a given user
@@ -41,8 +32,17 @@ contract LeverageAllocator is ReentrancyGuard, AccessControl {
     /// @dev verify the address has requested lvUSD to use and reduce allocation by amount
     function useAvailableLvUSD(address addr, uint256 amount) external nonReentrant returns (uint256) {
         uint256 availableLvUSD = _getAddressToLvUSDAvailable(addr);
-        require(availableLvUSD >= amount, "useAvailableLvUSD: amount is greater than available lvUSD allocation");
+        require(availableLvUSD >= amount, "Insufficient lvUSD allocation");
         _addressToLvUSDAvailable[addr] -= amount;
+        return _addressToLvUSDAvailable[addr];
+    }
+
+    function getAddressToLvUSDAvailable(address addr) external view returns (uint256) {
+        return _getAddressToLvUSDAvailable(addr);
+    }
+
+    /// @dev get available lvUSD allocated to address
+    function _getAddressToLvUSDAvailable(address addr) internal view returns (uint256) {
         return _addressToLvUSDAvailable[addr];
     }
 }
