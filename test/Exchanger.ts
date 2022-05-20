@@ -31,7 +31,7 @@ describe("Exchanger Test suit", function () {
         // Fund exchanger
         await lvUSD.mint(exchanger.address, amountStarting);
         await helperSwapETHWithOUSD(owner, amountStarting);
-        ousd.transfer(exchanger.address, amountStarting);
+        await ousd.transfer(exchanger.address, amountStarting);
     });
 
     describe("Exchanges", function () {
@@ -45,11 +45,11 @@ describe("Exchanger Test suit", function () {
             expect(finalBalance).eq(amountStarting.sub(amountToExchange));
             expect(await ousd.balanceOf(exchanger.address)).gt(amountStarting);
         });
-        // it("Should swap OUSD for LvUSD", async function () {
-        //     await exchanger.xOUSDforLvUSD(amountToExchange, owner.address, amountMinRequired);
-        //     const finalBalance = await ousd.balanceOf(exchanger.address);
-        //     expect(finalBalance).eq(amountStarting.sub(amountToExchange));
-        //     expect(await lvUSD.balanceOf(exchanger.address)).gt(amountStarting);
-        // });
+        it("Should swap OUSD for LvUSD", async function () {
+            await exchanger.xOUSDforLvUSD(amountToExchange, owner.address, amountMinRequired);
+            const finalBalance = await ousd.balanceOf(exchanger.address);
+            expect(finalBalance).eq(amountStarting.sub(amountToExchange));
+            expect(await lvUSD.balanceOf(exchanger.address)).gt(amountStarting);
+        });
     });
 });
