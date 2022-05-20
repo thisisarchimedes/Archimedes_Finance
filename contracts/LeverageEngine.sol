@@ -38,12 +38,12 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     IERC20 internal _ousd;
 
     modifier onlyAdmin() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "onlyAdmin: Caller is not admin");
+        require(hasRole(ADMIN_ROLE, msg.sender), "onlyAdmin: Not admin");
         _;
     }
 
     modifier expectInitialized() {
-        require(_initialized, "expectInitialized: contract is not initialized");
+        require(_initialized, "Not initialized");
         _;
     }
 
@@ -100,7 +100,7 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     ///
     /// @param positionTokenId the NFT ID of the position
     function unwindLeveragedPosition(uint256 positionTokenId) external expectInitialized nonReentrant {
-        require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller address does not own this position token");
+        require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
     }

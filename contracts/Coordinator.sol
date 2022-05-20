@@ -86,10 +86,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         /// Method makes sure ousd recorded balance transfer
         uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
         _ousd.safeTransferFrom(_addressExchanger, _to, _amount);
-        require(
-            _ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount,
-            "Coordinator : Revert since OUSD transfer to user is not correct with OUSD balanceOf"
-        );
+        require(_ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount, "OUSD transfer balance incorrect");
         _cdp.withdrawOUSDFromPosition(_nftId, _amount);
     }
 
@@ -107,7 +104,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     }
 
     function _repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) internal {
-        require(_cdp.getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay, "Coordinator : Cannot repay more lvUSD then is borrowed");
+        require(_cdp.getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay, "Repay must be less than borrowed");
         _lvUSD.transferFrom(_addressExchanger, address(this), _amountLvUSDToRepay);
         _cdp.repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
     }
@@ -124,7 +121,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         uint256 ousdPrinciple = _cdp.getOUSDPrinciple(_nftId);
         require(
             _amountToLeverage <= _paramStore.getAllowedLeverageForPosition(ousdPrinciple, _paramStore.getMaxNumberOfCycles()),
-            "Cannot get more leverage then max allowed leverage"
+            "Leverage more than max allowed"
         );
 
         // borrowUnderNFT transfer lvUSD from Coordinator to Exchanger + mark borrowed lvUSD in CDP under nft ID
@@ -154,7 +151,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         uint256 numberOfSharesInPosition = _cdp.getShares(_nftId);
         uint256 borrowedLvUSD = _cdp.getLvUSDBorrowed(_nftId);
 
-        require(numberOfSharesInPosition > 0, "Cannot unwind a position with no shares");
+        require(numberOfSharesInPosition > 0, "Position has no shares");
 
         uint256 redeemedOUSD = _vault.redeem(numberOfSharesInPosition, _addressExchanger, address(this));
 

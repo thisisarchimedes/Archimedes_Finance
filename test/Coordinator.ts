@@ -167,7 +167,7 @@ describe("Coordinator Test suit", function () {
                 /// add test for when we try to repay more then we have
                 it("Should revert if trying to repay more then borrowed lvUSD", async function () {
                     await expect(coordinator.repayUnderNFT(nftIdFirstPosition, ethers.utils.parseEther("100")))
-                        .to.be.revertedWith("Coordinator : Cannot repay more lvUSD then is borrowed");
+                        .to.be.revertedWith("Repay must be less than borrowed");
                 });
             });
 

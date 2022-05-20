@@ -49,7 +49,7 @@ contract CDPosition {
     /// @param nftID NFT position to update
     /// @param shares shares to remove
     function removeSharesFromPosition(uint256 nftID, uint256 shares) external nftIDMustExist(nftID) {
-        require(_nftCDP[nftID].shares >= shares, "Shares to remove exceed position balance");
+        require(_nftCDP[nftID].shares >= shares, "Shares exceed position balance");
         _nftCDP[nftID].shares -= shares;
     }
 
@@ -64,7 +64,7 @@ contract CDPosition {
     /// @param nftID NFT position to update
     /// @param lvUSDAmountToRepay amount to remove fom position's existing borrowed lvUSD sum
     function repayLvUSDToPosition(uint256 nftID, uint256 lvUSDAmountToRepay) external nftIDMustExist(nftID) {
-        require(_nftCDP[nftID].lvUSDBorrowed >= lvUSDAmountToRepay, "lvUSD Borrowed amount must be greater or equal than amount to repay");
+        require(_nftCDP[nftID].lvUSDBorrowed >= lvUSDAmountToRepay, "lvUSD is greater than borrowed");
         _nftCDP[nftID].lvUSDBorrowed -= lvUSDAmountToRepay;
     }
 
@@ -79,7 +79,7 @@ contract CDPosition {
     /// @param nftID NFT position to update
     /// @param oUSDAmountToWithdraw amount to remove to position's existing deposited sum
     function withdrawOUSDFromPosition(uint256 nftID, uint256 oUSDAmountToWithdraw) external nftIDMustExist(nftID) {
-        require(_nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw, "OUSD total amount must be greater or equal than amount to withdraw");
+        require(_nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw, "Insufficient OUSD balance");
         _nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
     }
 
@@ -108,7 +108,7 @@ contract CDPosition {
     }
 
     modifier canDeletePosition(uint256 nftID) {
-        require(_nftCDP[nftID].lvUSDBorrowed == 0, "Borrowed LvUSD must be zero before deleting");
+        require(_nftCDP[nftID].lvUSDBorrowed == 0, "lvUSD borrowed must be zero");
         _;
     }
 

@@ -22,13 +22,13 @@ describe("PositionToken test suit", function () {
         it("Should not allow non admin to init", async function () {
             const addr1PositionToken = await ptContract.deploy(r.addr1.address) as PositionToken;
             const initPromise = addr1PositionToken.init(r.addr2.address);
-            await expect(initPromise).to.be.revertedWith("onlyAdmin: Caller is not admin");
+            await expect(initPromise).to.be.revertedWith("onlyAdmin: Not admin");
         });
 
         it("Should not allow non executive to mint", async function () {
             await r.positionToken.init(r.addr1.address);
             const mintPromise = r.positionToken.safeMint(r.addr1.address);
-            await expect(mintPromise).to.be.revertedWith("onlyExecutive: Caller is not executive");
+            await expect(mintPromise).to.be.revertedWith("Caller is not executive");
         });
     });
 
@@ -70,12 +70,12 @@ describe("PositionToken test suit", function () {
 
         it("Should fail to burn if not executive", async function () {
             const burnPromise = r.positionToken.connect(secondTokenOwner).burn(firstTokenId);
-            await expect(burnPromise).to.be.revertedWith("onlyExecutive: Caller is not executive");
+            await expect(burnPromise).to.be.revertedWith("Caller is not executive");
         });
 
         it("Should not allow positionToken owner to burn positionToken directly. Position unwind required via executive", async function () {
             const burnPromise = r.positionToken.connect(firstTokenOwner).burn(firstTokenId);
-            await expect(burnPromise).to.be.revertedWith("onlyExecutive: Caller is not executive");
+            await expect(burnPromise).to.be.revertedWith("Caller is not executive");
         });
 
         it("Should allow executive to burn any token", async function () {

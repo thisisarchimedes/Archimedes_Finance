@@ -24,17 +24,17 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
     bool internal _initialized = false;
 
     modifier onlyAdmin() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "onlyAdmin: Caller is not admin");
+        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
         _;
     }
 
     modifier onlyExecutive() {
-        require(hasRole(EXECUTIVE_ROLE, msg.sender), "onlyExecutive: Caller is not executive");
+        require(hasRole(EXECUTIVE_ROLE, msg.sender), "Caller is not executive");
         _;
     }
 
     modifier expectInitialized() {
-        require(_initialized, "expectInitialized: contract is not initialized");
+        require(_initialized, "Not initialized");
         _;
     }
 
