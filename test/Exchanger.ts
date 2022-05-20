@@ -24,7 +24,7 @@ describe("Exchanger Test suit", function () {
     });
 
     describe("Exchanges", function () {
-        // TODO
+        // TODO:
         it("Should swap LvUSD for OUSD", async function () {
             expect(true);
         });
