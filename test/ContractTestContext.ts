@@ -118,6 +118,9 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
     // Setup pool with approval
     await context.lvUSD.approve(context.curveLvUSDPool.address, ethers.utils.parseEther("1000"));
 
+    await context.lvUSD.approve(context.exchanger.address, ethers.constants.MaxUint256);
+    await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
+
     // Post init contracts
     await Promise.all([
         context.leverageEngine.init(

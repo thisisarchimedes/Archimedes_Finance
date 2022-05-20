@@ -79,6 +79,7 @@ contract Exchanger is IExchanger {
 
         // approve Coordinator address to spend on behalf of exchanger
         // TODO
+        _lvusd.safeApprove(_addressCoordinator, type(uint256).max);
         _lvusd.safeApprove(_addressPoolLvUSD3CRV, type(uint256).max);
         _ousd.safeApprove(_addressPoolOUSD3CRV, type(uint256).max);
         _3crv.safeApprove(_addressPoolLvUSD3CRV, type(uint256).max);

@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { helperResetNetwork, helperSwapETHWith3CRV, defaultBlockNumber } from "./MainnetHelper";
-import { createMetapool, getMetapool, fundMetapool, createAndFundMetapool, exchangeLvUSDfor3CRV, exchange3CRVfor3LvUSD, fundedPoolAmount } from "./CurveHelper";
+import { helperResetNetwork, defaultBlockNumber } from "./MainnetHelper";
+import { fundMetapool, fundedPoolAmount } from "./CurveHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 describe("CurveHelper Test Suite", function () {
