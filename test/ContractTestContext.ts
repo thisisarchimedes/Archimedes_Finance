@@ -14,6 +14,7 @@ import type {
     LeverageAllocator,
     PositionToken,
     ParameterStore,
+    ArchToken,
 } from "../types/contracts";
 import type { LvUSDToken } from "../types/contracts/LvUSDToken";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -56,6 +57,7 @@ async function deployContracts <T> (contractMap: ContractMap, contractRoles: Con
 }
 
 type ArchContracts = {
+    archToken: ArchToken;
     cdp: CDPosition;
     coordinator: Coordinator;
     exchanger: Exchanger;
@@ -103,6 +105,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     context.external3CRV = new ethers.Contract(address3CRV, abi3CRVToken, context.owner);
 
     const contracts = await deployContracts<ArchContracts>({
+        archToken: ["ArchToken", context.owner.address],
         cdp: ["CDPosition"],
         coordinator: ["Coordinator"],
         exchanger: ["Exchanger"],
@@ -154,6 +157,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
         ),
         context.vault.init(context.parameterStore.address, context.externalOUSD.address),
         context.parameterStore.init(context.treasurySigner.address),
+        context.positionToken.init(),
     ]);
 
     return context;

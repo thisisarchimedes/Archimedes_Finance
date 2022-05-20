@@ -36,7 +36,7 @@ describe("PositionToken test suit", function () {
 
     it("Should not allow non executive to mint", async function () {
         const mintPromise = positionTokenAsExecutive.connect(firstTokenOwner).safeMint(r.addr1.address);
-        await expect(mintPromise).to.be.revertedWith("onlyExecutive: Caller is not executive");
+        await expect(mintPromise).to.be.revertedWith("Caller is not executive");
     });
 
     it("Should revert if the token id doesn't exist", async function () {

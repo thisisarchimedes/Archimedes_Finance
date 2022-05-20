@@ -14,12 +14,13 @@ describe("LeverageAllocator test suit", async function () {
     });
 
     it("Should not allow non admin to set available lvUSD allocation", async function () {
-        const laContract = await ethers.getContractFactory("LeverageAllocator");
-        const leverageAllocator = await laContract.deploy(r.addr1.address);
+        const withAddr1Admin = await buildContractTestContext({
+            LeverageAllocator: { admin: r.addr1.address },
+        });
 
         await expect(
-            leverageAllocator.setAddressToLvUSDAvailable(r.addr2.address, 1234),
-        ).to.be.revertedWith("onlyAdmin: Not admin");
+            withAddr1Admin.leverageAllocator.setAddressToLvUSDAvailable(r.addr2.address, 1234),
+        ).to.be.revertedWith("Caller is not admin");
     });
 
     it("Should allow admin to set available lvUSD allocation", async function () {

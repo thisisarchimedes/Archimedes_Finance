@@ -21,7 +21,7 @@ describe("LeverageEngine test suit", async function () {
             const leContract = await ethers.getContractFactory("LeverageEngine");
             const leverageEngine = await leContract.deploy(r.addr1.address);
             await expect(leverageEngine.createLeveragedPosition(1234, 1234)).to.be.revertedWith(
-                "Not initialized",
+                "Contract is not initialized",
             );
         });
 
@@ -29,7 +29,7 @@ describe("LeverageEngine test suit", async function () {
             const leContract = await ethers.getContractFactory("LeverageEngine");
             const leverageEngine = await leContract.deploy(r.addr1.address);
             await expect(leverageEngine.unwindLeveragedPosition(1234)).to.be.revertedWith(
-                "Not initialized",
+                "Contract is not initialized",
             );
         });
     });
