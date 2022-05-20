@@ -12,15 +12,6 @@ contract LeverageAllocator is AccessController {
 
     constructor(address admin) AccessController(admin) {}
 
-    /// @dev get available lvUSD allocated to address
-    function _getAddressToLvUSDAvailable(address addr) internal view returns (uint256) {
-        return _addressToLvUSDAvailable[addr];
-    }
-
-    function getAddressToLvUSDAvailable(address addr) external view returns (uint256) {
-        return _getAddressToLvUSDAvailable(addr);
-    }
-
     /// @dev admin can use to manually override available lvUSD for a given user
     function setAddressToLvUSDAvailable(address addr, uint256 amount) external onlyAdmin returns (uint256) {
         _addressToLvUSDAvailable[addr] = amount;
@@ -30,8 +21,17 @@ contract LeverageAllocator is AccessController {
     /// @dev verify the address has requested lvUSD to use and reduce allocation by amount
     function useAvailableLvUSD(address addr, uint256 amount) external nonReentrant returns (uint256) {
         uint256 availableLvUSD = _getAddressToLvUSDAvailable(addr);
-        require(availableLvUSD >= amount, "useAvailableLvUSD: amount is greater than available lvUSD allocation");
+        require(availableLvUSD >= amount, "Insufficient lvUSD allocation");
         _addressToLvUSDAvailable[addr] -= amount;
+        return _addressToLvUSDAvailable[addr];
+    }
+
+    function getAddressToLvUSDAvailable(address addr) external view returns (uint256) {
+        return _getAddressToLvUSDAvailable(addr);
+    }
+
+    /// @dev get available lvUSD allocated to address
+    function _getAddressToLvUSDAvailable(address addr) internal view returns (uint256) {
         return _addressToLvUSDAvailable[addr];
     }
 }

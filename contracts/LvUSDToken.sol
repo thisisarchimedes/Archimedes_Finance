@@ -13,13 +13,6 @@ import {AccessController} from "./AccessController.sol";
 contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), AccessController {
     constructor(address admin) AccessController(admin) {}
 
-    /// @dev Sets the address of the current minter contract
-    /// Timelocked function (set candidate and change owner after 17,280 blocks ~3 days)
-    /// Emits MinterSet
-    ///
-    /// @param accounts the accounts to set.
-    function _setMinter(address[] calldata accounts) internal {}
-
     /// @dev Mints tokens to a recipient.
     ///
     /// This function reverts if the caller does not have the minter role.
@@ -38,4 +31,11 @@ contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), AccessController {
     function setMinter(address[] calldata accounts) external nonReentrant {
         _setMinter(accounts);
     }
+
+    /// @dev Sets the address of the current minter contract
+    /// Timelocked function (set candidate and change owner after 17,280 blocks ~3 days)
+    /// Emits MinterSet
+    ///
+    /// @param accounts the accounts to set.
+    function _setMinter(address[] calldata accounts) internal {}
 }

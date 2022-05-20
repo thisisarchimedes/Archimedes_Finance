@@ -79,7 +79,7 @@ contract LeverageEngine is AccessController {
     ///
     /// @param positionTokenId the NFT ID of the position
     function unwindLeveragedPosition(uint256 positionTokenId) external expectInitialized nonReentrant {
-        require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller address does not own this position token");
+        require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
     }

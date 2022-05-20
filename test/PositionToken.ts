@@ -55,12 +55,12 @@ describe("PositionToken test suit", function () {
 
     it("Should fail to burn if not executive", async function () {
         const burnPromise = r.positionToken.connect(secondTokenOwner).burn(firstTokenId);
-        await expect(burnPromise).to.be.revertedWith("onlyExecutive: Caller is not executive");
+        await expect(burnPromise).to.be.revertedWith("Caller is not executive");
     });
 
     it("Should not allow positionToken owner to burn positionToken directly. Position unwind required via executive", async function () {
         const burnPromise = r.positionToken.connect(firstTokenOwner).burn(firstTokenId);
-        await expect(burnPromise).to.be.revertedWith("onlyExecutive: Caller is not executive");
+        await expect(burnPromise).to.be.revertedWith("Caller is not executive");
     });
 
     it("Should allow executive to burn any token", async function () {

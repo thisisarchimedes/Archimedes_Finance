@@ -21,7 +21,7 @@ describe("LeverageEngine test suit", async function () {
             const leContract = await ethers.getContractFactory("LeverageEngine");
             const leverageEngine = await leContract.deploy(r.addr1.address);
             await expect(leverageEngine.createLeveragedPosition(1234, 1234)).to.be.revertedWith(
-                "expectInitialized: contract is not initialized",
+                "Not initialized",
             );
         });
 
@@ -29,7 +29,7 @@ describe("LeverageEngine test suit", async function () {
             const leContract = await ethers.getContractFactory("LeverageEngine");
             const leverageEngine = await leContract.deploy(r.addr1.address);
             await expect(leverageEngine.unwindLeveragedPosition(1234)).to.be.revertedWith(
-                "expectInitialized: contract is not initialized",
+                "Not initialized",
             );
         });
     });
@@ -37,7 +37,7 @@ describe("LeverageEngine test suit", async function () {
     it("Should revert if cycles is greater than global max cycles", async function () {
         const maxCycles = await r.parameterStore.getMaxNumberOfCycles();
         const promise = r.leverageEngine.createLeveragedPosition(ethers.utils.parseUnits("1"), maxCycles.add(1));
-        await expect(promise).to.be.revertedWith("Number of cycles must be lower then allowed max");
+        await expect(promise).to.be.revertedWith("Cycles greater than max allowed");
     });
 
     it("Should begin without a positionToken balance", async function () {
@@ -104,7 +104,7 @@ describe("LeverageEngine test suit", async function () {
         it("Should fail to unwind if caller doesn't own positionToken", async function () {
             await r.positionToken.transferFrom(r.owner.address, r.addr1.address, positionTokenId);
             const unwindPromise = r.leverageEngine.unwindLeveragedPosition(positionTokenId);
-            await expect(unwindPromise).to.be.revertedWith("Caller address does not own this position token");
+            await expect(unwindPromise).to.be.revertedWith("Caller is not token owner");
         });
 
         it("Should fail to unwind if positionToken doesn't exist", async function () {
