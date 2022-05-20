@@ -32,6 +32,11 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     IERC20 internal _ousd;
     ParameterStore internal _paramStore;
 
+    modifier notImplementedYet() {
+        revert("Method not implemented yet");
+        _;
+    }
+
     constructor() {}
 
     function init(
@@ -78,35 +83,12 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         _withdrawCollateralUnderNFT(_nftId, _amount, _to);
     }
 
-    function _withdrawCollateralUnderNFT(
-        uint256 _nftId,
-        uint256 _amount,
-        address _to
-    ) internal {
-        /// Method makes sure ousd recorded balance transfer
-        uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
-        _ousd.safeTransferFrom(_addressExchanger, _to, _amount);
-        require(_ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount, "OUSD transfer balance incorrect");
-        _cdp.withdrawOUSDFromPosition(_nftId, _amount);
-    }
-
     function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override {
         _borrowUnderNFT(_nftId, _amount);
     }
 
-    function _borrowUnderNFT(uint256 _nftId, uint256 _amount) internal {
-        _lvUSD.transfer(_addressExchanger, _amount);
-        _cdp.borrowLvUSDFromPosition(_nftId, _amount);
-    }
-
     function repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) external override {
         _repayUnderNFT(_nftId, _amountLvUSDToRepay);
-    }
-
-    function _repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) internal {
-        require(_cdp.getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay, "Repay must be less than borrowed");
-        _lvUSD.transferFrom(_addressExchanger, address(this), _amountLvUSDToRepay);
-        _cdp.repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
     }
 
     function getLeveragedOUSD(uint256 _nftId, uint256 _amountToLeverage) external override nonReentrant {
@@ -175,12 +157,6 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
     function repayUnderAddress(uint256 _amount) external override notImplementedYet {}
 
-    function _takeOriginationFee(uint256 _leveragedOUSDAmount) internal returns (uint256 fee) {
-        uint256 _fee = _paramStore.calculateOriginationFee(_leveragedOUSDAmount);
-        _ousd.safeTransfer(_paramStore.getTreasuryAddress(), _fee);
-        return _fee;
-    }
-
     /* Privileged functions: Anyone */
 
     function addressOfLvUSDToken() external view override returns (address) {
@@ -191,8 +167,32 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         return _addressVaultOUSD;
     }
 
-    modifier notImplementedYet() {
-        revert("Method not implemented yet");
-        _;
+    function _withdrawCollateralUnderNFT(
+        uint256 _nftId,
+        uint256 _amount,
+        address _to
+    ) internal {
+        /// Method makes sure ousd recorded balance transfer
+        uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
+        _ousd.safeTransferFrom(_addressExchanger, _to, _amount);
+        require(_ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount, "OUSD transfer balance incorrect");
+        _cdp.withdrawOUSDFromPosition(_nftId, _amount);
+    }
+
+    function _borrowUnderNFT(uint256 _nftId, uint256 _amount) internal {
+        _lvUSD.transfer(_addressExchanger, _amount);
+        _cdp.borrowLvUSDFromPosition(_nftId, _amount);
+    }
+
+    function _repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) internal {
+        require(_cdp.getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay, "Repay must be less than borrowed");
+        _lvUSD.transferFrom(_addressExchanger, address(this), _amountLvUSDToRepay);
+        _cdp.repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
+    }
+
+    function _takeOriginationFee(uint256 _leveragedOUSDAmount) internal returns (uint256 fee) {
+        uint256 _fee = _paramStore.calculateOriginationFee(_leveragedOUSDAmount);
+        _ousd.safeTransfer(_paramStore.getTreasuryAddress(), _fee);
+        return _fee;
     }
 }

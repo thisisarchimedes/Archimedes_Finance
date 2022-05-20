@@ -57,25 +57,26 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
         return positionTokenId;
     }
 
+    function exists(uint256 positionTokenId) external view expectInitialized returns (bool) {
+        return _exists(positionTokenId);
+    }
+
     /* override burn to only allow executive to burn positionToken */
     function burn(uint256 positionTokenId) public override(ERC721Burnable) nonReentrant expectInitialized onlyExecutive {
         super.burn(positionTokenId);
     }
 
-    function exists(uint256 positionTokenId) external view expectInitialized returns (bool) {
-        return _exists(positionTokenId);
+    /* Override required by Solidity: */
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl, ERC721Enumerable) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 
-    /* Overrides required by Solidity: */
+    /* Override required by Solidity: */
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
     ) internal virtual override(ERC721, ERC721Enumerable) {
         return super._beforeTokenTransfer(from, to, tokenId);
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl, ERC721Enumerable) returns (bool) {
-        return super.supportsInterface(interfaceId);
     }
 }

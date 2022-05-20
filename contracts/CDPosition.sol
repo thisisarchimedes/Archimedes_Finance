@@ -22,6 +22,22 @@ contract CDPosition {
 
     mapping(uint256 => CDP) internal _nftCDP;
 
+    // Maps return default value when entry is not present. OUSD principle will always be gt 0 if _nftCDP has
+    // a valid value in nftID
+    modifier nftIDMustExist(uint256 nftID) {
+        require(_nftCDP[nftID].oUSDPrinciple > 0, "NFT ID must exist");
+        _;
+    }
+    modifier nftIDMustNotExist(uint256 nftID) {
+        require(_nftCDP[nftID].oUSDPrinciple == 0, "NFT ID must not exist");
+        _;
+    }
+
+    modifier canDeletePosition(uint256 nftID) {
+        require(_nftCDP[nftID].lvUSDBorrowed == 0, "lvUSD borrowed must be zero");
+        _;
+    }
+
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Update both principle and total with OUSDPrinciple
     /// @param nftID newly minted NFT
@@ -94,22 +110,6 @@ contract CDPosition {
 
     function getCollateralRate() external view returns (uint256) {
         return _globalCollateralRate;
-    }
-
-    // Maps return default value when entry is not present. OUSD principle will always be gt 0 if _nftCDP has
-    // a valid value in nftID
-    modifier nftIDMustExist(uint256 nftID) {
-        require(_nftCDP[nftID].oUSDPrinciple > 0, "NFT ID must exist");
-        _;
-    }
-    modifier nftIDMustNotExist(uint256 nftID) {
-        require(_nftCDP[nftID].oUSDPrinciple == 0, "NFT ID must not exist");
-        _;
-    }
-
-    modifier canDeletePosition(uint256 nftID) {
-        require(_nftCDP[nftID].lvUSDBorrowed == 0, "lvUSD borrowed must be zero");
-        _;
     }
 
     // * CDP Getters *//
