@@ -29,7 +29,7 @@ describe("LeverageEngine test suit", async function () {
                     r.leverageAllocator.address,
                     r.externalOUSD.address,
                 ),
-            ).to.be.revertedWith("onlyAdmin: Caller is not admin");
+            ).to.be.revertedWith("onlyAdmin: Not admin");
         });
     });
 
@@ -38,7 +38,7 @@ describe("LeverageEngine test suit", async function () {
             const leContract = await ethers.getContractFactory("LeverageEngine");
             const leverageEngine = await leContract.deploy(r.addr1.address);
             await expect(leverageEngine.createLeveragedPosition(1234, 1234)).to.be.revertedWith(
-                "expectInitialized: contract is not initialized",
+                "Not initialized",
             );
         });
 
@@ -46,7 +46,7 @@ describe("LeverageEngine test suit", async function () {
             const leContract = await ethers.getContractFactory("LeverageEngine");
             const leverageEngine = await leContract.deploy(r.addr1.address);
             await expect(leverageEngine.unwindLeveragedPosition(1234)).to.be.revertedWith(
-                "expectInitialized: contract is not initialized",
+                "Not initialized",
             );
         });
     });
@@ -54,7 +54,7 @@ describe("LeverageEngine test suit", async function () {
     it("Should revert if cycles is greater than global max cycles", async function () {
         const maxCycles = await r.parameterStore.getMaxNumberOfCycles();
         const promise = r.leverageEngine.createLeveragedPosition(ethers.utils.parseUnits("1"), maxCycles.add(1));
-        await expect(promise).to.be.revertedWith("Number of cycles must be lower then allowed max");
+        await expect(promise).to.be.revertedWith("Cycles greater than max allowed");
     });
 
     it("Should begin without a positionToken balance", async function () {

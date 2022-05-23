@@ -22,6 +22,22 @@ contract CDPosition {
 
     mapping(uint256 => CDP) internal _nftCDP;
 
+    // Maps return default value when entry is not present. OUSD principle will always be gt 0 if _nftCDP has
+    // a valid value in nftID
+    modifier nftIDMustExist(uint256 nftID) {
+        require(_nftCDP[nftID].oUSDPrinciple > 0, "NFT ID must exist");
+        _;
+    }
+    modifier nftIDMustNotExist(uint256 nftID) {
+        require(_nftCDP[nftID].oUSDPrinciple == 0, "NFT ID must not exist");
+        _;
+    }
+
+    modifier canDeletePosition(uint256 nftID) {
+        require(_nftCDP[nftID].lvUSDBorrowed == 0, "lvUSD borrowed must be zero");
+        _;
+    }
+
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Update both principle and total with OUSDPrinciple
     /// @param nftID newly minted NFT
@@ -49,7 +65,7 @@ contract CDPosition {
     /// @param nftID NFT position to update
     /// @param shares shares to remove
     function removeSharesFromPosition(uint256 nftID, uint256 shares) external nftIDMustExist(nftID) {
-        require(_nftCDP[nftID].shares >= shares, "Shares to remove exceed position balance");
+        require(_nftCDP[nftID].shares >= shares, "Shares exceed position balance");
         _nftCDP[nftID].shares -= shares;
     }
 
@@ -64,7 +80,7 @@ contract CDPosition {
     /// @param nftID NFT position to update
     /// @param lvUSDAmountToRepay amount to remove fom position's existing borrowed lvUSD sum
     function repayLvUSDToPosition(uint256 nftID, uint256 lvUSDAmountToRepay) external nftIDMustExist(nftID) {
-        require(_nftCDP[nftID].lvUSDBorrowed >= lvUSDAmountToRepay, "lvUSD Borrowed amount must be greater or equal than amount to repay");
+        require(_nftCDP[nftID].lvUSDBorrowed >= lvUSDAmountToRepay, "lvUSD is greater than borrowed");
         _nftCDP[nftID].lvUSDBorrowed -= lvUSDAmountToRepay;
     }
 
@@ -79,7 +95,7 @@ contract CDPosition {
     /// @param nftID NFT position to update
     /// @param oUSDAmountToWithdraw amount to remove to position's existing deposited sum
     function withdrawOUSDFromPosition(uint256 nftID, uint256 oUSDAmountToWithdraw) external nftIDMustExist(nftID) {
-        require(_nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw, "OUSD total amount must be greater or equal than amount to withdraw");
+        require(_nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw, "Insufficient OUSD balance");
         _nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
     }
 
@@ -94,22 +110,6 @@ contract CDPosition {
 
     function getCollateralRate() external view returns (uint256) {
         return _globalCollateralRate;
-    }
-
-    // Maps return default value when entry is not present. OUSD principle will always be gt 0 if _nftCDP has
-    // a valid value in nftID
-    modifier nftIDMustExist(uint256 nftID) {
-        require(_nftCDP[nftID].oUSDPrinciple > 0, "NFT ID must exist");
-        _;
-    }
-    modifier nftIDMustNotExist(uint256 nftID) {
-        require(_nftCDP[nftID].oUSDPrinciple == 0, "NFT ID must not exist");
-        _;
-    }
-
-    modifier canDeletePosition(uint256 nftID) {
-        require(_nftCDP[nftID].lvUSDBorrowed == 0, "Borrowed LvUSD must be zero before deleting");
-        _;
     }
 
     // * CDP Getters *//

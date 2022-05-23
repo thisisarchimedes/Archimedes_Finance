@@ -24,17 +24,17 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
     bool internal _initialized = false;
 
     modifier onlyAdmin() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "onlyAdmin: Caller is not admin");
+        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
         _;
     }
 
     modifier onlyExecutive() {
-        require(hasRole(EXECUTIVE_ROLE, msg.sender), "onlyExecutive: Caller is not executive");
+        require(hasRole(EXECUTIVE_ROLE, msg.sender), "Caller is not executive");
         _;
     }
 
     modifier expectInitialized() {
-        require(_initialized, "expectInitialized: contract is not initialized");
+        require(_initialized, "Not initialized");
         _;
     }
 
@@ -57,25 +57,26 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
         return positionTokenId;
     }
 
+    function exists(uint256 positionTokenId) external view expectInitialized returns (bool) {
+        return _exists(positionTokenId);
+    }
+
     /* override burn to only allow executive to burn positionToken */
     function burn(uint256 positionTokenId) public override(ERC721Burnable) nonReentrant expectInitialized onlyExecutive {
         super.burn(positionTokenId);
     }
 
-    function exists(uint256 positionTokenId) external view expectInitialized returns (bool) {
-        return _exists(positionTokenId);
+    /* Override required by Solidity: */
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl, ERC721Enumerable) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 
-    /* Overrides required by Solidity: */
+    /* Override required by Solidity: */
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
     ) internal virtual override(ERC721, ERC721Enumerable) {
         return super._beforeTokenTransfer(from, to, tokenId);
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl, ERC721Enumerable) returns (bool) {
-        return super.supportsInterface(interfaceId);
     }
 }
