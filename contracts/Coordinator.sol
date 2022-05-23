@@ -139,7 +139,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
         /// TODO: add slippage protection
         (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.xOUSDforLvUSD(redeemedOUSD, address(this), borrowedLvUSD);
-
+        console.log(" trying to repay %s exChangedLvUSD while original borrowedLvUSD was %s", exchangedLvUSD / 1 ether, borrowedLvUSD / 1 ether);
         _repayUnderNFT(_nftId, exchangedLvUSD);
 
         // transferring funds from exchanger to user
