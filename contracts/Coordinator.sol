@@ -110,6 +110,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
         uint256 ousdAmountExchanged = _exchanger.xLvUSDforOUSD(_amountToLeverage, address(this));
+        console.log("ousdAmountExchanged ", ousdAmountExchanged);
         uint256 feeTaken = _takeOriginationFee(ousdAmountExchanged);
         uint256 positionLeveragedOUSDAfterFees = ousdAmountExchanged - feeTaken;
         uint256 sharesFromDeposit = _vault.deposit(positionLeveragedOUSDAfterFees, address(this));
@@ -139,7 +140,6 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
         /// TODO: add slippage protection
         (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.xOUSDforLvUSD(redeemedOUSD, address(this), borrowedLvUSD);
-        console.log(" trying to repay %s exChangedLvUSD while original borrowedLvUSD was %s", exchangedLvUSD / 1 ether, borrowedLvUSD / 1 ether);
         _repayUnderNFT(_nftId, exchangedLvUSD);
 
         // transferring funds from exchanger to user
@@ -185,7 +185,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     }
 
     function _repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) internal {
-        require(_cdp.getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay, "Repay must be less than borrowed");
+        // require(_cdp.getLvUSDBorrowed(_nftId) <= _amountLvUSDToRepay, "Repay LvUSD must be egt borrowed");
         _lvUSD.transferFrom(_addressExchanger, address(this), _amountLvUSDToRepay);
         _cdp.repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
     }
