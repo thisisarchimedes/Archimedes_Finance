@@ -4,7 +4,10 @@ import {
     addressOUSD, abiOUSDToken,
     addressUSDT, abiUSDTToken,
     address3CRV, abi3CRVToken,
+    addressCurveOUSDPool,
+    helperSwapETHWith3CRV,
 } from "./MainnetHelper";
+import { createAndFundMetapool } from "./CurveHelper";
 import type {
     Coordinator,
     CDPosition,
@@ -48,6 +51,7 @@ export type ContractTestContext = {
     externalOUSD: Contract;
     externalUSDT: Contract;
     external3CRV: Contract;
+    curveLvUSDPool: Contract;
 }
 
 export async function buildContractTestContext (): Promise<ContractTestContext> {
@@ -105,6 +109,18 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         Coordinator
     ];
 
+    // Give context.owner some funds:
+    await context.lvUSD.mint(context.owner.address, ethers.utils.parseEther("1000.0"));
+    await helperSwapETHWith3CRV(context.owner, ethers.utils.parseEther("3.0"));
+
+    // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token
+    context.curveLvUSDPool = await createAndFundMetapool(context.owner, context);
+    // Setup pool with approval
+    await context.lvUSD.approve(context.curveLvUSDPool.address, ethers.utils.parseEther("1000"));
+
+    await context.lvUSD.approve(context.exchanger.address, ethers.constants.MaxUint256);
+    await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
+
     // Post init contracts
     await Promise.all([
         context.leverageEngine.init(
@@ -114,7 +130,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.leverageAllocator.address,
             context.externalOUSD.address,
         ),
-        context.exchanger.init(context.lvUSD.address, context.coordinator.address, context.externalOUSD.address),
+
         context.coordinator.init(
             context.lvUSD.address,
             context.vault.address,
@@ -123,6 +139,26 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.exchanger.address,
             context.parameterStore.address,
         ),
+
+        /**
+        address addressParameterStore,
+        address addressCoordinator,
+        address addressLvUSD,
+        address addressOUSD,
+        address address3CRV,
+        address addressPoolLvUSD3CRV,
+        address addressPoolOUSD3CRV
+         */
+        context.exchanger.init(
+            context.parameterStore.address,
+            context.coordinator.address,
+            context.lvUSD.address,
+            context.externalOUSD.address,
+            context.external3CRV.address,
+            context.curveLvUSDPool.address,
+            addressCurveOUSDPool,
+        ),
+
         context.vault.init(context.parameterStore.address, context.externalOUSD.address),
         context.parameterStore.init(context.treasurySigner.address),
         context.positionToken.init(context.leverageEngine.address),

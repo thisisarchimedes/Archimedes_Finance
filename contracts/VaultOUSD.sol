@@ -62,9 +62,9 @@ contract VaultOUSD is ERC4626, ReentrancyGuard {
             uint256 feeToCollect = (unhandledRebasePayment * _paramStore.getRebaseFeeRate()) / 1 ether;
             uint256 handledRebaseValueToKeepInVault = unhandledRebasePayment - feeToCollect;
 
-            _ousd.transfer(_paramStore.getTreasuryAddress(), feeToCollect);
-
             _assetsHandledByArchimedes += handledRebaseValueToKeepInVault;
+
+            _ousd.transfer(_paramStore.getTreasuryAddress(), feeToCollect);
         }
     }
 }

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 const getEighteenDecimal = (naturalNumber) => {
-    return ethers.utils.parseEther(naturalNumber.toString());
+    return ethers.utils.parseUnits(naturalNumber.toString());
 };
 
 describe("CDPosition test suit", async function () {
@@ -61,7 +61,7 @@ describe("CDPosition test suit", async function () {
         it("Should not delete position if position still has borrowed lvUSD", async function () {
             await cdp.createPosition(NFT_ID, BASIC_OUSD_PRINCIPLE);
             cdp.borrowLvUSDFromPosition(NFT_ID, getEighteenDecimal(100));
-            await expect(cdp.deletePosition(NFT_ID)).to.be.revertedWith("Borrowed LvUSD must be zero before deleting");
+            await expect(cdp.deletePosition(NFT_ID)).to.be.revertedWith("lvUSD borrowed must be zero");
         });
         it("Should not delete position if NFT ID does not exist in mapping", async function () {
             await expect(cdp.deletePosition(NFT_ID)).to.be.revertedWith("NFT ID must exist");
@@ -92,7 +92,7 @@ describe("CDPosition test suit", async function () {
         it("Should revert when removing more shares than the position owns", async function () {
             await expect(
                 cdp.removeSharesFromPosition(NFT_ID, 20),
-            ).to.be.revertedWith("Shares to remove exceed position balance");
+            ).to.be.revertedWith("Shares exceed position balance");
         });
     });
 
@@ -126,12 +126,6 @@ describe("CDPosition test suit", async function () {
                 BASIC_OUSD_PRINCIPLE,
                 getEighteenDecimal(LVUSD_AMOUNT_NATURAL - 1000),
                 0,
-            );
-        });
-
-        it("Should not mark down repayed lvUSD if not enough borrowed lvUSD", async function () {
-            await expect(cdp.repayLvUSDToPosition(NFT_ID, getEighteenDecimal(1000))).to.be.revertedWith(
-                "lvUSD Borrowed amount must be greater or equal than amount to repay",
             );
         });
 
@@ -190,7 +184,7 @@ describe("CDPosition test suit", async function () {
 
         it("Should revert if total deposited OUSD is lower then amount to withdraw", async function () {
             await expect(cdp.withdrawOUSDFromPosition(NFT_ID, getEighteenDecimal(1100000))).to.be.revertedWith(
-                "OUSD total amount must be greater or equal than amount to withdraw",
+                "Insufficient OUSD balance",
             );
         });
     });

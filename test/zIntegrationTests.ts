@@ -12,11 +12,12 @@ let pretendOUSDRebaseSigner : SignerWithAddress;
 let lvUSD3CRVPoolInstance;
 
 const userOUSDPrinciple = 100;
-const initialFundsInPool = 700;
+const initialFundsInPool = 800;
 const initialCoordinatorLvUSDBalance = 10000;
 const initialUserLevAllocation = 10000;
 
 let adminInitial3CRVBalance: number;
+let ownerLvUSDBalanceBeforeFunding: number;
 
 function parseUnitsNum (num) {
     return parseUnits(num.toString());
@@ -48,7 +49,7 @@ async function setupEnvForIntegrationTests () {
     expected state:
     - admin has 1000 lvUSD and 10 ethereum worth of 3CRV tokens, to fund pool
     - User has 1 ethereum worth (about 2000 OUSDs)  to use as principle
-    - pretenderOUSDSigner, which will act as OUSD rebase agent, has 10 ethereum worth (about 20k OUSD)
+    - pretendOUSDRebaseSigner, which will act as OUSD rebase agent, has 10 ethereum worth (about 20k OUSD)
     */
 
     // Prep owner accounts with funds needed to fund pool
@@ -61,7 +62,7 @@ async function setupEnvForIntegrationTests () {
     // Get User some OUSD for principle
     await helperSwapETHWithOUSD(user, parseUnits("1.0"));
 
-    // Fund pretenderOUSDSigner with OUSD
+    // Fund pretendOUSDRebaseSigner with OUSD
     await helperSwapETHWithOUSD(pretendOUSDRebaseSigner, parseUnits("10.0"));
 
     /* ====== admin manual processes ======
@@ -79,8 +80,8 @@ async function setupEnvForIntegrationTests () {
     - lvUSD/3CRV pool is set up and is funded with 700 tokens each
       (createAndFundMetapool funds pool with 100 tokens, second call adds 600 more)
     */
-
-    lvUSD3CRVPoolInstance = await createAndFundMetapool(owner, r);
+    ownerLvUSDBalanceBeforeFunding = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
+    lvUSD3CRVPoolInstance = r.curveLvUSDPool;
     await fundMetapool(lvUSD3CRVPoolInstance.address, [parseUnits("600.0"), parseUnits("600.0")], owner, r);
 }
 
@@ -115,7 +116,7 @@ describe("Test suit for setting up the stage", function () {
 
     it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
         const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
-        expect(adminLvUSDBalance).to.equal(300);
+        expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
     });
 
     it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
