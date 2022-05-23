@@ -115,10 +115,10 @@ contract Exchanger is IExchanger {
      * NOTE: There is no guarantee of a 1:1 exchange ratio, but should be close
      * Minimum is 90% * 90%  / _curveGuardPercentage * _curveGuardPercentage
      */
-    function xLvUSDforOUSD(uint256 amountLvUSD, address to) external returns (uint256 amountOUSD) {
-        uint256 _returned3CRV = _xLvUSDfor3CRV(amountLvUSD, address(this));
-        uint256 _returnedOUSD = _x3CRVforOUSD(_returned3CRV, _addressCoordinator);
-        // TODO emit an event
+    function swapLvUSDforOUSD(uint256 amountLvUSD) external returns (uint256 amountOUSD) {
+        uint256 _returned3CRV = _xLvUSDfor3CRV(amountLvUSD);
+        uint256 _returnedOUSD = _x3CRVforOUSD(_returned3CRV);
+        _ousd.safeTransfer(_addressCoordinator, _returnedOUSD);
         return _returnedOUSD;
     }
 
@@ -128,7 +128,6 @@ contract Exchanger is IExchanger {
      * - MUST emit an event
      * - MUST revert if we dont get back the minimum required OUSD
      * @param amountOUSD amount of OUSD we have available to exchange
-     * @param to address to send the exchanged LvUSD
      * @param minRequiredLvUSD amount of OUSD we must get back or revert
      * @return lvUSDReturned amount of LvUSD we got back
      * NOTE: lvUSDReturned isnt necessarily minRequiredLvUSD - it
@@ -137,32 +136,31 @@ contract Exchanger is IExchanger {
      * NOTE: There is no gaurnatee of a 1:1 exchange ratio
      * @dev OUSD funds are already under Exchanger address, if called by Coordinator
      */
-    function xOUSDforLvUSD(
-        uint256 amountOUSD,
-        address to,
-        uint256 minRequiredLvUSD
-    ) external returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
-        // Use "minRequiredLvUSD" to estimate "neededOUSD"
+    function swapOUSDforLvUSD(uint256 amountOUSD, uint256 minRequiredLvUSD) external returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
+        // Estimate "neededOUSD" using get_dy()
         uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(_indexLvUSD, _index3CRV, minRequiredLvUSD);
         uint256 _neededOUSD = _poolOUSD3CRV.get_dy(_index3CRV, _indexOUSD, _needed3CRV);
+        _needed3CRV = (_neededOUSD * 103) / 100;
 
-        // We lose some $ from fees and slippage:
+        require(amountOUSD >= _neededOUSD, "Not enough OUSD for exchange");
+
+        // We lose some $ from fees and slippage
         // multiply _neededOUSD * 103%
-        uint256 _returned3CRV = _xOUSDfor3CRV((_neededOUSD * 103) / 100, to);
-        uint256 _returnedLvUSD = _x3CRVforLvUSD(_returned3CRV, to);
+        uint256 _returned3CRV = _xOUSDfor3CRV(_needed3CRV);
+        uint256 _returnedLvUSD = _x3CRVforLvUSD(_returned3CRV);
 
         require(_returnedLvUSD >= minRequiredLvUSD, "Pool imbalanced: not enough LvUSD");
-        // TODO emit an event
+
+        _lvusd.safeTransfer(_addressCoordinator, _returnedLvUSD);
         return (_returnedLvUSD, remainingOUSD);
     }
 
     /**
      * @dev Exchange using the CurveFi OUSD/3CRV Metapool
      * @param amountOUSD amount of OUSD to put into the pool
-     * @param to address to send exchanged 3CRV to
      * @return amount3CRV amount of 3CRV returned from exchange
      */
-    function _xOUSDfor3CRV(uint256 amountOUSD, address to) internal returns (uint256 amount3CRV) {
+    function _xOUSDfor3CRV(uint256 amountOUSD) internal returns (uint256 amount3CRV) {
         /**
          * @param _expected3CRV uses get_dy() to estimate amount the exchange will give us
          * @param _minimum3CRV mimimum accounting for slippage. (_expected3CRV * slippage)
@@ -198,10 +196,9 @@ contract Exchanger is IExchanger {
     /**
      * @dev Exchange using the CurveFi LvUSD/3CRV Metapool
      * @param amount3CRV amount of 3CRV to exchange
-     * @param to address to send exchanged 3CRV to
      * @return amountLvUSD amount of LvUSD returned from exchange
      */
-    function _x3CRVforLvUSD(uint256 amount3CRV, address to) internal returns (uint256 amountLvUSD) {
+    function _x3CRVforLvUSD(uint256 amount3CRV) internal returns (uint256 amountLvUSD) {
         /**
          * @param _expectedLvUSD uses get_dy() to estimate amount the exchange will give us
          * @param _minimumLvUSD mimimum accounting for slippage. (_expectedOUSD * slippage)
@@ -237,10 +234,9 @@ contract Exchanger is IExchanger {
     /**
      * @dev Exchange using the CurveFi LvUSD/3CRV Metapool
      * @param amountLvUSD amount of LvUSD to exchange
-     * @param to address to send exchanged 3CRV to
      * @return amount3CRV amount of 3CRV returned from exchange
      */
-    function _xLvUSDfor3CRV(uint256 amountLvUSD, address to) internal returns (uint256 amount3CRV) {
+    function _xLvUSDfor3CRV(uint256 amountLvUSD) internal returns (uint256 amount3CRV) {
         /**
          * @param _expected3CRV uses get_dy() to estimate amount the exchange will give us
          * @param _minimum3CRV mimimum accounting for slippage. (_expected3CRV * slippage)
@@ -276,10 +272,9 @@ contract Exchanger is IExchanger {
     /**
      * @dev Exchange using the CurveFi OUSD/3CRV Metapool
      * @param amount3CRV amount of LvUSD to exchange
-     * @param to address to send exchanged 3CRV to
      * @return amountOUSD amount returned from exchange
      */
-    function _x3CRVforOUSD(uint256 amount3CRV, address to) internal returns (uint256 amountOUSD) {
+    function _x3CRVforOUSD(uint256 amount3CRV) internal returns (uint256 amountOUSD) {
         /**
          * @param amount3CRV amount of 3CRV we are exchanging
          * @param _expectedOUSD uses get_dy() to estimate amount the exchange will give us
@@ -313,19 +308,19 @@ contract Exchanger is IExchanger {
         return _returnedOUSD;
     }
 
-    function xLvUSDfor3CRV(uint256 amountLvUSD, address to) external returns (uint256) {
-        return _xLvUSDfor3CRV(amountLvUSD, to);
+    function xLvUSDfor3CRV(uint256 amountLvUSD) external returns (uint256) {
+        return _xLvUSDfor3CRV(amountLvUSD);
     }
 
-    function x3CRVforOUSD(uint256 amount3CRV, address to) external returns (uint256) {
-        return _x3CRVforOUSD(amount3CRV, to);
+    function x3CRVforOUSD(uint256 amount3CRV) external returns (uint256) {
+        return _x3CRVforOUSD(amount3CRV);
     }
 
-    function xOUSDfor3CRV(uint256 amountOUSD, address to) external returns (uint256) {
-        return _xOUSDfor3CRV(amountOUSD, to);
+    function xOUSDfor3CRV(uint256 amountOUSD) external returns (uint256) {
+        return _xOUSDfor3CRV(amountOUSD);
     }
 
-    function x3CRVforLvUSD(uint256 amount3CRV, address to) external returns (uint256) {
-        return _x3CRVforLvUSD(amount3CRV, to);
+    function x3CRVforLvUSD(uint256 amount3CRV) external returns (uint256) {
+        return _x3CRVforLvUSD(amount3CRV);
     }
 }

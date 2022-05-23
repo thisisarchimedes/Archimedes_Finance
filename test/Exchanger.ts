@@ -12,6 +12,7 @@ describe("Exchanger Test suit", function () {
     let r: ContractTestContext;
     let lvUSD;
     let exchanger;
+    let coordinator;
     let ousd;
 
     // Amount of LvUSD & OUSD exchanger starts with
@@ -32,6 +33,7 @@ describe("Exchanger Test suit", function () {
         ousd = r.externalOUSD;
         owner = r.owner;
         exchanger = r.exchanger;
+        coordinator = r.coordinator;
 
         // Fund exchanger
         await lvUSD.mint(exchanger.address, amountStarting);
@@ -46,44 +48,37 @@ describe("Exchanger Test suit", function () {
         });
 
         // Create position
-        describe("xLvUSDforOUSD()", function () {
-            it("Should send & receive correct amounts", async function () {
-                await exchanger.xLvUSDforOUSD(amountToExchange, exchanger.address);
+        describe("swapLvUSDforOUSD()", function () {
+            beforeEach(async function () {
+                await exchanger.swapLvUSDforOUSD(amountToExchange);
+            });
+            it("Should send correct amount LvUSD", async function () {
                 const balanceLvUSD = (await lvUSD.balanceOf(exchanger.address));
                 const expectedLvUSD = (amountStarting.sub(amountToExchange));
                 expect(balanceLvUSD).eq(expectedLvUSD);
-                const balanceOUSD = (await ousd.balanceOf(exchanger.address));
-                const expectedOUSD = parseBN(amountStarting.add(amountToExchange));
-                // console.log("%s LvUSD => %s OUSD", parseBN(amountToExchange), parseBN(balanceOUSD.sub(amountStarting)));
-                // console.log("delta", parseBN(amountToExchange) - parseBN(balanceOUSD.sub(amountStarting)));
-                // console.log("bal lvUSD: %s, expected lvUSD: %s", parseBN(balanceLvUSD), parseBN(expectedLvUSD));
-                // console.log("bal OUSD: %s, expected OUSD: %s", parseBN(balanceOUSD), parseBN(expectedOUSD));
-                expect(parseBN(balanceOUSD)).closeTo(expectedOUSD, closeToRange);
+            });
+            it("Should receive correct amount OUSD", async function () {
+                // funds end up at coordinator's address
+                const balanceOUSD = parseBN(await ousd.balanceOf(coordinator.address));
+                expect(balanceOUSD).closeTo(parseBN(amountToExchange), closeToRange);
             });
         });
-        describe("xOUSDforLvUSD()", function () {
+        describe("swapOUSDforLvUSD()", function () {
             it("Should only use min needed to unwind", async function () {
-                // send 3 OUSD and require at least 2 LvUSD back
-                await exchanger.xOUSDforLvUSD(amountToExchange, owner.address, amountMinRequired);
-                const balanceOUSD = await ousd.balanceOf(exchanger.address);
-                const amountUsed = amountStarting.sub(balanceOUSD);
-                const remainingOUSD = parseBN(amountToExchange.sub(amountUsed));
-                const expectedRemaining = parseBN(amountToExchange.sub(amountMinRequired));
-                // console.log("Remaining OUSD %s, expectedRemaining %s:", remainingOUSD, expectedRemaining);
-                // console.log("delta", expectedRemaining - remainingOUSD);
-                expect(remainingOUSD).closeTo(expectedRemaining, closeToRange);
+                await exchanger.swapOUSDforLvUSD(amountToExchange, amountMinRequired);
+                const balanceOUSD = parseBN(await ousd.balanceOf(exchanger.address));
+                const expectedOUSD = parseBN(amountStarting.sub(amountMinRequired));
+                expect(balanceOUSD).closeTo(expectedOUSD, closeToRange);
             });
             it("LvUSD balance should increase by closeTo 'amountMinRequired'", async function () {
-                await exchanger.xOUSDforLvUSD(amountToExchange, owner.address, amountMinRequired);
-                const balanceLvUSD = parseBN(await lvUSD.balanceOf(exchanger.address));
-                const expectedLvUSD = parseBN(amountStarting.add(amountMinRequired));
-                // console.log("Remaining LvUSD %s, expectedLvUSD %s:", balanceLvUSD, expectedLvUSD);
-                // console.log("delta", balanceLvUSD - expectedLvUSD);
-                expect(balanceLvUSD).closeTo(expectedLvUSD, closeToRange);
+                await exchanger.swapOUSDforLvUSD(amountToExchange, amountMinRequired);
+                const balanceLvUSD = await lvUSD.balanceOf(coordinator.address);
+                expect(parseBN(balanceLvUSD)).closeTo(parseBN(amountMinRequired), closeToRange);
             });
-            it("End funds should be under Coordinator address", async function () {
-                // TODO
-                return true;
+            it("Should revert if we dont get enough back (minimumRequired)", async function () {
+                // set minimum to 110% of what we send in
+                const minReq = amountToExchange.mul(110).div(100);
+                await expect(exchanger.swapOUSDforLvUSD(amountToExchange, minReq)).to.be.revertedWith("Not enough OUSD for exchange");
             });
         });
     });

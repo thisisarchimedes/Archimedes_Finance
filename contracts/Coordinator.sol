@@ -109,7 +109,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         // borrowUnderNFT transfer lvUSD from Coordinator to Exchanger + mark borrowed lvUSD in CDP under nft ID
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
-        uint256 ousdAmountExchanged = _exchanger.xLvUSDforOUSD(_amountToLeverage, address(this));
+        uint256 ousdAmountExchanged = _exchanger.swapLvUSDforOUSD(_amountToLeverage);
         console.log("ousdAmountExchanged ", ousdAmountExchanged);
         uint256 feeTaken = _takeOriginationFee(ousdAmountExchanged);
         uint256 positionLeveragedOUSDAfterFees = ousdAmountExchanged - feeTaken;
@@ -139,7 +139,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         uint256 redeemedOUSD = _vault.redeem(numberOfSharesInPosition, _addressExchanger, address(this));
 
         /// TODO: add slippage protection
-        (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.xOUSDforLvUSD(redeemedOUSD, address(this), borrowedLvUSD);
+        (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.swapOUSDforLvUSD(redeemedOUSD, borrowedLvUSD);
         _repayUnderNFT(_nftId, exchangedLvUSD);
 
         // transferring funds from exchanger to user
