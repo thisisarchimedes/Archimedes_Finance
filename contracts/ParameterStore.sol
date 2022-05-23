@@ -18,6 +18,29 @@ contract ParameterStore {
         _treasuryAddress = treasuryAddress;
     }
 
+    function changeTreasuryAddress(address newTreasuryAddress) external {
+        _treasuryAddress = newTreasuryAddress;
+    }
+
+    function changeOriginationFeeRate(uint256 newFeeRate) external {
+        _originationFeeRate = newFeeRate;
+    }
+
+    function changeGlobalCollateralRate(uint256 _newGlobalCollateralRate) external {
+        require(_newGlobalCollateralRate <= 100 && _newGlobalCollateralRate > 0, "New collateral rate out of range");
+        _globalCollateralRate = _newGlobalCollateralRate;
+    }
+
+    function changeMaxNumberOfCycles(uint256 _newMaxNumberOfCycles) external {
+        _maxNumberOfCycles = _newMaxNumberOfCycles;
+    }
+
+    function changeRebaseFeeRate(uint256 _newRebaseFeeRate) external {
+        // rebaseFeeRate must be a number between 1 and 99 (in 18 decimal)
+        require(_newRebaseFeeRate < (100 ether) && _newRebaseFeeRate > (0 ether), "New rebase fee rate out of range");
+        _rebaseFeeRate = _newRebaseFeeRate;
+    }
+
     function getMaxNumberOfCycles() external view returns (uint256) {
         return _maxNumberOfCycles;
     }
@@ -30,41 +53,19 @@ contract ParameterStore {
         return _globalCollateralRate;
     }
 
-    function getTreasuryAddress() public view returns (address) {
-        return _treasuryAddress;
-    }
-
-    function changeTreasuryAddress(address newTreasuryAddress) external {
-        _treasuryAddress = newTreasuryAddress;
-    }
-
-    function changeOriginationFeeRate(uint256 newFeeRate) external {
-        _originationFeeRate = newFeeRate;
-    }
-
-    function changeGlobalCollateralRate(uint256 _newGlobalCollateralRate) external {
-        require(_newGlobalCollateralRate <= 100 && _newGlobalCollateralRate > 0, "_globalCollateralRate must be a number between 1 and 100");
-        _globalCollateralRate = _newGlobalCollateralRate;
-    }
-
-    function changeMaxNumberOfCycles(uint256 _newMaxNumberOfCycles) external {
-        _maxNumberOfCycles = _newMaxNumberOfCycles;
-    }
-
     function getRebaseFeeRate() external view returns (uint256) {
         return _rebaseFeeRate;
     }
 
-    function changeRebaseFeeRate(uint256 _newRebaseFeeRate) external {
-        require(_newRebaseFeeRate < (100 ether) && _newRebaseFeeRate > (0 ether), "rebaseFeeRate must be a number between 1 and 99 (in 18 decimal)");
-        _rebaseFeeRate = _newRebaseFeeRate;
+    function getTreasuryAddress() public view returns (address) {
+        return _treasuryAddress;
     }
 
     /// Method returns the allowed leverage for principle and number of cycles
     /// Return value does not include principle!
     /// must be public as we need to access it in contract
     function getAllowedLeverageForPosition(uint256 principle, uint256 numberOfCycles) public view returns (uint256) {
-        require(numberOfCycles <= _maxNumberOfCycles, "Number of cycles must be lower then allowed max");
+        require(numberOfCycles <= _maxNumberOfCycles, "Cycles greater than max allowed");
         uint256 leverageAmount = 0;
         uint256 cyclePrinciple = principle;
         for (uint256 i = 0; i < numberOfCycles; i++) {

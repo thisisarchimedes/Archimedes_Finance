@@ -92,7 +92,7 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
 async function createAndFundMetapool (owner, r) {
     const lvUSD = r.lvUSD;
     const addressPool = await createMetapool(lvUSD, owner);
-    await fundMetapool(addressPool, [ethers.utils.parseEther("100.0"), ethers.utils.parseEther("100.0")], owner, r);
+    await fundMetapool(addressPool, [ethers.utils.parseUnits("100.0"), ethers.utils.parseUnits("100.0")], owner, r);
     const pool = await getMetapool(addressPool, owner);
     return pool;
 }

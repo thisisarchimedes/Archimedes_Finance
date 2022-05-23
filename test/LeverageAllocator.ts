@@ -19,7 +19,7 @@ describe("LeverageAllocator test suit", async function () {
 
         await expect(
             leverageAllocator.setAddressToLvUSDAvailable(r.addr2.address, 1234),
-        ).to.be.revertedWith("onlyAdmin: Caller is not admin");
+        ).to.be.revertedWith("onlyAdmin: Not admin");
     });
 
     it("Should allow admin to set available lvUSD allocation", async function () {
@@ -33,13 +33,13 @@ describe("LeverageAllocator test suit", async function () {
 
     it("Should revert if attempting to use more than allocated amount", async function () {
         await expect(
-            r.leverageAllocator.useAvailableLvUSD(r.addr1.address, ethers.utils.parseEther("2")),
-        ).to.be.revertedWith("useAvailableLvUSD: amount is greater than available lvUSD allocation");
+            r.leverageAllocator.useAvailableLvUSD(r.addr1.address, ethers.utils.parseUnits("2")),
+        ).to.be.revertedWith("Insufficient lvUSD allocation");
     });
 
     it("Should successfully use allocated amount without affecting other address amounts", async function () {
-        const expectedRemainingAmount = ethers.utils.parseEther("0");
-        const transaction = await r.leverageAllocator.useAvailableLvUSD(r.addr1.address, ethers.utils.parseEther("1"));
+        const expectedRemainingAmount = ethers.utils.parseUnits("0");
+        const transaction = await r.leverageAllocator.useAvailableLvUSD(r.addr1.address, ethers.utils.parseUnits("1"));
         await expect(transaction.value).to.equal(expectedRemainingAmount);
         const remainingAmount = await r.leverageAllocator.getAddressToLvUSDAvailable(r.addr1.address);
         expect(remainingAmount).to.equal(expectedRemainingAmount);
