@@ -119,49 +119,49 @@ async function setupEnvForIntegrationTests () {
     await fundMetapool(lvUSD3CRVPoolInstance.address, [parseUnits("600.0"), parseUnits("600.0")], owner, r);
 }
 
-// describe("Test suit for setting up the stage", function () {
-//     before(async function () {
-//         await setupEnvForIntegrationTests();
-//     });
+describe("Test suit for setting up the stage", function () {
+    before(async function () {
+        await setupEnvForIntegrationTests();
+    });
 
-//     it("Should have initialCoordinatorLvUSDBalance lvUSD balance under coordinator", async function () {
-//         const coordinatorLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
-//         expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
-//     });
+    it("Should have initialCoordinatorLvUSDBalance lvUSD balance under coordinator", async function () {
+        const coordinatorLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
+        expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
+    });
 
-//     it("Should have setup OUSD pretender with OUSD to spend ", async function () {
-//         const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretendOUSDRebaseSigner.getAddress()));
-//         /// since we are exchanging 10 ethereum for the dollar value of token, price is not set. Checking for a reasonable value
-//         expect(pretenderOUSDbalance).to.greaterThan(1000);
-//     });
+    it("Should have setup OUSD pretender with OUSD to spend ", async function () {
+        const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretendOUSDRebaseSigner.getAddress()));
+        /// since we are exchanging 10 ethereum for the dollar value of token, price is not set. Checking for a reasonable value
+        expect(pretenderOUSDbalance).to.greaterThan(1000);
+    });
 
-//     it("Should have setup user with  enough OUSD to cover principle amount", async function () {
-//         const userOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await user.getAddress()));
-//         expect(userOUSDbalance).to.greaterThan(userOUSDPrinciple);
-//     });
+    it("Should have setup user with  enough OUSD to cover principle amount", async function () {
+        const userOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await user.getAddress()));
+        expect(userOUSDbalance).to.greaterThan(userOUSDPrinciple);
+    });
 
-//     it("Should have initialFundsInPool as balance of pool", async function () {
-//         printPoolState(lvUSD3CRVPoolInstance);
-//         const lvUSDCoinsInPool = await lvUSD3CRVPoolInstance.balances(0);
-//         const crvCoinsInPool = await lvUSD3CRVPoolInstance.balances(1);
-//         expect(lvUSDCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
-//         expect(crvCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
-//     });
+    it("Should have initialFundsInPool as balance of pool", async function () {
+        printPoolState(lvUSD3CRVPoolInstance);
+        const lvUSDCoinsInPool = await lvUSD3CRVPoolInstance.balances(0);
+        const crvCoinsInPool = await lvUSD3CRVPoolInstance.balances(1);
+        expect(lvUSDCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
+        expect(crvCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
+    });
 
-//     it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
-//         const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
-//         expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
-//     });
+    it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
+        const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
+        expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
+    });
 
-//     it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
-//         const admin3CRVBalance = getFloatFromBigNum(await r.external3CRV.balanceOf(await owner.getAddress()));
-//         expect(admin3CRVBalance).to.lessThan(adminInitial3CRVBalance);
-//     });
+    it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
+        const admin3CRVBalance = getFloatFromBigNum(await r.external3CRV.balanceOf(await owner.getAddress()));
+        expect(admin3CRVBalance).to.lessThan(adminInitial3CRVBalance);
+    });
 
-//     it("Should have set a big leverage allocation for user", async function () {
-//         expect(await r.leverageAllocator.getAddressToLvUSDAvailable(await user.getAddress())).to.equal(parseUnitsNum(initialUserLevAllocation));
-//     });
-// });
+    it("Should have set a big leverage allocation for user", async function () {
+        expect(await r.leverageAllocator.getAddressToLvUSDAvailable(await user.getAddress())).to.equal(parseUnitsNum(initialUserLevAllocation));
+    });
+});
 
 describe("Test suit for getting leverage", function () {
     let leverageUserIsTaking: number;
@@ -217,12 +217,21 @@ describe("test suit for rebase events", function () {
         await r.vault.takeRebaseFees();
     });
     it("Should update treasury with rebase fees", async function () {
+        printPositionState(r, positionId);
         printMiscInfo(r, user);
-
         const treasuryBalance = getFloatFromBigNum(
             await r.externalOUSD.balanceOf(r.treasurySigner.address),
         );
         /// treasury should have originationFee + rebaseFee = 8.5 + 20*0.1 = 8.5+2 = 10.5
         expect(treasuryBalance).to.closeTo(10.5, 0.1);
     });
+
+    it("Should update assets deposited in vault", async function () {
+        const vaultOUSDBalance = getFloatFromBigNum(await r.vault.totalAssets());
+        /// vault should have deposited funds + OUSDRebase after fee = ~262 + (20-20*0.1) = 262 + 18 = 280
+        expect(vaultOUSDBalance).to.closeTo(280, 0.5);
+    });
+
+    // TODO : OUSDEarned is not being updated at the moment.
+    // It can be a view that does a previewRedeem on vault with position shares and OUSDEarned is the delta with that and OUSDTotal
 });
