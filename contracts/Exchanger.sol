@@ -151,6 +151,10 @@ contract Exchanger is IExchanger {
 
         require(_returnedLvUSD >= minRequiredLvUSD, "Pool imbalanced: not enough LvUSD");
 
+        // calculate remaining OUSD
+        uint256 remainingOUSD = amountOUSD - _neededOUSD;
+
+        _ousd.safeTransfer(_addressCoordinator, remainingOUSD);
         _lvusd.safeTransfer(_addressCoordinator, _returnedLvUSD);
         return (_returnedLvUSD, remainingOUSD);
     }
