@@ -230,7 +230,6 @@ contract Exchanger is IExchanger {
 
         // Exchange LvUSD for 3CRV:
         _returnedLvUSD = _poolLvUSD3CRV.exchange(1, 0, amount3CRV, _minimumLvUSD);
-
         return _returnedLvUSD;
     }
 
@@ -309,6 +308,7 @@ contract Exchanger is IExchanger {
 
         // Exchange LvUSD for 3CRV:
         _returnedOUSD = _poolOUSD3CRV.exchange(1, 0, amount3CRV, _minimumOUSD);
+        _ousd.safeTransfer(_addressCoordinator, _returnedOUSD);
 
         return _returnedOUSD;
     }

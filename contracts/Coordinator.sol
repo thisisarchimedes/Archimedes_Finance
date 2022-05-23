@@ -69,7 +69,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     // Note: Expects funds to be under coordinator already
     function depositCollateralUnderNFT(uint256 _nftId, uint256 _amountInOUSD) external override {
         /// Transfer collateral to vault, mint shares to shares owner
-        uint256 shares = _vault.deposit(_amountInOUSD, address(this));
+        uint256 shares = _vault.archimedesDeposit(_amountInOUSD, address(this));
         // create CDP position with collateral
         _cdp.createPosition(_nftId, _amountInOUSD);
         _cdp.addSharesToPosition(_nftId, shares);
@@ -108,12 +108,15 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
         // borrowUnderNFT transfer lvUSD from Coordinator to Exchanger + mark borrowed lvUSD in CDP under nft ID
         _borrowUnderNFT(_nftId, _amountToLeverage);
-
+        console.log("getLeveragedOUSD: OUSD coordinator balance before exchange %s", _ousd.balanceOf(address(this)));
         uint256 ousdAmountExchanged = _exchanger.xLvUSDforOUSD(_amountToLeverage, address(this));
-        console.log("ousdAmountExchanged ", ousdAmountExchanged);
+        console.log("getLeveragedOUSD: OUSD coordinator balance after exchange %s", _ousd.balanceOf(address(this)));
+
+        console.log("getLeveragedOUSD: ousdAmountExchanged ", ousdAmountExchanged / 1 ether);
         uint256 feeTaken = _takeOriginationFee(ousdAmountExchanged);
+        console.log("getLeveragedOUSD: After taking fee");
         uint256 positionLeveragedOUSDAfterFees = ousdAmountExchanged - feeTaken;
-        uint256 sharesFromDeposit = _vault.deposit(positionLeveragedOUSDAfterFees, address(this));
+        uint256 sharesFromDeposit = _vault.archimedesDeposit(positionLeveragedOUSDAfterFees, address(this));
 
         _cdp.addSharesToPosition(_nftId, sharesFromDeposit);
         _cdp.depositOUSDtoPosition(_nftId, positionLeveragedOUSDAfterFees);
@@ -136,7 +139,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
         require(numberOfSharesInPosition > 0, "Position has no shares");
 
-        uint256 redeemedOUSD = _vault.redeem(numberOfSharesInPosition, _addressExchanger, address(this));
+        uint256 redeemedOUSD = _vault.archimedesRedeem(numberOfSharesInPosition, _addressExchanger, address(this));
 
         /// TODO: add slippage protection
         (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.xOUSDforLvUSD(redeemedOUSD, address(this), borrowedLvUSD);
@@ -192,6 +195,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
     function _takeOriginationFee(uint256 _leveragedOUSDAmount) internal returns (uint256 fee) {
         uint256 _fee = _paramStore.calculateOriginationFee(_leveragedOUSDAmount);
+        console.log("_takeOriginationFee is taking a fee of %s", _fee / 1 ether);
         _ousd.safeTransfer(_paramStore.getTreasuryAddress(), _fee);
         return _fee;
     }

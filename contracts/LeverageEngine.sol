@@ -84,11 +84,18 @@ contract LeverageEngine is ReentrancyGuard, AccessControl {
     /// @param cycles How many leverage cycles to do
     function createLeveragedPosition(uint256 ousdPrinciple, uint256 cycles) external expectInitialized nonReentrant returns (uint256) {
         uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
+        console.log("CLP: lvUSDAmount is %s and ousdPrinciple is %s ", lvUSDAmount / 1 ether, ousdPrinciple / 1 ether);
         _leverageAllocator.useAvailableLvUSD(msg.sender, lvUSDAmount);
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
-        _ousd.transferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
+        console.log("CLP: positionTokenId %s", positionTokenId);
+        console.log("CLP: msg.sender is %s, coordinator is %s", msg.sender, _addressCoordinator);
+        _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
+        console.log("CLP: after transfer of %s principle OUSD to coordinator", ousdPrinciple/ 1 ether);
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple);
+        console.log("CLP: after depositCollateralUnderNFT");
         _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
+        console.log("CLP: after getLeveragedOUSD");
+
         return positionTokenId;
     }
 
