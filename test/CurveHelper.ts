@@ -9,6 +9,9 @@ import {
     addressCurve3Pool,
 } from "./MainnetHelper";
 
+// Hard-coded amount we use to fund the pool with
+const fundedPoolAmount = ethers.utils.parseEther("200.0");
+
 /** Create a Curve Meta Pool that uses 3CRV
 * @param token: ERC20 token balanced in the pool
 * @param owner: Signer used to deploy / own the pool
@@ -68,33 +71,48 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
     await token3CRV.approve(addressPool, amount3CRV);
     await lvUSD.approve(addressPool, amountLvUSD);
     const pool = await getMetapool(addressPool, owner);
-    const balanceLvUSD = await pool.balances(0);
-    const balance3CRV = await pool.balances(1);
-    // if the pool is NOT empty we calculated expected amount of minted LP
+    let balanceLvUSD = await pool.balances(0);
+    let balance3CRV = await pool.balances(1);
+    // if the pool is NOT empty we calculate expected amount of minted LP
     if (balanceLvUSD > 0 && balance3CRV > 0) {
         // https://curve.readthedocs.io/factory-pools.html#getting-pool-info
         const calc = await pool.calc_token_amount([amountLvUSD, amount3CRV], true);
+
         // allows for 1% slippage by requiring only 99%
         const onePercent = calc.div(100);
         const expected = calc.sub(onePercent);
         await pool.add_liquidity([amountLvUSD, amount3CRV], expected, owner.address);
     } else {
-    // otherwise, its a brand new empty pool so we deposit directly
+        // otherwise, its a brand new empty pool so we deposit directly
         await pool.add_liquidity([amountLvUSD, amount3CRV], 1, owner.address);
     }
+    balanceLvUSD = await pool.balances(0, {
+        gasLimit: 3000000,
+    });
+    balance3CRV = await pool.balances(1, {
+        gasLimit: 3000000,
+    });
 }
 
 /**  Creates & Funds a LvUSD/3CRV Metapool
- * funds pool with 100 LvUSD & 100 3CRV
+ * funds pools with "fundedPoolAmount" LvUSD & 3CRV
  * @param owner: signer
  * @param r: instance: ContractContextTest
  */
 async function createAndFundMetapool (owner, r) {
     const lvUSD = r.lvUSD;
     const addressPool = await createMetapool(lvUSD, owner);
-    await fundMetapool(addressPool, [ethers.utils.parseUnits("100.0"), ethers.utils.parseUnits("100.0")], owner, r);
     const pool = await getMetapool(addressPool, owner);
-    return pool;
+    // Should not be able to call this multiple times
+    // Check to make sure pool is empty
+    const poolCoin0Bal = ethers.utils.formatUnits(await pool.balances(0));
+    const poolCoin1Bal = ethers.utils.formatUnits(await pool.balances(1));
+    if (poolCoin0Bal === "0.0" && poolCoin1Bal === "0.0") {
+        await fundMetapool(addressPool, [fundedPoolAmount, fundedPoolAmount], owner, r);
+        return pool;
+    } else {
+        throw new Error("Pool already created at [" + addressPool + "]. Use fundMetapool() instead.");
+    }
 }
 
 // Swap LvUSD for 3CRV using the Metapool
@@ -113,4 +131,5 @@ export {
     createAndFundMetapool,
     exchangeLvUSDfor3CRV,
     exchange3CRVfor3LvUSD,
+    fundedPoolAmount,
 };
