@@ -109,9 +109,9 @@ async function createAndFundMetapool (owner, r) {
     const pool = await getMetapool(addressPool, owner);
     // Should not be able to call this multiple times
     // Check to make sure pool is empty
-    const poolCoin0Bal = await pool.balances(0);
-    const poolCoin1Bal = await pool.balances(1);
-    if (poolCoin0Bal == 0 && poolCoin1Bal == 0) {
+    const poolCoin0Bal = ethers.utils.formatUnits(await pool.balances(0));
+    const poolCoin1Bal = ethers.utils.formatUnits(await pool.balances(1));
+    if (poolCoin0Bal === "0.0" && poolCoin1Bal === "0.0") {
         await fundMetapool(addressPool, [fundedPoolAmount, fundedPoolAmount], owner, r);
         return pool;
     } else {
