@@ -110,10 +110,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
         uint256 ousdAmountExchanged = _exchanger.swapLvUSDforOUSD(_amountToLeverage);
-        console.log("getLeveragedOUSD: OUSD coordinator balance before exchange %s", _ousd.balanceOf(address(this)));
-        console.log("getLeveragedOUSD: ousdAmountExchanged ", ousdAmountExchanged / 1 ether);
         uint256 feeTaken = _takeOriginationFee(ousdAmountExchanged);
-        console.log("getLeveragedOUSD: After taking fee");
         uint256 positionLeveragedOUSDAfterFees = ousdAmountExchanged - feeTaken;
         uint256 sharesFromDeposit = _vault.archimedesDeposit(positionLeveragedOUSDAfterFees, address(this));
 
@@ -135,28 +132,20 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
         uint256 numberOfSharesInPosition = _cdp.getShares(_nftId);
         uint256 borrowedLvUSD = _cdp.getLvUSDBorrowed(_nftId);
-        console.log("CoorUnwind: borrowedLvUSD");
         require(numberOfSharesInPosition > 0, "Position has no shares");
 
         uint256 redeemedOUSD = _vault.archimedesRedeem(numberOfSharesInPosition, _addressExchanger, address(this));
-        console.log("CoorUnwind: redeemedOUSD");
 
         /// TODO: add slippage protection
-        console.log("CoorUnwind: Before swap with values : redeemedOUSD %s , borrowedLvUSD %s", redeemedOUSD / 1 ether, borrowedLvUSD / 1 ether);
-
         (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.swapOUSDforLvUSD(redeemedOUSD, borrowedLvUSD);
-        console.log("CoorUnwind: exchangedLvUSD , remainingOUSD");
 
         _repayUnderNFT(_nftId, exchangedLvUSD);
-        console.log("CoorUnwind: repayed Under NFT");
 
         // transferring funds from coordinator to user
         _withdrawCollateralUnderNFT(_nftId, remainingOUSD, _userAddress);
-        console.log("CoorUnwind: withdrawing collateral");
 
         /// Note : leverage engine still need to make sure the delete the NFT itself in positionToken
         _cdp.deletePosition(_nftId);
-        console.log("CoorUnwind: finish unwind");
     }
 
     function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
