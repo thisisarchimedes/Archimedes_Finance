@@ -2,8 +2,8 @@ import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { parseUnits, formatUnits } from "ethers/lib/utils";
 import { expect } from "chai";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-import { helperResetNetwork, helperSwapETHWithOUSD, defaultBlockNumber, helperSwapETHWith3CRV } from "./MainnetHelper";
-import { createAndFundMetapool, fundMetapool } from "./CurveHelper";
+import { helperSwapETHWithOUSD, helperSwapETHWith3CRV } from "./MainnetHelper";
+import { fundMetapool } from "./CurveHelper";
 import { BigNumber } from "ethers";
 
 let r: ContractTestContext;
@@ -70,9 +70,6 @@ async function printMiscInfo (_r, _user) {
 }
 
 async function setupEnvForIntegrationTests () {
-    // Reset network before integration tests
-    await helperResetNetwork(defaultBlockNumber);
-
     // Setup & deploy contracts
     r = await buildContractTestContext();
     owner = r.owner;
