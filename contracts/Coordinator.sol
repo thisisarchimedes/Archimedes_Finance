@@ -109,7 +109,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         // borrowUnderNFT transfer lvUSD from Coordinator to Exchanger + mark borrowed lvUSD in CDP under nft ID
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
-        uint256 ousdAmountExchanged = _exchanger.xLvUSDforOUSD(_amountToLeverage, address(this));
+        uint256 ousdAmountExchanged = _exchanger.swapLvUSDforOUSD(_amountToLeverage);
         uint256 feeTaken = _takeOriginationFee(ousdAmountExchanged);
         uint256 positionLeveragedOUSDAfterFees = ousdAmountExchanged - feeTaken;
         uint256 sharesFromDeposit = _vault.deposit(positionLeveragedOUSDAfterFees, address(this));
@@ -138,8 +138,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         uint256 redeemedOUSD = _vault.redeem(numberOfSharesInPosition, _addressExchanger, address(this));
 
         /// TODO: add slippage protection
-        (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.xOUSDforLvUSD(redeemedOUSD, address(this), borrowedLvUSD);
-
+        (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.swapOUSDforLvUSD(redeemedOUSD, borrowedLvUSD);
         _repayUnderNFT(_nftId, exchangedLvUSD);
 
         // transferring funds from exchanger to user
@@ -174,7 +173,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     ) internal {
         /// Method makes sure ousd recorded balance transfer
         uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
-        _ousd.safeTransferFrom(_addressExchanger, _to, _amount);
+        _ousd.safeTransfer(_to, _amount);
         require(_ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount, "OUSD transfer balance incorrect");
         _cdp.withdrawOUSDFromPosition(_nftId, _amount);
     }
@@ -185,8 +184,6 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     }
 
     function _repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) internal {
-        require(_cdp.getLvUSDBorrowed(_nftId) >= _amountLvUSDToRepay, "Repay must be less than borrowed");
-        _lvUSD.transferFrom(_addressExchanger, address(this), _amountLvUSDToRepay);
         _cdp.repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
     }
 
