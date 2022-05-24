@@ -140,15 +140,6 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.parameterStore.address,
         ),
 
-        /**
-        address addressParameterStore,
-        address addressCoordinator,
-        address addressLvUSD,
-        address addressOUSD,
-        address address3CRV,
-        address addressPoolLvUSD3CRV,
-        address addressPoolOUSD3CRV
-         */
         context.exchanger.init(
             context.parameterStore.address,
             context.coordinator.address,

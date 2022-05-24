@@ -71,12 +71,8 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
     await token3CRV.approve(addressPool, amount3CRV);
     await lvUSD.approve(addressPool, amountLvUSD);
     const pool = await getMetapool(addressPool, owner);
-    let balanceLvUSD = await pool.balances(0, {
-        gasLimit: 3000000,
-    });
-    let balance3CRV = await pool.balances(1, {
-        gasLimit: 3000000,
-    });
+    let balanceLvUSD = await pool.balances(0);
+    let balance3CRV = await pool.balances(1);
     // if the pool is NOT empty we calculate expected amount of minted LP
     if (balanceLvUSD > 0 && balance3CRV > 0) {
         // https://curve.readthedocs.io/factory-pools.html#getting-pool-info

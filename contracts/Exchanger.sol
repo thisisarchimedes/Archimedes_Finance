@@ -8,8 +8,6 @@ import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import "hardhat/console.sol";
 
-/// TODO cleanup unecessary variables like amountOUSD = amountOUSD
-/// TODO Make sure funds end up at coordinator address for WINDUP and UNWIND
 /// TODO Approval & Allownace should NOT BE MAX VALUES for pools
 /// Use the overloaded function with TO parameter for exchange
 
@@ -36,7 +34,6 @@ contract Exchanger is IExchanger {
     int128 internal _indexOUSD = 0;
     int128 internal _index3CRV = 1;
 
-    // TODO should slippage be in ParamStore?
     uint256 internal _slippage;
     bool internal _initialized = false;
 
@@ -46,7 +43,6 @@ contract Exchanger is IExchanger {
      * @dev expressed as a percentage
      * 100 would require a perfect 1:1 swap
      * 90 allows at most, 1:.9 swaps
-     * TODO make getter and setter for this or put in ParamStore
      */
     uint256 internal _curveGuardPercentage;
 
@@ -98,9 +94,7 @@ contract Exchanger is IExchanger {
         _ousd.safeApprove(_addressPoolOUSD3CRV, type(uint256).max);
         _crv3.safeApprove(_addressPoolOUSD3CRV, type(uint256).max);
 
-        // TODO add to param store with get/setter
         _curveGuardPercentage = 90; // 90%
-        // TODO add to param store with get/setter
         _slippage = 2; // 2%
 
         // TODO remove this after the accessControl is added
