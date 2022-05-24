@@ -1,10 +1,10 @@
 
 import { assert, expect } from "chai";
 import { ethers } from "hardhat";
-import { helperResetNetwork, helperSwapETHWithOUSD, defaultBlockNumber } from "./MainnetHelper";
+import { helperSwapETHWithOUSD } from "./MainnetHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 import type { Coordinator } from "../types/contracts";
-import { parseUnits, formatUnits } from "ethers/lib/utils";
+import { formatUnits } from "ethers/lib/utils";
 
 function getFloatFromBigNum (bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
@@ -19,8 +19,6 @@ describe("Coordinator Test suit", function () {
     const nftIdAddr2Position = 15426;
 
     before(async function () {
-        await helperResetNetwork(defaultBlockNumber);
-
         r = await buildContractTestContext();
 
         endUserSigner = r.owner;
@@ -283,8 +281,6 @@ describe("Coordinator Test suit", function () {
         let originationFeeAmount;
         let depositedLeveragedOUSD;
         before(async function () {
-            // start with a clean setup
-            await helperResetNetwork(defaultBlockNumber);
             r = await buildContractTestContext();
             endUserSigner = r.owner;
             sharesOwnerAddress = r.coordinator.address;

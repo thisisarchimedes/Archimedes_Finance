@@ -2,13 +2,12 @@ import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-import { defaultBlockNumber, helperResetNetwork, helperSwapETHWithOUSD } from "./MainnetHelper";
+import { helperSwapETHWithOUSD } from "./MainnetHelper";
 
 describe("LeverageEngine test suit", async function () {
     let r: ContractTestContext;
 
     before(async () => {
-        await helperResetNetwork(defaultBlockNumber);
         r = await buildContractTestContext();
     });
 
@@ -71,7 +70,6 @@ describe("LeverageEngine test suit", async function () {
 
         let userInitialOUSD;
         before(async function () {
-            await helperResetNetwork(defaultBlockNumber);
             r = await buildContractTestContext();
             maxCycles = await r.parameterStore.getMaxNumberOfCycles();
             const totalOUSD = await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("5"));
