@@ -23,17 +23,16 @@ describe("VaultOUSD test suit", function () {
     const addr1Deposit = 10;
     const addr2Deposit = 20;
     const interestIntoVault = 10;
-    before(async function () {
+
+    async function setupAndResetState () {
         await helperResetNetwork(defaultBlockNumber);
         r = await buildContractTestContext();
 
         // Mint initial amount on OUSD token, will be used by all tests
-        await Promise.all([
-            helperSwapETHWithOUSD(r.addr1, ethers.utils.parseEther("1.0")),
-            helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("1.0")),
-            helperSwapETHWithOUSD(r.addr3, ethers.utils.parseUnits("2.0")),
-            helperSwapETHWithOUSD(r.owner, ethers.utils.parseEther("1.0")),
-        ]);
+        await helperSwapETHWithOUSD(r.addr1, ethers.utils.parseEther("1.0"));
+        await helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("1.0"));
+        await helperSwapETHWithOUSD(r.addr3, ethers.utils.parseUnits("2.0"));
+        await helperSwapETHWithOUSD(r.owner, ethers.utils.parseEther("1.0"));
         sharesOwnerAddress = r.owner.address;
 
         // deposit OUSD as a user (that gets shares) into vault. Shares goes to owner, not user.
@@ -41,10 +40,6 @@ describe("VaultOUSD test suit", function () {
         await r.vault.connect(r.addr1).archimedesDeposit(getDecimal(addr1Deposit), sharesOwnerAddress);
         await r.externalOUSD.connect(r.addr2).approve(r.vault.address, getDecimal(addr2Deposit));
         await r.vault.connect(r.addr2).archimedesDeposit(getDecimal(addr2Deposit), sharesOwnerAddress);
-    });
-
-    async function setupAndResetState () {
-        helperResetNetwork(defaultBlockNumber);
     }
 
     describe("Addr1 and addr2 signer deposited OUSD into vault", function () {
