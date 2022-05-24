@@ -51,15 +51,14 @@ describe("Exchanger Test suit", function () {
 
         // Create position
         describe("swapLvUSDforOUSD()", function () {
-            beforeEach(async function () {
-                await exchanger.swapLvUSDforOUSD(amountToExchange);
-            });
             it("Should send correct amount LvUSD", async function () {
+                await expect(exchanger.swapLvUSDforOUSD(amountToExchange));
                 const balanceLvUSD = (await lvUSD.balanceOf(exchanger.address));
                 const expectedLvUSD = (amountStarting.sub(amountToExchange));
                 expect(balanceLvUSD).eq(expectedLvUSD);
             });
             it("Should receive correct amount OUSD", async function () {
+                await expect(exchanger.swapLvUSDforOUSD(amountToExchange));
                 // funds end up at coordinator's address
                 const balanceOUSD = parseBN(await ousd.balanceOf(coordinator.address));
                 expect(balanceOUSD).closeTo(parseBN(amountToExchange), closeToRange);
@@ -68,6 +67,7 @@ describe("Exchanger Test suit", function () {
         describe("swapOUSDforLvUSD()", function () {
             it("LvUSD balance should increase by closeTo 'amountMinRequired'", async function () {
                 await exchanger.swapOUSDforLvUSD(amountToExchange, amountMinRequired);
+                // coordinator starts with zero, so we can use the current balance
                 const balanceLvUSD = await lvUSD.balanceOf(coordinator.address);
                 expect(parseBN(balanceLvUSD)).closeTo(parseBN(amountMinRequired), closeToRange);
             });
@@ -75,6 +75,19 @@ describe("Exchanger Test suit", function () {
                 // set minimum to 110% of what we send in
                 const minReq = amountToExchange.mul(110).div(100);
                 await expect(exchanger.swapOUSDforLvUSD(amountToExchange, minReq)).to.be.revertedWith("Not enough OUSD for exchange");
+            });
+            it("Should transfer remainingOUSD to coordinator", async function () {
+                const initOUSD = parseBN(await ousd.balanceOf(coordinator.address));
+                // coordinator should start with zero OUSD
+                expect(initOUSD).eq(0);
+
+                // send 3 and require 2: expectedRemaining = 1
+                const expectedRemaining = parseBN(amountToExchange.sub(amountMinRequired));
+
+                await exchanger.swapOUSDforLvUSD(amountToExchange, amountMinRequired);
+
+                const balanceOUSD = parseBN(await ousd.balanceOf(coordinator.address));
+                expect(balanceOUSD).closeTo(expectedRemaining, closeToRange);
             });
         });
     });
