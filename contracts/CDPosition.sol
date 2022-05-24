@@ -83,8 +83,12 @@ contract CDPosition is AccessController {
     /// @param nftID NFT position to update
     /// @param lvUSDAmountToRepay amount to remove fom position's existing borrowed lvUSD sum
     function repayLvUSDToPosition(uint256 nftID, uint256 lvUSDAmountToRepay) external nftIDMustExist(nftID) {
-        require(_nftCDP[nftID].lvUSDBorrowed >= lvUSDAmountToRepay, "lvUSD is greater than borrowed");
-        _nftCDP[nftID].lvUSDBorrowed -= lvUSDAmountToRepay;
+        if (_nftCDP[nftID].lvUSDBorrowed < lvUSDAmountToRepay) {
+            // if trying to repay more lvUSDthen expected, zero out lvUSDBorrowed
+            _nftCDP[nftID].lvUSDBorrowed = 0;
+        } else {
+            _nftCDP[nftID].lvUSDBorrowed -= lvUSDAmountToRepay;
+        }
     }
 
     /// @dev update deposited OUSD in position. This method adds a delta to existing deposited value
