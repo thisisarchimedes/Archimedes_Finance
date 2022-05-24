@@ -174,7 +174,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     ) internal {
         /// Method makes sure ousd recorded balance transfer
         uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
-        _ousd.safeTransferFrom(_addressExchanger, _to, _amount);
+        _ousd.safeTransfer(_to, _amount);
         require(_ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount, "OUSD transfer balance incorrect");
         _cdp.withdrawOUSDFromPosition(_nftId, _amount);
     }
@@ -186,7 +186,6 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
 
     function _repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) internal {
         // require(_cdp.getLvUSDBorrowed(_nftId) <= _amountLvUSDToRepay, "Repay LvUSD must be egt borrowed");
-        _lvUSD.transferFrom(_addressExchanger, address(this), _amountLvUSDToRepay);
         _cdp.repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
     }
 
