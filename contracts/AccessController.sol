@@ -22,7 +22,7 @@ abstract contract AccessController is AccessControl, ReentrancyGuard {
     bool private _rolesSet;
 
     modifier onlyAdmin() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
+        _requireAdmin();
         _;
     }
 
@@ -52,17 +52,18 @@ abstract contract AccessController is AccessControl, ReentrancyGuard {
     }
 
     modifier initializer() {
+        _requireAdmin();
         require(_initializing || !_initialized, "initializer: Already initialized");
 
-        bool isTopLevelCall = !_initializing;
-        if (isTopLevelCall) {
+        bool isFirstCall = !_initializing;
+        if (isFirstCall) {
             _initializing = true;
             _initialized = true;
         }
 
         _;
 
-        if (isTopLevelCall) {
+        if (isFirstCall) {
             _initializing = false;
         }
     }
@@ -86,6 +87,26 @@ abstract contract AccessController is AccessControl, ReentrancyGuard {
         _rolesSet = true;
     }
 
+    function getInitialized() external view returns (bool) {
+        return _initialized;
+    }
+
+    function getAddressAdmin() external view requireRoles returns (address) {
+        return _getAddressAdmin();
+    }
+
+    function getAddressExecutive() external view requireRoles returns (address) {
+        return _getAddressExecutive();
+    }
+
+    function getAddressGovernor() external view requireRoles returns (address) {
+        return _getAddressGovernor();
+    }
+
+    function getAddressGuardian() external view requireRoles returns (address) {
+        return _getAddressGuardian();
+    }
+
     /* Override required by Solidity: */
     function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
@@ -105,5 +126,9 @@ abstract contract AccessController is AccessControl, ReentrancyGuard {
 
     function _getAddressGuardian() internal view requireRoles returns (address) {
         return _addressGuardian;
+    }
+
+    function _requireAdmin() internal view {
+        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
     }
 }
