@@ -52,7 +52,7 @@
         "eslint-plugin-import": "^2.26.0",
         "eslint-plugin-mocha": "^10.0.4",
         "ethereum-waffle": "^3.4.4",
-        "ethers": "^5.6.6",
+        "ethers": "^5.6.7",
         "hardhat": "^2.9.6",
         "hardhat-watcher": "^2.3.0",
         "mocha": "^10.0.0",
