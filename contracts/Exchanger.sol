@@ -8,7 +8,6 @@ import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import "hardhat/console.sol";
 
-/// TODO cleanup unecessary variables like amountOUSD = amountOUSD
 /// TODO Make sure funds end up at coordinator address for WINDUP and UNWIND
 /// TODO Approval & Allownace should NOT BE MAX VALUES for pools
 /// Use the overloaded function with TO parameter for exchange
