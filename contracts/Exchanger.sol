@@ -27,7 +27,7 @@ contract Exchanger is IExchanger {
     address internal _addressPoolOUSD3CRV;
     IERC20 internal _lvusd;
     IERC20 internal _ousd;
-    IERC20 internal _3crv;
+    IERC20 internal _crv3;
     ICurveFiCurve internal _poolLvUSD3CRV;
     ICurveFiCurve internal _poolOUSD3CRV;
 
@@ -84,7 +84,7 @@ contract Exchanger is IExchanger {
         _paramStore = ParameterStore(addressParameterStore);
         _lvusd = IERC20(_addressLvUSD);
         _ousd = IERC20(_addressOUSD);
-        _3crv = IERC20(_address3CRV);
+        _crv3 = IERC20(_address3CRV);
         _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
 
@@ -93,10 +93,10 @@ contract Exchanger is IExchanger {
         _ousd.safeApprove(_addressCoordinator, type(uint256).max);
         // Approve LvUSD pool
         _lvusd.safeApprove(_addressPoolLvUSD3CRV, type(uint256).max);
-        _3crv.safeApprove(_addressPoolLvUSD3CRV, type(uint256).max);
+        _crv3.safeApprove(_addressPoolLvUSD3CRV, type(uint256).max);
         // approve OUSD pool
         _ousd.safeApprove(_addressPoolOUSD3CRV, type(uint256).max);
-        _3crv.safeApprove(_addressPoolOUSD3CRV, type(uint256).max);
+        _crv3.safeApprove(_addressPoolOUSD3CRV, type(uint256).max);
 
         // TODO add to param store with get/setter
         _curveGuardPercentage = 90; // 90%
@@ -149,7 +149,7 @@ contract Exchanger is IExchanger {
         uint256 _returned3CRV = _xOUSDfor3CRV(_needed3CRV);
         uint256 _returnedLvUSD = _x3CRVforLvUSD(_returned3CRV);
 
-        require(_returnedLvUSD >= minRequiredLvUSD, "Pool imbalanced: not enough LvUSD");
+        require(_returnedLvUSD >= minRequiredLvUSD, "Not enough LvUSD in pool");
 
         // calculate remaining OUSD
         uint256 remainingOUSD = amountOUSD - _neededOUSD;
@@ -157,6 +157,22 @@ contract Exchanger is IExchanger {
         _ousd.safeTransfer(_addressCoordinator, remainingOUSD);
         _lvusd.safeTransfer(_addressCoordinator, _returnedLvUSD);
         return (_returnedLvUSD, remainingOUSD);
+    }
+
+    function xLvUSDfor3CRV(uint256 amountLvUSD) external returns (uint256) {
+        return _xLvUSDfor3CRV(amountLvUSD);
+    }
+
+    function x3CRVforOUSD(uint256 amount3CRV) external returns (uint256) {
+        return _x3CRVforOUSD(amount3CRV);
+    }
+
+    function xOUSDfor3CRV(uint256 amountOUSD) external returns (uint256) {
+        return _xOUSDfor3CRV(amountOUSD);
+    }
+
+    function x3CRVforLvUSD(uint256 amount3CRV) external returns (uint256) {
+        return _x3CRVforLvUSD(amount3CRV);
     }
 
     /**
@@ -215,7 +231,7 @@ contract Exchanger is IExchanger {
         uint256 _guardLvUSD = (amount3CRV * _curveGuardPercentage) / 100;
 
         // Verify Exchanger has enough 3CRV to use
-        require(amount3CRV <= _3crv.balanceOf(address(this)), "Insufficient 3CRV in Exchanger.");
+        require(amount3CRV <= _crv3.balanceOf(address(this)), "Insufficient 3CRV in Exchanger.");
 
         // Estimate expected amount of 3CRV
         // get_dy(indexCoinSend, indexCoinRec, amount)
@@ -292,7 +308,7 @@ contract Exchanger is IExchanger {
         uint256 _guardOUSD = (amount3CRV * _curveGuardPercentage) / 100;
 
         // Verify Exchanger has enough 3CRV to use
-        require(amount3CRV <= _3crv.balanceOf(address(this)), "Insufficient 3CRV in Exchanger.");
+        require(amount3CRV <= _crv3.balanceOf(address(this)), "Insufficient 3CRV in Exchanger.");
 
         // Estimate expected amount of 3CRV
         // get_dy(indexCoinSend, indexCoinRec, amount)
@@ -310,21 +326,5 @@ contract Exchanger is IExchanger {
         _returnedOUSD = _poolOUSD3CRV.exchange(1, 0, amount3CRV, _minimumOUSD);
 
         return _returnedOUSD;
-    }
-
-    function xLvUSDfor3CRV(uint256 amountLvUSD) external returns (uint256) {
-        return _xLvUSDfor3CRV(amountLvUSD);
-    }
-
-    function x3CRVforOUSD(uint256 amount3CRV) external returns (uint256) {
-        return _x3CRVforOUSD(amount3CRV);
-    }
-
-    function xOUSDfor3CRV(uint256 amountOUSD) external returns (uint256) {
-        return _xOUSDfor3CRV(amountOUSD);
-    }
-
-    function x3CRVforLvUSD(uint256 amount3CRV) external returns (uint256) {
-        return _x3CRVforLvUSD(amount3CRV);
     }
 }

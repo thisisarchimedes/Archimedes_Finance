@@ -110,7 +110,6 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
         uint256 ousdAmountExchanged = _exchanger.swapLvUSDforOUSD(_amountToLeverage);
-        console.log("ousdAmountExchanged ", ousdAmountExchanged);
         uint256 feeTaken = _takeOriginationFee(ousdAmountExchanged);
         uint256 positionLeveragedOUSDAfterFees = ousdAmountExchanged - feeTaken;
         uint256 sharesFromDeposit = _vault.deposit(positionLeveragedOUSDAfterFees, address(this));
@@ -185,7 +184,6 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
     }
 
     function _repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) internal {
-        // require(_cdp.getLvUSDBorrowed(_nftId) <= _amountLvUSDToRepay, "Repay LvUSD must be egt borrowed");
         _cdp.repayLvUSDToPosition(_nftId, _amountLvUSDToRepay);
     }
 
