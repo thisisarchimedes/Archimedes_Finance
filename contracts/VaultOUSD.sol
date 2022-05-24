@@ -58,8 +58,10 @@ contract VaultOUSD is ERC4626, ReentrancyGuard {
     function _takeRebaseFees() internal {
         uint256 unhandledRebasePayment = totalAssets() - _assetsHandledByArchimedes;
         /// only run fee collection if there are some rebased funds not handled
+        console.log("Vault: unhandledRebasePayment %s", unhandledRebasePayment / 1 ether);
         if (unhandledRebasePayment > 0) {
             uint256 feeToCollect = (unhandledRebasePayment * _paramStore.getRebaseFeeRate()) / 1 ether;
+            console.log("Vault: FeeToCollectAfterRebase %s", feeToCollect / 1 ether);
             uint256 handledRebaseValueToKeepInVault = unhandledRebasePayment - feeToCollect;
 
             _assetsHandledByArchimedes += handledRebaseValueToKeepInVault;

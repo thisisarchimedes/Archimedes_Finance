@@ -134,22 +134,23 @@ contract Exchanger is IExchanger {
         // Estimate "neededOUSD" using get_dy()
         uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(_indexLvUSD, _index3CRV, minRequiredLvUSD);
         uint256 _neededOUSD = _poolOUSD3CRV.get_dy(_index3CRV, _indexOUSD, _needed3CRV);
-        _needed3CRV = (_neededOUSD * 103) / 100;
+        uint256 _neededOUSDWithSlippage = (_neededOUSD * 101) / 100;
 
         require(amountOUSD >= _neededOUSD, "Not enough OUSD for exchange");
 
         // We lose some $ from fees and slippage
         // multiply _neededOUSD * 103%
-        uint256 _returned3CRV = _xOUSDfor3CRV(_needed3CRV);
-        uint256 _returnedLvUSD = _x3CRVforLvUSD(_returned3CRV);
+        uint256 _returned3CRV = _xOUSDfor3CRV(_neededOUSDWithSlippage);
 
+        uint256 _returnedLvUSD = _x3CRVforLvUSD(_returned3CRV);
         require(_returnedLvUSD >= minRequiredLvUSD, "Not enough LvUSD in pool");
 
         // calculate remaining OUSD
-        uint256 remainingOUSD = amountOUSD - _neededOUSD;
-
+        uint256 remainingOUSD = amountOUSD - _neededOUSDWithSlippage;
         _ousd.safeTransfer(_addressCoordinator, remainingOUSD);
+
         _lvusd.safeTransfer(_addressCoordinator, _returnedLvUSD);
+
         return (_returnedLvUSD, remainingOUSD);
     }
 

@@ -4,6 +4,7 @@ import { expect } from "chai";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 import { helperResetNetwork, helperSwapETHWithOUSD, defaultBlockNumber, helperSwapETHWith3CRV } from "./MainnetHelper";
 import { createAndFundMetapool, fundMetapool } from "./CurveHelper";
+import { BigNumber } from "ethers";
 
 let r: ContractTestContext;
 let owner: SignerWithAddress;
@@ -16,8 +17,19 @@ const initialFundsInPool = 800;
 const initialCoordinatorLvUSDBalance = 10000;
 const initialUserLevAllocation = 10000;
 
+const numberOfCycles = 2;
+const userOUSDPrincipleInEighteenDecimal = parseUnitsNum(userOUSDPrinciple);
+
+let positionId: number;
 let adminInitial3CRVBalance: number;
 let ownerLvUSDBalanceBeforeFunding: number;
+
+async function approveAndGetLeverageAsUser (
+    _principleOUSD: BigNumber, _numberOfCycles:number, _r: ContractTestContext, _user: SignerWithAddress,
+) {
+    await _r.externalOUSD.connect(_user).approve(_r.leverageEngine.address, _principleOUSD);
+    await _r.leverageEngine.connect(_user).createLeveragedPosition(_principleOUSD, _numberOfCycles);
+}
 
 function parseUnitsNum (num) {
     return parseUnits(num.toString());
@@ -33,6 +45,28 @@ async function printPoolState (poolInstance) {
         getFloatFromBigNum(await poolInstance.balances(0)),
         getFloatFromBigNum(await poolInstance.balances(1)),
     );
+}
+
+async function printPositionState (_r, _positionId, overviewMessage = "Printing Position State") {
+    await console.log(overviewMessage);
+    const principle = getFloatFromBigNum(await _r.cdp.getOUSDPrinciple(_positionId));
+    const ousdEarned = getFloatFromBigNum(await _r.cdp.getOUSDInterestEarned(_positionId));
+    const ousdTotal = getFloatFromBigNum(await _r.cdp.getOUSDTotal(_positionId));
+    const lvUSDBorrowed = getFloatFromBigNum(await _r.cdp.getLvUSDBorrowed(_positionId));
+    const shares = getFloatFromBigNum(await _r.cdp.getShares(_positionId));
+    console.log("Stats for NFT %s: principle %s, ousdEarned %s, ousdTotal %s, lvUSDBorrowed %s, shares %s",
+        _positionId, principle, ousdEarned, ousdTotal, lvUSDBorrowed, shares);
+}
+
+async function printMiscInfo (_r, _user) {
+    const treasuryBalance = getFloatFromBigNum(
+        await _r.externalOUSD.balanceOf(_r.treasurySigner.address),
+    );
+    const userOUSDBalance = getFloatFromBigNum(
+        await _r.externalOUSD.balanceOf(_user.address),
+    );
+    const vaultOUSDBalance = getFloatFromBigNum(await _r.vault.totalAssets());
+    console.log("OUSD : Treasury balance is %s, Vault Balance is %s, User balance is %s", treasuryBalance, vaultOUSDBalance, userOUSDBalance);
 }
 
 async function setupEnvForIntegrationTests () {
@@ -113,6 +147,7 @@ describe("Test suit for setting up the stage", function () {
         expect(lvUSDCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
         expect(crvCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
     });
+
     it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
         const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
         expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
@@ -126,4 +161,77 @@ describe("Test suit for setting up the stage", function () {
     it("Should have set a big leverage allocation for user", async function () {
         expect(await r.leverageAllocator.getAddressToLvUSDAvailable(await user.getAddress())).to.equal(parseUnitsNum(initialUserLevAllocation));
     });
+});
+
+describe("Test suit for getting leverage", function () {
+    let leverageUserIsTaking: number;
+
+    before(async function () {
+        await setupEnvForIntegrationTests();
+        leverageUserIsTaking = getFloatFromBigNum(
+            await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleInEighteenDecimal, numberOfCycles));
+        console.log("Will take %s lev while user has allocation of %s", leverageUserIsTaking,
+            getFloatFromBigNum(await r.leverageAllocator.getAddressToLvUSDAvailable(user.address)));
+
+        await approveAndGetLeverageAsUser(userOUSDPrincipleInEighteenDecimal, numberOfCycles, r, user);
+        positionId = 0;
+    });
+
+    it("Should have created a single position and assign it to user", async function () {
+        printPositionState(r, positionId);
+        printPoolState(r.curveLvUSDPool);
+        printMiscInfo(r, user);
+        const nftBalance = await r.positionToken.balanceOf(user.address);
+        expect(nftBalance).to.equal(1);
+    });
+
+    it("Should have assigned origination fee to treasury", async function () {
+        const treasuryBalance = getFloatFromBigNum(
+            await r.externalOUSD.balanceOf(r.treasurySigner.address),
+        );
+        /// origination fee is 5% at the moment, lvUSDBorrowed is 171 so 5% of it is roughly 8.5
+        expect(treasuryBalance).to.closeTo(8.5, 0.1);
+    });
+
+    it("Should have deposited leverage and principle in vault (minus fee)", async function () {
+        const vaultOUSDBalance = getFloatFromBigNum(await r.vault.totalAssets());
+        /// this should be equal to principle + leveraged OUSD - fees = 100 + 171 - 8.5 = 262.5
+        expect(vaultOUSDBalance).to.closeTo(262, 1);
+    });
+
+    it("Should have reduced lev allocation", async function () {
+        const allowedLev = getFloatFromBigNum(await r.leverageAllocator.getAddressToLvUSDAvailable(user.address));
+        expect(allowedLev).to.equal(initialUserLevAllocation - leverageUserIsTaking);
+    });
+});
+
+describe("test suit for rebase events", function () {
+    const rebaseAmount = 20;
+    before(async function () {
+        await setupEnvForIntegrationTests();
+        await approveAndGetLeverageAsUser(userOUSDPrincipleInEighteenDecimal, numberOfCycles, r, user);
+        positionId = 0;
+        // at this stage we have a position created. Now simulating a rebase
+        await r.externalOUSD.connect(pretendOUSDRebaseSigner).transfer(r.vault.address, parseUnitsNum(rebaseAmount));
+        // take fees
+        await r.vault.takeRebaseFees();
+    });
+    it("Should update treasury with rebase fees", async function () {
+        printPositionState(r, positionId);
+        printMiscInfo(r, user);
+        const treasuryBalance = getFloatFromBigNum(
+            await r.externalOUSD.balanceOf(r.treasurySigner.address),
+        );
+        /// treasury should have originationFee + rebaseFee = 8.5 + 20*0.1 = 8.5+2 = 10.5
+        expect(treasuryBalance).to.closeTo(10.5, 0.1);
+    });
+
+    it("Should update assets deposited in vault", async function () {
+        const vaultOUSDBalance = getFloatFromBigNum(await r.vault.totalAssets());
+        /// vault should have deposited funds + OUSDRebase after fee = ~262 + (20-20*0.1) = 262 + 18 = 280
+        expect(vaultOUSDBalance).to.closeTo(280, 0.5);
+    });
+
+    // TODO : OUSDEarned is not being updated at the moment.
+    // It can be a view that does a previewRedeem on vault with position shares and OUSDEarned is the delta with that and OUSDTotal
 });
