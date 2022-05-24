@@ -1,4 +1,4 @@
-import { helperResetNetwork, helperSwapETHWithOUSD, defaultBlockNumber } from "./MainnetHelper";
+import { helperSwapETHWithOUSD } from "./MainnetHelper";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
@@ -24,9 +24,6 @@ describe("Exchanger Test suit", function () {
     const closeToRange = parseBN(amountToExchange.mul(2).div(100)); // 2% fee+slippage
 
     beforeEach(async function () {
-        // Reset network before tests
-        await helperResetNetwork(defaultBlockNumber);
-
         // Setup & deploy contracts
         r = await buildContractTestContext();
         lvUSD = r.lvUSD;
