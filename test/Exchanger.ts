@@ -47,6 +47,8 @@ describe("Exchanger Test suit", function () {
             expect(await ousd.balanceOf(exchanger.address)).eq(amountStarting);
         });
 
+        // TODO test a revert of imbalanced pool
+
         // Create position
         describe("swapLvUSDforOUSD()", function () {
             beforeEach(async function () {
@@ -64,12 +66,6 @@ describe("Exchanger Test suit", function () {
             });
         });
         describe("swapOUSDforLvUSD()", function () {
-            it("Should only use min needed to unwind", async function () {
-                await exchanger.swapOUSDforLvUSD(amountToExchange, amountMinRequired);
-                const balanceOUSD = parseBN(await ousd.balanceOf(exchanger.address));
-                const expectedOUSD = parseBN(amountStarting.sub(amountMinRequired));
-                expect(balanceOUSD).closeTo(expectedOUSD, closeToRange);
-            });
             it("LvUSD balance should increase by closeTo 'amountMinRequired'", async function () {
                 await exchanger.swapOUSDforLvUSD(amountToExchange, amountMinRequired);
                 const balanceLvUSD = await lvUSD.balanceOf(coordinator.address);
