@@ -143,7 +143,7 @@ contract Exchanger is IExchanger, AccessController {
         require(_returnedLvUSD >= minRequiredLvUSD, "Not enough LvUSD in pool");
 
         // calculate remaining OUSD
-        uint256 remainingOUSD = amountOUSD - _neededOUSDWithSlippage;
+        remainingOUSD = amountOUSD - _neededOUSDWithSlippage;
         _ousd.safeTransfer(_addressCoordinator, remainingOUSD);
 
         _lvusd.safeTransfer(_addressCoordinator, _returnedLvUSD);
