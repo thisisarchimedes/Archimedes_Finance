@@ -1,11 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import {
-    helperResetNetwork,
-    addressOUSD,
-    helperSwapETHWithOUSD,
-    defaultBlockNumber,
-} from "./MainnetHelper";
+import { addressOUSD, helperSwapETHWithOUSD } from "./MainnetHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 const getDecimal = (naturalNumber) => {
@@ -25,8 +20,6 @@ describe("VaultOUSD test suit", function () {
     const interestIntoVault = 10;
 
     async function setupAndResetState () {
-        await helperResetNetwork(defaultBlockNumber);
-
         r = await buildContractTestContext();
         sharesOwnerAddress = r.owner.address;
 
