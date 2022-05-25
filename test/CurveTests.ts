@@ -1,12 +1,7 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { helperResetNetwork, defaultBlockNumber } from "./MainnetHelper";
-import { createMetapool, fundMetapool, createAndFundMetapool, getMetapool } from "./CurveHelper";
+import { fundMetapool } from "./CurveHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-
-function parseBN (bigNumValue) {
-    return parseFloat(parseFloat(ethers.utils.formatUnits(bigNumValue)).toFixed(5));
-}
 
 describe("CurveHelper Test Suite", function () {
     let owner;
@@ -16,8 +11,6 @@ describe("CurveHelper Test Suite", function () {
     let pool;
 
     beforeEach(async function () {
-        // Reset network before integration tests
-        await helperResetNetwork(defaultBlockNumber);
         // Setup & deploy contracts
         r = await buildContractTestContext();
         lvUSD = r.lvUSD;

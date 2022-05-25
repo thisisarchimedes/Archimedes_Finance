@@ -1,12 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { addressOUSD, helperSwapETHWithOUSD } from "./MainnetHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-import {
-    helperResetNetwork,
-    addressOUSD,
-    helperSwapETHWithOUSD,
-    defaultBlockNumber,
-} from "./MainnetHelper";
 
 const getDecimal = (naturalNumber) => {
     return ethers.utils.parseUnits(naturalNumber.toString());
@@ -25,7 +20,6 @@ describe("VaultOUSD test suit", function () {
     const interestIntoVault = 10;
 
     async function setupAndResetState () {
-        await helperResetNetwork(defaultBlockNumber);
         r = await buildContractTestContext();
 
         // Mint initial amount on OUSD token, will be used by all tests

@@ -6,6 +6,8 @@ import {
     address3CRV, abi3CRVToken,
     addressCurveOUSDPool,
     helperSwapETHWith3CRV,
+    helperResetNetwork,
+    defaultBlockNumber,
 } from "./MainnetHelper";
 import { createAndFundMetapool } from "./CurveHelper";
 import type {
@@ -88,6 +90,8 @@ export type ContractTestContext = ArchContracts & {
 export const signers = ethers.getSigners();
 
 export async function buildContractTestContext (contractRoles: ContractRoles = {}): Promise<ContractTestContext> {
+    await helperResetNetwork(defaultBlockNumber);
+
     const context = {} as ContractTestContext;
 
     [context.owner, context.addr1, context.addr2, context.treasurySigner, context.addr3] = await signers;

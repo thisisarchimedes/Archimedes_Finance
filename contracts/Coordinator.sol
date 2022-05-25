@@ -61,7 +61,7 @@ contract Coordinator is ICoordinator, AccessController {
         _ousd = IERC20(_addressOUSD);
         _paramStore = ParameterStore(addressParamStore);
 
-        // approve VaultOUSD address to spend on behalf of coordinator
+        // approve VaultOUSD address to spend OUSD on behalf of coordinator
         _ousd.safeApprove(_addressVaultOUSD, type(uint256).max);
     }
 

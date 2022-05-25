@@ -1,13 +1,11 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { helperResetNetwork, defaultBlockNumber } from "./MainnetHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 describe("ContractTestContext", function () {
     let contractTestContext: ContractTestContext;
 
     before(async function () {
-        await helperResetNetwork(defaultBlockNumber);
         contractTestContext = await buildContractTestContext();
     });
 
@@ -25,15 +23,6 @@ describe("ContractTestContext", function () {
 
             it("coordinator has a OUSD contract address", async function () {
                 expect(await coordinator.addressOfVaultOUSDToken()).to.equal(contractTestContext.vault.address);
-            });
-        });
-
-        describe("Init methods will be called", async function () {
-            it("Should set unlimited allowance for exchange to spend Coordinator's lvUSD", async function () {
-                // String in equal is 2^256 -1, max uint256
-                expect(await contractTestContext.lvUSD.allowance(
-                    contractTestContext.exchanger.address, contractTestContext.coordinator.address))
-                    .to.equal("115792089237316195423570985008687907853269984665640564039457584007913129639935");
             });
         });
     });
