@@ -10,12 +10,18 @@ describe("AccessController test suit", function () {
     let addr2: SignerWithAddress;
     let addr3: SignerWithAddress;
     let accessControllerMock: AccessControllerMock;
+    let executive: SignerWithAddress;
+    let governor: SignerWithAddress;
+    let guardian: SignerWithAddress;
     const initArg = 1234;
 
     before(async () => {
         [owner, addr1, addr2, addr3] = await signers;
         /* AccessController is abstract so we need to use a contract that inherits it to test with: */
         const factory = await ethers.getContractFactory("AccessControllerMock");
+        executive = addr3;
+        governor = addr1;
+        guardian = addr2;
         accessControllerMock = await factory.deploy(owner.address) as AccessControllerMock;
     });
 
@@ -66,16 +72,13 @@ describe("AccessController test suit", function () {
     });
 
     it("Should allow admin to call setRoles", async function () {
-        const executive = addr3.address;
-        const governor = addr1.address;
-        const guardian = addr2.address;
-        await accessControllerMock.setRoles(executive, governor, guardian);
+        await accessControllerMock.setRoles(executive.address, governor.address, guardian.address);
         const executiveSet = await accessControllerMock.getAddressExecutive();
         const governorSet = await accessControllerMock.getAddressGovernor();
         const guardianSet = await accessControllerMock.getAddressGuardian();
-        await expect(executive).to.equal(executiveSet);
-        await expect(governor).to.equal(governorSet);
-        await expect(guardian).to.equal(guardianSet);
+        await expect(executive.address).to.equal(executiveSet);
+        await expect(governor.address).to.equal(governorSet);
+        await expect(guardian.address).to.equal(guardianSet);
     });
 
     it("Should revert if non executive calls onlyExecutive function", async function () {
@@ -91,5 +94,20 @@ describe("AccessController test suit", function () {
     it("Should revert if non guardian calls onlyGuardian function", async function () {
         const mockOnlyGovernorPromise = accessControllerMock.mockOnlyGuardian();
         await expect(mockOnlyGovernorPromise).to.be.revertedWith("Caller is not guardian");
+    });
+
+    it("Should allow executive to call onlyExecutive functions", async function () {
+        const mockOnlyExecutivePromise = accessControllerMock.connect(executive).mockOnlyExecutive();
+        await expect(mockOnlyExecutivePromise).to.not.be.reverted;
+    });
+
+    it("Should allow governor to call onlyGovernor functions", async function () {
+        const mockOnlyGovernorPromise = accessControllerMock.connect(governor).mockOnlyGovernor();
+        await expect(mockOnlyGovernorPromise).to.not.be.reverted;
+    });
+
+    it("Should allow guardian to call onlyGuardian functions", async function () {
+        const mockOnlyGuardianPromise = accessControllerMock.connect(guardian).mockOnlyGuardian();
+        await expect(mockOnlyGuardianPromise).to.not.be.reverted;
     });
 });
