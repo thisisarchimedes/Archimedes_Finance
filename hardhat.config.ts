@@ -37,7 +37,6 @@ task("test:watch", "For hardhat watch to run tests on save for both test and sol
 });
 
 task("test:log", "Run tests with all logger logs", async (taskArgs: { file }, hre) => {
-    /* testFiles is always an array of one file: */
     const { file } = taskArgs;
     setLoggingEnabled(true);
     const args = file ? { testFiles: [file] } : undefined;
