@@ -84,16 +84,6 @@ contract Exchanger is IExchanger {
         _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
 
-        // Approve Coordinator
-        _lvusd.safeApprove(_addressCoordinator, type(uint256).max);
-        _ousd.safeApprove(_addressCoordinator, type(uint256).max);
-        // Approve LvUSD pool
-        _lvusd.safeApprove(_addressPoolLvUSD3CRV, type(uint256).max);
-        _crv3.safeApprove(_addressPoolLvUSD3CRV, type(uint256).max);
-        // approve OUSD pool
-        _ousd.safeApprove(_addressPoolOUSD3CRV, type(uint256).max);
-        _crv3.safeApprove(_addressPoolOUSD3CRV, type(uint256).max);
-
         _curveGuardPercentage = 90; // 90%
         _slippage = 2; // 2%
 
@@ -136,7 +126,7 @@ contract Exchanger is IExchanger {
         uint256 _neededOUSD = _poolOUSD3CRV.get_dy(_index3CRV, _indexOUSD, _needed3CRV);
         uint256 _neededOUSDWithSlippage = (_neededOUSD * 101) / 100;
 
-        require(amountOUSD >= _neededOUSD, "Not enough OUSD for exchange");
+        require(amountOUSD >= _neededOUSDWithSlippage, "Not enough OUSD for exchange");
 
         // We lose some $ from fees and slippage
         // multiply _neededOUSD * 103%
@@ -145,10 +135,11 @@ contract Exchanger is IExchanger {
         uint256 _returnedLvUSD = _x3CRVforLvUSD(_returned3CRV);
         require(_returnedLvUSD >= minRequiredLvUSD, "Not enough LvUSD in pool");
 
-        // calculate remaining OUSD
+        // calculate remaining OUSD and send to coordinator
         uint256 remainingOUSD = amountOUSD - _neededOUSDWithSlippage;
         _ousd.safeTransfer(_addressCoordinator, remainingOUSD);
 
+        // send all swapped lvUSD to coordinator
         _lvusd.safeTransfer(_addressCoordinator, _returnedLvUSD);
 
         return (_returnedLvUSD, remainingOUSD);
@@ -202,8 +193,14 @@ contract Exchanger is IExchanger {
         // TODO auto balance if pool is bent
         require(_minimum3CRV >= _guard3CRV, "OUSD pool too imbalanced.");
 
-        // Exchange LvUSD for 3CRV:
+        // Increase allowance
+        _ousd.safeIncreaseAllowance(address(_poolOUSD3CRV), amountOUSD);
+
+        // Exchange OUSD for 3CRV:
         _returned3CRV = _poolOUSD3CRV.exchange(0, 1, amountOUSD, _minimum3CRV);
+
+        // Set approval to zero for safety
+        _ousd.safeApprove(address(_poolOUSD3CRV), 0);
 
         return _returned3CRV;
     }
@@ -216,7 +213,7 @@ contract Exchanger is IExchanger {
     function _x3CRVforLvUSD(uint256 amount3CRV) internal returns (uint256 amountLvUSD) {
         /**
          * @param _expectedLvUSD uses get_dy() to estimate amount the exchange will give us
-         * @param _minimumLvUSD mimimum accounting for slippage. (_expectedOUSD * slippage)
+         * @param _minimumLvUSD mimimum accounting for slippage. (_expectedLvUSD * slippage)
          * @param _returnedLvUSD amount we actually get from the pool
          * @param _guardLvUSD sanity check to protect user
          */
@@ -240,8 +237,14 @@ contract Exchanger is IExchanger {
         // TODO auto balance if pool is bent
         require(_minimumLvUSD >= _guardLvUSD, "LvUSD pool too imbalanced.");
 
-        // Exchange LvUSD for 3CRV:
+        // Increase allowance
+        _crv3.safeIncreaseAllowance(address(_poolLvUSD3CRV), amount3CRV);
+
+        // Exchange 3CRV for LvUSD:
         _returnedLvUSD = _poolLvUSD3CRV.exchange(1, 0, amount3CRV, _minimumLvUSD);
+
+        // Set approval to zero for safety
+        _crv3.safeApprove(address(_poolLvUSD3CRV), 0);
 
         return _returnedLvUSD;
     }
@@ -278,8 +281,14 @@ contract Exchanger is IExchanger {
         // TODO auto balance if pool is bent
         require(_minimum3CRV >= _guard3CRV, "LvUSD pool too imbalanced.");
 
+        // Increase allowance
+        _lvusd.safeIncreaseAllowance(address(_poolLvUSD3CRV), amountLvUSD);
+
         // Exchange LvUSD for 3CRV:
         _returned3CRV = _poolLvUSD3CRV.exchange(0, 1, amountLvUSD, _minimum3CRV);
+
+        // Set approval to zero for safety
+        _lvusd.safeApprove(address(_poolLvUSD3CRV), 0);
 
         return _returned3CRV;
     }
@@ -291,7 +300,6 @@ contract Exchanger is IExchanger {
      */
     function _x3CRVforOUSD(uint256 amount3CRV) internal returns (uint256 amountOUSD) {
         /**
-         * @param amount3CRV amount of 3CRV we are exchanging
          * @param _expectedOUSD uses get_dy() to estimate amount the exchange will give us
          * @param _minimumOUSD mimimum accounting for slippage. (_expectedOUSD * slippage)
          * @param _returnedOUSD amount we actually get from the pool
@@ -317,8 +325,14 @@ contract Exchanger is IExchanger {
         // TODO auto balance if pool is bent
         require(_minimumOUSD >= _guardOUSD, "LvUSD pool too imbalanced.");
 
+        // Increase allowance
+        _crv3.safeIncreaseAllowance(address(_poolOUSD3CRV), amount3CRV);
+
         // Exchange LvUSD for 3CRV:
         _returnedOUSD = _poolOUSD3CRV.exchange(1, 0, amount3CRV, _minimumOUSD);
+
+        // Set approval to zero for safety
+        _crv3.safeApprove(address(_poolOUSD3CRV), 0);
 
         return _returnedOUSD;
     }
