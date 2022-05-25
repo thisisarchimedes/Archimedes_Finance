@@ -88,6 +88,7 @@ export type ContractTestContext = ArchContracts & {
 }
 
 export const signers = ethers.getSigners();
+export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("1000.0");
 
 export async function buildContractTestContext (contractRoles: ContractRoles = {}): Promise<ContractTestContext> {
     await helperResetNetwork(defaultBlockNumber);
@@ -146,13 +147,13 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     }));
 
     // Give context.owner some funds:
-    await context.lvUSD.mint(context.owner.address, ethers.utils.parseEther("1000.0"));
-    await helperSwapETHWith3CRV(context.owner, ethers.utils.parseEther("3.0"));
+    await context.lvUSD.mint(context.owner.address, ownerStartingLvUSDAmount);
+    await helperSwapETHWith3CRV(context.owner, ethers.utils.parseUnits("3.0"));
 
     // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token
     context.curveLvUSDPool = await createAndFundMetapool(context.owner, context);
     // Setup pool with approval
-    await context.lvUSD.approve(context.curveLvUSDPool.address, ethers.utils.parseEther("1000"));
+    await context.lvUSD.approve(context.curveLvUSDPool.address, ownerStartingLvUSDAmount);
 
     await context.lvUSD.approve(context.exchanger.address, ethers.constants.MaxUint256);
     await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);

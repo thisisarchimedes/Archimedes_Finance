@@ -1,6 +1,6 @@
 // We import Chai to use its asserting functions here.
 import { expect } from "chai";
-import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext, ownerStartingLvUSDAmount } from "./ContractTestContext";
 
 describe("LvUSD contract test suit", function () {
     let r: ContractTestContext;
@@ -13,7 +13,7 @@ describe("LvUSD contract test suit", function () {
     describe("Minting", function () {
         it("Should be able to mint to specific address", async function () {
             await r.lvUSD.mint(r.owner.address, tokenSupply);
-            expect(await r.lvUSD.totalSupply()).to.equal(tokenSupply);
+            expect(await r.lvUSD.totalSupply()).to.equal(ownerStartingLvUSDAmount.add(tokenSupply));
         });
     });
 

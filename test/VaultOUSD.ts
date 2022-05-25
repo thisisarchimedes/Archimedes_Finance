@@ -23,10 +23,10 @@ describe("VaultOUSD test suit", function () {
         r = await buildContractTestContext();
 
         // Mint initial amount on OUSD token, will be used by all tests
-        await helperSwapETHWithOUSD(r.addr1, ethers.utils.parseEther("1.0"));
-        await helperSwapETHWithOUSD(r.addr2, ethers.utils.parseEther("1.0"));
+        await helperSwapETHWithOUSD(r.addr1, ethers.utils.parseUnits("1.0"));
+        await helperSwapETHWithOUSD(r.addr2, ethers.utils.parseUnits("1.0"));
         await helperSwapETHWithOUSD(r.addr3, ethers.utils.parseUnits("2.0"));
-        await helperSwapETHWithOUSD(r.owner, ethers.utils.parseEther("1.0"));
+        await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("1.0"));
         sharesOwnerAddress = r.owner.address;
 
         // deposit OUSD as a user (that gets shares) into vault. Shares goes to owner, not user.
