@@ -84,8 +84,8 @@ contract Exchanger is IExchanger, AccessController {
         _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
 
-        _curveGuardPercentage = 90; // 90%
-        _slippage = 2; // 2%
+        _curveGuardPercentage = _paramStore.getCurveGuardPercentage();
+        _slippage = _paramStore.getSlippage();
     }
 
     /**
