@@ -5,6 +5,7 @@ import { helperSwapETHWithOUSD } from "./MainnetHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 import type { Coordinator } from "../types/contracts";
 import { formatUnits } from "ethers/lib/utils";
+import { logger } from "../logger";
 
 function getFloatFromBigNum (bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
@@ -182,7 +183,7 @@ describe("Coordinator Test suit", function () {
                 before(async function () {
                     /// Get initial state
                     borrowedLvUSDInPositionBeforeLeverage = await r.cdp.getLvUSDBorrowed(nftIdFirstPosition);
-                    console.log("borrowedLvUSDInPositionBeforeLeverage", borrowedLvUSDInPositionBeforeLeverage);
+                    logger("borrowedLvUSDInPositionBeforeLeverage", borrowedLvUSDInPositionBeforeLeverage);
                     /// Test artifact only, Once exchanger is functional we can use the exchange and
                     /// transfer OUSD directly to coordinator
                     await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, leverageAmount);

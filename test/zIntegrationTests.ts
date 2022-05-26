@@ -5,6 +5,7 @@ import { buildContractTestContext, ContractTestContext } from "./ContractTestCon
 import { helperSwapETHWithOUSD, helperSwapETHWith3CRV } from "./MainnetHelper";
 import { fundMetapool } from "./CurveHelper";
 import { BigNumber } from "ethers";
+import { logger } from "../logger";
 
 let r: ContractTestContext;
 let owner: SignerWithAddress;
@@ -40,7 +41,7 @@ function getFloatFromBigNum (bigNumValue) {
 }
 
 async function printPoolState (poolInstance) {
-    console.log(
+    logger(
         "Pool has %s coin0/lvUSD and %s coin1/3CRV",
         getFloatFromBigNum(await poolInstance.balances(0)),
         getFloatFromBigNum(await poolInstance.balances(1)),
@@ -48,13 +49,13 @@ async function printPoolState (poolInstance) {
 }
 
 async function printPositionState (_r, _positionId, overviewMessage = "Printing Position State") {
-    await console.log(overviewMessage);
+    logger(overviewMessage);
     const principle = getFloatFromBigNum(await _r.cdp.getOUSDPrinciple(_positionId));
     const ousdEarned = getFloatFromBigNum(await _r.cdp.getOUSDInterestEarned(_positionId));
     const ousdTotal = getFloatFromBigNum(await _r.cdp.getOUSDTotal(_positionId));
     const lvUSDBorrowed = getFloatFromBigNum(await _r.cdp.getLvUSDBorrowed(_positionId));
     const shares = getFloatFromBigNum(await _r.cdp.getShares(_positionId));
-    console.log("Stats for NFT %s: principle %s, ousdEarned %s, ousdTotal %s, lvUSDBorrowed %s, shares %s",
+    logger("Stats for NFT %s: principle %s, ousdEarned %s, ousdTotal %s, lvUSDBorrowed %s, shares %s",
         _positionId, principle, ousdEarned, ousdTotal, lvUSDBorrowed, shares);
 }
 
@@ -66,7 +67,7 @@ async function printMiscInfo (_r, _user) {
         await _r.externalOUSD.balanceOf(_user.address),
     );
     const vaultOUSDBalance = getFloatFromBigNum(await _r.vault.totalAssets());
-    console.log("OUSD : Treasury balance is %s, Vault Balance is %s, User balance is %s", treasuryBalance, vaultOUSDBalance, userOUSDBalance);
+    logger("OUSD : Treasury balance is %s, Vault Balance is %s, User balance is %s", treasuryBalance, vaultOUSDBalance, userOUSDBalance);
 }
 
 async function setupEnvForIntegrationTests () {
@@ -167,7 +168,7 @@ describe("Test suit for getting leverage", function () {
         await setupEnvForIntegrationTests();
         leverageUserIsTaking = getFloatFromBigNum(
             await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleInEighteenDecimal, numberOfCycles));
-        console.log("Will take %s lev while user has allocation of %s", leverageUserIsTaking,
+        logger("Will take %s lev while user has allocation of %s", leverageUserIsTaking,
             getFloatFromBigNum(await r.leverageAllocator.getAddressToLvUSDAvailable(user.address)));
 
         await approveAndGetLeverageAsUser(userOUSDPrincipleInEighteenDecimal, numberOfCycles, r, user);
