@@ -9,7 +9,8 @@ import {ParameterStore} from "./ParameterStore.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Exchanger} from "../contracts/Exchanger.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {AccessController} from "./AccessController.sol";
 
 import "hardhat/console.sol";
 
@@ -17,7 +18,7 @@ import "hardhat/console.sol";
 /// @dev is in charge of overall flow of creating positions and unwinding positions
 /// It manages keeping tracks of fund in vault, updating CDP as needed and transferring lvUSD inside the system
 /// It is controlled (and called) by the leverage engine
-contract Coordinator is ICoordinator, ReentrancyGuard {
+contract Coordinator is ICoordinator, AccessController {
     using SafeERC20 for IERC20;
     address internal _addressLvUSD;
     address internal _addressVaultOUSD;
@@ -37,7 +38,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         _;
     }
 
-    constructor() {}
+    constructor(address admin) AccessController(admin) {}
 
     function init(
         address addressLvUSD,
@@ -46,7 +47,7 @@ contract Coordinator is ICoordinator, ReentrancyGuard {
         address addressOUSD,
         address addressExchanger,
         address addressParamStore
-    ) external nonReentrant {
+    ) external nonReentrant initializer onlyAdmin {
         _addressLvUSD = addressLvUSD;
         _addressVaultOUSD = addressVaultOUSD;
         _addressCDP = addressCDP;

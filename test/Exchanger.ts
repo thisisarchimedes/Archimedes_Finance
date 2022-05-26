@@ -16,11 +16,11 @@ describe("Exchanger Test suit", function () {
     let ousd;
 
     // Amount of LvUSD & OUSD exchanger starts with
-    const amountStarting = ethers.utils.parseEther("10.0");
+    const amountStarting = ethers.utils.parseUnits("10.0");
 
     // Amount of LvUSD / OUSD exchanged in tests
-    const amountToExchange = ethers.utils.parseEther("3.0");
-    const amountMinRequired = ethers.utils.parseEther("2.0");
+    const amountToExchange = ethers.utils.parseUnits("3.0");
+    const amountMinRequired = ethers.utils.parseUnits("2.0");
     const closeToRange = parseBN(amountToExchange.mul(2).div(100)); // 2% fee+slippage
 
     beforeEach(async function () {

@@ -192,7 +192,7 @@ describe("Coordinator Test suit", function () {
                     originationFee = await r.parameterStore.calculateOriginationFee(leverageAmount);
                     sharesTotalSupplyBeforeLeverage = await r.vault.maxRedeem(sharesOwnerAddress);
                     // we need more lvusd for exchanger
-                    await r.lvUSD.mint(coordinator.address, ethers.utils.parseEther("100"));
+                    await r.lvUSD.mint(coordinator.address, ethers.utils.parseUnits("100"));
                     await coordinator.getLeveragedOUSD(nftIdFirstPosition, leverageAmount);
                 });
                 it("Should have increase borrowed amount on CDP for NFT", async function () {
@@ -276,8 +276,8 @@ describe("Coordinator Test suit", function () {
 
     describe("Coordinator overview testing", function () {
         const endToEndTestNFTId = 34674675;
-        const collateralAmount = ethers.utils.parseEther("50");
-        const mintedLvUSDAmount = ethers.utils.parseEther("100000");
+        const collateralAmount = ethers.utils.parseUnits("50");
+        const mintedLvUSDAmount = ethers.utils.parseUnits("100000");
         let leverageToGetForPosition;
         let originationFeeAmount;
         let depositedLeveragedOUSD;

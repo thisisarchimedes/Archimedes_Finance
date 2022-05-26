@@ -12,8 +12,8 @@ const getFloatFromBigNum = (bigNumValue) => {
 };
 
 describe("VaultOUSD test suit", function () {
-    let sharesOwnerAddress;
     let r: ContractTestContext;
+    let sharesOwnerAddress;
 
     const addr1Deposit = 10;
     const addr2Deposit = 20;
@@ -21,13 +21,13 @@ describe("VaultOUSD test suit", function () {
 
     async function setupAndResetState () {
         r = await buildContractTestContext();
-        sharesOwnerAddress = r.owner.address;
 
         // Mint initial amount on OUSD token, will be used by all tests
         await helperSwapETHWithOUSD(r.addr1, ethers.utils.parseUnits("1.0"));
         await helperSwapETHWithOUSD(r.addr2, ethers.utils.parseUnits("1.0"));
         await helperSwapETHWithOUSD(r.addr3, ethers.utils.parseUnits("2.0"));
         await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("1.0"));
+        sharesOwnerAddress = r.owner.address;
 
         // deposit OUSD as a user (that gets shares) into vault. Shares goes to owner, not user.
         await r.externalOUSD.connect(r.addr1).approve(r.vault.address, getDecimal(addr1Deposit));

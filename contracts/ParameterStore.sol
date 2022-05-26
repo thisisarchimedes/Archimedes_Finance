@@ -2,19 +2,20 @@
 pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
+import {AccessController} from "./AccessController.sol";
 
 /// @title ParameterStore is a contract for storing global parameters that can be modified by a privileged role
 /// @notice This contract (will be) proxy upgradable
-contract ParameterStore {
+contract ParameterStore is AccessController {
     uint256 internal _maxNumberOfCycles = 10;
     uint256 internal _originationFeeRate = 5 ether / 100;
     uint256 internal _globalCollateralRate = 90; // in percentage
     uint256 internal _rebaseFeeRate = 10 ether / 100; // meaning 10%
     address internal _treasuryAddress;
 
-    constructor() {}
+    constructor(address admin) AccessController(admin) {}
 
-    function init(address treasuryAddress) external {
+    function init(address treasuryAddress) external initializer onlyAdmin {
         _treasuryAddress = treasuryAddress;
     }
 

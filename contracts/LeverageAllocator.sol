@@ -2,26 +2,15 @@
 pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {AccessController} from "./AccessController.sol";
 
 /// @title LeverageAllocator
 /// @dev Contract that tracks how much lvUSD is available for an address to be allocated
 /// @notice This contract (will be) proxy upgradable
-contract LeverageAllocator is ReentrancyGuard, AccessControl {
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-
+contract LeverageAllocator is AccessController {
     mapping(address => uint256) internal _addressToLvUSDAvailable;
 
-    modifier onlyAdmin() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "onlyAdmin: Not admin");
-        _;
-    }
-
-    /// @dev set the admin address to contract deployer
-    constructor(address admin) {
-        _setupRole(ADMIN_ROLE, admin);
-    }
+    constructor(address admin) AccessController(admin) {}
 
     /// @dev admin can use to manually override available lvUSD for a given user
     function setAddressToLvUSDAvailable(address addr, uint256 amount) external onlyAdmin returns (uint256) {

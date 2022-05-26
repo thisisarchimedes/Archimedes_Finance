@@ -6,6 +6,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IExchanger} from "./interfaces/IExchanger.sol";
 import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
 import {ParameterStore} from "./ParameterStore.sol";
+import {AccessController} from "./AccessController.sol";
 import "hardhat/console.sol";
 
 /// TODO Approval & Allownace should NOT BE MAX VALUES for pools
@@ -13,7 +14,7 @@ import "hardhat/console.sol";
 
 /// @title Exchanger
 /// @dev is in charge of interacting with the CurveFi pools
-contract Exchanger is IExchanger {
+contract Exchanger is IExchanger, AccessController {
     using SafeERC20 for IERC20;
 
     address internal _addressParameterStore;
@@ -35,7 +36,6 @@ contract Exchanger is IExchanger {
     int128 internal _index3CRV = 1;
 
     uint256 internal _slippage;
-    bool internal _initialized = false;
 
     /** @dev curve stable metapools provide 1:1 swaps
      * if the pools are very bent, this is a protection for users
@@ -46,7 +46,7 @@ contract Exchanger is IExchanger {
      */
     uint256 internal _curveGuardPercentage;
 
-    constructor() {}
+    constructor(address admin) AccessController(admin) {}
 
     /**
      * @dev initialize Exchanger
@@ -66,7 +66,7 @@ contract Exchanger is IExchanger {
         address address3CRV,
         address addressPoolLvUSD3CRV,
         address addressPoolOUSD3CRV
-    ) external {
+    ) external initializer nonReentrant onlyAdmin {
         // Set variables
         _addressParameterStore = addressParameterStore;
         _addressCoordinator = addressCoordinator;
@@ -86,9 +86,6 @@ contract Exchanger is IExchanger {
 
         _curveGuardPercentage = 90; // 90%
         _slippage = 2; // 2%
-
-        // TODO remove this after the accessControl is added
-        _initialized = true;
     }
 
     /**
@@ -135,8 +132,8 @@ contract Exchanger is IExchanger {
         uint256 _returnedLvUSD = _x3CRVforLvUSD(_returned3CRV);
         require(_returnedLvUSD >= minRequiredLvUSD, "Not enough LvUSD in pool");
 
-        // calculate remaining OUSD and send to coordinator
-        uint256 remainingOUSD = amountOUSD - _neededOUSDWithSlippage;
+        // calculate remaining OUSD
+        remainingOUSD = amountOUSD - _neededOUSDWithSlippage;
         _ousd.safeTransfer(_addressCoordinator, remainingOUSD);
 
         // send all swapped lvUSD to coordinator

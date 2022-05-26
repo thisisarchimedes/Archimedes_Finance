@@ -10,7 +10,7 @@ import {
 } from "./MainnetHelper";
 
 // Hard-coded amount we use to fund the pool with
-const fundedPoolAmount = ethers.utils.parseEther("200.0");
+const fundedPoolAmount = ethers.utils.parseUnits("200.0");
 
 /** Create a Curve Meta Pool that uses 3CRV
 * @param token: ERC20 token balanced in the pool

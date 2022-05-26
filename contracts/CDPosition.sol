@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
+import {AccessController} from "./AccessController.sol";
 
 /// @title CDPosition is ledger contract for all  NFT positions and regular positions
 /// @dev CDP creates and destroy NFT and address positions. It keep tracks of how many tokens user has borrowed.
@@ -9,7 +10,7 @@ import "hardhat/console.sol";
 /// @notice CDPosition does not hold any tokens. It is not a vault of any kind.
 /// @notice CDP does not emit any events. All related events will be emitted by the calling contract.
 /// @notice This contract (will be) proxy upgradable
-contract CDPosition {
+contract CDPosition is AccessController {
     struct CDP {
         uint256 oUSDPrinciple; // Amount of OUSD originally deposited by user
         uint256 oUSDInterestEarned; // Total interest earned (and rebased) so far
@@ -37,6 +38,8 @@ contract CDPosition {
         require(_nftCDP[nftID].lvUSDBorrowed == 0, "lvUSD borrowed must be zero");
         _;
     }
+
+    constructor(address admin) AccessController(admin) {}
 
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Update both principle and total with OUSDPrinciple

@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { buildContractTestContext } from "./ContractTestContext";
 
 const getEighteenDecimal = (naturalNumber) => {
     return ethers.utils.parseUnits(naturalNumber.toString());
@@ -24,8 +25,8 @@ describe("CDPosition test suit", async function () {
     const BASIC_OUSD_PRINCIPLE = getEighteenDecimal(BASIC_OUSD_PRINCIPLE_NATURAL);
 
     beforeEach(async () => {
-        const contract = await ethers.getContractFactory("CDPosition");
-        cdp = await contract.deploy();
+        const r = await buildContractTestContext();
+        cdp = r.cdp;
     });
 
     describe("Create position", () => {
