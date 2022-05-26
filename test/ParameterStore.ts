@@ -65,8 +65,8 @@ describe("ParameterStore test suit", async function () {
             expect(CGP).to.equal(newCGP);
         });
         it("Should revert if new curve guard percentage is out of range", async function () {
-            await expect(parameterStore.changeCurveGuardPercentage(79)).to.revertedWith("Invalid new curve guard percentage");
-            await expect(parameterStore.changeCurveGuardPercentage(101)).to.revertedWith("Invalid new curve guard percentage");
+            await expect(parameterStore.changeCurveGuardPercentage(79)).to.revertedWith("New CGP out of range");
+            await expect(parameterStore.changeCurveGuardPercentage(101)).to.revertedWith("New CGP out of range");
         });
     });
 

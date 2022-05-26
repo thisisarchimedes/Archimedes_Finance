@@ -19,9 +19,6 @@ contract Exchanger is IExchanger, AccessController {
 
     address internal _addressParameterStore;
     address internal _addressCoordinator;
-    address internal _addressLvUSD;
-    address internal _addressOUSD;
-    address internal _address3CRV;
     address internal _addressPoolLvUSD3CRV;
     address internal _addressPoolOUSD3CRV;
     IERC20 internal _lvusd;
@@ -70,17 +67,14 @@ contract Exchanger is IExchanger, AccessController {
         // Set variables
         _addressParameterStore = addressParameterStore;
         _addressCoordinator = addressCoordinator;
-        _addressLvUSD = addressLvUSD;
-        _addressOUSD = addressOUSD;
-        _address3CRV = address3CRV;
         _addressPoolLvUSD3CRV = addressPoolLvUSD3CRV;
         _addressPoolOUSD3CRV = addressPoolOUSD3CRV;
 
         // Load contracts
         _paramStore = ParameterStore(addressParameterStore);
-        _lvusd = IERC20(_addressLvUSD);
-        _ousd = IERC20(_addressOUSD);
-        _crv3 = IERC20(_address3CRV);
+        _lvusd = IERC20(addressLvUSD);
+        _ousd = IERC20(addressOUSD);
+        _crv3 = IERC20(address3CRV);
         _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
 
