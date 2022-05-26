@@ -17,6 +17,7 @@
         "test:ci": "npm run clean && npm run typechain && npm run test",
         "console": "ts-node console.ts",
         "test": "hardhat test",
+        "test:log": "hardhat test:log",
         "test:watch": "hardhat typechain && hardhat watch test",
         "typechain": "hardhat typechain",
         "typechain:watch": "hardhat watch typechain"

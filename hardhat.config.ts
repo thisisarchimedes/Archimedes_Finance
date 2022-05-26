@@ -7,7 +7,8 @@ import "@nomiclabs/hardhat-waffle";
 
 import "hardhat-watcher";
 
-import { task } from "hardhat/config";
+import { setLoggingEnabled } from "./logger";
+import { task, types } from "hardhat/config";
 import dotenv from "dotenv";
 
 // grab the private api key from the private repo
@@ -32,8 +33,15 @@ task("test:watch", "For hardhat watch to run tests on save for both test and sol
         path = path.replace(/^contracts\/([^.]+).sol$/, "test/$1.ts");
         console.log(`Running matching test ${path} for changed Solidity file ${taskArgs.path}`);
     }
-    hre.run("test", { testFiles: [path] });
+    await hre.run("test:log", { file: path });
 });
+
+task("test:log", "Run tests with all logger logs", async (taskArgs: { file }, hre) => {
+    const { file } = taskArgs;
+    setLoggingEnabled(true);
+    const args = file ? { testFiles: [file] } : undefined;
+    await hre.run("test", args);
+}).addOptionalParam("file", "If provided run tests only on specified file", undefined, types.inputFile);
 
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
