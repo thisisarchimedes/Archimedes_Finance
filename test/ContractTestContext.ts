@@ -164,7 +164,7 @@ export async function buildContractTestContext (contractRoleOverrides: ContractR
         parameterStore: [context.treasurySigner.address],
     };
 
-    /* call setRoles on all contracts, allowing any specified overrides from arguments: */
+    /* call setRoles and init on all contracts, allowing any specified overrides from arguments: */
     await Promise.all(Object.entries(contracts).map(async ([contractKey, contract]) => {
         const roles = {
             /* these defaults are temporary while  */
@@ -176,10 +176,8 @@ export async function buildContractTestContext (contractRoleOverrides: ContractR
             ...contractRoleOverrides[contractKey] as Partial<DefaultRoles>,
         };
         await contract.connect(signerAdmin).setRoles(roles.executive, roles.governor, roles.guardian);
-        const args = initArgs[contractKey] || [];
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        await contract.connect(signerAdmin).init(...args);
+        const args: string[] = initArgs[contractKey] || [] as const;
+        await contract.connect(signerAdmin).init(args);
     }));
 
     return context;

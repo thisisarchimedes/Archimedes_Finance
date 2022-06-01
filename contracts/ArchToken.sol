@@ -13,5 +13,5 @@ contract ArchToken is ERC20, ERC20Burnable, AccessController {
         _mint(_addressTreasury, 100000000 ether);
     }
 
-    function init() external onlyAdmin {}
+    function init(address[] calldata addressContracts) external initializer onlyAdmin {}
 }

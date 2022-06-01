@@ -30,9 +30,9 @@ contract VaultOUSD is ERC4626, AccessController {
         string memory symbol
     ) ERC20(name, symbol) ERC4626(asset) AccessController(admin) {}
 
-    function init(address _addressParamStore, address _addressOUSD) external {
-        _paramStore = ParameterStore(_addressParamStore);
-        _ousd = IERC20(_addressOUSD);
+    function init(address[] calldata addressContracts) external initializer onlyAdmin {
+        _paramStore = ParameterStore(addressContracts[0]);
+        _ousd = IERC20(addressContracts[1]);
     }
 
     function archimedesDeposit(uint256 assets, address receiver) external nonReentrant returns (uint256) {

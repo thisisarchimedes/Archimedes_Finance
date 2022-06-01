@@ -36,22 +36,16 @@ contract LeverageEngine is AccessController {
     constructor(address admin) AccessController(admin) {}
 
     /// @dev set the addresses for Coordinator, PositionToken, ParameterStore
-    function init(
-        address addressCoordinator,
-        address addressPositionToken,
-        address addressParameterStore,
-        address addressLeverageAllocator,
-        address addressOUSD
-    ) external nonReentrant initializer onlyAdmin {
-        _addressCoordinator = addressCoordinator;
-        _coordinator = ICoordinator(addressCoordinator);
-        _addressPositionToken = addressPositionToken;
-        _positionToken = PositionToken(addressPositionToken);
-        _addressParameterStore = addressParameterStore;
+    function init(address[] calldata addressContracts) external initializer onlyAdmin {
+        _addressCoordinator = addressContracts[0];
+        _coordinator = ICoordinator(_addressCoordinator);
+        _addressPositionToken = addressContracts[1];
+        _positionToken = PositionToken(_addressPositionToken);
+        _addressParameterStore = addressContracts[2];
         _parameterStore = ParameterStore(_addressParameterStore);
-        _addressLeverageAllocator = addressLeverageAllocator;
+        _addressLeverageAllocator = addressContracts[3];
         _leverageAllocator = LeverageAllocator(_addressLeverageAllocator);
-        _addressOUSD = addressOUSD;
+        _addressOUSD = addressContracts[4];
         _ousd = IERC20(_addressOUSD);
     }
 

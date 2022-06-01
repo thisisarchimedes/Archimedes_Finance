@@ -40,26 +40,19 @@ contract Coordinator is ICoordinator, AccessController {
 
     constructor(address admin) AccessController(admin) {}
 
-    function init(
-        address addressLvUSD,
-        address addressVaultOUSD,
-        address addressCDP,
-        address addressOUSD,
-        address addressExchanger,
-        address addressParamStore
-    ) external nonReentrant initializer onlyAdmin {
-        _addressLvUSD = addressLvUSD;
-        _addressVaultOUSD = addressVaultOUSD;
-        _addressCDP = addressCDP;
-        _addressOUSD = addressOUSD;
-        _addressExchanger = addressExchanger;
+    function init(address[] calldata addressContracts) external initializer onlyAdmin {
+        _addressLvUSD = addressContracts[0];
+        _addressVaultOUSD = addressContracts[1];
+        _addressCDP = addressContracts[2];
+        _addressOUSD = addressContracts[3];
+        _addressExchanger = addressContracts[4];
 
         _vault = VaultOUSD(_addressVaultOUSD);
         _cdp = CDPosition(_addressCDP);
         _exchanger = Exchanger(_addressExchanger);
         _lvUSD = IERC20(_addressLvUSD);
         _ousd = IERC20(_addressOUSD);
-        _paramStore = ParameterStore(addressParamStore);
+        _paramStore = ParameterStore(addressContracts[5]);
 
         // approve VaultOUSD address to spend OUSD on behalf of coordinator
         _ousd.safeApprove(_addressVaultOUSD, type(uint256).max);

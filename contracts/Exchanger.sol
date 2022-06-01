@@ -50,39 +50,25 @@ contract Exchanger is IExchanger, AccessController {
 
     /**
      * @dev initialize Exchanger
-     * @param addressParameterStore ParameterStore address
-     * @param addressCoordinator Coordinator contract address
-     * @param addressLvUSD lvUSD ERC20 contract address
-     * @param addressOUSD OUSD ERC20 contract address
-     * @param address3CRV 3CRV ERC20 contract address
-     * @param addressPoolLvUSD3CRV 3CRV+LvUSD pool address
-     * @param addressPoolOUSD3CRV 3CRV+OUSD pool address
+     * @param addressContracts contract addresses
      */
-    function init(
-        address addressParameterStore,
-        address addressCoordinator,
-        address addressLvUSD,
-        address addressOUSD,
-        address address3CRV,
-        address addressPoolLvUSD3CRV,
-        address addressPoolOUSD3CRV
-    ) external initializer nonReentrant onlyAdmin {
+    function init(address[] calldata addressContracts) external initializer onlyAdmin {
         // Set variables
-        _addressParameterStore = addressParameterStore;
-        _addressCoordinator = addressCoordinator;
-        _addressLvUSD = addressLvUSD;
-        _addressOUSD = addressOUSD;
-        _address3CRV = address3CRV;
-        _addressPoolLvUSD3CRV = addressPoolLvUSD3CRV;
-        _addressPoolOUSD3CRV = addressPoolOUSD3CRV;
+        _addressParameterStore = addressContracts[0];
+        _addressCoordinator = addressContracts[1];
+        _addressLvUSD = addressContracts[2];
+        _addressOUSD = addressContracts[3];
+        _address3CRV = addressContracts[4];
+        _addressPoolLvUSD3CRV = addressContracts[5];
+        _addressPoolOUSD3CRV = addressContracts[6];
 
         // Load contracts
-        _paramStore = ParameterStore(addressParameterStore);
+        _paramStore = ParameterStore(_addressParameterStore);
         _lvusd = IERC20(_addressLvUSD);
         _ousd = IERC20(_addressOUSD);
         _crv3 = IERC20(_address3CRV);
-        _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
-        _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
+        _poolLvUSD3CRV = ICurveFiCurve(_addressPoolLvUSD3CRV);
+        _poolOUSD3CRV = ICurveFiCurve(_addressPoolOUSD3CRV);
 
         _curveGuardPercentage = 90; // 90%
         _slippage = 2; // 2%

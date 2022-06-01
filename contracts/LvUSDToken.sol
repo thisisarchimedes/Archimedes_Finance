@@ -13,7 +13,7 @@ import {AccessController} from "./AccessController.sol";
 contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), AccessController {
     constructor(address admin) AccessController(admin) {}
 
-    function init() external onlyAdmin {}
+    function init(address[] calldata addressContracts) external initializer onlyAdmin {}
 
     /// @dev Mints tokens to a recipient.
     ///

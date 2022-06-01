@@ -15,8 +15,8 @@ contract ParameterStore is AccessController {
 
     constructor(address admin) AccessController(admin) {}
 
-    function init(address treasuryAddress) external initializer onlyAdmin {
-        _treasuryAddress = treasuryAddress;
+    function init(address[] calldata addressContracts) external initializer onlyAdmin {
+        _treasuryAddress = addressContracts[0];
     }
 
     function changeTreasuryAddress(address newTreasuryAddress) external {

@@ -16,7 +16,7 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
 
     constructor(address admin) ERC721("PositionToken", "PNT") AccessController(admin) {}
 
-    function init() external initializer onlyAdmin {}
+    function init(address[] calldata addressContracts) external initializer onlyAdmin {}
 
     /* Privileged functions: Executive */
     function safeMint(address to) external onlyExecutive returns (uint256 positionTokenId) {

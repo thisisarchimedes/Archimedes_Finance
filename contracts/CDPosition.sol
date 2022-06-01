@@ -41,7 +41,7 @@ contract CDPosition is AccessController {
 
     constructor(address admin) AccessController(admin) {}
 
-    function init() external onlyAdmin {}
+    function init(address[] calldata addressContracts) external initializer onlyAdmin {}
 
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Update both principle and total with OUSDPrinciple
