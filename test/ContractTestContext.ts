@@ -35,7 +35,6 @@ type ContractRoles = {
     [contractKey: string]: Partial<DefaultRoles> | SignerWithAddress | undefined;
 };
 
-type ContractPath = string;
 type ContractConstructorArgs = any[];
 type ContractMap = {
     [contractKey: string]: ContractConstructorArgs;
