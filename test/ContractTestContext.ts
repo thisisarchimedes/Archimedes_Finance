@@ -38,7 +38,11 @@ type ContractRoles = {
 type ContractPath = string;
 type ContractConstructorArgs = any[];
 type ContractMap = {
-    [contractKey: string]: [ContractPath, ...ContractConstructorArgs];
+    [contractKey: string]: ContractConstructorArgs;
+}
+
+function capitalizeFirstLetter (str: string) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 /* Return object matching contractMap keys with deployed contract objects. contractMap values should be
@@ -46,8 +50,8 @@ type ContractMap = {
    argument to contructor will be admin address which is expected by AccessController */
 async function deployContracts <T> (contractMap: ContractMap, addressAdmin: string): Promise<T> {
     const contracts = {};
-    await Promise.all(Object.entries(contractMap).map(async ([contractKey, [contractPath, ...constructorArgs]]) => {
-        const factory = await ethers.getContractFactory(contractPath);
+    await Promise.all(Object.entries(contractMap).map(async ([contractKey, constructorArgs]) => {
+        const factory = await ethers.getContractFactory(capitalizeFirstLetter(contractKey));
         const contract = await factory.deploy(addressAdmin, ...constructorArgs);
         contracts[contractKey] = contract;
     }));
@@ -56,15 +60,15 @@ async function deployContracts <T> (contractMap: ContractMap, addressAdmin: stri
 
 type ArchContracts = {
     archToken: ArchToken;
-    cdp: CDPosition;
+    cDPosition: CDPosition;
     coordinator: Coordinator;
     exchanger: Exchanger;
     leverageAllocator: LeverageAllocator;
     leverageEngine: LeverageEngine;
-    lvUSD: LvUSDToken;
+    lvUSDToken: LvUSDToken;
     parameterStore: ParameterStore;
     positionToken: PositionToken;
-    vault: VaultOUSD;
+    vaultOUSD: VaultOUSD;
 };
 
 export type ContractTestContext = ArchContracts & {
@@ -100,34 +104,34 @@ export async function buildContractTestContext (contractRoleOverrides: ContractR
 
     const signerAdmin = contractRoleOverrides.admin || context.owner;
     const contracts = await deployContracts<ArchContracts>({
-        archToken: ["ArchToken", context.owner.address],
-        cdp: ["CDPosition"],
-        coordinator: ["Coordinator"],
-        exchanger: ["Exchanger"],
-        leverageAllocator: ["LeverageAllocator"],
-        leverageEngine: ["LeverageEngine"],
-        lvUSD: ["LvUSDToken"],
-        parameterStore: ["ParameterStore"],
-        positionToken: ["PositionToken"],
-        vault: ["VaultOUSD", context.externalOUSD.address, "VaultOUSD", "VOUSD"],
+        archToken: [context.owner.address],
+        cDPosition: [],
+        coordinator: [],
+        exchanger: [],
+        leverageAllocator: [],
+        leverageEngine: [],
+        lvUSDToken: [],
+        parameterStore: [],
+        positionToken: [],
+        vaultOUSD: [context.externalOUSD.address, "VaultOUSD", "VOUSD"],
     }, signerAdmin.address);
     Object.assign(context, contracts);
 
     // Give context.owner some funds:
-    await context.lvUSD.mint(context.owner.address, ownerStartingLvUSDAmount);
+    await context.lvUSDToken.mint(context.owner.address, ownerStartingLvUSDAmount);
     await helperSwapETHWith3CRV(context.owner, ethers.utils.parseUnits("3.0"));
 
     // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token
     context.curveLvUSDPool = await createAndFundMetapool(context.owner, context);
     // Setup pool with approval
-    await context.lvUSD.approve(context.curveLvUSDPool.address, ownerStartingLvUSDAmount);
+    await context.lvUSDToken.approve(context.curveLvUSDPool.address, ownerStartingLvUSDAmount);
 
-    await context.lvUSD.approve(context.exchanger.address, ethers.constants.MaxUint256);
-    await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
+    await context.lvUSDToken.approve(context.exchanger.address, ethers.constants.MaxUint256);
+    await context.lvUSDToken.approve(context.coordinator.address, ethers.constants.MaxUint256);
 
     /* expected contract roles when deployed to mainnet: */
     const contractRoles = {
-        PositionToken: {
+        positionToken: {
             executive: context.leverageEngine.address,
         },
     };
@@ -141,9 +145,9 @@ export async function buildContractTestContext (contractRoleOverrides: ContractR
             context.externalOUSD.address,
         ],
         coordinator: [
-            context.lvUSD.address,
-            context.vault.address,
-            context.cdp.address,
+            context.lvUSDToken.address,
+            context.vaultOUSD.address,
+            context.cDPosition.address,
             context.externalOUSD.address,
             context.exchanger.address,
             context.parameterStore.address,
@@ -151,13 +155,13 @@ export async function buildContractTestContext (contractRoleOverrides: ContractR
         exchanger: [
             context.parameterStore.address,
             context.coordinator.address,
-            context.lvUSD.address,
+            context.lvUSDToken.address,
             context.externalOUSD.address,
             context.external3CRV.address,
             context.curveLvUSDPool.address,
             addressCurveOUSDPool,
         ],
-        vault: [context.parameterStore.address, context.externalOUSD.address],
+        vaultOUSD: [context.parameterStore.address, context.externalOUSD.address],
         parameterStore: [context.treasurySigner.address],
     };
 

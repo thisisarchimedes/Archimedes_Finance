@@ -58,7 +58,7 @@ describe("LeverageEngine test suit", async function () {
             const totalOUSD = await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("5"));
             await r.externalOUSD.approve(r.leverageEngine.address, totalOUSD);
             await r.leverageAllocator.setAddressToLvUSDAvailable(r.owner.address, availableLvUSD);
-            await r.lvUSD.mint(r.coordinator.address, ethers.utils.parseUnits("5000"));
+            await r.lvUSDToken.mint(r.coordinator.address, ethers.utils.parseUnits("5000"));
             allowedLvUSDForPosition = await r.parameterStore.getAllowedLeverageForPosition(principle, maxCycles);
             userInitialOUSD = await r.externalOUSD.balanceOf(r.owner.address);
             await r.leverageEngine.createLeveragedPosition(principle, maxCycles);

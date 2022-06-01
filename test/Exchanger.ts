@@ -10,7 +10,6 @@ function parseBN (bigNumValue) {
 describe("Exchanger Test suit", function () {
     let owner;
     let r: ContractTestContext;
-    let lvUSD;
     let exchanger;
     let coordinator;
     let ousd;
@@ -26,21 +25,20 @@ describe("Exchanger Test suit", function () {
     beforeEach(async function () {
         // Setup & deploy contracts
         r = await buildContractTestContext();
-        lvUSD = r.lvUSD;
         ousd = r.externalOUSD;
         owner = r.owner;
         exchanger = r.exchanger;
         coordinator = r.coordinator;
 
         // Fund exchanger
-        await lvUSD.mint(exchanger.address, amountStarting);
+        await r.lvUSDToken.mint(exchanger.address, amountStarting);
         await helperSwapETHWithOUSD(owner, amountStarting);
         await ousd.transfer(exchanger.address, amountStarting);
     });
 
     describe("Exchanges", function () {
         it("Tests should init with some funds", async function () {
-            expect(await lvUSD.balanceOf(exchanger.address)).eq(amountStarting);
+            expect(await r.lvUSDToken.balanceOf(exchanger.address)).eq(amountStarting);
             expect(await ousd.balanceOf(exchanger.address)).eq(amountStarting);
         });
 
@@ -50,7 +48,7 @@ describe("Exchanger Test suit", function () {
         describe("swapLvUSDforOUSD()", function () {
             it("Should send correct amount LvUSD", async function () {
                 await expect(exchanger.swapLvUSDforOUSD(amountToExchange));
-                const balanceLvUSD = (await lvUSD.balanceOf(exchanger.address));
+                const balanceLvUSD = (await r.lvUSDToken.balanceOf(exchanger.address));
                 const expectedLvUSD = (amountStarting.sub(amountToExchange));
                 expect(balanceLvUSD).eq(expectedLvUSD);
             });
@@ -65,7 +63,7 @@ describe("Exchanger Test suit", function () {
             it("LvUSD balance should increase by closeTo 'amountMinRequired'", async function () {
                 await exchanger.swapOUSDforLvUSD(amountToExchange, amountMinRequired);
                 // coordinator starts with zero, so we can use the current balance
-                const balanceLvUSD = await lvUSD.balanceOf(coordinator.address);
+                const balanceLvUSD = await r.lvUSDToken.balanceOf(coordinator.address);
                 expect(parseBN(balanceLvUSD)).closeTo(parseBN(amountMinRequired), closeToRange);
             });
             it("Should revert if we dont get enough back (minimumRequired)", async function () {

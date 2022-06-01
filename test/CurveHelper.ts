@@ -67,9 +67,8 @@ async function getMetapool (address, signer) {
  */
 async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
     const token3CRV = r.external3CRV;
-    const lvUSD = r.lvUSD;
     await token3CRV.approve(addressPool, amount3CRV);
-    await lvUSD.approve(addressPool, amountLvUSD);
+    await r.lvUSDToken.approve(addressPool, amountLvUSD);
     const pool = await getMetapool(addressPool, owner);
     let balanceLvUSD = await pool.balances(0);
     let balance3CRV = await pool.balances(1);
@@ -100,8 +99,7 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
  * @param r: instance: ContractContextTest
  */
 async function createAndFundMetapool (owner, r) {
-    const lvUSD = r.lvUSD;
-    const addressPool = await createMetapool(lvUSD, owner);
+    const addressPool = await createMetapool(r.lvUSDToken, owner);
     const pool = await getMetapool(addressPool, owner);
     // Should not be able to call this multiple times
     // Check to make sure pool is empty
