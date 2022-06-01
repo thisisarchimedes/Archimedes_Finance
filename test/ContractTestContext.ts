@@ -176,8 +176,8 @@ export async function buildContractTestContext (contractRoleOverrides: ContractR
             ...contractRoleOverrides[contractKey] as Partial<DefaultRoles>,
         };
         await contract.connect(signerAdmin).setRoles(roles.executive, roles.governor, roles.guardian);
-        const args: string[] = initArgs[contractKey] || [] as const;
-        await contract.connect(signerAdmin).init(args);
+        const args: string[] = initArgs[contractKey] || [];
+        await contract.connect(signerAdmin).init.apply(null, [args]);
     }));
 
     return context;
