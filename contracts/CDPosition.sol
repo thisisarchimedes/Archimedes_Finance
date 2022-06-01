@@ -41,6 +41,8 @@ contract CDPosition is AccessController {
 
     constructor(address admin) AccessController(admin) {}
 
+    function init() external onlyAdmin {}
+
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Update both principle and total with OUSDPrinciple
     /// @param nftID newly minted NFT

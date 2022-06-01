@@ -12,6 +12,8 @@ contract LeverageAllocator is AccessController {
 
     constructor(address admin) AccessController(admin) {}
 
+    function init() external onlyAdmin {}
+
     /// @dev admin can use to manually override available lvUSD for a given user
     function setAddressToLvUSDAvailable(address addr, uint256 amount) external onlyAdmin returns (uint256) {
         _addressToLvUSDAvailable[addr] = amount;

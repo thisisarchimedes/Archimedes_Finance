@@ -25,19 +25,14 @@ import type { LvUSDToken } from "../types/contracts/LvUSDToken";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 type DefaultRoles = {
-    admin: string,
     executive: string,
     governor: string,
     guardian: string,
 };
 
 type ContractRoles = {
-    [contractKey: string]: Partial<DefaultRoles>;
-};
-
-type ContractRolesWithDefaults = {
-    [contractKey: string]: Partial<DefaultRoles>;
-    defaults: DefaultRoles & ContractRoles;
+    admin?: SignerWithAddress;
+    [contractKey: string]: Partial<DefaultRoles> | SignerWithAddress | undefined;
 };
 
 type ContractPath = string;
@@ -49,12 +44,10 @@ type ContractMap = {
 /* Return object matching contractMap keys with deployed contract objects. contractMap values should be
    an array where first item is path to contract and remaining items are constructor args to pass. First
    argument to contructor will be admin address which is expected by AccessController */
-async function deployContracts <T> (contractMap: ContractMap, contractRoles: ContractRolesWithDefaults): Promise<T> {
+async function deployContracts <T> (contractMap: ContractMap, addressAdmin: string): Promise<T> {
     const contracts = {};
     await Promise.all(Object.entries(contractMap).map(async ([contractKey, [contractPath, ...constructorArgs]]) => {
         const factory = await ethers.getContractFactory(contractPath);
-        const overrideRoles = contractRoles[contractPath];
-        const addressAdmin = (overrideRoles && overrideRoles.admin) || contractRoles.defaults.admin;
         const contract = await factory.deploy(addressAdmin, ...constructorArgs);
         contracts[contractKey] = contract;
     }));
@@ -90,22 +83,14 @@ export type ContractTestContext = ArchContracts & {
 export const signers = ethers.getSigners();
 export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("1000.0");
 
-export async function buildContractTestContext (contractRoles: ContractRoles = {}): Promise<ContractTestContext> {
+/* reset the network and rebuild and deploy all contracts. accepts contractRoleOverrides which can specify
+   an overriden admin address for all contracts or individual roles per contract */
+export async function buildContractTestContext (contractRoleOverrides: ContractRoles = {}): Promise<ContractTestContext> {
     await helperResetNetwork(defaultBlockNumber);
 
     const context = {} as ContractTestContext;
 
     [context.owner, context.addr1, context.addr2, context.treasurySigner, context.addr3] = await signers;
-
-    const contractRolesWithDefaults = {
-        defaults: {
-            admin: context.owner.address,
-            executive: context.owner.address,
-            governor: context.owner.address,
-            guardian: context.owner.address,
-        },
-        ...contractRoles,
-    } as ContractRolesWithDefaults;
 
     context.externalOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, context.owner);
     context.externalUSDT = new ethers.Contract(addressUSDT, abiUSDTToken, context.owner);
@@ -113,6 +98,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     // @ts-ignore
     context.external3CRV = new ethers.Contract(address3CRV, abi3CRVToken, context.owner);
 
+    const signerAdmin = contractRoleOverrides.admin || context.owner;
     const contracts = await deployContracts<ArchContracts>({
         archToken: ["ArchToken", context.owner.address],
         cdp: ["CDPosition"],
@@ -124,27 +110,8 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
         parameterStore: ["ParameterStore"],
         positionToken: ["PositionToken"],
         vault: ["VaultOUSD", context.externalOUSD.address, "VaultOUSD", "VOUSD"],
-    }, contractRolesWithDefaults);
+    }, signerAdmin.address);
     Object.assign(context, contracts);
-
-    /* temporary list, in the future will just iterate over all contracts: */
-    const contractsWithRoles = [context.positionToken];
-    /* if contracts have derrived role addresses they should exist under their contract name
-       on defaults. defaults should be the expected final roles when deployed to mainnet: */
-    contractRolesWithDefaults.defaults.PositionToken = {
-        executive: context.leverageEngine.address,
-    };
-    /* call setRoles on all contracts, allowing any specified overrides from arguments: */
-    await Promise.all(contractsWithRoles.map(async (contract) => {
-        const contractName = await contract.name();
-        const roles = {
-            ...contractRolesWithDefaults.defaults,
-            ...contractRolesWithDefaults.defaults[contractName],
-            /* contractRoles allow tests to pass in an alternative address to make role based testing more concise and clear */
-            ...contractRolesWithDefaults[contractName],
-        };
-        return contract.setRoles(roles.executive, roles.governor, roles.guardian);
-    }));
 
     // Give context.owner some funds:
     await context.lvUSD.mint(context.owner.address, ownerStartingLvUSDAmount);
@@ -158,26 +125,30 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     await context.lvUSD.approve(context.exchanger.address, ethers.constants.MaxUint256);
     await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
 
-    // Post init contracts
-    await Promise.all([
-        context.leverageEngine.init(
+    /* expected contract roles when deployed to mainnet: */
+    const contractRoles = {
+        PositionToken: {
+            executive: context.leverageEngine.address,
+        },
+    };
+
+    const initArgs = {
+        leverageEngine: [
             context.coordinator.address,
             context.positionToken.address,
             context.parameterStore.address,
             context.leverageAllocator.address,
             context.externalOUSD.address,
-        ),
-
-        context.coordinator.init(
+        ],
+        coordinator: [
             context.lvUSD.address,
             context.vault.address,
             context.cdp.address,
             context.externalOUSD.address,
             context.exchanger.address,
             context.parameterStore.address,
-        ),
-
-        context.exchanger.init(
+        ],
+        exchanger: [
             context.parameterStore.address,
             context.coordinator.address,
             context.lvUSD.address,
@@ -185,12 +156,28 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
             context.external3CRV.address,
             context.curveLvUSDPool.address,
             addressCurveOUSDPool,
-        ),
+        ],
+        vault: [context.parameterStore.address, context.externalOUSD.address],
+        parameterStore: [context.treasurySigner.address],
+    };
 
-        context.vault.init(context.parameterStore.address, context.externalOUSD.address),
-        context.parameterStore.init(context.treasurySigner.address),
-        context.positionToken.init(),
-    ]);
+    /* call setRoles on all contracts, allowing any specified overrides from arguments: */
+    await Promise.all(Object.entries(contracts).map(async ([contractKey, contract]) => {
+        const roles = {
+            /* these defaults are temporary while  */
+            executive: context.owner.address,
+            governor: context.owner.address,
+            guardian: context.owner.address,
+            ...contractRoles[contractKey],
+            /* contractRoleOverrides allow tests to pass in an address override to make role based testing more clear */
+            ...contractRoleOverrides[contractKey] as Partial<DefaultRoles>,
+        };
+        await contract.connect(signerAdmin).setRoles(roles.executive, roles.governor, roles.guardian);
+        const args = initArgs[contractKey] || [];
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        await contract.connect(signerAdmin).init(...args);
+    }));
 
     return context;
 }

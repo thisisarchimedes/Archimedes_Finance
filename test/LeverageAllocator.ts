@@ -43,7 +43,7 @@ describe("LeverageAllocator test suit", async function () {
     describe("Access without proper role", () => {
         it("Should not allow non admin to set available lvUSD allocation", async function () {
             const withAddr1Admin = await buildContractTestContext({
-                LeverageAllocator: { admin: r.addr1.address },
+                admin: r.addr1,
             });
 
             await expect(

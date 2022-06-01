@@ -12,4 +12,6 @@ contract ArchToken is ERC20, ERC20Burnable, AccessController {
     constructor(address admin, address _addressTreasury) ERC20("Archimedes Token", "ARCH") AccessController(admin) {
         _mint(_addressTreasury, 100000000 ether);
     }
+
+    function init() external onlyAdmin {}
 }
