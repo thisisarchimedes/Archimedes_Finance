@@ -19,7 +19,7 @@ describe("PositionToken test suit", function () {
     before(async function () {
         const [owner] = await signers;
         r = await buildContractTestContext({
-            PositionToken: { executive: owner.address },
+            positionToken: { executive: owner.address },
         });
         positionTokenAsExecutive = r.positionToken;
         firstTokenOwner = r.addr1;
