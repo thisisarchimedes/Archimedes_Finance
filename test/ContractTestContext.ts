@@ -167,7 +167,7 @@ export async function buildContractTestContext (contractRoleOverrides: ContractR
     /* call setRoles and init on all contracts, allowing any specified overrides from arguments: */
     await Promise.all(Object.entries(contracts).map(async ([contractKey, contract]) => {
         const roles = {
-            /* these defaults are temporary while  */
+            /* these defaults are temporary while the actual contract to contract executive roles and others are sorted out */
             executive: context.owner.address,
             governor: context.owner.address,
             guardian: context.owner.address,
