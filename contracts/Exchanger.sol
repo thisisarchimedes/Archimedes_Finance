@@ -77,9 +77,6 @@ contract Exchanger is IExchanger, AccessController {
         _crv3 = IERC20(address3CRV);
         _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
-
-        _curveGuardPercentage = _paramStore.getCurveGuardPercentage();
-        _slippage = _paramStore.getSlippage();
     }
 
     /**
@@ -167,6 +164,8 @@ contract Exchanger is IExchanger, AccessController {
         uint256 _expected3CRV;
         uint256 _minimum3CRV;
         uint256 _returned3CRV;
+        _curveGuardPercentage = _paramStore.getCurveGuardPercentage();
+        _slippage = _paramStore.getSlippage();
         uint256 _guard3CRV = (amountOUSD * _curveGuardPercentage) / 100;
 
         // Verify Exchanger has enough OUSD to use
@@ -211,6 +210,8 @@ contract Exchanger is IExchanger, AccessController {
         uint256 _expectedLvUSD;
         uint256 _minimumLvUSD;
         uint256 _returnedLvUSD;
+        _curveGuardPercentage = _paramStore.getCurveGuardPercentage();
+        _slippage = _paramStore.getSlippage();
         uint256 _guardLvUSD = (amount3CRV * _curveGuardPercentage) / 100;
 
         // Verify Exchanger has enough 3CRV to use
@@ -255,6 +256,8 @@ contract Exchanger is IExchanger, AccessController {
         uint256 _expected3CRV;
         uint256 _minimum3CRV;
         uint256 _returned3CRV;
+        _curveGuardPercentage = _paramStore.getCurveGuardPercentage();
+        _slippage = _paramStore.getSlippage();
         uint256 _guard3CRV = (amountLvUSD * _curveGuardPercentage) / 100;
 
         // Verify Exchanger has enough LvUSD to use
@@ -299,6 +302,8 @@ contract Exchanger is IExchanger, AccessController {
         uint256 _expectedOUSD;
         uint256 _minimumOUSD;
         uint256 _returnedOUSD;
+        _curveGuardPercentage = _paramStore.getCurveGuardPercentage();
+        _slippage = _paramStore.getSlippage();
         uint256 _guardOUSD = (amount3CRV * _curveGuardPercentage) / 100;
 
         // Verify Exchanger has enough 3CRV to use
