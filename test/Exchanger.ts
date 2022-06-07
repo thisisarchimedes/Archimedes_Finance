@@ -49,13 +49,13 @@ describe("Exchanger Test suit", function () {
         // Create position
         describe("swapLvUSDforOUSD()", function () {
             it("Should send correct amount LvUSD", async function () {
-                await expect(exchanger.swapLvUSDforOUSD(amountToExchange));
+                await exchanger.swapLvUSDforOUSD(amountToExchange);
                 const balanceLvUSD = (await lvUSD.balanceOf(exchanger.address));
                 const expectedLvUSD = (amountStarting.sub(amountToExchange));
                 expect(balanceLvUSD).eq(expectedLvUSD);
             });
             it("Should receive correct amount OUSD", async function () {
-                await expect(exchanger.swapLvUSDforOUSD(amountToExchange));
+                await exchanger.swapLvUSDforOUSD(amountToExchange);
                 // funds end up at coordinator's address
                 const balanceOUSD = parseBN(await ousd.balanceOf(coordinator.address));
                 expect(balanceOUSD).closeTo(parseBN(amountToExchange), closeToRange);
