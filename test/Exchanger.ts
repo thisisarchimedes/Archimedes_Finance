@@ -87,5 +87,6 @@ describe("Exchanger Test suit", function () {
                 expect(balanceOUSD).closeTo(expectedRemaining, closeToRange);
             });
         });
+        // TODO test that _slippage and _curveGuardPercentage work as intended
     });
 });

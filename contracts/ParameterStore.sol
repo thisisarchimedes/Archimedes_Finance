@@ -12,11 +12,25 @@ contract ParameterStore is AccessController {
     uint256 internal _globalCollateralRate = 90; // in percentage
     uint256 internal _rebaseFeeRate = 10 ether / 100; // meaning 10%
     address internal _treasuryAddress;
+    uint256 internal _curveGuardPercentage = 90; // 90%
+    uint256 internal _slippage = 2; // 2%;
 
     constructor(address admin) AccessController(admin) {}
 
     function init(address treasuryAddress) external initializer onlyAdmin {
         _treasuryAddress = treasuryAddress;
+    }
+
+    function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external {
+        // curveGuardPercentage must be a number between 80 and 100
+        require(newCurveGuardPercentage >= 80 && newCurveGuardPercentage <= 100, "New CGP out of range");
+        _curveGuardPercentage = newCurveGuardPercentage;
+    }
+
+    function changeSlippage(uint256 newchangeSlippage) external {
+        // slippage must be a number between 0 and 5
+        require(newchangeSlippage > 0 && newchangeSlippage < 5, "New slippage out of range");
+        _slippage = newchangeSlippage;
     }
 
     function changeTreasuryAddress(address newTreasuryAddress) external {
@@ -60,6 +74,14 @@ contract ParameterStore is AccessController {
 
     function getTreasuryAddress() public view returns (address) {
         return _treasuryAddress;
+    }
+
+    function getCurveGuardPercentage() public view returns (uint256) {
+        return _curveGuardPercentage;
+    }
+
+    function getSlippage() public view returns (uint256) {
+        return _slippage;
     }
 
     /// Method returns the allowed leverage for principle and number of cycles
