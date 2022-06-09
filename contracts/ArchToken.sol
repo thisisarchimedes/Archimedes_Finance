@@ -1,15 +1,33 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import {AccessController} from "./AccessController.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-/// @title Archimedes Token
-/// @dev This is the contract for the Archimedes rewards token
-contract ArchToken is ERC20, ERC20Burnable, AccessController {
-    /// @notice We premint to the _addressTreasury in the constructor when deployed
-    constructor(address admin, address _addressTreasury) ERC20("Archimedes Token", "ARCH") AccessController(admin) {
+contract ArchToken is ERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Votes {
+    constructor(address _addressTreasury) ERC20("Archimedes", "ARCH") ERC20Permit("ArchToken") {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _mint(_addressTreasury, 100000000 ether);
+    }
+
+    // The following functions are overrides required by Solidity.
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20, ERC20Votes) {
+        super._afterTokenTransfer(from, to, amount);
+    }
+
+    function _mint(address to, uint256 amount) internal override(ERC20, ERC20Votes) {
+        super._mint(to, amount);
+    }
+
+    function _burn(address account, uint256 amount) internal override(ERC20, ERC20Votes) {
+        super._burn(account, amount);
     }
 }
