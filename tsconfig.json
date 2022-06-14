@@ -13,7 +13,7 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["./scripts", "./test", "./deploy/**/*"],
+  "include": ["./scripts", "./test", "./deploy/**/*", "integrationTests"],
   "exclude": ["node_modules"],
   "files": ["./hardhat.config.ts"]
 }

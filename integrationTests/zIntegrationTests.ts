@@ -1,9 +1,9 @@
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { parseUnits, formatUnits } from "ethers/lib/utils";
 import { expect } from "chai";
-import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-import { helperSwapETHWithOUSD, helperSwapETHWith3CRV } from "./MainnetHelper";
-import { fundMetapool } from "./CurveHelper";
+import { buildContractTestContext, ContractTestContext } from "../test/ContractTestContext";
+import { helperSwapETHWithOUSD, helperSwapETHWith3CRV } from "../test/MainnetHelper";
+import { fundMetapool } from "../test/CurveHelper";
 import { BigNumber } from "ethers";
 import { logger } from "../logger";
 
@@ -176,9 +176,9 @@ describe("Test suit for getting leverage", function () {
     });
 
     it("Should have created a single position and assign it to user", async function () {
-        printPositionState(r, positionId);
-        printPoolState(r.curveLvUSDPool);
-        printMiscInfo(r, user);
+        // printPositionState(r, positionId);
+        // printPoolState(r.curveLvUSDPool);
+        // printMiscInfo(r, user);
         const nftBalance = await r.positionToken.balanceOf(user.address);
         expect(nftBalance).to.equal(1);
     });
@@ -215,8 +215,8 @@ describe("test suit for rebase events", function () {
         await r.vault.takeRebaseFees();
     });
     it("Should update treasury with rebase fees", async function () {
-        printPositionState(r, positionId);
-        printMiscInfo(r, user);
+        // printPositionState(r, positionId);
+        // printMiscInfo(r, user);
         const treasuryBalance = getFloatFromBigNum(
             await r.externalOUSD.balanceOf(r.treasurySigner.address),
         );
