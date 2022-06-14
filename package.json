@@ -14,7 +14,7 @@
         "lint:ts:fix": "eslint --fix .",
         "lint:sol": "solhint \"contracts/**/*.sol\" && prettier --check \"contracts/*.sol\"",
         "lint:sol:fix": "solhint \"contracts/**/*.sol\" --fix && prettier --write \"contracts/**/*.sol\"",
-        "test:ci": "npm run clean && npm run typechain && npm run test",
+        "test:ci": "npm run clean && npm run typechain && npx hardhat test",
         "console": "ts-node console.ts",
         "test": "hardhat typechain && hardhat test",
         "test:log": "hardhat typechain && hardhat test:log",
