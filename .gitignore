@@ -54,3 +54,5 @@ tenderly.yaml
 ##########
 
 secrets/
+
+user.env

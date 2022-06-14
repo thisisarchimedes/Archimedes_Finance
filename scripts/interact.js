@@ -13,7 +13,7 @@ async function main () {
 
     const lvUSD = new ethers.Contract(rinkebyLvUSDAddress, abiLvUSDToken, signer);
 
-    await lvUSD.mint(ownerAddress, ethers.utils.parseEther("101.0"));
+    await lvUSD.mint(ethers.utils.parseEther("101.0"));
 }
 
 main()
