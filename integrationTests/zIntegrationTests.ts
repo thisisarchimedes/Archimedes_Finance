@@ -176,9 +176,9 @@ describe("Test suit for getting leverage", function () {
     });
 
     it("Should have created a single position and assign it to user", async function () {
-        // printPositionState(r, positionId);
-        // printPoolState(r.curveLvUSDPool);
-        // printMiscInfo(r, user);
+        printPositionState(r, positionId);
+        printPoolState(r.curveLvUSDPool);
+        printMiscInfo(r, user);
         const nftBalance = await r.positionToken.balanceOf(user.address);
         expect(nftBalance).to.equal(1);
     });
@@ -215,8 +215,8 @@ describe("test suit for rebase events", function () {
         await r.vault.takeRebaseFees();
     });
     it("Should update treasury with rebase fees", async function () {
-        // printPositionState(r, positionId);
-        // printMiscInfo(r, user);
+        printPositionState(r, positionId);
+        printMiscInfo(r, user);
         const treasuryBalance = getFloatFromBigNum(
             await r.externalOUSD.balanceOf(r.treasurySigner.address),
         );

@@ -14,6 +14,7 @@ contract ParameterStore is AccessController {
     address internal _treasuryAddress;
     uint256 internal _curveGuardPercentage = 90; // 90%
     uint256 internal _slippage = 2; // 2%;
+    /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
     uint256 internal _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
 
     constructor(address admin) AccessController(admin) {}
@@ -57,8 +58,8 @@ contract ParameterStore is AccessController {
         _rebaseFeeRate = newRebaseFeeRate;
     }
 
-    function changeArchToLevRation(uint256 newArchToLevRation) external {
-        _archToLevRatio = newArchToLevRation;
+    function changeArchToLevRatio(uint256 newArchToLevRatio) external {
+        _archToLevRatio = newArchToLevRatio;
     }
 
     function getMaxNumberOfCycles() external view returns (uint256) {
@@ -129,7 +130,7 @@ contract ParameterStore is AccessController {
     }
 
     function calculateArchNeededForLeverage(uint256 leverageAmount) public view returns (uint256) {
-        return (_archToLevRatio * leverageAmount) / 1 ether;
+        return (leverageAmount / _archToLevRatio);
     }
 
     function calculateLeverageAllowedForArch(uint256 archAmount) public view returns (uint256) {
