@@ -190,7 +190,6 @@ contract Coordinator is ICoordinator, AccessController {
 
     function _takeOriginationFee(uint256 _leveragedOUSDAmount) internal returns (uint256 fee) {
         uint256 _fee = _paramStore.calculateOriginationFee(_leveragedOUSDAmount);
-        console.log("_takeOriginationFee is taking a fee of %s", _fee / 1 ether);
         _ousd.safeTransfer(_paramStore.getTreasuryAddress(), _fee);
         return _fee;
     }

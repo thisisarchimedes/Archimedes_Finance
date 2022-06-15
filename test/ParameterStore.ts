@@ -153,6 +153,16 @@ describe("ParameterStore test suit", async function () {
                     ethers.utils.parseUnits("368.559"),
                 );
             });
+            it("Should return lower leverage allowance if not enough ArchToken", async function () {
+                const leverageAllowed =
+                    await parameterStore.getAllowedLeverageForPositionWithArch(ethers.utils.parseUnits("100"), 5, ethers.utils.parseUnits("1"));
+                expect(leverageAllowed).to.equal(ethers.utils.parseUnits("1"));
+            });
+            it("Should return leverage allowance if enough arch token is given", async function () {
+                const leverageAllowed =
+                    await parameterStore.getAllowedLeverageForPositionWithArch(ethers.utils.parseUnits("100"), 5, ethers.utils.parseUnits("1000"));
+                expect(leverageAllowed).to.equal(ethers.utils.parseUnits("368.559"));
+            });
             it("Should revert if number of cycles is bigger then allowed max", async function () {
                 await expect(
                     parameterStore.getAllowedLeverageForPosition(ethers.utils.parseUnits("100"), 20),
