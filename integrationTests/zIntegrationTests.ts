@@ -1,9 +1,9 @@
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { parseUnits, formatUnits } from "ethers/lib/utils";
 import { expect } from "chai";
-import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-import { helperSwapETHWithOUSD, helperSwapETHWith3CRV } from "./MainnetHelper";
-import { fundMetapool } from "./CurveHelper";
+import { buildContractTestContext, ContractTestContext } from "../test/ContractTestContext";
+import { helperSwapETHWithOUSD, helperSwapETHWith3CRV } from "../test/MainnetHelper";
+import { fundMetapool } from "../test/CurveHelper";
 import { BigNumber } from "ethers";
 import { logger } from "../logger";
 
