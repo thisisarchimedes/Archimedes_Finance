@@ -6,7 +6,6 @@ import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 
 import "hardhat-watcher";
-import "tsconfig-paths/register";
 
 import { setLoggingEnabled } from "./logger";
 import { task, types } from "hardhat/config";

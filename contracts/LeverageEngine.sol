@@ -10,6 +10,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {PositionToken} from "./PositionToken.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import {LeverageAllocator} from "./LeverageAllocator.sol";
+import {ArchToken} from "./ArchToken.sol";
 
 // Notes
 // - nonReentrant: a method cant call itself (nested calls). Furthermore,
@@ -24,13 +25,13 @@ contract LeverageEngine is AccessController {
     address internal _addressCoordinator;
     address internal _addressPositionToken;
     address internal _addressParameterStore;
-    address internal _addressLeverageAllocator;
+    address internal _addressArchToken;
     address internal _addressOUSD;
 
     ICoordinator internal _coordinator;
     PositionToken internal _positionToken;
     ParameterStore internal _parameterStore;
-    LeverageAllocator internal _leverageAllocator;
+    ArchToken internal _archToken;
     IERC20 internal _ousd;
 
     constructor(address admin) AccessController(admin) {}
@@ -40,7 +41,7 @@ contract LeverageEngine is AccessController {
         address addressCoordinator,
         address addressPositionToken,
         address addressParameterStore,
-        address addressLeverageAllocator,
+        address addressArchToken,
         address addressOUSD
     ) external nonReentrant initializer onlyAdmin {
         _addressCoordinator = addressCoordinator;
@@ -48,9 +49,9 @@ contract LeverageEngine is AccessController {
         _addressPositionToken = addressPositionToken;
         _positionToken = PositionToken(addressPositionToken);
         _addressParameterStore = addressParameterStore;
-        _parameterStore = ParameterStore(_addressParameterStore);
-        _addressLeverageAllocator = addressLeverageAllocator;
-        _leverageAllocator = LeverageAllocator(_addressLeverageAllocator);
+        _parameterStore = ParameterStore(addressParameterStore);
+        _addressArchToken = addressArchToken;
+        _archToken = ArchToken(addressArchToken);
         _addressOUSD = addressOUSD;
         _ousd = IERC20(_addressOUSD);
     }
@@ -64,9 +65,17 @@ contract LeverageEngine is AccessController {
     ///
     /// @param ousdPrinciple the amount of OUSD sent to Archimedes
     /// @param cycles How many leverage cycles to do
-    function createLeveragedPosition(uint256 ousdPrinciple, uint256 cycles) external expectInitialized nonReentrant returns (uint256) {
+    /// @param archAmount Arch tokens to burn for position
+    function createLeveragedPosition(
+        uint256 ousdPrinciple,
+        uint256 cycles,
+        uint256 archAmount
+    ) external expectInitialized nonReentrant returns (uint256) {
         uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
-        _leverageAllocator.useAvailableLvUSD(msg.sender, lvUSDAmount);
+        uint256 lvUSDAmountAllocatedFromArch = _parameterStore.calculateLeverageAllowedForArch(archAmount);
+        /// Revert if not enough Arch token for needed leverage. Continue if too much arch is given
+        require(lvUSDAmountAllocatedFromArch >= lvUSDAmount, "Not enough Arch provided");
+        _burnArchTokenForPosition(msg.sender, archAmount);
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
         _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple);
@@ -86,5 +95,10 @@ contract LeverageEngine is AccessController {
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
+    }
+
+    // required - the caller must have allowance for accounts's tokens of at least amount.
+    function _burnArchTokenForPosition(address sender, uint256 archAmount) internal expectInitialized {
+        _archToken.burnFrom(sender, archAmount);
     }
 }
