@@ -100,4 +100,6 @@ interface ICoordinator {
 
     /// @dev returns the address of VaultOUSD contract on file
     function addressOfVaultOUSDToken() external returns (address);
+
+    function getAvailableLeverage() external view returns (uint256);
 }
