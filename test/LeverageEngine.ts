@@ -6,7 +6,24 @@ import { helperSwapETHWithOUSD } from "./MainnetHelper";
 
 describe("LeverageEngine test suit", async function () {
     let r: ContractTestContext;
+    const principle = ethers.utils.parseUnits("1.0");
+    const archTokenToBurn = ethers.utils.parseUnits("100.0");
+    let initialArchTokenBalance;
+    let maxCycles: BigNumber;
+    let positionTokenId: BigNumber;
+    let userInitialOUSD;
 
+    async function prepForPositionCreation (lvUSDAmountToMint:BigNumber = ethers.utils.parseUnits("5000")) {
+        r = await buildContractTestContext();
+        maxCycles = await r.parameterStore.getMaxNumberOfCycles();
+        const totalOUSD = await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("5"));
+        await r.externalOUSD.approve(r.leverageEngine.address, totalOUSD);
+        await r.lvUSD.mint(r.coordinator.address, lvUSDAmountToMint);
+        // give LevEng approval to burn owner's arch tokens
+        initialArchTokenBalance = await r.archToken.balanceOf(r.owner.address);
+        await r.archToken.approve(r.leverageEngine.address, archTokenToBurn);
+        userInitialOUSD = await r.externalOUSD.balanceOf(r.owner.address);
+    }
     before(async () => {
         r = await buildContractTestContext();
     });
@@ -45,24 +62,39 @@ describe("LeverageEngine test suit", async function () {
         expect(balance).to.equal(0);
     });
 
-    describe("After successful position creation", async function () {
-        const principle = ethers.utils.parseUnits("1.0");
-        const archTokenToBurn = ethers.utils.parseUnits("100.0");
-        let initialArchTokenBalance;
-        let maxCycles: BigNumber;
-        let positionTokenId: BigNumber;
-
-        let userInitialOUSD;
+    describe("unsuccsful position creation", async function () {
         before(async function () {
-            r = await buildContractTestContext();
-            maxCycles = await r.parameterStore.getMaxNumberOfCycles();
-            const totalOUSD = await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("5"));
-            await r.externalOUSD.approve(r.leverageEngine.address, totalOUSD);
+            await prepForPositionCreation(ethers.utils.parseUnits("0"));
+        });
+        it("Should fail because not enough lvUSD available to use", async function () {
+            const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
+            await expect(promise).to.be.revertedWith("Not enough available lvUSD");
+        });
+        it("Should fail because not enough arch tokens burned", async function () {
             await r.lvUSD.mint(r.coordinator.address, ethers.utils.parseUnits("5000"));
-            // give LevEng approval to burn owner's arch tokens
-            initialArchTokenBalance = await r.archToken.balanceOf(r.owner.address);
-            await r.archToken.approve(r.leverageEngine.address, archTokenToBurn);
-            userInitialOUSD = await r.externalOUSD.balanceOf(r.owner.address);
+            const promise = r.leverageEngine.createLeveragedPosition(
+                principle, maxCycles, ethers.utils.parseUnits("1"));
+            await expect(promise).to.be.revertedWith("Not enough Arch provided");
+            // Now check that no arch was burned on revert
+            const archBalance = await r.archToken.balanceOf(r.owner.address);
+            expect(archBalance).to.equal(initialArchTokenBalance);
+        });
+    });
+
+    describe("Emiting events", async function () {
+        before(async function () {
+            await prepForPositionCreation();
+        });
+        it("Should emit position creation event", async function () {
+            const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
+            await expect(promise).to.emit(r.leverageEngine, "PositionCreated").withArgs(
+                r.owner.address, 0, principle, await r.parameterStore.getAllowedLeverageForPosition(principle, maxCycles), archTokenToBurn,
+            );
+        });
+    });
+    describe("After successful position creation", async function () {
+        before(async function () {
+            await prepForPositionCreation();
             await r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
         });
 

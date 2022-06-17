@@ -159,6 +159,10 @@ contract Coordinator is ICoordinator, AccessController {
 
     /* Privileged functions: Anyone */
 
+    function getAvailableLeverage() external view returns (uint256) {
+        return _lvUSD.balanceOf(address(this));
+    }
+
     function addressOfLvUSDToken() external view override returns (address) {
         return _addressLvUSD;
     }

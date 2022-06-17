@@ -21,7 +21,6 @@ contract LeverageEngine is AccessController {
     using SafeERC20 for IERC20;
 
     uint256 internal _positionId;
-
     address internal _addressCoordinator;
     address internal _addressPositionToken;
     address internal _addressParameterStore;
@@ -33,6 +32,8 @@ contract LeverageEngine is AccessController {
     ParameterStore internal _parameterStore;
     ArchToken internal _archToken;
     IERC20 internal _ousd;
+
+    event PositionCreated(address indexed _from, uint256 indexed _positionId, uint256 _princple, uint256 _levTaken, uint256 _archBurned);
 
     constructor(address admin) AccessController(admin) {}
 
@@ -75,12 +76,17 @@ contract LeverageEngine is AccessController {
         uint256 lvUSDAmountAllocatedFromArch = _parameterStore.calculateLeverageAllowedForArch(archAmount);
         /// Revert if not enough Arch token for needed leverage. Continue if too much arch is given
         require(lvUSDAmountAllocatedFromArch >= lvUSDAmount, "Not enough Arch provided");
+
+        uint256 availableLev = _coordinator.getAvailableLeverage();
+        require(availableLev >= lvUSDAmount, "Not enough available lvUSD");
+
         _burnArchTokenForPosition(msg.sender, archAmount);
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
         _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple);
         _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
 
+        emit PositionCreated(msg.sender, positionTokenId, ousdPrinciple, lvUSDAmount, archAmount);
         return positionTokenId;
     }
 
