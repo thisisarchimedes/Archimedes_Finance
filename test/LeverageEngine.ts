@@ -62,7 +62,7 @@ describe("LeverageEngine test suit", async function () {
         expect(balance).to.equal(0);
     });
 
-    describe("unsuccsful position creation", async function () {
+    describe("unsuccessful position creation", async function () {
         before(async function () {
             await prepForPositionCreation(ethers.utils.parseUnits("0"));
         });
