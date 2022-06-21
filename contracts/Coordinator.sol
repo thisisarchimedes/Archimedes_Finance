@@ -119,7 +119,7 @@ contract Coordinator is ICoordinator, AccessController {
         _cdp.depositOUSDtoPosition(_nftId, positionLeveragedOUSDAfterFees);
     }
 
-    function unwindLeveragedOUSD(uint256 _nftId, address _userAddress) external override nonReentrant {
+    function unwindLeveragedOUSD(uint256 _nftId, address _userAddress) external override nonReentrant returns (uint256 positionWindfall) {
         /* Flow
             1. sanity checks as needed
             2. get amount of shares for position
@@ -147,6 +147,8 @@ contract Coordinator is ICoordinator, AccessController {
 
         /// Note : leverage engine still need to make sure the delete the NFT itself in positionToken
         _cdp.deletePosition(_nftId);
+
+        return remainingOUSD;
     }
 
     function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}

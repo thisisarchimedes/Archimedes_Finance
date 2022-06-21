@@ -34,6 +34,7 @@ contract LeverageEngine is AccessController {
     IERC20 internal _ousd;
 
     event PositionCreated(address indexed _from, uint256 indexed _positionId, uint256 _princple, uint256 _levTaken, uint256 _archBurned);
+    event PositionUnwind(address indexed _from, uint256 indexed _positionId, uint256 _redeemValue);
 
     constructor(address admin) AccessController(admin) {}
 
@@ -100,7 +101,8 @@ contract LeverageEngine is AccessController {
     function unwindLeveragedPosition(uint256 positionTokenId) external expectInitialized nonReentrant {
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
-        _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
+        uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
+        emit PositionUnwind(msg.sender,positionTokenId,positionWindfall)
     }
 
     // required - the caller must have allowance for accounts's tokens of at least amount.
