@@ -14,10 +14,10 @@
         "lint:ts:fix": "eslint --fix .",
         "lint:sol": "solhint \"contracts/**/*.sol\" && prettier --check \"contracts/*.sol\"",
         "lint:sol:fix": "solhint \"contracts/**/*.sol\" --fix && prettier --write \"contracts/**/*.sol\"",
-        "test:ci": "npm run clean && npm run typechain && npx hardhat test",
+        "test:ci": "npm run clean && npm run typechain && npx hardhat test --parallel",
         "console": "ts-node console.ts",
         "test:full": "hardhat typechain && hardhat test && hardhat test integrationTests/zIntegrationTests.ts",
-        "test": "hardhat typechain && hardhat test",
+        "test": "hardhat typechain && hardhat test --parallel",
         "test:integ": "hardhat typechain && hardhat test integrationTests/zIntegrationTests.ts",
         "test:log": "hardhat typechain && hardhat test:log",
         "test:watch": "hardhat typechain && hardhat watch test",
@@ -46,11 +46,11 @@
         "@types/chai": "^4.3.1",
         "@types/mocha": "^9.1.1",
         "@types/node": "^18.0.0",
-        "@typescript-eslint/eslint-plugin": "^5.28.0",
+        "@typescript-eslint/eslint-plugin": "^5.29.0",
         "@typescript-eslint/parser": "^5.28.0",
         "chai": "^4.3.6",
         "dotenv": "^16.0.1",
-        "eslint": "^8.17.0",
+        "eslint": "^8.18.0",
         "eslint-config-standard": "^17.0.0",
         "eslint-plugin-import": "^2.26.0",
         "eslint-plugin-mocha": "^10.0.5",
@@ -64,6 +64,6 @@
         "solhint": "^3.3.7",
         "ts-node": "^10.8.1",
         "typechain": "^8.0.0",
-        "typescript": "^4.7.3"
+        "typescript": "^4.7.4"
     }
 }
