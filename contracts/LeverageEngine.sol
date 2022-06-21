@@ -102,7 +102,7 @@ contract LeverageEngine is AccessController {
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
-        emit PositionUnwind(msg.sender,positionTokenId,positionWindfall)
+        emit PositionUnwind(msg.sender, positionTokenId, positionWindfall);
     }
 
     // required - the caller must have allowance for accounts's tokens of at least amount.
