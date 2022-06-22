@@ -2,14 +2,17 @@
 pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-contract ArchToken is ERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Votes {
+/**
+@title Archimedes Governance token
+@notice contract is ERC20Permit and ERC20Votes to allow voting
+@notice to keep token tight and simple, use Ownable instead of AccessControl module
+ **/
+contract ArchToken is ERC20, Ownable, ERC20Permit, ERC20Votes {
     constructor(address _addressTreasury) ERC20("Archimedes", "ARCH") ERC20Permit("ArchToken") {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _mint(_addressTreasury, 100000000 ether);
     }
 
