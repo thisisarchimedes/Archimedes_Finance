@@ -1,6 +1,12 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
+import { formatUnits } from "ethers/lib/utils";
+import { logger } from "../logger";
+
+function getFloatFromBigNum (bigNumValue) {
+    return parseFloat(formatUnits(bigNumValue));
+}
 
 describe("ParameterStore test suit", async function () {
     let parameterStore;
@@ -47,6 +53,33 @@ describe("ParameterStore test suit", async function () {
             await parameterStore.changeTreasuryAddress(newTreasurySigner.address);
             const returnedTreasuryAddress = await parameterStore.getTreasuryAddress();
             expect(returnedTreasuryAddress).to.equal(newTreasurySigner.address);
+        });
+    });
+
+    describe("Curve Guard Percentage tests", function () {
+        it("should be able to change curve guard percentage", async function () {
+            const oldCGP = await parameterStore.getCurveGuardPercentage();
+            const newCGP = oldCGP.add(2);
+            await parameterStore.changeCurveGuardPercentage(newCGP);
+            const CGP = await parameterStore.getCurveGuardPercentage();
+            expect(CGP).to.equal(newCGP);
+        });
+        it("Should revert if new curve guard percentage is out of range", async function () {
+            await expect(parameterStore.changeCurveGuardPercentage(79)).to.revertedWith("New CGP out of range");
+            await expect(parameterStore.changeCurveGuardPercentage(101)).to.revertedWith("New CGP out of range");
+        });
+    });
+
+    describe("Slippage tests", function () {
+        it("should be able to change slippage", async function () {
+            const oldSlippage = await parameterStore.getSlippage();
+            const newSlippage = oldSlippage.add(1);
+            await parameterStore.changeSlippage(newSlippage);
+            const slippage = await parameterStore.getSlippage();
+            expect(slippage).to.equal(newSlippage);
+        });
+        it("Should revert if new slippage is out of range", async function () {
+            await expect(parameterStore.changeSlippage(5)).to.revertedWith("New slippage out of range");
         });
     });
 
@@ -119,6 +152,16 @@ describe("ParameterStore test suit", async function () {
                 expect(await parameterStore.getAllowedLeverageForPosition(ethers.utils.parseUnits("100"), 5)).to.equal(
                     ethers.utils.parseUnits("368.559"),
                 );
+            });
+            it("Should return lower leverage allowance if not enough ArchToken", async function () {
+                const leverageAllowed =
+                    await parameterStore.getAllowedLeverageForPositionWithArch(ethers.utils.parseUnits("100"), 5, ethers.utils.parseUnits("1"));
+                expect(leverageAllowed).to.equal(ethers.utils.parseUnits("1"));
+            });
+            it("Should return leverage allowance if enough arch token is given", async function () {
+                const leverageAllowed =
+                    await parameterStore.getAllowedLeverageForPositionWithArch(ethers.utils.parseUnits("100"), 5, ethers.utils.parseUnits("1000"));
+                expect(leverageAllowed).to.equal(ethers.utils.parseUnits("368.559"));
             });
             it("Should revert if number of cycles is bigger then allowed max", async function () {
                 await expect(

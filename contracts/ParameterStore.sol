@@ -12,11 +12,27 @@ contract ParameterStore is AccessController {
     uint256 internal _globalCollateralRate = 90; // in percentage
     uint256 internal _rebaseFeeRate = 10 ether / 100; // meaning 10%
     address internal _treasuryAddress;
+    uint256 internal _curveGuardPercentage = 90; // 90%
+    uint256 internal _slippage = 2; // 2%;
+    /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
+    uint256 internal _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
 
     constructor(address admin) AccessController(admin) {}
 
     function init(address treasuryAddress) external initializer onlyAdmin {
         _treasuryAddress = treasuryAddress;
+    }
+
+    function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external {
+        // curveGuardPercentage must be a number between 80 and 100
+        require(newCurveGuardPercentage >= 80 && newCurveGuardPercentage <= 100, "New CGP out of range");
+        _curveGuardPercentage = newCurveGuardPercentage;
+    }
+
+    function changeSlippage(uint256 newSlippage) external {
+        // slippage must be a number between 0 and 5
+        require(newSlippage > 0 && newSlippage < 5, "New slippage out of range");
+        _slippage = newSlippage;
     }
 
     function changeTreasuryAddress(address newTreasuryAddress) external {
@@ -27,19 +43,23 @@ contract ParameterStore is AccessController {
         _originationFeeRate = newFeeRate;
     }
 
-    function changeGlobalCollateralRate(uint256 _newGlobalCollateralRate) external {
-        require(_newGlobalCollateralRate <= 100 && _newGlobalCollateralRate > 0, "New collateral rate out of range");
-        _globalCollateralRate = _newGlobalCollateralRate;
+    function changeGlobalCollateralRate(uint256 newGlobalCollateralRate) external {
+        require(newGlobalCollateralRate <= 100 && newGlobalCollateralRate > 0, "New collateral rate out of range");
+        _globalCollateralRate = newGlobalCollateralRate;
     }
 
-    function changeMaxNumberOfCycles(uint256 _newMaxNumberOfCycles) external {
-        _maxNumberOfCycles = _newMaxNumberOfCycles;
+    function changeMaxNumberOfCycles(uint256 newMaxNumberOfCycles) external {
+        _maxNumberOfCycles = newMaxNumberOfCycles;
     }
 
-    function changeRebaseFeeRate(uint256 _newRebaseFeeRate) external {
+    function changeRebaseFeeRate(uint256 newRebaseFeeRate) external {
         // rebaseFeeRate must be a number between 1 and 99 (in 18 decimal)
-        require(_newRebaseFeeRate < (100 ether) && _newRebaseFeeRate > (0 ether), "New rebase fee rate out of range");
-        _rebaseFeeRate = _newRebaseFeeRate;
+        require(newRebaseFeeRate < (100 ether) && newRebaseFeeRate > (0 ether), "New rebase fee rate out of range");
+        _rebaseFeeRate = newRebaseFeeRate;
+    }
+
+    function changeArchToLevRatio(uint256 newArchToLevRatio) external {
+        _archToLevRatio = newArchToLevRatio;
     }
 
     function getMaxNumberOfCycles() external view returns (uint256) {
@@ -62,6 +82,18 @@ contract ParameterStore is AccessController {
         return _treasuryAddress;
     }
 
+    function getCurveGuardPercentage() public view returns (uint256) {
+        return _curveGuardPercentage;
+    }
+
+    function getSlippage() public view returns (uint256) {
+        return _slippage;
+    }
+
+    function getArchToLevRatio() public view returns (uint256) {
+        return _archToLevRatio;
+    }
+
     /// Method returns the allowed leverage for principle and number of cycles
     /// Return value does not include principle!
     /// must be public as we need to access it in contract
@@ -76,7 +108,32 @@ contract ParameterStore is AccessController {
         return leverageAmount;
     }
 
+    function getAllowedLeverageForPositionWithArch(
+        uint256 principle,
+        uint256 numberOfCycles,
+        uint256 archAmount
+    ) public view returns (uint256) {
+        uint256 allowedLeverageNoArchLimit = getAllowedLeverageForPosition(principle, numberOfCycles);
+        uint256 allowedLeverageWithGivenArch = calculateLeverageAllowedForArch(archAmount);
+        if (allowedLeverageWithGivenArch >= allowedLeverageNoArchLimit) {
+            // In this case, user is burning more(or exactly) arch tokens needed for leverage
+            return allowedLeverageNoArchLimit;
+        } else {
+            // user did not burn enough arch tokens,
+            // send the max amount of leverage based on how much arch was burned
+            return allowedLeverageWithGivenArch;
+        }
+    }
+
     function calculateOriginationFee(uint256 leverageAmount) public view returns (uint256) {
         return (_originationFeeRate * leverageAmount) / 1 ether;
+    }
+
+    function calculateArchNeededForLeverage(uint256 leverageAmount) public view returns (uint256) {
+        return (leverageAmount / _archToLevRatio);
+    }
+
+    function calculateLeverageAllowedForArch(uint256 archAmount) public view returns (uint256) {
+        return (_archToLevRatio * archAmount) / 1 ether;
     }
 }

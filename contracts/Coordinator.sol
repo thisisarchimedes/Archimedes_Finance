@@ -119,7 +119,7 @@ contract Coordinator is ICoordinator, AccessController {
         _cdp.depositOUSDtoPosition(_nftId, positionLeveragedOUSDAfterFees);
     }
 
-    function unwindLeveragedOUSD(uint256 _nftId, address _userAddress) external override nonReentrant {
+    function unwindLeveragedOUSD(uint256 _nftId, address _userAddress) external override nonReentrant returns (uint256 positionWindfall) {
         /* Flow
             1. sanity checks as needed
             2. get amount of shares for position
@@ -147,6 +147,8 @@ contract Coordinator is ICoordinator, AccessController {
 
         /// Note : leverage engine still need to make sure the delete the NFT itself in positionToken
         _cdp.deletePosition(_nftId);
+
+        return remainingOUSD;
     }
 
     function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
@@ -158,6 +160,10 @@ contract Coordinator is ICoordinator, AccessController {
     function repayUnderAddress(uint256 _amount) external override notImplementedYet {}
 
     /* Privileged functions: Anyone */
+
+    function getAvailableLeverage() external view returns (uint256) {
+        return _lvUSD.balanceOf(address(this));
+    }
 
     function addressOfLvUSDToken() external view override returns (address) {
         return _addressLvUSD;
@@ -190,7 +196,6 @@ contract Coordinator is ICoordinator, AccessController {
 
     function _takeOriginationFee(uint256 _leveragedOUSDAmount) internal returns (uint256 fee) {
         uint256 _fee = _paramStore.calculateOriginationFee(_leveragedOUSDAmount);
-        console.log("_takeOriginationFee is taking a fee of %s", _fee / 1 ether);
         _ousd.safeTransfer(_paramStore.getTreasuryAddress(), _fee);
         return _fee;
     }

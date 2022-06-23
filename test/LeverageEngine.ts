@@ -6,7 +6,24 @@ import { helperSwapETHWithOUSD } from "./MainnetHelper";
 
 describe("LeverageEngine test suit", async function () {
     let r: ContractTestContext;
+    const principle = ethers.utils.parseUnits("1.0");
+    const archTokenToBurn = ethers.utils.parseUnits("100.0");
+    let initialArchTokenBalance;
+    let maxCycles: BigNumber;
+    let positionTokenId: BigNumber;
+    let userInitialOUSD;
 
+    async function prepForPositionCreation (lvUSDAmountToMint:BigNumber = ethers.utils.parseUnits("5000")) {
+        r = await buildContractTestContext();
+        maxCycles = await r.parameterStore.getMaxNumberOfCycles();
+        const totalOUSD = await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("5"));
+        await r.externalOUSD.approve(r.leverageEngine.address, totalOUSD);
+        await r.lvUSD.mint(r.coordinator.address, lvUSDAmountToMint);
+        // give LevEng approval to burn owner's arch tokens
+        initialArchTokenBalance = await r.archToken.balanceOf(r.owner.address);
+        await r.archToken.approve(r.leverageEngine.address, archTokenToBurn);
+        userInitialOUSD = await r.externalOUSD.balanceOf(r.owner.address);
+    }
     before(async () => {
         r = await buildContractTestContext();
     });
@@ -19,7 +36,7 @@ describe("LeverageEngine test suit", async function () {
         it("createLeveragedPosition should revert when not intiailized", async function () {
             const leContract = await ethers.getContractFactory("LeverageEngine");
             const leverageEngine = await leContract.deploy(r.addr1.address);
-            await expect(leverageEngine.createLeveragedPosition(1234, 1234)).to.be.revertedWith(
+            await expect(leverageEngine.createLeveragedPosition(1234, 1234, 1234)).to.be.revertedWith(
                 "Contract is not initialized",
             );
         });
@@ -35,7 +52,8 @@ describe("LeverageEngine test suit", async function () {
 
     it("Should revert if cycles is greater than global max cycles", async function () {
         const maxCycles = await r.parameterStore.getMaxNumberOfCycles();
-        const promise = r.leverageEngine.createLeveragedPosition(ethers.utils.parseUnits("1"), maxCycles.add(1));
+        const promise = r.leverageEngine.createLeveragedPosition(
+            ethers.utils.parseUnits("1"), maxCycles.add(1), ethers.utils.parseUnits("1"));
         await expect(promise).to.be.revertedWith("Cycles greater than max allowed");
     });
 
@@ -44,29 +62,50 @@ describe("LeverageEngine test suit", async function () {
         expect(balance).to.equal(0);
     });
 
-    describe("After successful position creation", async function () {
-        const principle = ethers.utils.parseUnits("1.0");
-        const availableLvUSD = ethers.utils.parseUnits("100000");
-        let maxCycles: BigNumber;
-        let allowedLvUSDForPosition: BigNumber;
-        let positionTokenId: BigNumber;
-
-        let userInitialOUSD;
+    describe("unsuccessful position creation", async function () {
         before(async function () {
-            r = await buildContractTestContext();
-            maxCycles = await r.parameterStore.getMaxNumberOfCycles();
-            const totalOUSD = await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("5"));
-            await r.externalOUSD.approve(r.leverageEngine.address, totalOUSD);
-            await r.leverageAllocator.setAddressToLvUSDAvailable(r.owner.address, availableLvUSD);
+            await prepForPositionCreation(ethers.utils.parseUnits("0"));
+        });
+        it("Should fail because not enough lvUSD available to use", async function () {
+            const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
+            await expect(promise).to.be.revertedWith("Not enough available lvUSD");
+        });
+        it("Should fail because not enough arch tokens burned", async function () {
             await r.lvUSD.mint(r.coordinator.address, ethers.utils.parseUnits("5000"));
-            allowedLvUSDForPosition = await r.parameterStore.getAllowedLeverageForPosition(principle, maxCycles);
-            userInitialOUSD = await r.externalOUSD.balanceOf(r.owner.address);
-            await r.leverageEngine.createLeveragedPosition(principle, maxCycles);
+            const promise = r.leverageEngine.createLeveragedPosition(
+                principle, maxCycles, ethers.utils.parseUnits("1"));
+            await expect(promise).to.be.revertedWith("Not enough Arch provided");
+            // Now check that no arch was burned on revert
+            const archBalance = await r.archToken.balanceOf(r.owner.address);
+            expect(archBalance).to.equal(initialArchTokenBalance);
+        });
+    });
+
+    describe("Emiting events", async function () {
+        before(async function () {
+            await prepForPositionCreation();
+        });
+        it("Should emit position creation event", async function () {
+            const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
+            await expect(promise).to.emit(r.leverageEngine, "PositionCreated").withArgs(
+                r.owner.address, 0, principle, await r.parameterStore.getAllowedLeverageForPosition(principle, maxCycles), archTokenToBurn,
+            );
         });
 
-        it("Should have use allocated lvUSD", async function () {
-            const remainingLvUSD = await r.leverageAllocator.getAddressToLvUSDAvailable(r.owner.address);
-            expect(remainingLvUSD).to.equal(availableLvUSD.sub(allowedLvUSDForPosition));
+        it("Should emit position unwind event", async function () {
+            const promise = r.leverageEngine.unwindLeveragedPosition(0);
+            await expect(promise).to.emit(r.leverageEngine, "PositionUnwind").withArgs(
+                // there really is no reasonable way to get the total windfall of position without actually unwinding
+                // Using fixed value instead. If needed, we can duplicate creation/unwind
+                // and save the value, reset network and do it again but that's a bit much for now
+                r.owner.address, 0, "649128765929186981",
+            );
+        });
+    });
+    describe("After successful position creation", async function () {
+        before(async function () {
+            await prepForPositionCreation();
+            await r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
         });
 
         it("PositionToken balance of user should be 1", async () => {
@@ -79,11 +118,6 @@ describe("LeverageEngine test suit", async function () {
             expect(positionTokenId).to.equal(0);
         });
 
-        it("Should have use allocated lvUSD", async function () {
-            const remainingLvUSD = await r.leverageAllocator.getAddressToLvUSDAvailable(r.owner.address);
-            expect(remainingLvUSD).to.equal(availableLvUSD.sub(allowedLvUSDForPosition));
-        });
-
         it("Should have moved all OUSD funds out of the user's wallet", async function () {
             const balance = await r.externalOUSD.balanceOf(r.owner.address);
             expect(balance).to.equal(userInitialOUSD.sub(principle));
@@ -94,6 +128,11 @@ describe("LeverageEngine test suit", async function () {
             expect(balance).to.equal(1);
             /* this is the first positionToken minted so its id should be 0 */
             expect(positionTokenId).to.equal(0);
+        });
+
+        it("Should have burned ArchTokens with position creation", async function () {
+            const archBalance = await r.archToken.balanceOf(r.owner.address);
+            expect(archBalance).to.equal(initialArchTokenBalance.sub(archTokenToBurn));
         });
 
         it("Should fail to unwind if caller doesn't own positionToken", async function () {

@@ -14,6 +14,9 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
 
     Counters.Counter private _positionTokenIdCounter;
 
+    event NFTCreated(uint256 indexed _positionId, address indexed _minter);
+    event NFTBurned(uint256 indexed _positionId, address indexed _redeemer);
+
     constructor(address admin) ERC721("PositionToken", "PNT") AccessController(admin) {}
 
     function init() external initializer onlyAdmin {}
@@ -24,6 +27,7 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
         _positionTokenIdCounter.increment();
         _safeMint(to, positionTokenId);
         _setApprovalForAll(to, _getAddressExecutive(), true);
+        emit NFTCreated(positionTokenId, to);
         return positionTokenId;
     }
 
@@ -34,6 +38,7 @@ contract PositionToken is ERC721, ERC721Burnable, ERC721Enumerable, AccessContro
     /* override burn to only allow executive to burn positionToken */
     function burn(uint256 positionTokenId) public override(ERC721Burnable) nonReentrant expectInitialized onlyExecutive {
         super.burn(positionTokenId);
+        emit NFTBurned(positionTokenId, msg.sender);
     }
 
     /* Override required by Solidity: */
