@@ -91,6 +91,16 @@ describe("LeverageEngine test suit", async function () {
                 r.owner.address, 0, principle, await r.parameterStore.getAllowedLeverageForPosition(principle, maxCycles), archTokenToBurn,
             );
         });
+
+        it("Should emit position unwind event", async function () {
+            const promise = r.leverageEngine.unwindLeveragedPosition(0);
+            await expect(promise).to.emit(r.leverageEngine, "PositionUnwind").withArgs(
+                // there really is no reasonable way to get the total windfall of position without actually unwinding
+                // Using fixed value instead. If needed, we can duplicate creation/unwind
+                // and save the value, reset network and do it again but that's a bit much for now
+                r.owner.address, 0, "649128765929186981",
+            );
+        });
     });
     describe("After successful position creation", async function () {
         before(async function () {
