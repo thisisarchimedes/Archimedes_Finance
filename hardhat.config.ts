@@ -20,7 +20,6 @@ dotenv.config({ path: "secrets/alchemy.env" });
 
 const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
 
-// const RINKEBY_PRIVATE_KEY = "YOUR_PRIVATE_KEY_HERE";
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -58,10 +57,6 @@ task("test:log", "Run tests with all logger logs", async (taskArgs: { file }, hr
 export default {
     solidity: "0.8.13",
     networks: {
-        // rinkeby: {
-        //     url: "rinkeby alcemy url",
-        //     accounts: [`${RINKEBY_PRIVATE_KEY}`],
-        // },
         hardhat: {
             forking: {
                 url: alchemyUrl,
