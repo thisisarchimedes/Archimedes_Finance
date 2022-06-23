@@ -34,7 +34,7 @@ contract LeverageEngine is AccessController {
     IERC20 internal _ousd;
 
     event PositionCreated(address indexed _from, uint256 indexed _positionId, uint256 _princple, uint256 _levTaken, uint256 _archBurned);
-    event PositionUnwind(address indexed _from, uint256 indexed _positionId, uint256 _redeemValue);
+    event PositionUnwind(address indexed _from, uint256 indexed _positionId, uint256 _positionWindfall);
 
     constructor(address admin) AccessController(admin) {}
 
