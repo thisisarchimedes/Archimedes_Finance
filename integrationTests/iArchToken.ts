@@ -7,6 +7,7 @@ import { defaultBlockNumber, helperResetNetwork } from "../test/MainnetHelper";
 import { addressArchToken, addressTreasury, impersonateAccount, fundAccount, stopImpersonate } from "./IntegrationTestContext";
 
 const expectedTotalSupply = ethers.utils.parseUnits("100000000");
+const About4700ETH = "0x1000000000000000000";
 
 const addr1 = "0x6d84F413fc541E6c8693e910af824fF22FFA0166";
 const addr2 = "0x5dD0DcBdcb6D5f9bc58f5bbbF083b417B48C818D";
@@ -25,15 +26,15 @@ describe("Arch Token test suit", function () {
 
         // grab Treasury signer (Treasury is EOA)
         signerTreasury = await impersonateAccount(addressTreasury);
-        fundAccount(addressTreasury);
+        fundAccount(addressTreasury, About4700ETH);
 
         // grab random test address
         signerAddr1 = await impersonateAccount(addr1);
-        fundAccount(addr1);
+        fundAccount(addr1, About4700ETH);
 
         // grab random test address
         signerAddr2 = await impersonateAccount(addr2);
-        fundAccount(addr2);
+        fundAccount(addr2, About4700ETH);
     });
 
     after(async function () {

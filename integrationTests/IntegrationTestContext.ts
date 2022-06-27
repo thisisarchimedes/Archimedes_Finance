@@ -14,11 +14,11 @@ export async function impersonateAccount (address: string): Promise<Signer> {
     return await ethers.getSigner(address);
 }
 
-export async function fundAccount (address: string) {
+export async function fundAccount (address: string, amount: string) {
     // adding some ETH so we can initiate tx
     await hre.network.provider.send("hardhat_setBalance", [
         address,
-        "0x1000000000000000000",
+        amount,
     ]);
 }
 
