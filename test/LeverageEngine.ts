@@ -98,7 +98,7 @@ describe("LeverageEngine test suit", async function () {
                 // there really is no reasonable way to get the total windfall of position without actually unwinding
                 // Using fixed value instead. If needed, we can duplicate creation/unwind
                 // and save the value, reset network and do it again but that's a bit much for now
-                r.owner.address, 0, "649128765929186981",
+                r.owner.address, 0, "648327176046546760",
             );
         });
     });
