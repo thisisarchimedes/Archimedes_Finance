@@ -18,10 +18,11 @@ import type {
     LeverageEngine,
     LeverageAllocator,
     PositionToken,
-    ParameterStore,
+    // ParameterStore,
     ArchToken,
 } from "../types/contracts";
 import type { LvUSDToken } from "../types/contracts/LvUSDToken";
+
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 type DefaultRoles = {
@@ -69,7 +70,7 @@ type ArchContracts = {
     leverageAllocator: LeverageAllocator;
     leverageEngine: LeverageEngine;
     lvUSD: LvUSDToken;
-    parameterStore: ParameterStore;
+    // parameterStore: ParameterStore;
     positionToken: PositionToken;
     vault: VaultOUSD;
 };
@@ -80,6 +81,9 @@ export type ContractTestContext = ArchContracts & {
     addr2: SignerWithAddress;
     addr3: SignerWithAddress;
     treasurySigner: SignerWithAddress;
+    // Archimedes contracts
+    // TODO - how to make this type of parameterStore? Failing when I just set it :(
+    parameterStore: Contract;
     // External contracts
     externalOUSD: Contract;
     externalUSDT: Contract;
@@ -113,6 +117,10 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     // @ts-ignore
     context.external3CRV = new ethers.Contract(address3CRV, abi3CRVToken, context.owner);
 
+    const paramStoreFactory = await ethers.getContractFactory("ParameterStore");
+    context.parameterStore = await paramStoreFactory.deploy();
+
+    /// TODO: depracate this here in each test as we move away accessController
     const contracts = await deployContracts<ArchContracts>({
         archToken: ["ArchToken"],
         cdp: ["CDPosition"],
@@ -121,7 +129,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
         leverageAllocator: ["LeverageAllocator"],
         leverageEngine: ["LeverageEngine"],
         lvUSD: ["LvUSDToken"],
-        parameterStore: ["ParameterStore"],
+        // parameterStore: ["ParameterStore"],
         positionToken: ["PositionToken"],
         vault: ["VaultOUSD", context.externalOUSD.address, "VaultOUSD", "VOUSD"],
     }, contractRolesWithDefaults);
@@ -190,7 +198,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
         ),
 
         context.vault.init(context.parameterStore.address, context.externalOUSD.address),
-        context.parameterStore.init(context.treasurySigner.address),
+        context.parameterStore.init(context.treasurySigner.address, context.owner.address),
         context.positionToken.init(),
     ]);
 
