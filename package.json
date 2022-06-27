@@ -39,6 +39,7 @@
         "@nomiclabs/hardhat-ethers": "^2.0.6",
         "@nomiclabs/hardhat-waffle": "^2.0.3",
         "@openzeppelin/contracts": "^4.6.0",
+        "@openzeppelin/hardhat-upgrades": "^1.18.1",
         "@openzeppelin/test-helpers": "^0.5.15",
         "@tenderly/hardhat-tenderly": "^1.0.15",
         "@typechain/ethers-v5": "^10.0.0",
@@ -65,5 +66,8 @@
         "ts-node": "^10.8.1",
         "typechain": "^8.0.0",
         "typescript": "^4.7.4"
+    },
+    "dependencies": {
+        "@openzeppelin/contracts-upgradeable": "^4.6.0" 
     }
 }

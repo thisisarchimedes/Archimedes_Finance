@@ -114,7 +114,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     context.external3CRV = new ethers.Contract(address3CRV, abi3CRVToken, context.owner);
 
     const contracts = await deployContracts<ArchContracts>({
-        archToken: ["ArchToken", context.owner.address],
+        archToken: ["ArchToken"],
         cdp: ["CDPosition"],
         coordinator: ["Coordinator"],
         exchanger: ["Exchanger"],
@@ -147,7 +147,9 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     }));
 
     // Give context.owner some funds:
-    await context.lvUSD.mint(context.owner.address, ownerStartingLvUSDAmount);
+    // expecting minter to be owner
+    await context.lvUSD.setMintDestination(context.owner.address);
+    await context.lvUSD.mint(ownerStartingLvUSDAmount);
     await helperSwapETHWith3CRV(context.owner, ethers.utils.parseUnits("3.0"));
 
     // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token

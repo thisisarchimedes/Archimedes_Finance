@@ -33,7 +33,8 @@ describe("Exchanger Test suit", function () {
         coordinator = r.coordinator;
 
         // Fund exchanger
-        await lvUSD.mint(exchanger.address, amountStarting);
+        await lvUSD.setMintDestination(exchanger.address);
+        await lvUSD.mint(amountStarting);
         await helperSwapETHWithOUSD(owner, amountStarting);
         await ousd.transfer(exchanger.address, amountStarting);
     });
