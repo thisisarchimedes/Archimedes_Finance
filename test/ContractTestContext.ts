@@ -147,8 +147,9 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     }));
 
     // Give context.owner some funds:
-    await context.lvUSD.setMinter(context.owner.address);
-    await context.lvUSD.mint(context.owner.address, ownerStartingLvUSDAmount);
+    // expecting minter to be owner
+    await context.lvUSD.setMintDestination(context.owner.address);
+    await context.lvUSD.mint(ownerStartingLvUSDAmount);
     await helperSwapETHWith3CRV(context.owner, ethers.utils.parseUnits("3.0"));
 
     // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token
