@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 /// @title ParameterStore is a contract for storing global parameters that can be modified by a privileged role
 /// @notice This contract (will be) proxy upgradable
 contract ParameterStore is AccessControl {
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
 
     uint256 internal _maxNumberOfCycles = 10;
@@ -26,19 +25,31 @@ contract ParameterStore is AccessControl {
     }
 
     function init(address treasuryAddress, address admin) external {
-        _grantRole(ADMIN_ROLE, admin);
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(GOVERNOR_ROLE, admin);
         _treasuryAddress = treasuryAddress;
     }
 
+    /// TODO : Move access control to a simple lib
+
     function setGovernor(address newGovernor) external {
-        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
         _grantRole(GOVERNOR_ROLE, newGovernor);
     }
 
     function revokeGovernor(address governor) external {
-        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
         _revokeRole(GOVERNOR_ROLE, governor);
+    }
+
+    function setAdmin(address newAdmin) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+        _grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
+    }
+
+    function revokeAdmin(address admin) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+        _revokeRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
     function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external onlyGovernor {
