@@ -25,12 +25,20 @@ contract ParameterStore is AccessControl {
         _;
     }
 
-    // constructor(address admin) AccessController(admin) {}
-
     function init(address treasuryAddress, address admin) external {
         _grantRole(ADMIN_ROLE, admin);
         _grantRole(GOVERNOR_ROLE, admin);
         _treasuryAddress = treasuryAddress;
+    }
+
+    function setGovernor(address newGovernor) external {
+        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+        _grantRole(GOVERNOR_ROLE, newGovernor);
+    }
+
+    function revokeGovernor(address governor) external {
+        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+        _revokeRole(GOVERNOR_ROLE, governor);
     }
 
     function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external onlyGovernor {

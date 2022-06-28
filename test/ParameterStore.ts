@@ -171,3 +171,31 @@ describe("ParameterStore test suit", async function () {
         });
     });
 });
+
+describe("ParameterStore Access Control tests", async function () {
+    let parameterStore;
+    let r: ContractTestContext;
+
+    before(async () => {
+        r = await buildContractTestContext();
+        parameterStore = r.parameterStore;
+        parameterStore.setGovernor(r.addr1.address);
+        parameterStore.revokeGovernor(r.owner.address);
+    });
+
+    it("Should not be able to change governor if not admin", async function () {
+        const changePromise = parameterStore.connect(r.addr2).setGovernor(r.addr3.address);
+        await expect(changePromise).to.be.revertedWith("Caller is not an Admin");
+    });
+
+    it("owner should not be able to change paramaters (owner is not governor at this point)", async function () {
+        const changePromise = parameterStore.changeCurveGuardPercentage(ethers.utils.parseUnits("50"));
+        await expect(changePromise).to.be.revertedWith("Caller is not Governor");
+    });
+
+    it("Should be able to change default value as Govoernor only", async function () {
+        const newRebaseRateValue = ethers.utils.parseUnits("0.9");
+        await parameterStore.connect(r.addr1).changeRebaseFeeRate(newRebaseRateValue);
+        expect(await parameterStore.getRebaseFeeRate()).to.equal(newRebaseRateValue);
+    });
+});
