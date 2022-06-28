@@ -1,0 +1,7 @@
+What's "integration tests"?
+
+-   integration tests run on a mainnet fork (like unit tests)
+-   integration tests don't deploy any contract - never (unlike unit test). We start from the mainnet fork and "impersonate" if needed
+-   Since we don't deploy anything, we don't control the contract state we start with (good - this is closer to real world user behavior) and we also don't have admin access as the deployer (also good)
+-   We add integration tests to contract we deploy to mainnet
+-   Integration test is trying to avoid things that are not already on chain (like deploying contract or using locally generating wallets)
