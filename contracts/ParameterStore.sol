@@ -9,6 +9,8 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 contract ParameterStore is AccessControl {
     bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
 
+    bool internal _initlized = false;
+
     uint256 internal _maxNumberOfCycles = 10;
     uint256 internal _originationFeeRate = 5 ether / 100;
     uint256 internal _globalCollateralRate = 90; // in percentage
@@ -25,9 +27,11 @@ contract ParameterStore is AccessControl {
     }
 
     function init(address treasuryAddress, address admin) external {
+        require(_initlized == false, "Cant re init contract");
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(GOVERNOR_ROLE, admin);
         _treasuryAddress = treasuryAddress;
+        _initlized = true;
     }
 
     /// TODO : Move access control to a simple lib
