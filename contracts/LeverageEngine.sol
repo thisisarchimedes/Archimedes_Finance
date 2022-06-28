@@ -107,6 +107,7 @@ contract LeverageEngine is AccessController {
 
     // required - the caller must have allowance for accounts's tokens of at least amount.
     function _burnArchTokenForPosition(address sender, uint256 archAmount) internal expectInitialized {
-        _archToken.burnFrom(sender, archAmount);
+        address treasuryAddress = _parameterStore.getTreasuryAddress();
+        _archToken.transferFrom(sender, treasuryAddress, archAmount);
     }
 }
