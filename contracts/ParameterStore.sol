@@ -177,6 +177,7 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
         return (_archToLevRatio * archAmount) / 1 ether;
     }
 
+    // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not Admin");
     }
