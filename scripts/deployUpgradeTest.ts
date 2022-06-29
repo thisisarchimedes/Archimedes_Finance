@@ -38,7 +38,13 @@ it("is deployed", async function () {
     const storeV2 = await hre.upgrades.upgradeProxy(store, this.ParamStoreV2);
 
     // sanity check to check that contract is updated
+    expect(storeV2.address === store.address);
     expect(await storeV2.version()).to.equal("V2");
+
+    // Check that we can change state of new contract
+    await store.changeCurveGuardPercentage(93);
+    expect(await store.getCurveGuardPercentage()).to.equal(93);
+
     console.log("ParamStore2 adderess %s", await storeV2.address);
 
     await stopImpersonate(adminAddress);

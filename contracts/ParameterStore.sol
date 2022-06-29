@@ -11,8 +11,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
     bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
 
-    // bool internal _initialized = false;
-
     uint256 internal _maxNumberOfCycles;
     uint256 internal _originationFeeRate;
     uint256 internal _globalCollateralRate; // in percentage
@@ -31,9 +29,8 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
     function initialize(address admin) external initializer {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(GOVERNOR_ROLE, admin);
-        console.log("assign admin and governor role to %", admin);
 
-        // _treasuryAddress = treasuryAddress;
+        console.log("assign admin and governor role to %", admin);
 
         _maxNumberOfCycles = 10;
         _originationFeeRate = 5 ether / 100;
@@ -43,7 +40,6 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
         _curveGuardPercentage = 90; // 90%
         _slippage = 2; // 2%;
         _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
-
         _treasuryAddress = address(0); // this needs to be updated
     }
 
@@ -182,10 +178,6 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
     function calculateLeverageAllowedForArch(uint256 archAmount) public view returns (uint256) {
         return (_archToLevRatio * archAmount) / 1 ether;
     }
-
-    // function version() public pure returns (string memory) {
-    //     return "V1";
-    // }
 
     function _authorizeUpgrade(address newImplementation) internal override {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not Admin");
