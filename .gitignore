@@ -49,7 +49,7 @@ types/
 .vscode
 *.code-workspace
 tenderly.yaml
-.openzeppelin
+.openzeppelin/
 
 # Github #
 ##########
