@@ -2,13 +2,13 @@
   "manifestVersion": "3.2",
   "proxies": [
     {
-      "address": "0x3ec1b77FC9f614B0C8CB62556396f1f804538De2",
-      "txHash": "0xc81d91ab9d56a66c4ae1e902269cbd3e267294677bfcd399cfd892cf32e8e152",
+      "address": "0xDde063eBe8E85D666AD99f731B4Dbf8C98F29708",
+      "txHash": "0xe2f49d3c047f1f1b3d23c23fb847b17747da6385ccb087c8d1c5e357486ae391",
       "kind": "uups"
     },
     {
-      "address": "0xDde063eBe8E85D666AD99f731B4Dbf8C98F29708",
-      "txHash": "0xe2f49d3c047f1f1b3d23c23fb847b17747da6385ccb087c8d1c5e357486ae391",
+      "address": "0x3ec1b77FC9f614B0C8CB62556396f1f804538De2",
+      "txHash": "0x47435f4e834eff02164265be03bd809590b0e0654644b4c0caf2509a5c0e97c2",
       "kind": "uups"
     }
   ],
@@ -179,8 +179,8 @@
       }
     },
     "4bdb58cc86c8abbe8272c2d305b8839e6e630cdc334723930b267a7d8457a05a": {
-      "address": "0xc9952Fc93Fa9bE383ccB39008c786b9f94eAc95d",
-      "txHash": "0x54911bd7e4f6980b1443bb3d608b3f5a8ecad99829b744f13465dd0721108de4",
+      "address": "0x0b163730c49e32A01f1E54779df03349A59E4c4E",
+      "txHash": "0x0c978c6a34e9026ab868522822e629402105d9d5d7d1c12d7ccbc1528dc1cdd2",
       "layout": {
         "storage": [
           {
@@ -230,7 +230,7 @@
             "slot": "102",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:16"
+            "src": "contracts/ParameterStore.sol:14"
           },
           {
             "label": "_originationFeeRate",
@@ -238,7 +238,7 @@
             "slot": "103",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:17"
+            "src": "contracts/ParameterStore.sol:15"
           },
           {
             "label": "_globalCollateralRate",
@@ -246,7 +246,7 @@
             "slot": "104",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:18"
+            "src": "contracts/ParameterStore.sol:16"
           },
           {
             "label": "_rebaseFeeRate",
@@ -254,7 +254,7 @@
             "slot": "105",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:19"
+            "src": "contracts/ParameterStore.sol:17"
           },
           {
             "label": "_treasuryAddress",
@@ -262,7 +262,7 @@
             "slot": "106",
             "type": "t_address",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:20"
+            "src": "contracts/ParameterStore.sol:18"
           },
           {
             "label": "_curveGuardPercentage",
@@ -270,7 +270,7 @@
             "slot": "107",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:21"
+            "src": "contracts/ParameterStore.sol:19"
           },
           {
             "label": "_slippage",
@@ -278,7 +278,7 @@
             "slot": "108",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:22"
+            "src": "contracts/ParameterStore.sol:20"
           },
           {
             "label": "_archToLevRatio",
@@ -286,7 +286,7 @@
             "slot": "109",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:24"
+            "src": "contracts/ParameterStore.sol:22"
           }
         ],
         "types": {
@@ -345,7 +345,7 @@
     },
     "e67770d7d571ade14ac9f2553166dd200234d76eaff31cb65d1e15d4727688c5": {
       "address": "0x23209d21450F53D57F7F27459869D30313430cFf",
-      "txHash": "0xfa35dac20254d4567952e128d1d8d61582f8768d2ab51050c70c559e1fe5a9e5",
+      "txHash": "0xffcf353c9745c5f6232ee45c4d153a0d3737b4176217ee5f10497b3d74449d48",
       "layout": {
         "storage": [
           {
@@ -395,7 +395,7 @@
             "slot": "102",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:16"
+            "src": "contracts/ParameterStore.sol:14"
           },
           {
             "label": "_originationFeeRate",
@@ -403,7 +403,7 @@
             "slot": "103",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:17"
+            "src": "contracts/ParameterStore.sol:15"
           },
           {
             "label": "_globalCollateralRate",
@@ -411,7 +411,7 @@
             "slot": "104",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:18"
+            "src": "contracts/ParameterStore.sol:16"
           },
           {
             "label": "_rebaseFeeRate",
@@ -419,7 +419,7 @@
             "slot": "105",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:19"
+            "src": "contracts/ParameterStore.sol:17"
           },
           {
             "label": "_treasuryAddress",
@@ -427,7 +427,7 @@
             "slot": "106",
             "type": "t_address",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:20"
+            "src": "contracts/ParameterStore.sol:18"
           },
           {
             "label": "_curveGuardPercentage",
@@ -435,7 +435,7 @@
             "slot": "107",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:21"
+            "src": "contracts/ParameterStore.sol:19"
           },
           {
             "label": "_slippage",
@@ -443,7 +443,7 @@
             "slot": "108",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:22"
+            "src": "contracts/ParameterStore.sol:20"
           },
           {
             "label": "_archToLevRatio",
@@ -451,7 +451,7 @@
             "slot": "109",
             "type": "t_uint256",
             "contract": "ParameterStore",
-            "src": "contracts/ParameterStore.sol:24"
+            "src": "contracts/ParameterStore.sol:22"
           }
         ],
         "types": {
