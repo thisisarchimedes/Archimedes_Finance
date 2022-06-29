@@ -5,11 +5,15 @@ import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 
+import "@openzeppelin/hardhat-upgrades";
+
 import "hardhat-watcher";
 
 import { setLoggingEnabled } from "./logger";
 import { task, types } from "hardhat/config";
 import dotenv from "dotenv";
+
+require("@nomiclabs/hardhat-ethers");
 
 // grab the private api key from the private repo
 dotenv.config({ path: "secrets/alchemy.env" });

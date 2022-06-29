@@ -8,24 +8,25 @@ describe("LvUSD contract test suit", function () {
 
     beforeEach(async function () {
         r = await buildContractTestContext();
+        await r.lvUSD.setMintDestination(r.coordinator.address);
     });
 
     describe("Minting", function () {
         it("Should be able to mint to specific address", async function () {
-            await r.lvUSD.mint(r.owner.address, tokenSupply);
+            await r.lvUSD.mint(tokenSupply);
             expect(await r.lvUSD.totalSupply()).to.equal(ownerStartingLvUSDAmount.add(tokenSupply));
         });
     });
 
     it("Should transfer tokens to an account", async function () {
-        await r.lvUSD.mint(r.owner.address, tokenSupply);
+        await r.lvUSD.mint(tokenSupply);
         await r.lvUSD.transfer(r.addr1.address, 50);
         const addr1Balance = await r.lvUSD.balanceOf(r.addr1.address);
         expect(addr1Balance).to.equal(50);
     });
 
     it("Should transfer tokens between accounts", async function () {
-        await r.lvUSD.mint(r.owner.address, tokenSupply);
+        await r.lvUSD.mint(tokenSupply);
         await r.lvUSD.transfer(r.addr1.address, 50);
         // Transfer 50 tokens from addr1 to addr2
         // We use .connect(signer) to send a transaction from another account
@@ -57,7 +58,7 @@ describe("LvUSD contract test suit", function () {
         let initialOwnerBalance;
 
         beforeEach(async function () {
-            await r.lvUSD.mint(r.owner.address, tokenSupply);
+            await r.lvUSD.mint(tokenSupply);
             initialOwnerBalance = await r.lvUSD.balanceOf(r.owner.address);
 
             // Transfer 100 tokens from owner to addr1.

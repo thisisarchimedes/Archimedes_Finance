@@ -34,6 +34,7 @@ const indexCurveOUSDOUSD = 0;
 const indexCurveOUSD3CRV = 1;
 const defaultBlockNumber = 15046160;
 
+
 async function helperResetNetwork (lockBlock) {
     const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
     // Reset hardhat mainnet fork

@@ -2,11 +2,15 @@
 pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
-import {AccessController} from "./AccessController.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /// @title ParameterStore is a contract for storing global parameters that can be modified by a privileged role
 /// @notice This contract (will be) proxy upgradable
-contract ParameterStore is AccessController {
+contract ParameterStore is AccessControl {
+    bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
+
+    bool internal _initialized = false;
+
     uint256 internal _maxNumberOfCycles = 10;
     uint256 internal _originationFeeRate = 5 ether / 100;
     uint256 internal _globalCollateralRate = 90; // in percentage
@@ -17,48 +21,77 @@ contract ParameterStore is AccessController {
     /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
     uint256 internal _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
 
-    constructor(address admin) AccessController(admin) {}
-
-    function init(address treasuryAddress) external initializer onlyAdmin {
-        _treasuryAddress = treasuryAddress;
+    modifier onlyGovernor() {
+        require(hasRole(GOVERNOR_ROLE, msg.sender), "Caller is not Governor");
+        _;
     }
 
-    function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external {
+    function init(address treasuryAddress, address admin) external {
+        require(_initialized == false, "Cant re init contract");
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(GOVERNOR_ROLE, admin);
+        _treasuryAddress = treasuryAddress;
+        _initialized = true;
+    }
+
+    /// TODO : Move access control to a simple lib
+
+    function addGovernor(address newGovernor) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+        _grantRole(GOVERNOR_ROLE, newGovernor);
+    }
+
+    function revokeGovernor(address governor) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+        _revokeRole(GOVERNOR_ROLE, governor);
+    }
+
+    function addAdmin(address newAdmin) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+        _grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
+    }
+
+    function revokeAdmin(address admin) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+        _revokeRole(DEFAULT_ADMIN_ROLE, admin);
+    }
+
+    function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external onlyGovernor {
         // curveGuardPercentage must be a number between 80 and 100
         require(newCurveGuardPercentage >= 80 && newCurveGuardPercentage <= 100, "New CGP out of range");
         _curveGuardPercentage = newCurveGuardPercentage;
     }
 
-    function changeSlippage(uint256 newSlippage) external {
+    function changeSlippage(uint256 newSlippage) external onlyGovernor {
         // slippage must be a number between 0 and 5
         require(newSlippage > 0 && newSlippage < 5, "New slippage out of range");
         _slippage = newSlippage;
     }
 
-    function changeTreasuryAddress(address newTreasuryAddress) external {
+    function changeTreasuryAddress(address newTreasuryAddress) external onlyGovernor {
         _treasuryAddress = newTreasuryAddress;
     }
 
-    function changeOriginationFeeRate(uint256 newFeeRate) external {
+    function changeOriginationFeeRate(uint256 newFeeRate) external onlyGovernor {
         _originationFeeRate = newFeeRate;
     }
 
-    function changeGlobalCollateralRate(uint256 newGlobalCollateralRate) external {
+    function changeGlobalCollateralRate(uint256 newGlobalCollateralRate) external onlyGovernor {
         require(newGlobalCollateralRate <= 100 && newGlobalCollateralRate > 0, "New collateral rate out of range");
         _globalCollateralRate = newGlobalCollateralRate;
     }
 
-    function changeMaxNumberOfCycles(uint256 newMaxNumberOfCycles) external {
+    function changeMaxNumberOfCycles(uint256 newMaxNumberOfCycles) external onlyGovernor {
         _maxNumberOfCycles = newMaxNumberOfCycles;
     }
 
-    function changeRebaseFeeRate(uint256 newRebaseFeeRate) external {
+    function changeRebaseFeeRate(uint256 newRebaseFeeRate) external onlyGovernor {
         // rebaseFeeRate must be a number between 1 and 99 (in 18 decimal)
         require(newRebaseFeeRate < (100 ether) && newRebaseFeeRate > (0 ether), "New rebase fee rate out of range");
         _rebaseFeeRate = newRebaseFeeRate;
     }
 
-    function changeArchToLevRatio(uint256 newArchToLevRatio) external {
+    function changeArchToLevRatio(uint256 newArchToLevRatio) external onlyGovernor {
         _archToLevRatio = newArchToLevRatio;
     }
 
