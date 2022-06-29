@@ -14,8 +14,6 @@ import { task, types } from "hardhat/config";
 import dotenv from "dotenv";
 import { resolve } from "path";
 
-// import { config as dotenvConfig } from "dotenv";
-
 require("@nomiclabs/hardhat-ethers");
 
 // grab the private api key from the private repo
@@ -23,12 +21,8 @@ dotenv.config({ path: "secrets/alchemy.env" });
 dotenv.config({ path: resolve(__dirname, "./user.env") });
 
 const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
-
-const georliPrivateKey: string | undefined = process.env.PRIVATE_WALLET_KEY;
-console.log("private key is ", georliPrivateKey);
-
+const georliPrivateKey = process.env.PRIVATE_WALLET_KEY;
 const goerliURL = process.env.GOERLI_ALCHEMY_URL;
-console.log("goerli URI ", goerliURL);
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html

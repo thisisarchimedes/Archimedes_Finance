@@ -11,13 +11,13 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
     bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
 
-    uint256 internal _maxNumberOfCycles;
-    uint256 internal _originationFeeRate;
+    uint256 internal _maxNumberOfCycles; // regualr natural number
+    uint256 internal _originationFeeRate; // in ether percengr (see initalize for examples)
     uint256 internal _globalCollateralRate; // in percentage
-    uint256 internal _rebaseFeeRate; // meaning 10%
+    uint256 internal _rebaseFeeRate; // in ether percengr (see initalize for examples)
     address internal _treasuryAddress;
-    uint256 internal _curveGuardPercentage; // 90%
-    uint256 internal _slippage; // 2%;
+    uint256 internal _curveGuardPercentage; // in regualer (0-100) percentges
+    uint256 internal _slippage; // in regualer (0-100) percentges
     /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
     uint256 internal _archToLevRatio; // meaning 1 arch is equal 1 lvUSD
 
@@ -30,17 +30,15 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(GOVERNOR_ROLE, admin);
 
-        console.log("assign admin and governor role to %", admin);
-
         _maxNumberOfCycles = 10;
         _originationFeeRate = 5 ether / 100;
-        _globalCollateralRate = 90; // in percentage
+        _globalCollateralRate = 90;
         _rebaseFeeRate = 10 ether / 100; // meaning 10%
         _treasuryAddress;
-        _curveGuardPercentage = 90; // 90%
+        _curveGuardPercentage = 90;
         _slippage = 2; // 2%;
         _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
-        _treasuryAddress = address(0); // this needs to be updated
+        _treasuryAddress = address(0);
     }
 
     /// TODO : Move access control to a simple lib
