@@ -6,6 +6,8 @@ const baseContractName = "ParameterStoreMock";
 const upgradedContractName = "ParameterStoreMockV2";
 const deployUpgrade = false;
 
+/// Note : To deploy other contracts, deep changes are needed here. Ping you team mates for help!
+
 before("get factories", async function () {
     this.ParamStore = await hre.ethers.getContractFactory(baseContractName);
     this.ParamStoreV2 = await hre.ethers.getContractFactory(upgradedContractName);
