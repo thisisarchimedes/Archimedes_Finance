@@ -1,0 +1,342 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0xDde063eBe8E85D666AD99f731B4Dbf8C98F29708",
+      "txHash": "0xe8822a8aeb359048c51a9200607da5f4e2b3e31d3365445deae648e74a836842",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "1fa381ab365f0b311b3c3d163687ba3fcbea311b46b3625beedb079020f8ba2c": {
+      "address": "0xD5724171C2b7f0AA717a324626050BD05767e2C6",
+      "txHash": "0x2c6cfba3732a62df5102810cbced7a521902f9b5601b6a6a9ac4cd2549d23b4b",
+      "layout": {
+        "storage": [
+          {
+            "label": "_roles",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)989_storage)",
+            "contract": "AccessControl",
+            "src": "@openzeppelin/contracts/access/AccessControl.sol:55"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ERC1967UpgradeUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:211"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "UUPSUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:107"
+          },
+          {
+            "label": "_maxNumberOfCycles",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:16"
+          },
+          {
+            "label": "_originationFeeRate",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:17"
+          },
+          {
+            "label": "_globalCollateralRate",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:18"
+          },
+          {
+            "label": "_rebaseFeeRate",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:19"
+          },
+          {
+            "label": "_treasuryAddress",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_address",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:20"
+          },
+          {
+            "label": "_curveGuardPercentage",
+            "offset": 0,
+            "slot": "107",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:21"
+          },
+          {
+            "label": "_slippage",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:22"
+          },
+          {
+            "label": "_archToLevRatio",
+            "offset": 0,
+            "slot": "109",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:24"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)989_storage)": {
+            "label": "mapping(bytes32 => struct AccessControl.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)989_storage": {
+            "label": "struct AccessControl.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "afe00fdbc3d2d8770883e69fa0b5338a3f7a91298be7369f0b1c26bf5521ae55": {
+      "address": "0xc9952Fc93Fa9bE383ccB39008c786b9f94eAc95d",
+      "txHash": "0x66f52c68c4bf0ef42521f52ace74821834ad236ec918b4b3464b749be95abd5f",
+      "layout": {
+        "storage": [
+          {
+            "label": "_roles",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)989_storage)",
+            "contract": "AccessControl",
+            "src": "@openzeppelin/contracts/access/AccessControl.sol:55"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ERC1967UpgradeUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:211"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "UUPSUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:107"
+          },
+          {
+            "label": "_maxNumberOfCycles",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:16"
+          },
+          {
+            "label": "_originationFeeRate",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:17"
+          },
+          {
+            "label": "_globalCollateralRate",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:18"
+          },
+          {
+            "label": "_rebaseFeeRate",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:19"
+          },
+          {
+            "label": "_treasuryAddress",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_address",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:20"
+          },
+          {
+            "label": "_curveGuardPercentage",
+            "offset": 0,
+            "slot": "107",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:21"
+          },
+          {
+            "label": "_slippage",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:22"
+          },
+          {
+            "label": "_archToLevRatio",
+            "offset": 0,
+            "slot": "109",
+            "type": "t_uint256",
+            "contract": "ParameterStore",
+            "src": "contracts/ParameterStore.sol:24"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)989_storage)": {
+            "label": "mapping(bytes32 => struct AccessControl.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)989_storage": {
+            "label": "struct AccessControl.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}

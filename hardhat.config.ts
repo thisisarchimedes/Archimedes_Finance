@@ -56,6 +56,11 @@ task("test:log", "Run tests with all logger logs", async (taskArgs: { file }, hr
 export default {
     solidity: "0.8.13",
     networks: {
+        goerli: {
+            url: "https://eth-goerli.alchemyapi.io/v2/sIittCdD9ETvFdTgG-iJV6nbFa-matFA",
+            accounts: ["08d97e512dbf53f8b736ec399da4bb0baef5e81cffc47f85227e9e92fe1c6d9d"],
+
+        },
         hardhat: {
             forking: {
                 url: alchemyUrl,
