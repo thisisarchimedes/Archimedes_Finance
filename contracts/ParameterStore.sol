@@ -31,6 +31,8 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
     function initialize(address admin) external initializer {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(GOVERNOR_ROLE, admin);
+        console.log("assign admin and governor role to %", admin);
+
         // _treasuryAddress = treasuryAddress;
 
         _maxNumberOfCycles = 10;
@@ -187,11 +189,5 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
 
     function _authorizeUpgrade(address newImplementation) internal override {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not Admin");
-    }
-}
-
-contract ParameterStoreV2 is ParameterStore {
-    function version() public pure returns (string memory) {
-        return "V2";
     }
 }
