@@ -21,6 +21,7 @@ dotenv.config({ path: "secrets/alchemy.env" });
 dotenv.config({ path: resolve(__dirname, "./user.env") });
 
 const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
+// Notice that if no process.env.PRIVATE_WALLET_KEY, set it a random value (junk key)
 const georliPrivateKey = process.env.PRIVATE_WALLET_KEY;
 const goerliURL = process.env.GOERLI_ALCHEMY_URL;
 

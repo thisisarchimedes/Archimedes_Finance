@@ -201,7 +201,7 @@ describe("ParameterStore Access Control tests", async function () {
 
     it("Should not be able to call init again", async function () {
         // does not matter what paramatera we pass to init
-        const promise = parameterStore.init(r.addr1.address, r.addr1.address);
+        const promise = parameterStore.initialize(r.addr1.address);
         await expect(promise).to.be.revertedWith("Cant re init contract");
     });
 });
