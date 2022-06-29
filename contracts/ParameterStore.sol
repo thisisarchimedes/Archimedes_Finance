@@ -19,7 +19,7 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
     uint256 internal _curveGuardPercentage; // in regualer (0-100) percentges
     uint256 internal _slippage; // in regualer (0-100) percentges
     /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
-    uint256 internal _archToLevRatio; // meaning 1 arch is equal 1 lvUSD
+    uint256 internal _archToLevRatio;
 
     modifier onlyGovernor() {
         require(hasRole(GOVERNOR_ROLE, msg.sender), "Caller is not Governor");
