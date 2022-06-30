@@ -3,35 +3,42 @@ pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /// @title ParameterStore is a contract for storing global parameters that can be modified by a privileged role
 /// @notice This contract (will be) proxy upgradable
-contract ParameterStore is AccessControl {
+contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
     bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
 
-    bool internal _initialized = false;
-
-    uint256 internal _maxNumberOfCycles = 10;
-    uint256 internal _originationFeeRate = 5 ether / 100;
-    uint256 internal _globalCollateralRate = 90; // in percentage
-    uint256 internal _rebaseFeeRate = 10 ether / 100; // meaning 10%
+    uint256 internal _maxNumberOfCycles; // regualr natural number
+    uint256 internal _originationFeeRate; // in ether percengr (see initalize for examples)
+    uint256 internal _globalCollateralRate; // in percentage
+    uint256 internal _rebaseFeeRate; // in ether percengr (see initalize for examples)
     address internal _treasuryAddress;
-    uint256 internal _curveGuardPercentage = 90; // 90%
-    uint256 internal _slippage = 2; // 2%;
+    uint256 internal _curveGuardPercentage; // in regualer (0-100) percentges
+    uint256 internal _slippage; // in regualer (0-100) percentges
     /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
-    uint256 internal _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
+    uint256 internal _archToLevRatio;
 
     modifier onlyGovernor() {
         require(hasRole(GOVERNOR_ROLE, msg.sender), "Caller is not Governor");
         _;
     }
 
-    function init(address treasuryAddress, address admin) external {
-        require(_initialized == false, "Cant re init contract");
+    function initialize(address admin) external initializer {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(GOVERNOR_ROLE, admin);
-        _treasuryAddress = treasuryAddress;
-        _initialized = true;
+
+        _maxNumberOfCycles = 10;
+        _originationFeeRate = 5 ether / 100;
+        _globalCollateralRate = 90;
+        _rebaseFeeRate = 10 ether / 100; // meaning 10%
+        _treasuryAddress;
+        _curveGuardPercentage = 90;
+        _slippage = 2; // 2%;
+        _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
+        _treasuryAddress = address(0);
     }
 
     /// TODO : Move access control to a simple lib
@@ -168,5 +175,10 @@ contract ParameterStore is AccessControl {
 
     function calculateLeverageAllowedForArch(uint256 archAmount) public view returns (uint256) {
         return (_archToLevRatio * archAmount) / 1 ether;
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not Admin");
     }
 }

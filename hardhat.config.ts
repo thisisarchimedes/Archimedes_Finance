@@ -12,13 +12,18 @@ import "hardhat-watcher";
 import { setLoggingEnabled } from "./logger";
 import { task, types } from "hardhat/config";
 import dotenv from "dotenv";
+import { resolve } from "path";
 
 require("@nomiclabs/hardhat-ethers");
 
 // grab the private api key from the private repo
 dotenv.config({ path: "secrets/alchemy.env" });
+dotenv.config({ path: resolve(__dirname, "./user.env") });
 
 const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
+// Notice that if no process.env.PRIVATE_WALLET_KEY, set it a random value (junk key)
+const georliPrivateKey = process.env.PRIVATE_WALLET_KEY || "3d5840424a343a01a9eb7c4e4cce2b9675562910de9e68292c6f4266b40b78b3";
+const goerliURL = process.env.GOERLI_ALCHEMY_URL;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -56,6 +61,11 @@ task("test:log", "Run tests with all logger logs", async (taskArgs: { file }, hr
 export default {
     solidity: "0.8.13",
     networks: {
+        goerli: {
+            url: `${goerliURL}`,
+            accounts: [`0x${georliPrivateKey}`],
+
+        },
         hardhat: {
             forking: {
                 url: alchemyUrl,
