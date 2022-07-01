@@ -3,6 +3,7 @@ import { ethers } from "hardhat";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 import { formatUnits } from "ethers/lib/utils";
 import { logger } from "../logger";
+import { isTypedArray } from "util/types";
 
 function getFloatFromBigNum (bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
@@ -47,7 +48,30 @@ describe("ParameterStore test suit", async function () {
         });
     });
 
+    describe("Emit events tests", function () {
+        it("Should emit event on fee rate change", async function () {
+            const oldRebaseRateValue = await parameterStore.getRebaseFeeRate();
+            const newRebaseRateValue = ethers.utils.parseUnits("0.3");
+            const promise = parameterStore.changeRebaseFeeRate(newRebaseRateValue);
+            await expect(promise).to.emit(parameterStore, "ParameterChange").withArgs(
+                "rebaseFeeRate", newRebaseRateValue.toString(), oldRebaseRateValue.toString(),
+            );
+        });
+
+        it("Should emit event on treasury address change", async function () {
+            const newTreasurySigner = ethers.Wallet.createRandom();
+            const promise = parameterStore.changeTreasuryAddress(newTreasurySigner.address);
+            await expect(promise).to.emit(parameterStore, "TreasuryChange").withArgs(
+                newTreasurySigner.address, r.treasurySigner.address,
+            );
+        });
+    });
+
     describe("Treasury address tests", function () {
+        it("Should not return address zero", async function () {
+            await parameterStore.changeTreasuryAddress(ethers.constants.AddressZero);
+            await expect(parameterStore.getTreasuryAddress()).to.revertedWith("Treasury address is not set");
+        });
         it("should have updated treasury address", async function () {
             const newTreasurySigner = ethers.Wallet.createRandom();
             await parameterStore.changeTreasuryAddress(newTreasurySigner.address);
