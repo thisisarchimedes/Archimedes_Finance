@@ -68,9 +68,9 @@ describe("ParameterStore test suit", async function () {
     });
 
     describe("Treasury address tests", function () {
-        it("Should not return address zero", async function () {
-            await parameterStore.changeTreasuryAddress(ethers.constants.AddressZero);
-            await expect(parameterStore.getTreasuryAddress()).to.revertedWith("Treasury address is not set");
+        it("Should not be able to change to address zerp", async function () {
+            const promise = parameterStore.changeTreasuryAddress(ethers.constants.AddressZero);
+            await expect(promise).to.revertedWith("Treasury can't be set to 0");
         });
         it("should have updated treasury address", async function () {
             const newTreasurySigner = ethers.Wallet.createRandom();

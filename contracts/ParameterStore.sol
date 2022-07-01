@@ -22,7 +22,7 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
     /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
     uint256 internal _archToLevRatio;
 
-    event ParameterChange(string indexed _name, string _newValue, string _oldValue);
+    event ParameterChange(string indexed _name, uint256 _newValue, uint256 _oldValue);
     event TreasuryChange(address indexed _newValue, address indexed _oldValue);
 
     modifier onlyGovernor() {
@@ -70,47 +70,48 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
     function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external onlyGovernor {
         // curveGuardPercentage must be a number between 80 and 100
         require(newCurveGuardPercentage >= 80 && newCurveGuardPercentage <= 100, "New CGP out of range");
-        emit ParameterChange("curveGuardPercentage", Strings.toString(newCurveGuardPercentage), Strings.toString(_curveGuardPercentage));
+        emit ParameterChange("curveGuardPercentage", newCurveGuardPercentage, _curveGuardPercentage);
         _curveGuardPercentage = newCurveGuardPercentage;
     }
 
     function changeSlippage(uint256 newSlippage) external onlyGovernor {
         // slippage must be a number between 0 and 5
         require(newSlippage > 0 && newSlippage < 5, "New slippage out of range");
-        emit ParameterChange("slippage", Strings.toString(newSlippage), Strings.toString(_slippage));
+        emit ParameterChange("slippage", newSlippage, _slippage);
         _slippage = newSlippage;
     }
 
     function changeTreasuryAddress(address newTreasuryAddress) external onlyGovernor {
+        require(newTreasuryAddress != address(0), "Treasury can't be set to 0");
         emit TreasuryChange(newTreasuryAddress, _treasuryAddress);
         _treasuryAddress = newTreasuryAddress;
     }
 
     function changeOriginationFeeRate(uint256 newFeeRate) external onlyGovernor {
-        emit ParameterChange("originationFeeRate", Strings.toString(newFeeRate), Strings.toString(_originationFeeRate));
+        emit ParameterChange("originationFeeRate", newFeeRate, _originationFeeRate);
         _originationFeeRate = newFeeRate;
     }
 
     function changeGlobalCollateralRate(uint256 newGlobalCollateralRate) external onlyGovernor {
         require(newGlobalCollateralRate <= 100 && newGlobalCollateralRate > 0, "New collateral rate out of range");
-        emit ParameterChange("globalCollateralRate", Strings.toString(newGlobalCollateralRate), Strings.toString(_globalCollateralRate));
+        emit ParameterChange("globalCollateralRate", newGlobalCollateralRate, _globalCollateralRate);
         _globalCollateralRate = newGlobalCollateralRate;
     }
 
     function changeMaxNumberOfCycles(uint256 newMaxNumberOfCycles) external onlyGovernor {
-        emit ParameterChange("maxNumberOfCycles", Strings.toString(newMaxNumberOfCycles), Strings.toString(_maxNumberOfCycles));
+        emit ParameterChange("maxNumberOfCycles", newMaxNumberOfCycles, _maxNumberOfCycles);
         _maxNumberOfCycles = newMaxNumberOfCycles;
     }
 
     function changeRebaseFeeRate(uint256 newRebaseFeeRate) external onlyGovernor {
         // rebaseFeeRate must be a number between 1 and 99 (in 18 decimal)
         require(newRebaseFeeRate < (100 ether) && newRebaseFeeRate > (0 ether), "New rebase fee rate out of range");
-        emit ParameterChange("rebaseFeeRate", Strings.toString(newRebaseFeeRate), Strings.toString(_rebaseFeeRate));
+        emit ParameterChange("rebaseFeeRate", newRebaseFeeRate, _rebaseFeeRate);
         _rebaseFeeRate = newRebaseFeeRate;
     }
 
     function changeArchToLevRatio(uint256 newArchToLevRatio) external onlyGovernor {
-        emit ParameterChange("archToLevRatio", Strings.toString(newArchToLevRatio), Strings.toString(_archToLevRatio));
+        emit ParameterChange("archToLevRatio", newArchToLevRatio, _archToLevRatio);
         _archToLevRatio = newArchToLevRatio;
     }
 
