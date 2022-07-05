@@ -1,21 +1,27 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.13;
+// import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC20MetadataUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ERC4626} from "./standard/ERC4626.sol";
+// import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
+
+// import {ERC4626} from "./standard/ERC4626.sol";
 import {AccessController} from "./AccessController.sol";
 import {ParameterStore} from "./ParameterStore.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 
 import "hardhat/console.sol";
 
 /// @title Archimedes OUSD vault
 /// @notice Vault holds OUSD managed by Archimedes under all positions.
 /// @notice It Uses ER4626 to mint shares for deposited OUSD.
-contract VaultOUSD is ERC4626, AccessController {
+contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     ParameterStore internal _paramStore;
@@ -23,14 +29,14 @@ contract VaultOUSD is ERC4626, AccessController {
 
     uint256 internal _assetsHandledByArchimedes = 0;
 
-    constructor(
-        address admin,
-        IERC20Metadata asset,
-        string memory name,
-        string memory symbol
-    ) ERC20(name, symbol) ERC4626(asset) AccessController(admin) {}
+    // constructor(
+    //     address admin,
+    //     IERC20Metadata asset,
+    //     string memory name,
+    //     string memory symbol
+    // ) ERC20(name, symbol) ERC4626Upgradeable(asset) AccessController(admin) {}
 
-    function init(address _addressParamStore, address _addressOUSD) external {
+    function setDependencies(address _addressParamStore, address _addressOUSD) external {
         _paramStore = ParameterStore(_addressParamStore);
         _ousd = IERC20(_addressOUSD);
     }
@@ -54,6 +60,21 @@ contract VaultOUSD is ERC4626, AccessController {
 
     function takeRebaseFees() external nonReentrant {
         _takeRebaseFees();
+    }
+
+    function initialize(
+        address admin,
+        IERC20MetadataUpgradeable asset,
+        string memory name,
+        string memory symbol
+    ) public initializer {
+        _grantRole(ADMIN_ROLE, admin);
+        setGovernor(admin);
+        setExecutive(admin);
+        setGuardian(admin);
+
+        __ERC4626_init(asset);
+        __ERC20_init(name, symbol);
     }
 
     function _takeRebaseFees() internal {

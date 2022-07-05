@@ -9,15 +9,16 @@ import {ICoordinator} from "./interfaces/ICoordinator.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {PositionToken} from "./PositionToken.sol";
 import {ParameterStore} from "./ParameterStore.sol";
-import {LeverageAllocator} from "./LeverageAllocator.sol";
 import {ArchToken} from "./ArchToken.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // Notes
 // - nonReentrant: a method cant call itself (nested calls). Furthermore,
 //   any method that has nonReentrant modifier cannot call another method with nonReentrant.
 // - onlyOwner: only ownwer can call
 //   https://github.com/NAOS-Finance/NAOS-Formation/blob/master/contracts/FormationV2.sol
-contract LeverageEngine is AccessController {
+contract LeverageEngine is AccessController, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint256 internal _positionId;
@@ -36,16 +37,14 @@ contract LeverageEngine is AccessController {
     event PositionCreated(address indexed _from, uint256 indexed _positionId, uint256 _princple, uint256 _levTaken, uint256 _archBurned);
     event PositionUnwind(address indexed _from, uint256 indexed _positionId, uint256 _positionWindfall);
 
-    constructor(address admin) AccessController(admin) {}
-
     /// @dev set the addresses for Coordinator, PositionToken, ParameterStore
-    function init(
+    function setDependencies(
         address addressCoordinator,
         address addressPositionToken,
         address addressParameterStore,
         address addressArchToken,
         address addressOUSD
-    ) external nonReentrant initializer onlyAdmin {
+    ) external nonReentrant onlyAdmin {
         _addressCoordinator = addressCoordinator;
         _coordinator = ICoordinator(addressCoordinator);
         _addressPositionToken = addressPositionToken;
@@ -72,7 +71,7 @@ contract LeverageEngine is AccessController {
         uint256 ousdPrinciple,
         uint256 cycles,
         uint256 archAmount
-    ) external expectInitialized nonReentrant returns (uint256) {
+    ) external nonReentrant returns (uint256) {
         uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
         uint256 lvUSDAmountAllocatedFromArch = _parameterStore.calculateLeverageAllowedForArch(archAmount);
         /// Revert if not enough Arch token for needed leverage. Continue if too much arch is given
@@ -98,15 +97,22 @@ contract LeverageEngine is AccessController {
     /// provide msg.sender address to coordinator destroy position
     ///
     /// @param positionTokenId the NFT ID of the position
-    function unwindLeveragedPosition(uint256 positionTokenId) external expectInitialized nonReentrant {
+    function unwindLeveragedPosition(uint256 positionTokenId) external nonReentrant {
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
         emit PositionUnwind(msg.sender, positionTokenId, positionWindfall);
     }
 
+    function initialize(address admin) public initializer {
+         _grantRole(ADMIN_ROLE, admin);
+        setGovernor(admin);
+        setExecutive(admin);
+        setGuardian(admin);
+    }
+
     // required - the caller must have allowance for accounts's tokens of at least amount.
-    function _burnArchTokenForPosition(address sender, uint256 archAmount) internal expectInitialized {
+    function _burnArchTokenForPosition(address sender, uint256 archAmount) internal {
         address treasuryAddress = _parameterStore.getTreasuryAddress();
         _archToken.transferFrom(sender, treasuryAddress, archAmount);
     }

@@ -12,13 +12,16 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {AccessController} from "./AccessController.sol";
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 import "hardhat/console.sol";
 
 /// @title Coordinator
 /// @dev is in charge of overall flow of creating positions and unwinding positions
 /// It manages keeping tracks of fund in vault, updating CDP as needed and transferring lvUSD inside the system
 /// It is controlled (and called) by the leverage engine
-contract Coordinator is ICoordinator, AccessController {
+contract Coordinator is ICoordinator, AccessController, ReentrancyGuard {
     using SafeERC20 for IERC20;
     address internal _addressLvUSD;
     address internal _addressVaultOUSD;
@@ -38,16 +41,14 @@ contract Coordinator is ICoordinator, AccessController {
         _;
     }
 
-    constructor(address admin) AccessController(admin) {}
-
-    function init(
+    function setDependencies(
         address addressLvUSD,
         address addressVaultOUSD,
         address addressCDP,
         address addressOUSD,
         address addressExchanger,
         address addressParamStore
-    ) external nonReentrant initializer onlyAdmin {
+    ) external nonReentrant onlyAdmin {
         _addressLvUSD = addressLvUSD;
         _addressVaultOUSD = addressVaultOUSD;
         _addressCDP = addressCDP;
@@ -171,6 +172,13 @@ contract Coordinator is ICoordinator, AccessController {
 
     function addressOfVaultOUSDToken() external view override returns (address) {
         return _addressVaultOUSD;
+    }
+
+    function initialize(address admin) public initializer {
+        _grantRole(ADMIN_ROLE, admin);
+        setGovernor(admin);
+        setExecutive(admin);
+        setGuardian(admin);
     }
 
     function _withdrawCollateralUnderNFT(

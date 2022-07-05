@@ -2,133 +2,109 @@
 pragma solidity 0.8.13;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+
+// import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+// import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /// @title ArchRole
 /// @dev Contract used to inherit standard role enforcement across Archimedes contracts
-abstract contract AccessController is AccessControl, ReentrancyGuard {
+abstract contract AccessController is AccessControlUpgradeable {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant EXECUTIVE_ROLE = keccak256("EXECUTIVE_ROLE");
     bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
     bytes32 public constant GUARDIAN_ROLE = keccak256("GUARDIAN_ROLE");
 
-    address private _addressAdmin;
+    // address private _addressDefaultAdmin;
+    // address private _addressAdmin;
     address private _addressExecutive;
     address private _addressGovernor;
     address private _addressGuardian;
 
-    bool private _initialized;
-    bool private _initializing;
-    bool private _rolesSet;
+    // modifier onlyDefaultAdmin() {
+    //     require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not default Admin");
+    //     _;
+    // }
 
     modifier onlyAdmin() {
-        _requireAdmin();
+        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not Admin");
         _;
     }
 
     modifier onlyExecutive() {
-        require(hasRole(EXECUTIVE_ROLE, msg.sender), "Caller is not executive");
+        require(hasRole(EXECUTIVE_ROLE, msg.sender), "Caller is not Executive");
         _;
     }
 
     modifier onlyGovernor() {
-        require(hasRole(GOVERNOR_ROLE, msg.sender), "Caller is not governor");
+        require(hasRole(GOVERNOR_ROLE, msg.sender), "Caller is not Governor");
         _;
     }
 
     modifier onlyGuardian() {
-        require(hasRole(GUARDIAN_ROLE, msg.sender), "Caller is not guardian");
+        require(hasRole(GUARDIAN_ROLE, msg.sender), "Caller is not Guardian");
         _;
     }
 
-    modifier requireRoles() {
-        require(_rolesSet, "Roles have not been set up");
-        _;
+    function addAdmin(address newAdmin) public onlyAdmin {
+        _grantRole(ADMIN_ROLE, newAdmin);
     }
 
-    modifier expectInitialized() {
-        require(_initialized, "Contract is not initialized");
-        _;
+    function revokeAdmin(address admin) public onlyAdmin {
+        _revokeRole(ADMIN_ROLE, admin);
     }
 
-    modifier initializer() {
-        _requireAdmin();
-        require(_initializing || !_initialized, "initializer: Already initialized");
-
-        bool isFirstCall = !_initializing;
-        if (isFirstCall) {
-            _initializing = true;
-            _initialized = true;
-        }
-
-        _;
-
-        if (isFirstCall) {
-            _initializing = false;
-        }
+    function setGovernor(address newGovernor) public onlyAdmin {
+        address oldGov = _addressGovernor;
+        require(oldGov != newGovernor, "New gov must be different");
+        _grantRole(GOVERNOR_ROLE, newGovernor);
+        _revokeRole(GOVERNOR_ROLE, oldGov);
+        _addressGovernor = newGovernor;
     }
 
-    constructor(address admin) {
-        _setupRole(ADMIN_ROLE, admin);
-        _addressAdmin = admin;
+    function setExecutive(address newExecutive) public onlyAdmin {
+        address oldExec = _addressExecutive;
+        require(oldExec != newExecutive, "New exec must be different");
+        _grantRole(EXECUTIVE_ROLE, newExecutive);
+        _revokeRole(EXECUTIVE_ROLE, oldExec);
+        _addressExecutive = newExecutive;
     }
 
-    function setRoles(
-        address executive,
-        address governor,
-        address guardian
-    ) external onlyAdmin {
-        _setupRole(EXECUTIVE_ROLE, executive);
-        _setupRole(GOVERNOR_ROLE, governor);
-        _setupRole(GUARDIAN_ROLE, guardian);
-        _addressExecutive = executive;
-        _addressGovernor = governor;
-        _addressGuardian = guardian;
-        _rolesSet = true;
+    function setGuardian(address newGuardian) public onlyAdmin {
+        address oldGuardian = _addressGuardian;
+        require(oldGuardian != newGuardian, "New guardian must be different");
+        _grantRole(GUARDIAN_ROLE, newGuardian);
+        _revokeRole(GOVERNOR_ROLE, oldGuardian);
+        _addressGovernor = newGuardian;
     }
 
-    function getInitialized() external view returns (bool) {
-        return _initialized;
-    }
+    // function getAddressDefaultAdmin() external view returns (address) {
+    //     return _addressDefaultAdmin();
+    // }
 
-    function getAddressAdmin() external view requireRoles returns (address) {
-        return _getAddressAdmin();
-    }
+    // function getAddressAdmin() public view returns (address) {
+    //     return _addressAdmin;
+    // }
 
-    function getAddressExecutive() external view requireRoles returns (address) {
-        return _getAddressExecutive();
-    }
-
-    function getAddressGovernor() external view requireRoles returns (address) {
-        return _getAddressGovernor();
-    }
-
-    function getAddressGuardian() external view requireRoles returns (address) {
-        return _getAddressGuardian();
-    }
-
-    /* Override required by Solidity: */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl) returns (bool) {
-        return super.supportsInterface(interfaceId);
-    }
-
-    function _getAddressAdmin() internal view requireRoles returns (address) {
-        return _addressAdmin;
-    }
-
-    function _getAddressExecutive() internal view requireRoles returns (address) {
+    function getAddressExecutive() public view returns (address) {
         return _addressExecutive;
     }
 
-    function _getAddressGovernor() internal view requireRoles returns (address) {
+    function getAddressGovernor() public view returns (address) {
         return _addressGovernor;
     }
 
-    function _getAddressGuardian() internal view requireRoles returns (address) {
+    function getAddressGuardian() public view returns (address) {
         return _addressGuardian;
     }
 
     function _requireAdmin() internal view {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
     }
+
+    // /* Override required by Solidity: */
+    // function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl) returns (bool) {
+    //     return super.supportsInterface(interfaceId);
+    // }
 }

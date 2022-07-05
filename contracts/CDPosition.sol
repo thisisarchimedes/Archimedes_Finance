@@ -3,6 +3,8 @@ pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
 import {AccessController} from "./AccessController.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
 
 /// @title CDPosition is ledger contract for all  NFT positions and regular positions
 /// @dev CDP creates and destroy NFT and address positions. It keep tracks of how many tokens user has borrowed.
@@ -38,8 +40,6 @@ contract CDPosition is AccessController {
         require(_nftCDP[nftID].lvUSDBorrowed == 0, "lvUSD borrowed must be zero");
         _;
     }
-
-    constructor(address admin) AccessController(admin) {}
 
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Update both principle and total with OUSDPrinciple
@@ -138,5 +138,12 @@ contract CDPosition is AccessController {
 
     function getShares(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
         return _nftCDP[nftID].shares;
+    }
+
+    function initialize(address admin) public initializer {
+        _grantRole(ADMIN_ROLE, admin);
+        setGovernor(admin);
+        setExecutive(admin);
+        setGuardian(admin);
     }
 }

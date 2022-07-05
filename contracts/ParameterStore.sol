@@ -3,14 +3,16 @@ pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {AccessController} from "./AccessController.sol";
+// import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+
+// import "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @title ParameterStore is a contract for storing global parameters that can be modified by a privileged role
 /// @notice This contract (will be) proxy upgradable
-contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
-    bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
+contract ParameterStore is AccessController, UUPSUpgradeable {
+    // bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
 
     uint256 internal _maxNumberOfCycles; // regualr natural number
     uint256 internal _originationFeeRate; // in ether percengr (see initalize for examples)
@@ -25,47 +27,32 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
     event ParameterChange(string indexed _name, uint256 _newValue, uint256 _oldValue);
     event TreasuryChange(address indexed _newValue, address indexed _oldValue);
 
-    modifier onlyGovernor() {
-        require(hasRole(GOVERNOR_ROLE, msg.sender), "Caller is not Governor");
-        _;
-    }
+    // modifier onlyGovernor() {
+    //     require(hasRole(GOVERNOR_ROLE, msg.sender), "Caller is not Governor");
+    //     _;
+    // }
 
-    function initialize(address admin) external initializer {
-        _grantRole(DEFAULT_ADMIN_ROLE, admin);
-        _grantRole(GOVERNOR_ROLE, admin);
+    // /// TODO : Move access control to a simple lib
 
-        _maxNumberOfCycles = 10;
-        _originationFeeRate = 5 ether / 100;
-        _globalCollateralRate = 90;
-        _rebaseFeeRate = 10 ether / 100; // meaning 10%
-        _treasuryAddress;
-        _curveGuardPercentage = 90;
-        _slippage = 2; // 2%;
-        _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
-        _treasuryAddress = address(0);
-    }
+    // function addGovernor(address newGovernor) external {
+    //     require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+    //     _grantRole(GOVERNOR_ROLE, newGovernor);
+    // }
 
-    /// TODO : Move access control to a simple lib
+    // function revokeGovernor(address governor) external {
+    //     require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+    //     _revokeRole(GOVERNOR_ROLE, governor);
+    // }
 
-    function addGovernor(address newGovernor) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-        _grantRole(GOVERNOR_ROLE, newGovernor);
-    }
+    // function addAdmin(address newAdmin) external {
+    //     require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+    //     _grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
+    // }
 
-    function revokeGovernor(address governor) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-        _revokeRole(GOVERNOR_ROLE, governor);
-    }
-
-    function addAdmin(address newAdmin) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-        _grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
-    }
-
-    function revokeAdmin(address admin) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-        _revokeRole(DEFAULT_ADMIN_ROLE, admin);
-    }
+    // function revokeAdmin(address admin) external {
+    //     require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
+    //     _revokeRole(DEFAULT_ADMIN_ROLE, admin);
+    // }
 
     function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external onlyGovernor {
         // curveGuardPercentage must be a number between 80 and 100
@@ -131,6 +118,23 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
         return _rebaseFeeRate;
     }
 
+    function initialize(address admin) public initializer {
+        _grantRole(ADMIN_ROLE, admin);
+        setGovernor(admin);
+        setExecutive(admin);
+        setGuardian(admin);
+
+        _maxNumberOfCycles = 10;
+        _originationFeeRate = 5 ether / 100;
+        _globalCollateralRate = 90;
+        _rebaseFeeRate = 10 ether / 100; // meaning 10%
+        _treasuryAddress;
+        _curveGuardPercentage = 90;
+        _slippage = 2; // 2%;
+        _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
+        _treasuryAddress = address(0);
+    }
+
     function getTreasuryAddress() public view returns (address) {
         require(_treasuryAddress != address(0), "Treasury address is not set");
         return _treasuryAddress;
@@ -193,6 +197,6 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
 
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not Admin");
+        _requireAdmin();
     }
 }

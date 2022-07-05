@@ -6,6 +6,7 @@ import { buildContractTestContext, ContractTestContext } from "./ContractTestCon
 import type { Coordinator } from "../types/contracts";
 import { formatUnits } from "ethers/lib/utils";
 import { logger } from "../logger";
+import { Contract } from "ethers";
 
 function getFloatFromBigNum (bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
@@ -15,7 +16,7 @@ describe("Coordinator Test suit", function () {
     let r: ContractTestContext;
     let endUserSigner;
     let sharesOwnerAddress: string;
-    let coordinator: Coordinator;
+    let coordinator: Contract;
     const nftIdAddr1Position = 35472;
     const nftIdAddr2Position = 15426;
 
