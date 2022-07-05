@@ -7,9 +7,6 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC20MetadataUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-// import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
-
-// import {ERC4626} from "./standard/ERC4626.sol";
 import {AccessController} from "./AccessController.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -28,13 +25,6 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuard {
     IERC20 internal _ousd;
 
     uint256 internal _assetsHandledByArchimedes = 0;
-
-    // constructor(
-    //     address admin,
-    //     IERC20Metadata asset,
-    //     string memory name,
-    //     string memory symbol
-    // ) ERC20(name, symbol) ERC4626Upgradeable(asset) AccessController(admin) {}
 
     function setDependencies(address _addressParamStore, address _addressOUSD) external {
         _paramStore = ParameterStore(_addressParamStore);

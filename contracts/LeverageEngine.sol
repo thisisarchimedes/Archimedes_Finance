@@ -105,7 +105,7 @@ contract LeverageEngine is AccessController, ReentrancyGuard {
     }
 
     function initialize(address admin) public initializer {
-         _grantRole(ADMIN_ROLE, admin);
+        _grantRole(ADMIN_ROLE, admin);
         setGovernor(admin);
         setExecutive(admin);
         setGuardian(admin);

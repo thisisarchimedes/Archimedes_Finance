@@ -5,7 +5,6 @@ import "hardhat/console.sol";
 import {AccessController} from "./AccessController.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-
 /// @title CDPosition is ledger contract for all  NFT positions and regular positions
 /// @dev CDP creates and destroy NFT and address positions. It keep tracks of how many tokens user has borrowed.
 /// It keeps track of how much interest each position accrue

@@ -73,8 +73,4 @@ contract PositionToken is AccessController, ReentrancyGuard, ERC721Upgradeable, 
     ) internal virtual override(ERC721Upgradeable, ERC721EnumerableUpgradeable) {
         return super._beforeTokenTransfer(from, to, tokenId);
     }
-
-    // function _msgSender() internal view override(ContextUpgradeable) returns (address sender) {}
-
-    // function _msgData() internal view override(ContextUpgradeable) returns (bytes calldata) {}
 }

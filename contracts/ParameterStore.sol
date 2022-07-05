@@ -27,33 +27,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     event ParameterChange(string indexed _name, uint256 _newValue, uint256 _oldValue);
     event TreasuryChange(address indexed _newValue, address indexed _oldValue);
 
-    // modifier onlyGovernor() {
-    //     require(hasRole(GOVERNOR_ROLE, msg.sender), "Caller is not Governor");
-    //     _;
-    // }
-
-    // /// TODO : Move access control to a simple lib
-
-    // function addGovernor(address newGovernor) external {
-    //     require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-    //     _grantRole(GOVERNOR_ROLE, newGovernor);
-    // }
-
-    // function revokeGovernor(address governor) external {
-    //     require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-    //     _revokeRole(GOVERNOR_ROLE, governor);
-    // }
-
-    // function addAdmin(address newAdmin) external {
-    //     require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-    //     _grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
-    // }
-
-    // function revokeAdmin(address admin) external {
-    //     require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-    //     _revokeRole(DEFAULT_ADMIN_ROLE, admin);
-    // }
-
     function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external onlyGovernor {
         // curveGuardPercentage must be a number between 80 and 100
         require(newCurveGuardPercentage >= 80 && newCurveGuardPercentage <= 100, "New CGP out of range");

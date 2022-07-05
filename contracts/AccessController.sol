@@ -79,14 +79,6 @@ abstract contract AccessController is AccessControlUpgradeable {
         _addressGovernor = newGuardian;
     }
 
-    // function getAddressDefaultAdmin() external view returns (address) {
-    //     return _addressDefaultAdmin();
-    // }
-
-    // function getAddressAdmin() public view returns (address) {
-    //     return _addressAdmin;
-    // }
-
     function getAddressExecutive() public view returns (address) {
         return _addressExecutive;
     }
@@ -102,9 +94,4 @@ abstract contract AccessController is AccessControlUpgradeable {
     function _requireAdmin() internal view {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
     }
-
-    // /* Override required by Solidity: */
-    // function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl) returns (bool) {
-    //     return super.supportsInterface(interfaceId);
-    // }
 }

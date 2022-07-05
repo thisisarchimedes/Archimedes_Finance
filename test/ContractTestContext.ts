@@ -141,15 +141,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     /// TODO: depracate this here in each test as we move away accessController
     const contracts = await deployContracts<ArchContracts>({
         archToken: ["ArchToken"],
-        // cdp: ["CDPosition"],
-        // coordinator: ["Coordinator"],
-        // exchanger: ["Exchanger"],
-        // leverageAllocator: ["LeverageAllocator"],
-        // leverageEngine: ["LeverageEngine"],
         lvUSD: ["LvUSDToken"],
-        // parameterStore: ["ParameterStore"],
-        // positionToken: ["PositionToken"],
-        // vault: ["VaultOUSD", context.externalOUSD.address, "VaultOUSD", "VOUSD"],
     }, contractRolesWithDefaults);
     Object.assign(context, contracts);
 
@@ -160,18 +152,6 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     contractRolesWithDefaults.defaults.PositionToken = {
         executive: context.leverageEngine.address,
     };
-
-    // /* call setRoles on all contracts, allowing any specified overrides from arguments: */
-    // await Promise.all(contractsWithRoles.map(async (contract) => {
-    //     const contractName = await contract.name();
-    //     const roles = {
-    //         ...contractRolesWithDefaults.defaults,
-    //         ...contractRolesWithDefaults.defaults[contractName],
-    //         /* contractRoles allow tests to pass in an alternative address to make role based testing more concise and clear */
-    //         ...contractRolesWithDefaults[contractName],
-    //     };
-    //     return contract.setRoles(roles.executive, roles.governor, roles.guardian);
-    // }));
 
     // Give context.owner some funds:
     // expecting minter to be owner
