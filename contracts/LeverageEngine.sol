@@ -11,13 +11,14 @@ import {PositionToken} from "./PositionToken.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import {ArchToken} from "./ArchToken.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 // Notes
 // - nonReentrant: a method cant call itself (nested calls). Furthermore,
 //   any method that has nonReentrant modifier cannot call another method with nonReentrant.
 // - onlyOwner: only ownwer can call
 //   https://github.com/NAOS-Finance/NAOS-Formation/blob/master/contracts/FormationV2.sol
-contract LeverageEngine is AccessController, ReentrancyGuard {
+contract LeverageEngine is AccessController, ReentrancyGuard, UUPSUpgradeable {
     using SafeERC20 for IERC20;
 
     uint256 internal _positionId;
@@ -114,5 +115,10 @@ contract LeverageEngine is AccessController, ReentrancyGuard {
     function _burnArchTokenForPosition(address sender, uint256 archAmount) internal {
         address treasuryAddress = _parameterStore.getTreasuryAddress();
         _archToken.transferFrom(sender, treasuryAddress, archAmount);
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        _requireAdmin();
     }
 }

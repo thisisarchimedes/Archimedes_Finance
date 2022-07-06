@@ -9,6 +9,7 @@ import {ParameterStore} from "./ParameterStore.sol";
 import {AccessController} from "./AccessController.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "hardhat/console.sol";
 
@@ -17,7 +18,7 @@ import "hardhat/console.sol";
 
 /// @title Exchanger
 /// @dev is in charge of interacting with the CurveFi pools
-contract Exchanger is AccessController, ReentrancyGuard, IExchanger {
+contract Exchanger is AccessController, ReentrancyGuard, IExchanger, UUPSUpgradeable {
     using SafeERC20 for IERC20;
 
     address internal _addressParameterStore;
@@ -339,5 +340,10 @@ contract Exchanger is AccessController, ReentrancyGuard, IExchanger {
         _crv3.safeApprove(address(_poolOUSD3CRV), 0);
 
         return _returnedOUSD;
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        _requireAdmin();
     }
 }

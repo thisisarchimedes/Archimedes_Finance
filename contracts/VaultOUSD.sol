@@ -10,13 +10,14 @@ import {ParameterStore} from "./ParameterStore.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "hardhat/console.sol";
 
 /// @title Archimedes OUSD vault
 /// @notice Vault holds OUSD managed by Archimedes under all positions.
 /// @notice It Uses ER4626 to mint shares for deposited OUSD.
-contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuard {
+contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuard, UUPSUpgradeable {
     using SafeERC20 for IERC20;
 
     ParameterStore internal _paramStore;
@@ -75,5 +76,10 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuard {
 
             _ousd.transfer(_paramStore.getTreasuryAddress(), feeToCollect);
         }
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        _requireAdmin();
     }
 }

@@ -1,29 +1,33 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "hardhat/console.sol";
+import {AccessController} from "./AccessController.sol";
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-// import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
-
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import {AccessController} from "./AccessController.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+import "hardhat/console.sol";
 
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
-contract PositionToken is AccessController, ReentrancyGuard, ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC721BurnableUpgradeable {
+contract PositionToken is
+    AccessController,
+    ReentrancyGuard,
+    ERC721Upgradeable,
+    ERC721EnumerableUpgradeable,
+    ERC721BurnableUpgradeable,
+    UUPSUpgradeable
+{
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     CountersUpgradeable.Counter private _positionTokenIdCounter;
 
     event NFTCreated(uint256 indexed _positionId, address indexed _minter);
     event NFTBurned(uint256 indexed _positionId, address indexed _redeemer);
-
-    // constructor(address admin) ERC721("PositionToken", "PNT") {}
 
     /* Privileged functions: Executive */
     function safeMint(address to) external onlyExecutive returns (uint256 positionTokenId) {
@@ -72,5 +76,10 @@ contract PositionToken is AccessController, ReentrancyGuard, ERC721Upgradeable, 
         uint256 tokenId
     ) internal virtual override(ERC721Upgradeable, ERC721EnumerableUpgradeable) {
         return super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        _requireAdmin();
     }
 }

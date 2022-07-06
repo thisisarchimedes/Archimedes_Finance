@@ -13,6 +13,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 import {AccessController} from "./AccessController.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "hardhat/console.sol";
 
@@ -20,7 +21,7 @@ import "hardhat/console.sol";
 /// @dev is in charge of overall flow of creating positions and unwinding positions
 /// It manages keeping tracks of fund in vault, updating CDP as needed and transferring lvUSD inside the system
 /// It is controlled (and called) by the leverage engine
-contract Coordinator is ICoordinator, AccessController, ReentrancyGuard {
+contract Coordinator is ICoordinator, AccessController, ReentrancyGuard, UUPSUpgradeable {
     using SafeERC20 for IERC20;
     address internal _addressLvUSD;
     address internal _addressVaultOUSD;
@@ -205,5 +206,10 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuard {
         uint256 _fee = _paramStore.calculateOriginationFee(_leveragedOUSDAmount);
         _ousd.safeTransfer(_paramStore.getTreasuryAddress(), _fee);
         return _fee;
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        _requireAdmin();
     }
 }
