@@ -72,7 +72,6 @@ export type ContractTestContext = ArchContracts & {
     cdp: Contract;
     coordinator: Contract;
     exchanger: Contract;
-    // leverageAllocator: LeverageAllocator;
     leverageEngine: Contract;
     positionToken: Contract;
     vault: Contract;

@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 /// @title ParameterStore is a contract for storing global parameters that can be modified by a privileged role
 /// @notice This contract (will be) proxy upgradable
 contract ParameterStore is AccessController, UUPSUpgradeable {
-    // bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
 
     uint256 internal _maxNumberOfCycles; // regualr natural number
     uint256 internal _originationFeeRate; // in ether percengr (see initalize for examples)
