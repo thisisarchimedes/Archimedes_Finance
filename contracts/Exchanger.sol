@@ -7,7 +7,6 @@ import {IExchanger} from "./interfaces/IExchanger.sol";
 import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import {AccessController} from "./AccessController.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
