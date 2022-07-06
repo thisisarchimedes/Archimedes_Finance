@@ -46,8 +46,6 @@ contract Exchanger is AccessController, ReentrancyGuard, IExchanger {
      */
     uint256 internal _curveGuardPercentage;
 
-    // constructor(address admin) AccessController(admin) {}
-
     /**
      * @dev initialize Exchanger
      * @param addressParameterStore ParameterStore address
