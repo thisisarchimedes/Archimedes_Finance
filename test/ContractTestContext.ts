@@ -11,14 +11,6 @@ import {
 } from "./MainnetHelper";
 import { createAndFundMetapool } from "./CurveHelper";
 import type {
-    Coordinator,
-    CDPosition,
-    VaultOUSD,
-    Exchanger,
-    LeverageEngine,
-    // LeverageAllocator,
-    PositionToken,
-    // ParameterStore,
     ArchToken,
 } from "../types/contracts";
 import type { LvUSDToken } from "../types/contracts/LvUSDToken";
