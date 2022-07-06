@@ -89,11 +89,11 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         return _rebaseFeeRate;
     }
 
-    function initialize(address admin) public initializer {
-        _grantRole(ADMIN_ROLE, admin);
-        setGovernor(admin);
-        setExecutive(admin);
-        setGuardian(admin);
+    function initialize() public initializer {
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
 
         _maxNumberOfCycles = 10;
         _originationFeeRate = 5 ether / 100;

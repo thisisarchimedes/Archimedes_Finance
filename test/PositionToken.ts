@@ -1,7 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { Contract } from "ethers";
-import { PositionToken } from "../types/contracts";
 import { buildContractTestContext, ContractTestContext, signers } from "./ContractTestContext";
 
 describe("PositionToken test suit", function () {

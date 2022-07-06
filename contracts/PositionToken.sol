@@ -39,14 +39,14 @@ contract PositionToken is AccessController, ReentrancyGuard, ERC721Upgradeable, 
         return _exists(positionTokenId);
     }
 
-    function initialize(address admin) public initializer {
-        __ERC721_init("PositionToken", "PNT");
+    function initialize() public initializer {
+        __ERC721_init("ArchimedesPositionToken", "APNT");
         __ERC721Enumerable_init();
         __ERC721Burnable_init();
-        _grantRole(ADMIN_ROLE, admin);
-        setGovernor(admin);
-        setExecutive(admin);
-        setGuardian(admin);
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
     }
 
     /* override burn to only allow executive to burn positionToken */

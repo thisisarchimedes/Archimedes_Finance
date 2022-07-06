@@ -1,13 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-import { formatUnits } from "ethers/lib/utils";
-import { logger } from "../logger";
-import { isTypedArray } from "util/types";
-
-function getFloatFromBigNum (bigNumValue) {
-    return parseFloat(formatUnits(bigNumValue));
-}
 
 describe("ParameterStore test suit", async function () {
     let parameterStore;
@@ -207,7 +200,7 @@ describe("ParameterStore Access Control tests", async function () {
     });
 
     it("Should not be able to change governor if not admin", async function () {
-        const changePromise = parameterStore.connect(r.addr2).x(r.addr3.address);
+        const changePromise = parameterStore.connect(r.addr2).setGovernor(r.addr3.address);
         await expect(changePromise).to.be.revertedWith("Caller is not Admin");
     });
 
@@ -223,8 +216,8 @@ describe("ParameterStore Access Control tests", async function () {
     });
 
     it("Should not be able to call init again", async function () {
-        // does not matter what paramatera we pass to init
-        const promise = parameterStore.initialize(r.addr1.address);
+        // does not matter what paramater we pass to init
+        const promise = parameterStore.initialize();
         await expect(promise).to.be.revertedWith("Initializable: contract is already initialized");
     });
 });

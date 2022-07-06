@@ -51,15 +51,14 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuard {
     }
 
     function initialize(
-        address admin,
         IERC20MetadataUpgradeable asset,
         string memory name,
         string memory symbol
     ) public initializer {
-        _grantRole(ADMIN_ROLE, admin);
-        setGovernor(admin);
-        setExecutive(admin);
-        setGuardian(admin);
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
 
         __ERC4626_init(asset);
         __ERC20_init(name, symbol);

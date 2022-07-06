@@ -104,11 +104,11 @@ contract LeverageEngine is AccessController, ReentrancyGuard {
         emit PositionUnwind(msg.sender, positionTokenId, positionWindfall);
     }
 
-    function initialize(address admin) public initializer {
-        _grantRole(ADMIN_ROLE, admin);
-        setGovernor(admin);
-        setExecutive(admin);
-        setGuardian(admin);
+    function initialize() public initializer {
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
     }
 
     // required - the caller must have allowance for accounts's tokens of at least amount.

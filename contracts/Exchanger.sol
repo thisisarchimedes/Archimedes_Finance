@@ -152,11 +152,11 @@ contract Exchanger is AccessController, ReentrancyGuard, IExchanger {
         return _x3CRVforLvUSD(amount3CRV);
     }
 
-    function initialize(address admin) public initializer {
-        _grantRole(ADMIN_ROLE, admin);
-        setGovernor(admin);
-        setExecutive(admin);
-        setGuardian(admin);
+    function initialize() public initializer {
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
     }
 
     /**

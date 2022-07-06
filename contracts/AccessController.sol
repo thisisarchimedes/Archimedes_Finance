@@ -12,16 +12,9 @@ abstract contract AccessController is AccessControlUpgradeable {
     bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
     bytes32 public constant GUARDIAN_ROLE = keccak256("GUARDIAN_ROLE");
 
-    // address private _addressDefaultAdmin;
-    // address private _addressAdmin;
     address private _addressExecutive;
     address private _addressGovernor;
     address private _addressGuardian;
-
-    // modifier onlyDefaultAdmin() {
-    //     require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not default Admin");
-    //     _;
-    // }
 
     modifier onlyAdmin() {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not Admin");

@@ -174,11 +174,11 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuard {
         return _addressVaultOUSD;
     }
 
-    function initialize(address admin) public initializer {
-        _grantRole(ADMIN_ROLE, admin);
-        setGovernor(admin);
-        setExecutive(admin);
-        setGuardian(admin);
+    function initialize() public initializer {
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
     }
 
     function _withdrawCollateralUnderNFT(

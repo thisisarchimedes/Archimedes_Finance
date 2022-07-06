@@ -138,7 +138,6 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     Object.assign(context, contracts);
 
     /* temporary list, in the future will just iterate over all contracts: */
-    const contractsWithRoles = [context.positionToken];
     /* if contracts have derrived role addresses they should exist under their contract name
        on defaults. defaults should be the expected final roles when deployed to mainnet: */
     contractRolesWithDefaults.defaults.PositionToken = {
@@ -161,7 +160,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
 
     // Post init contracts
     await Promise.all([
-        context.leverageEngine.initialize(context.owner.address),
+        context.leverageEngine.initialize(),
         context.leverageEngine.setDependencies(
             context.coordinator.address,
             context.positionToken.address,
@@ -170,7 +169,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
             context.externalOUSD.address,
         ),
 
-        context.coordinator.initialize(context.owner.address),
+        context.coordinator.initialize(),
         context.coordinator.setDependencies(
             context.lvUSD.address,
             context.vault.address,
@@ -180,7 +179,7 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
             context.parameterStore.address,
         ),
 
-        context.exchanger.initialize(context.owner.address),
+        context.exchanger.initialize(),
         context.exchanger.setDependencies(
             context.parameterStore.address,
             context.coordinator.address,
@@ -190,12 +189,12 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
             context.curveLvUSDPool.address,
             addressCurveOUSDPool,
         ),
-        context.vault.initialize(context.owner.address, context.externalOUSD.address, "VaultOUSD", "VOUSD"),
+        context.vault.initialize(context.externalOUSD.address, "VaultOUSD", "VOUSD"),
         context.vault.setDependencies(context.parameterStore.address, context.externalOUSD.address),
 
-        context.parameterStore.initialize(context.owner.address),
+        context.parameterStore.initialize(),
         context.parameterStore.changeTreasuryAddress(context.treasurySigner.address),
-        context.positionToken.initialize(context.owner.address),
+        context.positionToken.initialize(),
     ]);
 
     return context;
