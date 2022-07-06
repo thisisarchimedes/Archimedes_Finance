@@ -57,7 +57,6 @@ async function deployContracts <T> (contractMap: ContractMap, contractRoles: Con
 type ArchContracts = {
     archToken: ArchToken;
     lvUSD: LvUSDToken;
-    // parameterStore: ParameterStore;
 };
 
 export type ContractTestContext = ArchContracts & {
