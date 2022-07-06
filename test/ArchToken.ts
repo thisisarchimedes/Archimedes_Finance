@@ -2,7 +2,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-import { defaultBlockNumber, helperResetNetwork } from "./MainnetHelper";
 
 // TODO create separate test constants file to load in multiple test
 const zeroAddress = ethers.constants.AddressZero;

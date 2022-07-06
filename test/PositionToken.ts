@@ -1,6 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
-import { PositionToken } from "../types/contracts";
+import { Contract } from "ethers";
 import { buildContractTestContext, ContractTestContext, signers } from "./ContractTestContext";
 
 describe("PositionToken test suit", function () {
@@ -14,7 +14,7 @@ describe("PositionToken test suit", function () {
     let secondTokenOwnerAddress: string;
     let thirdTokenOwner: SignerWithAddress;
     let thirdTokenOwnerAddress: string;
-    let positionTokenAsExecutive: PositionToken;
+    let positionTokenAsExecutive: Contract;
 
     before(async function () {
         const [owner] = await signers;
@@ -36,7 +36,7 @@ describe("PositionToken test suit", function () {
 
     it("Should not allow non executive to mint", async function () {
         const mintPromise = positionTokenAsExecutive.connect(firstTokenOwner).safeMint(r.addr1.address);
-        await expect(mintPromise).to.be.revertedWith("Caller is not executive");
+        await expect(mintPromise).to.be.revertedWith("Caller is not Executive");
     });
 
     it("Should revert if the token id doesn't exist", async function () {
@@ -55,12 +55,12 @@ describe("PositionToken test suit", function () {
 
     it("Should fail to burn if not executive", async function () {
         const burnPromise = r.positionToken.connect(secondTokenOwner).burn(firstTokenId);
-        await expect(burnPromise).to.be.revertedWith("Caller is not executive");
+        await expect(burnPromise).to.be.revertedWith("Caller is not Executive");
     });
 
     it("Should not allow positionToken owner to burn positionToken directly. Position unwind required via executive", async function () {
         const burnPromise = r.positionToken.connect(firstTokenOwner).burn(firstTokenId);
-        await expect(burnPromise).to.be.revertedWith("Caller is not executive");
+        await expect(burnPromise).to.be.revertedWith("Caller is not Executive");
     });
 
     it("Should allow executive to burn any token", async function () {
@@ -94,6 +94,6 @@ describe("PositionToken test suit", function () {
                 thirdTokenOwnerAddress,
                 thirdTokenId,
             ),
-        ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
+        ).to.be.revertedWith("ERC721: caller is not token owner nor approved");
     });
 });

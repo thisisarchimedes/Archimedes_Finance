@@ -39,8 +39,6 @@ contract CDPosition is AccessController {
         _;
     }
 
-    constructor(address admin) AccessController(admin) {}
-
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Update both principle and total with OUSDPrinciple
     /// @param nftID newly minted NFT
@@ -138,5 +136,12 @@ contract CDPosition is AccessController {
 
     function getShares(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
         return _nftCDP[nftID].shares;
+    }
+
+    function initialize() public initializer {
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
     }
 }
