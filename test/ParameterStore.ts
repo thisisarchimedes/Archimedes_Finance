@@ -1,12 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-import { formatUnits } from "ethers/lib/utils";
-import { logger } from "../logger";
-
-function getFloatFromBigNum (bigNumValue) {
-    return parseFloat(formatUnits(bigNumValue));
-}
 
 describe("ParameterStore test suit", async function () {
     let parameterStore;
@@ -47,7 +41,30 @@ describe("ParameterStore test suit", async function () {
         });
     });
 
+    describe("Emit events tests", function () {
+        it("Should emit event on fee rate change", async function () {
+            const oldRebaseRateValue = await parameterStore.getRebaseFeeRate();
+            const newRebaseRateValue = ethers.utils.parseUnits("0.3");
+            const promise = parameterStore.changeRebaseFeeRate(newRebaseRateValue);
+            await expect(promise).to.emit(parameterStore, "ParameterChange").withArgs(
+                "rebaseFeeRate", newRebaseRateValue.toString(), oldRebaseRateValue.toString(),
+            );
+        });
+
+        it("Should emit event on treasury address change", async function () {
+            const newTreasurySigner = ethers.Wallet.createRandom();
+            const promise = parameterStore.changeTreasuryAddress(newTreasurySigner.address);
+            await expect(promise).to.emit(parameterStore, "TreasuryChange").withArgs(
+                newTreasurySigner.address, r.treasurySigner.address,
+            );
+        });
+    });
+
     describe("Treasury address tests", function () {
+        it("Should not be able to change to address zerp", async function () {
+            const promise = parameterStore.changeTreasuryAddress(ethers.constants.AddressZero);
+            await expect(promise).to.revertedWith("Treasury can't be set to 0");
+        });
         it("should have updated treasury address", async function () {
             const newTreasurySigner = ethers.Wallet.createRandom();
             await parameterStore.changeTreasuryAddress(newTreasurySigner.address);
@@ -179,13 +196,12 @@ describe("ParameterStore Access Control tests", async function () {
     before(async () => {
         r = await buildContractTestContext();
         parameterStore = r.parameterStore;
-        parameterStore.addGovernor(r.addr1.address);
-        parameterStore.revokeGovernor(r.owner.address);
+        parameterStore.setGovernor(r.addr1.address);
     });
 
     it("Should not be able to change governor if not admin", async function () {
-        const changePromise = parameterStore.connect(r.addr2).addGovernor(r.addr3.address);
-        await expect(changePromise).to.be.revertedWith("Caller is not an Admin");
+        const changePromise = parameterStore.connect(r.addr2).setGovernor(r.addr3.address);
+        await expect(changePromise).to.be.revertedWith("Caller is not Admin");
     });
 
     it("owner should not be able to change paramaters (owner is not governor at this point)", async function () {
@@ -200,8 +216,8 @@ describe("ParameterStore Access Control tests", async function () {
     });
 
     it("Should not be able to call init again", async function () {
-        // does not matter what paramatera we pass to init
-        const promise = parameterStore.initialize(r.addr1.address);
+        // does not matter what paramater we pass to init
+        const promise = parameterStore.initialize();
         await expect(promise).to.be.revertedWith("Initializable: contract is already initialized");
     });
 });

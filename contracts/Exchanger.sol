@@ -7,6 +7,9 @@ import {IExchanger} from "./interfaces/IExchanger.sol";
 import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import {AccessController} from "./AccessController.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 import "hardhat/console.sol";
 
 /// TODO Approval & Allownace should NOT BE MAX VALUES for pools
@@ -14,7 +17,7 @@ import "hardhat/console.sol";
 
 /// @title Exchanger
 /// @dev is in charge of interacting with the CurveFi pools
-contract Exchanger is IExchanger, AccessController {
+contract Exchanger is AccessController, ReentrancyGuard, IExchanger {
     using SafeERC20 for IERC20;
 
     address internal _addressParameterStore;
@@ -43,8 +46,6 @@ contract Exchanger is IExchanger, AccessController {
      */
     uint256 internal _curveGuardPercentage;
 
-    constructor(address admin) AccessController(admin) {}
-
     /**
      * @dev initialize Exchanger
      * @param addressParameterStore ParameterStore address
@@ -55,7 +56,7 @@ contract Exchanger is IExchanger, AccessController {
      * @param addressPoolLvUSD3CRV 3CRV+LvUSD pool address
      * @param addressPoolOUSD3CRV 3CRV+OUSD pool address
      */
-    function init(
+    function setDependencies(
         address addressParameterStore,
         address addressCoordinator,
         address addressLvUSD,
@@ -63,7 +64,7 @@ contract Exchanger is IExchanger, AccessController {
         address address3CRV,
         address addressPoolLvUSD3CRV,
         address addressPoolOUSD3CRV
-    ) external initializer nonReentrant onlyAdmin {
+    ) external nonReentrant onlyAdmin {
         // Set variables
         _addressParameterStore = addressParameterStore;
         _addressCoordinator = addressCoordinator;
@@ -147,6 +148,13 @@ contract Exchanger is IExchanger, AccessController {
 
     function x3CRVforLvUSD(uint256 amount3CRV) external returns (uint256) {
         return _x3CRVforLvUSD(amount3CRV);
+    }
+
+    function initialize() public initializer {
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
     }
 
     /**

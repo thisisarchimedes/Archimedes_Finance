@@ -11,14 +11,6 @@ import {
 } from "./MainnetHelper";
 import { createAndFundMetapool } from "./CurveHelper";
 import type {
-    Coordinator,
-    CDPosition,
-    VaultOUSD,
-    Exchanger,
-    LeverageEngine,
-    LeverageAllocator,
-    PositionToken,
-    // ParameterStore,
     ArchToken,
 } from "../types/contracts";
 import type { LvUSDToken } from "../types/contracts/LvUSDToken";
@@ -64,15 +56,8 @@ async function deployContracts <T> (contractMap: ContractMap, contractRoles: Con
 
 type ArchContracts = {
     archToken: ArchToken;
-    cdp: CDPosition;
-    coordinator: Coordinator;
-    exchanger: Exchanger;
-    leverageAllocator: LeverageAllocator;
-    leverageEngine: LeverageEngine;
     lvUSD: LvUSDToken;
     // parameterStore: ParameterStore;
-    positionToken: PositionToken;
-    vault: VaultOUSD;
 };
 
 export type ContractTestContext = ArchContracts & {
@@ -84,6 +69,12 @@ export type ContractTestContext = ArchContracts & {
     // Archimedes contracts
     // TODO - how to make this type of parameterStore? Failing when I just set it :(
     parameterStore: Contract;
+    cdp: Contract;
+    coordinator: Contract;
+    exchanger: Contract;
+    leverageEngine: Contract;
+    positionToken: Contract;
+    vault: Contract;
     // External contracts
     externalOUSD: Contract;
     externalUSDT: Contract;
@@ -120,39 +111,37 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
     const paramStoreFactory = await ethers.getContractFactory("ParameterStore");
     context.parameterStore = await paramStoreFactory.deploy();
 
+    const cdpFactory = await ethers.getContractFactory("CDPosition");
+    context.cdp = await cdpFactory.deploy();
+
+    const coordinatorFactory = await ethers.getContractFactory("Coordinator");
+    context.coordinator = await coordinatorFactory.deploy();
+
+    const exchangerFactory = await ethers.getContractFactory("Exchanger");
+    context.exchanger = await exchangerFactory.deploy();
+
+    const leverageEngineFactory = await ethers.getContractFactory("LeverageEngine");
+    context.leverageEngine = await leverageEngineFactory.deploy();
+
+    const positionTokenFactory = await ethers.getContractFactory("PositionToken");
+    context.positionToken = await positionTokenFactory.deploy();
+
+    const vaultFactory = await ethers.getContractFactory("VaultOUSD");
+    context.vault = await vaultFactory.deploy();
+
     /// TODO: depracate this here in each test as we move away accessController
     const contracts = await deployContracts<ArchContracts>({
         archToken: ["ArchToken"],
-        cdp: ["CDPosition"],
-        coordinator: ["Coordinator"],
-        exchanger: ["Exchanger"],
-        leverageAllocator: ["LeverageAllocator"],
-        leverageEngine: ["LeverageEngine"],
         lvUSD: ["LvUSDToken"],
-        // parameterStore: ["ParameterStore"],
-        positionToken: ["PositionToken"],
-        vault: ["VaultOUSD", context.externalOUSD.address, "VaultOUSD", "VOUSD"],
     }, contractRolesWithDefaults);
     Object.assign(context, contracts);
 
     /* temporary list, in the future will just iterate over all contracts: */
-    const contractsWithRoles = [context.positionToken];
     /* if contracts have derrived role addresses they should exist under their contract name
        on defaults. defaults should be the expected final roles when deployed to mainnet: */
     contractRolesWithDefaults.defaults.PositionToken = {
         executive: context.leverageEngine.address,
     };
-    /* call setRoles on all contracts, allowing any specified overrides from arguments: */
-    await Promise.all(contractsWithRoles.map(async (contract) => {
-        const contractName = await contract.name();
-        const roles = {
-            ...contractRolesWithDefaults.defaults,
-            ...contractRolesWithDefaults.defaults[contractName],
-            /* contractRoles allow tests to pass in an alternative address to make role based testing more concise and clear */
-            ...contractRolesWithDefaults[contractName],
-        };
-        return contract.setRoles(roles.executive, roles.governor, roles.guardian);
-    }));
 
     // Give context.owner some funds:
     // expecting minter to be owner
@@ -170,7 +159,8 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
 
     // Post init contracts
     await Promise.all([
-        context.leverageEngine.init(
+        context.leverageEngine.initialize(),
+        context.leverageEngine.setDependencies(
             context.coordinator.address,
             context.positionToken.address,
             context.parameterStore.address,
@@ -178,7 +168,8 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
             context.externalOUSD.address,
         ),
 
-        context.coordinator.init(
+        context.coordinator.initialize(),
+        context.coordinator.setDependencies(
             context.lvUSD.address,
             context.vault.address,
             context.cdp.address,
@@ -187,7 +178,8 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
             context.parameterStore.address,
         ),
 
-        context.exchanger.init(
+        context.exchanger.initialize(),
+        context.exchanger.setDependencies(
             context.parameterStore.address,
             context.coordinator.address,
             context.lvUSD.address,
@@ -196,11 +188,12 @@ export async function buildContractTestContext (contractRoles: ContractRoles = {
             context.curveLvUSDPool.address,
             addressCurveOUSDPool,
         ),
+        context.vault.initialize(context.externalOUSD.address, "VaultOUSD", "VOUSD"),
+        context.vault.setDependencies(context.parameterStore.address, context.externalOUSD.address),
 
-        context.vault.init(context.parameterStore.address, context.externalOUSD.address),
-        context.parameterStore.initialize(context.owner.address),
+        context.parameterStore.initialize(),
         context.parameterStore.changeTreasuryAddress(context.treasurySigner.address),
-        context.positionToken.init(),
+        context.positionToken.initialize(),
     ]);
 
     return context;

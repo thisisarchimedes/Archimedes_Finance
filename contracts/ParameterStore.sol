@@ -3,14 +3,13 @@ pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {AccessController} from "./AccessController.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @title ParameterStore is a contract for storing global parameters that can be modified by a privileged role
 /// @notice This contract (will be) proxy upgradable
-contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
-    bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
-
+contract ParameterStore is AccessController, UUPSUpgradeable {
     uint256 internal _maxNumberOfCycles; // regualr natural number
     uint256 internal _originationFeeRate; // in ether percengr (see initalize for examples)
     uint256 internal _globalCollateralRate; // in percentage
@@ -21,84 +20,54 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
     /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
     uint256 internal _archToLevRatio;
 
-    modifier onlyGovernor() {
-        require(hasRole(GOVERNOR_ROLE, msg.sender), "Caller is not Governor");
-        _;
-    }
-
-    function initialize(address admin) external initializer {
-        _grantRole(DEFAULT_ADMIN_ROLE, admin);
-        _grantRole(GOVERNOR_ROLE, admin);
-
-        _maxNumberOfCycles = 10;
-        _originationFeeRate = 5 ether / 100;
-        _globalCollateralRate = 90;
-        _rebaseFeeRate = 10 ether / 100; // meaning 10%
-        _treasuryAddress;
-        _curveGuardPercentage = 90;
-        _slippage = 2; // 2%;
-        _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
-        _treasuryAddress = address(0);
-    }
-
-    /// TODO : Move access control to a simple lib
-
-    function addGovernor(address newGovernor) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-        _grantRole(GOVERNOR_ROLE, newGovernor);
-    }
-
-    function revokeGovernor(address governor) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-        _revokeRole(GOVERNOR_ROLE, governor);
-    }
-
-    function addAdmin(address newAdmin) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-        _grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
-    }
-
-    function revokeAdmin(address admin) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not an Admin");
-        _revokeRole(DEFAULT_ADMIN_ROLE, admin);
-    }
+    event ParameterChange(string indexed _name, uint256 _newValue, uint256 _oldValue);
+    event TreasuryChange(address indexed _newValue, address indexed _oldValue);
 
     function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external onlyGovernor {
         // curveGuardPercentage must be a number between 80 and 100
         require(newCurveGuardPercentage >= 80 && newCurveGuardPercentage <= 100, "New CGP out of range");
+        emit ParameterChange("curveGuardPercentage", newCurveGuardPercentage, _curveGuardPercentage);
         _curveGuardPercentage = newCurveGuardPercentage;
     }
 
     function changeSlippage(uint256 newSlippage) external onlyGovernor {
         // slippage must be a number between 0 and 5
         require(newSlippage > 0 && newSlippage < 5, "New slippage out of range");
+        emit ParameterChange("slippage", newSlippage, _slippage);
         _slippage = newSlippage;
     }
 
     function changeTreasuryAddress(address newTreasuryAddress) external onlyGovernor {
+        require(newTreasuryAddress != address(0), "Treasury can't be set to 0");
+        emit TreasuryChange(newTreasuryAddress, _treasuryAddress);
         _treasuryAddress = newTreasuryAddress;
     }
 
     function changeOriginationFeeRate(uint256 newFeeRate) external onlyGovernor {
+        emit ParameterChange("originationFeeRate", newFeeRate, _originationFeeRate);
         _originationFeeRate = newFeeRate;
     }
 
     function changeGlobalCollateralRate(uint256 newGlobalCollateralRate) external onlyGovernor {
         require(newGlobalCollateralRate <= 100 && newGlobalCollateralRate > 0, "New collateral rate out of range");
+        emit ParameterChange("globalCollateralRate", newGlobalCollateralRate, _globalCollateralRate);
         _globalCollateralRate = newGlobalCollateralRate;
     }
 
     function changeMaxNumberOfCycles(uint256 newMaxNumberOfCycles) external onlyGovernor {
+        emit ParameterChange("maxNumberOfCycles", newMaxNumberOfCycles, _maxNumberOfCycles);
         _maxNumberOfCycles = newMaxNumberOfCycles;
     }
 
     function changeRebaseFeeRate(uint256 newRebaseFeeRate) external onlyGovernor {
         // rebaseFeeRate must be a number between 1 and 99 (in 18 decimal)
         require(newRebaseFeeRate < (100 ether) && newRebaseFeeRate > (0 ether), "New rebase fee rate out of range");
+        emit ParameterChange("rebaseFeeRate", newRebaseFeeRate, _rebaseFeeRate);
         _rebaseFeeRate = newRebaseFeeRate;
     }
 
     function changeArchToLevRatio(uint256 newArchToLevRatio) external onlyGovernor {
+        emit ParameterChange("archToLevRatio", newArchToLevRatio, _archToLevRatio);
         _archToLevRatio = newArchToLevRatio;
     }
 
@@ -118,7 +87,25 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
         return _rebaseFeeRate;
     }
 
+    function initialize() public initializer {
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
+
+        _maxNumberOfCycles = 10;
+        _originationFeeRate = 5 ether / 100;
+        _globalCollateralRate = 90;
+        _rebaseFeeRate = 10 ether / 100; // meaning 10%
+        _treasuryAddress;
+        _curveGuardPercentage = 90;
+        _slippage = 2; // 2%;
+        _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
+        _treasuryAddress = address(0);
+    }
+
     function getTreasuryAddress() public view returns (address) {
+        require(_treasuryAddress != address(0), "Treasury address is not set");
         return _treasuryAddress;
     }
 
@@ -179,6 +166,6 @@ contract ParameterStore is AccessControl, Initializable, UUPSUpgradeable {
 
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not Admin");
+        _requireAdmin();
     }
 }

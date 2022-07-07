@@ -24,6 +24,8 @@ describe("LeverageEngine test suit", async function () {
         initialArchTokenBalance = await r.archToken.balanceOf(r.owner.address);
         await r.archToken.approve(r.leverageEngine.address, archTokenToBurn);
         userInitialOUSD = await r.externalOUSD.balanceOf(r.owner.address);
+        // LevEngine is the exec of position creation so need to be set
+        r.positionToken.setExecutive(r.leverageEngine.address);
     }
 
     before(async () => {
@@ -32,24 +34,6 @@ describe("LeverageEngine test suit", async function () {
 
     it("Should be built properly by ContractTestContext", async function () {
         expect(r.leverageEngine).to.not.be.undefined;
-    });
-
-    describe("initialization", async function () {
-        it("createLeveragedPosition should revert when not intiailized", async function () {
-            const leContract = await ethers.getContractFactory("LeverageEngine");
-            const leverageEngine = await leContract.deploy(r.addr1.address);
-            await expect(leverageEngine.createLeveragedPosition(1234, 1234, 1234)).to.be.revertedWith(
-                "Contract is not initialized",
-            );
-        });
-
-        it("unwindLeveragedPosition should revert when not intiailized", async function () {
-            const leContract = await ethers.getContractFactory("LeverageEngine");
-            const leverageEngine = await leContract.deploy(r.addr1.address);
-            await expect(leverageEngine.unwindLeveragedPosition(1234)).to.be.revertedWith(
-                "Contract is not initialized",
-            );
-        });
     });
 
     it("Should revert if cycles is greater than global max cycles", async function () {
@@ -139,7 +123,7 @@ describe("LeverageEngine test suit", async function () {
         });
 
         it("Should fail to unwind if positionToken doesn't exist", async function () {
-            await expect(r.leverageEngine.unwindLeveragedPosition(99999)).to.be.revertedWith("ERC721: owner query for nonexistent token");
+            await expect(r.leverageEngine.unwindLeveragedPosition(99999)).to.be.revertedWith("ERC721: invalid token ID");
         });
 
         describe("After successful position unwind", async () => {
