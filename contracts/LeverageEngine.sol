@@ -3,14 +3,14 @@ pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
 
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {AccessController} from "./AccessController.sol";
 import {ICoordinator} from "./interfaces/ICoordinator.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {PositionToken} from "./PositionToken.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import {ArchToken} from "./ArchToken.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 // Notes
@@ -18,8 +18,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 //   any method that has nonReentrant modifier cannot call another method with nonReentrant.
 // - onlyOwner: only ownwer can call
 //   https://github.com/NAOS-Finance/NAOS-Formation/blob/master/contracts/FormationV2.sol
-contract LeverageEngine is AccessController, ReentrancyGuard, UUPSUpgradeable {
-    using SafeERC20 for IERC20;
+contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     uint256 internal _positionId;
     address internal _addressCoordinator;
@@ -32,7 +32,7 @@ contract LeverageEngine is AccessController, ReentrancyGuard, UUPSUpgradeable {
     PositionToken internal _positionToken;
     ParameterStore internal _parameterStore;
     ArchToken internal _archToken;
-    IERC20 internal _ousd;
+    IERC20Upgradeable internal _ousd;
 
     event PositionCreated(address indexed _from, uint256 indexed _positionId, uint256 _princple, uint256 _levTaken, uint256 _archBurned);
     event PositionUnwind(address indexed _from, uint256 indexed _positionId, uint256 _positionWindfall);
@@ -54,7 +54,7 @@ contract LeverageEngine is AccessController, ReentrancyGuard, UUPSUpgradeable {
         _addressArchToken = addressArchToken;
         _archToken = ArchToken(addressArchToken);
         _addressOUSD = addressOUSD;
-        _ousd = IERC20(_addressOUSD);
+        _ousd = IERC20Upgradeable(_addressOUSD);
     }
 
     /* Non-privileged functions */
