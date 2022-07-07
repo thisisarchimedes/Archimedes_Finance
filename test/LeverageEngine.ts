@@ -25,7 +25,7 @@ describe("LeverageEngine test suit", async function () {
         await r.archToken.approve(r.leverageEngine.address, archTokenToBurn);
         userInitialOUSD = await r.externalOUSD.balanceOf(r.owner.address);
         // LevEngine is the exec of position creation so need to be set
-        r.positionToken.setExecutive(r.leverageEngine.address);
+        await r.positionToken.setExecutive(r.leverageEngine.address);
     }
 
     before(async () => {
