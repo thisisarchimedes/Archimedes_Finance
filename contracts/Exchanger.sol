@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IExchanger} from "./interfaces/IExchanger.sol";
 import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import {AccessController} from "./AccessController.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
 import "hardhat/console.sol";
 
 /// TODO Approval & Allownace should NOT BE MAX VALUES for pools
@@ -14,23 +17,23 @@ import "hardhat/console.sol";
 
 /// @title Exchanger
 /// @dev is in charge of interacting with the CurveFi pools
-contract Exchanger is IExchanger, AccessController {
-    using SafeERC20 for IERC20;
+contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, UUPSUpgradeable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     address internal _addressParameterStore;
     address internal _addressCoordinator;
     address internal _addressPoolLvUSD3CRV;
     address internal _addressPoolOUSD3CRV;
-    IERC20 internal _lvusd;
-    IERC20 internal _ousd;
-    IERC20 internal _crv3;
+    IERC20Upgradeable internal _lvusd;
+    IERC20Upgradeable internal _ousd;
+    IERC20Upgradeable internal _crv3;
     ICurveFiCurve internal _poolLvUSD3CRV;
     ICurveFiCurve internal _poolOUSD3CRV;
 
     ParameterStore internal _paramStore;
-    int128 internal _indexLvUSD = 0;
-    int128 internal _indexOUSD = 0;
-    int128 internal _index3CRV = 1;
+    int128 internal _indexLvUSD;
+    int128 internal _indexOUSD;
+    int128 internal _index3CRV;
 
     uint256 internal _slippage;
 
@@ -43,8 +46,6 @@ contract Exchanger is IExchanger, AccessController {
      */
     uint256 internal _curveGuardPercentage;
 
-    constructor(address admin) AccessController(admin) {}
-
     /**
      * @dev initialize Exchanger
      * @param addressParameterStore ParameterStore address
@@ -55,7 +56,7 @@ contract Exchanger is IExchanger, AccessController {
      * @param addressPoolLvUSD3CRV 3CRV+LvUSD pool address
      * @param addressPoolOUSD3CRV 3CRV+OUSD pool address
      */
-    function init(
+    function setDependencies(
         address addressParameterStore,
         address addressCoordinator,
         address addressLvUSD,
@@ -63,7 +64,7 @@ contract Exchanger is IExchanger, AccessController {
         address address3CRV,
         address addressPoolLvUSD3CRV,
         address addressPoolOUSD3CRV
-    ) external initializer nonReentrant onlyAdmin {
+    ) external nonReentrant onlyAdmin {
         // Set variables
         _addressParameterStore = addressParameterStore;
         _addressCoordinator = addressCoordinator;
@@ -72,9 +73,9 @@ contract Exchanger is IExchanger, AccessController {
 
         // Load contracts
         _paramStore = ParameterStore(addressParameterStore);
-        _lvusd = IERC20(addressLvUSD);
-        _ousd = IERC20(addressOUSD);
-        _crv3 = IERC20(address3CRV);
+        _lvusd = IERC20Upgradeable(addressLvUSD);
+        _ousd = IERC20Upgradeable(addressOUSD);
+        _crv3 = IERC20Upgradeable(address3CRV);
         _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
     }
@@ -147,6 +148,17 @@ contract Exchanger is IExchanger, AccessController {
 
     function x3CRVforLvUSD(uint256 amount3CRV) external returns (uint256) {
         return _x3CRVforLvUSD(amount3CRV);
+    }
+
+    function initialize() public initializer {
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
+
+        _indexLvUSD = 0;
+        _indexOUSD = 0;
+        _index3CRV = 1;
     }
 
     /**
@@ -331,5 +343,10 @@ contract Exchanger is IExchanger, AccessController {
         _crv3.safeApprove(address(_poolOUSD3CRV), 0);
 
         return _returnedOUSD;
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        _requireAdmin();
     }
 }

@@ -3,6 +3,8 @@ pragma solidity 0.8.13;
 
 import "hardhat/console.sol";
 import {AccessController} from "./AccessController.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 /// @title CDPosition is ledger contract for all  NFT positions and regular positions
 /// @dev CDP creates and destroy NFT and address positions. It keep tracks of how many tokens user has borrowed.
@@ -10,7 +12,7 @@ import {AccessController} from "./AccessController.sol";
 /// @notice CDPosition does not hold any tokens. It is not a vault of any kind.
 /// @notice CDP does not emit any events. All related events will be emitted by the calling contract.
 /// @notice This contract (will be) proxy upgradable
-contract CDPosition is AccessController {
+contract CDPosition is AccessController, UUPSUpgradeable {
     struct CDP {
         uint256 oUSDPrinciple; // Amount of OUSD originally deposited by user
         uint256 oUSDInterestEarned; // Total interest earned (and rebased) so far
@@ -38,8 +40,6 @@ contract CDPosition is AccessController {
         require(_nftCDP[nftID].lvUSDBorrowed == 0, "lvUSD borrowed must be zero");
         _;
     }
-
-    constructor(address admin) AccessController(admin) {}
 
     /// @dev add new entry to nftid<>CPP map with ousdPrinciple.
     /// Update both principle and total with OUSDPrinciple
@@ -138,5 +138,17 @@ contract CDPosition is AccessController {
 
     function getShares(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
         return _nftCDP[nftID].shares;
+    }
+
+    function initialize() public initializer {
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        _requireAdmin();
     }
 }

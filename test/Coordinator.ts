@@ -6,6 +6,7 @@ import { buildContractTestContext, ContractTestContext } from "./ContractTestCon
 import type { Coordinator } from "../types/contracts";
 import { formatUnits } from "ethers/lib/utils";
 import { logger } from "../logger";
+import { Contract } from "ethers";
 
 function getFloatFromBigNum (bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
@@ -15,7 +16,7 @@ describe("Coordinator Test suit", function () {
     let r: ContractTestContext;
     let endUserSigner;
     let sharesOwnerAddress: string;
-    let coordinator: Coordinator;
+    let coordinator: Contract;
     const nftIdAddr1Position = 35472;
     const nftIdAddr2Position = 15426;
 
@@ -128,7 +129,8 @@ describe("Coordinator Test suit", function () {
 
             before(async function () {
                 // mint lvUSD to be borrowed, assign all minted lvUSD to coordinator as it will spend it
-                await r.lvUSD.mint(coordinator.address, ethers.utils.parseUnits("100"));
+                await r.lvUSD.setMintDestination(r.coordinator.address);
+                await r.lvUSD.mint(ethers.utils.parseUnits("100"));
                 // method under test
                 await coordinator.borrowUnderNFT(nftIdFirstPosition, lvUSDAmountToBorrow);
             });
@@ -192,7 +194,8 @@ describe("Coordinator Test suit", function () {
                     originationFee = await r.parameterStore.calculateOriginationFee(leverageAmount);
                     sharesTotalSupplyBeforeLeverage = await r.vault.maxRedeem(sharesOwnerAddress);
                     // we need more lvusd for exchanger
-                    await r.lvUSD.mint(coordinator.address, ethers.utils.parseUnits("100"));
+                    await r.lvUSD.setMintDestination(coordinator.address);
+                    await r.lvUSD.mint(ethers.utils.parseUnits("100"));
                     await coordinator.getLeveragedOUSD(nftIdFirstPosition, leverageAmount);
                 });
                 it("Should have increase borrowed amount on CDP for NFT", async function () {
@@ -296,7 +299,8 @@ describe("Coordinator Test suit", function () {
             /// 1. Transfer OUSD principle from user to coordinator address (simulate leverage engine task when creating position)
             /// 3. Mint enough lvUSD under coordinator address to get leveraged OUSD (via lvUSD borrowing)
             await r.externalOUSD.connect(endUserSigner).transfer(r.coordinator.address, collateralAmount);
-            await r.lvUSD.mint(r.coordinator.address, mintedLvUSDAmount);
+            await r.lvUSD.setMintDestination(r.coordinator.address);
+            await r.lvUSD.mint(mintedLvUSDAmount);
             /// Complete create position cycle from coordinator perspective
             await r.externalOUSD.approve(r.coordinator.address, collateralAmount);
             await r.coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount);
