@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IExchanger} from "./interfaces/IExchanger.sol";
 import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import {AccessController} from "./AccessController.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "hardhat/console.sol";
 
@@ -17,23 +17,23 @@ import "hardhat/console.sol";
 
 /// @title Exchanger
 /// @dev is in charge of interacting with the CurveFi pools
-contract Exchanger is AccessController, ReentrancyGuard, IExchanger {
-    using SafeERC20 for IERC20;
+contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, UUPSUpgradeable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     address internal _addressParameterStore;
     address internal _addressCoordinator;
     address internal _addressPoolLvUSD3CRV;
     address internal _addressPoolOUSD3CRV;
-    IERC20 internal _lvusd;
-    IERC20 internal _ousd;
-    IERC20 internal _crv3;
+    IERC20Upgradeable internal _lvusd;
+    IERC20Upgradeable internal _ousd;
+    IERC20Upgradeable internal _crv3;
     ICurveFiCurve internal _poolLvUSD3CRV;
     ICurveFiCurve internal _poolOUSD3CRV;
 
     ParameterStore internal _paramStore;
-    int128 internal _indexLvUSD = 0;
-    int128 internal _indexOUSD = 0;
-    int128 internal _index3CRV = 1;
+    int128 internal _indexLvUSD;
+    int128 internal _indexOUSD;
+    int128 internal _index3CRV;
 
     uint256 internal _slippage;
 
@@ -73,9 +73,9 @@ contract Exchanger is AccessController, ReentrancyGuard, IExchanger {
 
         // Load contracts
         _paramStore = ParameterStore(addressParameterStore);
-        _lvusd = IERC20(addressLvUSD);
-        _ousd = IERC20(addressOUSD);
-        _crv3 = IERC20(address3CRV);
+        _lvusd = IERC20Upgradeable(addressLvUSD);
+        _ousd = IERC20Upgradeable(addressOUSD);
+        _crv3 = IERC20Upgradeable(address3CRV);
         _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
     }
@@ -155,6 +155,10 @@ contract Exchanger is AccessController, ReentrancyGuard, IExchanger {
         setGovernor(_msgSender());
         setExecutive(_msgSender());
         setGuardian(_msgSender());
+
+        _indexLvUSD = 0;
+        _indexOUSD = 0;
+        _index3CRV = 1;
     }
 
     /**
@@ -339,5 +343,10 @@ contract Exchanger is AccessController, ReentrancyGuard, IExchanger {
         _crv3.safeApprove(address(_poolOUSD3CRV), 0);
 
         return _returnedOUSD;
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        _requireAdmin();
     }
 }

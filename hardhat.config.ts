@@ -59,7 +59,15 @@ task("test:log", "Run tests with all logger logs", async (taskArgs: { file }, hr
  * @type import('hardhat/config').HardhatUserConfig
  */
 export default {
-    solidity: "0.8.13",
+    solidity: {
+        version: "0.8.13",
+        settings: {
+            optimizer: {
+                enabled: true,
+                runs: 200,
+            },
+        },
+    },
     networks: {
         goerli: {
             url: `${goerliURL}`,
@@ -69,10 +77,13 @@ export default {
         hardhat: {
             forking: {
                 url: alchemyUrl,
+                allowUnlimitedContractSize: true,
+                gas: 3000000,
             },
             localhost: {
                 url: "http://127.0.0.1:8545",
                 gas: 3000000,
+                allowUnlimitedContractSize: true,
             },
         },
     },

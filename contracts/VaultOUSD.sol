@@ -1,32 +1,33 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {IERC20MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC20MetadataUpgradeable.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {AccessController} from "./AccessController.sol";
 import {ParameterStore} from "./ParameterStore.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "hardhat/console.sol";
 
 /// @title Archimedes OUSD vault
 /// @notice Vault holds OUSD managed by Archimedes under all positions.
 /// @notice It Uses ER4626 to mint shares for deposited OUSD.
-contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuard {
-    using SafeERC20 for IERC20;
+contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     ParameterStore internal _paramStore;
-    IERC20 internal _ousd;
+    IERC20Upgradeable internal _ousd;
 
-    uint256 internal _assetsHandledByArchimedes = 0;
+    uint256 internal _assetsHandledByArchimedes;
 
     function setDependencies(address _addressParamStore, address _addressOUSD) external {
         _paramStore = ParameterStore(_addressParamStore);
-        _ousd = IERC20(_addressOUSD);
+        _ousd = IERC20Upgradeable(_addressOUSD);
     }
 
     function archimedesDeposit(uint256 assets, address receiver) external nonReentrant returns (uint256) {
@@ -62,6 +63,8 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuard {
 
         __ERC4626_init(asset);
         __ERC20_init(name, symbol);
+
+        _assetsHandledByArchimedes = 0;
     }
 
     function _takeRebaseFees() internal {
@@ -75,5 +78,10 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuard {
 
             _ousd.transfer(_paramStore.getTreasuryAddress(), feeToCollect);
         }
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        _requireAdmin();
     }
 }

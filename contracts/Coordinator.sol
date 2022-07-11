@@ -2,17 +2,20 @@
 pragma solidity 0.8.13;
 
 import {ICoordinator} from "../contracts/interfaces/ICoordinator.sol";
-import {IERC4626} from "../contracts/interfaces/IERC4626.sol";
 import {VaultOUSD} from "../contracts/VaultOUSD.sol";
 import {CDPosition} from "../contracts/CDPosition.sol";
 import {ParameterStore} from "./ParameterStore.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+// import {IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20.sol";
+
 import {Exchanger} from "../contracts/Exchanger.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+// import {SafeERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20.sol";
+import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {AccessController} from "./AccessController.sol";
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "hardhat/console.sol";
 
@@ -20,8 +23,8 @@ import "hardhat/console.sol";
 /// @dev is in charge of overall flow of creating positions and unwinding positions
 /// It manages keeping tracks of fund in vault, updating CDP as needed and transferring lvUSD inside the system
 /// It is controlled (and called) by the leverage engine
-contract Coordinator is ICoordinator, AccessController, ReentrancyGuard {
-    using SafeERC20 for IERC20;
+contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
     address internal _addressLvUSD;
     address internal _addressVaultOUSD;
     address internal _addressCDP;
@@ -31,8 +34,8 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuard {
     VaultOUSD internal _vault;
     CDPosition internal _cdp;
     Exchanger internal _exchanger;
-    IERC20 internal _lvUSD;
-    IERC20 internal _ousd;
+    IERC20Upgradeable internal _lvUSD;
+    IERC20Upgradeable internal _ousd;
     ParameterStore internal _paramStore;
 
     modifier notImplementedYet() {
@@ -57,8 +60,8 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuard {
         _vault = VaultOUSD(_addressVaultOUSD);
         _cdp = CDPosition(_addressCDP);
         _exchanger = Exchanger(_addressExchanger);
-        _lvUSD = IERC20(_addressLvUSD);
-        _ousd = IERC20(_addressOUSD);
+        _lvUSD = IERC20Upgradeable(_addressLvUSD);
+        _ousd = IERC20Upgradeable(_addressOUSD);
         _paramStore = ParameterStore(addressParamStore);
 
         // approve VaultOUSD address to spend OUSD on behalf of coordinator
@@ -205,5 +208,10 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuard {
         uint256 _fee = _paramStore.calculateOriginationFee(_leveragedOUSDAmount);
         _ousd.safeTransfer(_paramStore.getTreasuryAddress(), _fee);
         return _fee;
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        _requireAdmin();
     }
 }
