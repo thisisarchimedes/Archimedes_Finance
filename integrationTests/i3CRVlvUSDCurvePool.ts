@@ -62,6 +62,7 @@ describe("3CRV/lvUSD curve pool test suit", function () {
         await contractlvUSDToken.connect(signerAddr1).approve(addressZap, tenK18Decimal);
         await contractUSDC.connect(signerAddr1).approve(addressZap, tenK6Decimal);
 
+        // get 3CRV/lvUSD contract
         contractlvUSD3CRVPool = await ethers.getContractAt(abilvUSD3CRVPool, address3CRVlvUSDPool);
 
         // grab the "before" balances so we can check they increase after adding liquidity
@@ -69,6 +70,8 @@ describe("3CRV/lvUSD curve pool test suit", function () {
         const balanceUSDC = await contractlvUSD3CRVPool.balances(1);
 
         // Seed 3CRV/lvUSD pool via Zap
+        // Indexes: 0 = lvusd, 1 = dai, 2 = usdc, 3 = usdt
+        // Indexes 123 are the 3curve token
         const zap = await ethers.getContractAt(abiZap, addressZap);
         const coins = [ethers.utils.parseUnits("100", 18), "0x0", ethers.utils.parseUnits("100", 6), "0x0"];
         await zap.connect(signerAddr1).add_liquidity(address3CRVlvUSDPool, coins, 0);
