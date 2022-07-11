@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
-import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext, setRolesForEndToEnd } from "./ContractTestContext";
 import { helperSwapETHWithOUSD } from "./MainnetHelper";
 
 describe("LeverageEngine test suit", async function () {
@@ -20,12 +20,14 @@ describe("LeverageEngine test suit", async function () {
         await r.externalOUSD.approve(r.leverageEngine.address, totalOUSD);
         await r.lvUSD.setMintDestination(r.coordinator.address);
         await r.lvUSD.mint(lvUSDAmountToMint);
+        // give owner ArchToken from minted tokens
+        await r.archToken.connect(r.treasurySigner).transfer(r.owner.address, archTokenToBurn);
         // give LevEng approval to burn owner's arch tokens
         initialArchTokenBalance = await r.archToken.balanceOf(r.owner.address);
         await r.archToken.approve(r.leverageEngine.address, archTokenToBurn);
         userInitialOUSD = await r.externalOUSD.balanceOf(r.owner.address);
         // LevEngine is the exec of position creation so need to be set
-        await r.positionToken.setExecutive(r.leverageEngine.address);
+        await setRolesForEndToEnd(r);
     }
 
     before(async () => {
@@ -72,6 +74,7 @@ describe("LeverageEngine test suit", async function () {
             await prepForPositionCreation();
         });
         it("Should emit position creation event", async function () {
+            // console.log("actual treasury: await r.parameterStore.getTreasuryAddress()");
             const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
             await expect(promise).to.emit(r.leverageEngine, "PositionCreated").withArgs(
                 r.owner.address, 0, principle, await r.parameterStore.getAllowedLeverageForPosition(principle, maxCycles), archTokenToBurn,

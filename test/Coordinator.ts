@@ -12,6 +12,10 @@ function getFloatFromBigNum (bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
 }
 
+async function setCoordinatorAsExcecutive (r) {
+    await r.vault.setExecutive(r.coordinator.address);
+    await r.exchanger.setExecutive(r.coordinator.address);
+}
 describe("Coordinator Test suit", function () {
     let r: ContractTestContext;
     let endUserSigner;
@@ -46,6 +50,9 @@ describe("Coordinator Test suit", function () {
             // (this will happen in leverage engine in full Archimedes flow)
             await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, addr1CollateralAmount);
             expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr1CollateralAmount);
+            //
+            await setCoordinatorAsExcecutive(r);
+            //
             await coordinator.depositCollateralUnderNFT(nftIdAddr1Position, addr1CollateralAmount, {
                 gasLimit: 3000000,
             });
@@ -84,7 +91,6 @@ describe("Coordinator Test suit", function () {
                 // (this will happen in leverage engine in full Archimedes flow)
                 await r.externalOUSD.connect(r.addr2).transfer(coordinator.address, addr2CollateralAmount);
                 expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr2CollateralAmount);
-
                 await coordinator.depositCollateralUnderNFT(
                     nftIdAddr2Position, addr2CollateralAmount, { gasLimit: 3000000 },
                 );
@@ -303,6 +309,7 @@ describe("Coordinator Test suit", function () {
             await r.lvUSD.mint(mintedLvUSDAmount);
             /// Complete create position cycle from coordinator perspective
             await r.externalOUSD.approve(r.coordinator.address, collateralAmount);
+            await setCoordinatorAsExcecutive(r);
             await r.coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount);
             /// Doing 5 cycles for this position
             await r.coordinator.getLeveragedOUSD(endToEndTestNFTId, leverageToGetForPosition);
