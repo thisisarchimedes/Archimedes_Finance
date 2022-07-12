@@ -3,7 +3,6 @@ import { assert, expect } from "chai";
 import { ethers } from "hardhat";
 import { helperSwapETHWithOUSD } from "./MainnetHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-import type { Coordinator } from "../types/contracts";
 import { formatUnits } from "ethers/lib/utils";
 import { logger } from "../logger";
 import { Contract } from "ethers";
@@ -15,7 +14,9 @@ function getFloatFromBigNum (bigNumValue) {
 async function setCoordinatorAsExcecutive (r) {
     await r.vault.setExecutive(r.coordinator.address);
     await r.exchanger.setExecutive(r.coordinator.address);
+    await r.cdp.setExecutive(r.coordinator.address);
 }
+
 describe("Coordinator Test suit", function () {
     let r: ContractTestContext;
     let endUserSigner;
@@ -26,7 +27,7 @@ describe("Coordinator Test suit", function () {
 
     before(async function () {
         r = await buildContractTestContext();
-
+        setCoordinatorAsExcecutive(r);
         endUserSigner = r.owner;
         // Object under test
         coordinator = r.coordinator;
@@ -51,7 +52,7 @@ describe("Coordinator Test suit", function () {
             await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, addr1CollateralAmount);
             expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr1CollateralAmount);
             //
-            await setCoordinatorAsExcecutive(r);
+            // await setCoordinatorAsExcecutive(r);
             //
             await coordinator.depositCollateralUnderNFT(nftIdAddr1Position, addr1CollateralAmount, {
                 gasLimit: 3000000,
@@ -292,6 +293,7 @@ describe("Coordinator Test suit", function () {
         let depositedLeveragedOUSD;
         before(async function () {
             r = await buildContractTestContext();
+            await setCoordinatorAsExcecutive(r);
             endUserSigner = r.owner;
             sharesOwnerAddress = r.coordinator.address;
             const tempFakeExchangerAddr = r.addr2;
@@ -309,7 +311,6 @@ describe("Coordinator Test suit", function () {
             await r.lvUSD.mint(mintedLvUSDAmount);
             /// Complete create position cycle from coordinator perspective
             await r.externalOUSD.approve(r.coordinator.address, collateralAmount);
-            await setCoordinatorAsExcecutive(r);
             await r.coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount);
             /// Doing 5 cycles for this position
             await r.coordinator.getLeveragedOUSD(endToEndTestNFTId, leverageToGetForPosition);

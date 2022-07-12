@@ -37,6 +37,9 @@ describe("Exchanger Test suit", function () {
         await lvUSD.mint(amountStarting);
         await helperSwapETHWithOUSD(owner, amountStarting);
         await ousd.transfer(exchanger.address, amountStarting);
+
+        // Note that owner is set as executive of exchanger as deafult.
+        // No need to set it for this test
     });
 
     describe("Exchanges", function () {

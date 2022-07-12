@@ -37,18 +37,13 @@ export type ContractTestContext ={
 }
 
 export async function setRolesForEndToEnd (r:ContractTestContext) {
-    r.coordinator.setExecutive(r.leverageEngine.address);
-    r.positionToken.setExecutive(r.leverageEngine.address);
+    await r.coordinator.setExecutive(r.leverageEngine.address);
+    await r.positionToken.setExecutive(r.leverageEngine.address);
 
-    r.exchanger.setExecutive(r.coordinator.address);
-    r.vault.setExecutive(r.coordinator.address);
-    r.cdp.setExecutive(r.coordinator.address);
+    await r.exchanger.setExecutive(r.coordinator.address);
+    await r.vault.setExecutive(r.coordinator.address);
+    await r.cdp.setExecutive(r.coordinator.address);
 }
-
-export async function trasnferArchTokensFromTreasury (r:ContractTestContext, to:SignerWithAddress, amount: BigNumber) {
-    await r.archToken.connect(r.treasurySigner).transfer(to.address, amount);
-}
-
 export const signers = ethers.getSigners();
 export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("1000.0");
 export async function buildContractTestContext (): Promise<ContractTestContext> {
@@ -105,7 +100,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
     await context.lvUSD.approve(context.exchanger.address, ethers.constants.MaxUint256);
     await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
 
-    await setRolesForEndToEnd(context);
+    // await setRolesForEndToEnd(context);
 
     // Post init contracts
     await Promise.all([
