@@ -3,13 +3,18 @@ import { assert, expect } from "chai";
 import { ethers } from "hardhat";
 import { helperSwapETHWithOUSD } from "./MainnetHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
-import type { Coordinator } from "../types/contracts";
 import { formatUnits } from "ethers/lib/utils";
 import { logger } from "../logger";
 import { Contract } from "ethers";
 
 function getFloatFromBigNum (bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
+}
+
+async function setCoordinatorAsExcecutive (r) {
+    await r.vault.setExecutive(r.coordinator.address);
+    await r.exchanger.setExecutive(r.coordinator.address);
+    await r.cdp.setExecutive(r.coordinator.address);
 }
 
 describe("Coordinator Test suit", function () {
@@ -22,7 +27,7 @@ describe("Coordinator Test suit", function () {
 
     before(async function () {
         r = await buildContractTestContext();
-
+        await setCoordinatorAsExcecutive(r);
         endUserSigner = r.owner;
         // Object under test
         coordinator = r.coordinator;
@@ -84,7 +89,6 @@ describe("Coordinator Test suit", function () {
                 // (this will happen in leverage engine in full Archimedes flow)
                 await r.externalOUSD.connect(r.addr2).transfer(coordinator.address, addr2CollateralAmount);
                 expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr2CollateralAmount);
-
                 await coordinator.depositCollateralUnderNFT(
                     nftIdAddr2Position, addr2CollateralAmount, { gasLimit: 3000000 },
                 );
@@ -286,6 +290,7 @@ describe("Coordinator Test suit", function () {
         let depositedLeveragedOUSD;
         before(async function () {
             r = await buildContractTestContext();
+            await setCoordinatorAsExcecutive(r);
             endUserSigner = r.owner;
             sharesOwnerAddress = r.coordinator.address;
             const tempFakeExchangerAddr = r.addr2;

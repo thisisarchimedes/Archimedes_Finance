@@ -12,7 +12,7 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/se
 /// @notice CDPosition does not hold any tokens. It is not a vault of any kind.
 /// @notice CDP does not emit any events. All related events will be emitted by the calling contract.
 /// @notice This contract (will be) proxy upgradable
-contract CDPosition is AccessController, UUPSUpgradeable {
+contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgradeable {
     struct CDP {
         uint256 oUSDPrinciple; // Amount of OUSD originally deposited by user
         uint256 oUSDInterestEarned; // Total interest earned (and rebased) so far
@@ -45,14 +45,14 @@ contract CDPosition is AccessController, UUPSUpgradeable {
     /// Update both principle and total with OUSDPrinciple
     /// @param nftID newly minted NFT
     /// @param oOUSDPrinciple initial OUSD investment (ie position principle)
-    function createPosition(uint256 nftID, uint256 oOUSDPrinciple) external nftIDMustNotExist(nftID) {
+    function createPosition(uint256 nftID, uint256 oOUSDPrinciple) external nftIDMustNotExist(nftID) nonReentrant onlyExecutive {
         _nftCDP[nftID] = CDP(oOUSDPrinciple, 0, oOUSDPrinciple, 0, 0);
     }
 
     /// @dev delete entry in CDP --if-- lvUSD borrowed balance is zero
     ///
     /// @param nftID entry address to delete
-    function deletePosition(uint256 nftID) external nftIDMustExist(nftID) canDeletePosition(nftID) {
+    function deletePosition(uint256 nftID) external nftIDMustExist(nftID) canDeletePosition(nftID) nonReentrant onlyExecutive {
         /// Set all values to default. Not way to remove key from mapping in solidity
         delete _nftCDP[nftID];
     }
@@ -60,14 +60,14 @@ contract CDPosition is AccessController, UUPSUpgradeable {
     /// @dev add shares to a position.
     /// @param nftID NFT position to update
     /// @param shares shares to add
-    function addSharesToPosition(uint256 nftID, uint256 shares) external nftIDMustExist(nftID) {
+    function addSharesToPosition(uint256 nftID, uint256 shares) external nftIDMustExist(nftID) nonReentrant onlyExecutive {
         _nftCDP[nftID].shares += shares;
     }
 
     /// @dev remove shares from position.
     /// @param nftID NFT position to update
     /// @param shares shares to remove
-    function removeSharesFromPosition(uint256 nftID, uint256 shares) external nftIDMustExist(nftID) {
+    function removeSharesFromPosition(uint256 nftID, uint256 shares) external nftIDMustExist(nftID) nonReentrant onlyExecutive {
         require(_nftCDP[nftID].shares >= shares, "Shares exceed position balance");
         _nftCDP[nftID].shares -= shares;
     }
@@ -75,14 +75,14 @@ contract CDPosition is AccessController, UUPSUpgradeable {
     /// @dev update borrowed lvUSD in position. This method adds a delta to existing borrowed value
     /// @param nftID NFT position to update
     /// @param lvUSDAmountToBorrow amount to add to position's existing borrowed lvUSD sum
-    function borrowLvUSDFromPosition(uint256 nftID, uint256 lvUSDAmountToBorrow) external nftIDMustExist(nftID) {
+    function borrowLvUSDFromPosition(uint256 nftID, uint256 lvUSDAmountToBorrow) external nftIDMustExist(nftID) nonReentrant onlyExecutive {
         _nftCDP[nftID].lvUSDBorrowed += lvUSDAmountToBorrow;
     }
 
     /// @dev update borrowed lvUSD in position. This method removed a delta to existing borrowed value
     /// @param nftID NFT position to update
     /// @param lvUSDAmountToRepay amount to remove fom position's existing borrowed lvUSD sum
-    function repayLvUSDToPosition(uint256 nftID, uint256 lvUSDAmountToRepay) external nftIDMustExist(nftID) {
+    function repayLvUSDToPosition(uint256 nftID, uint256 lvUSDAmountToRepay) external nftIDMustExist(nftID) nonReentrant onlyExecutive {
         if (_nftCDP[nftID].lvUSDBorrowed < lvUSDAmountToRepay) {
             // if trying to repay more lvUSDthen expected, zero out lvUSDBorrowed
             _nftCDP[nftID].lvUSDBorrowed = 0;
@@ -94,14 +94,14 @@ contract CDPosition is AccessController, UUPSUpgradeable {
     /// @dev update deposited OUSD in position. This method adds a delta to existing deposited value
     /// @param nftID NFT position to update
     /// @param oUSDAmountToDeposit amount to add to position's existing deposited sum
-    function depositOUSDtoPosition(uint256 nftID, uint256 oUSDAmountToDeposit) external nftIDMustExist(nftID) {
+    function depositOUSDtoPosition(uint256 nftID, uint256 oUSDAmountToDeposit) external nftIDMustExist(nftID) nonReentrant onlyExecutive {
         _nftCDP[nftID].oUSDTotal += oUSDAmountToDeposit;
     }
 
     /// @dev update deposited OUSD in position. This method removed a delta to existing deposited value
     /// @param nftID NFT position to update
     /// @param oUSDAmountToWithdraw amount to remove to position's existing deposited sum
-    function withdrawOUSDFromPosition(uint256 nftID, uint256 oUSDAmountToWithdraw) external nftIDMustExist(nftID) {
+    function withdrawOUSDFromPosition(uint256 nftID, uint256 oUSDAmountToWithdraw) external nftIDMustExist(nftID) nonReentrant onlyExecutive {
         require(_nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw, "Insufficient OUSD balance");
         _nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
     }
