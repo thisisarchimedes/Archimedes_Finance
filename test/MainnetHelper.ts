@@ -27,15 +27,19 @@ const addressCurve3Pool = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 const addressCurveOUSDPool = "0x87650D7bbfC3A9F10587d7778206671719d9910D";
 const addressOUSD = "0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86";
 const address3CRV = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
+const addressUSDC = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+const addressZap = "0xa79828df1850e8a3a3064576f380d90aecdd3359";
+const address3CRVlvUSDPool = "0x67C7f0a63BA70a2dAc69477B716551FC921aed00";
 
 const indexTripoolUSDT = 0;
 const indexTripoolWETH9 = 2;
 const indexCurveOUSDOUSD = 0;
 const indexCurveOUSD3CRV = 1;
-const defaultBlockNumber = 15046160;
+const defaultBlockNumber = 15104872;
 
 async function helperResetNetwork (lockBlock) {
     const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
+
     // Reset hardhat mainnet fork
     await network.provider.request({
         method: "hardhat_reset",
@@ -204,6 +208,9 @@ export {
     addressCurveOUSDPool,
     addressOUSD,
     address3CRV,
+    addressUSDC,
+    addressZap,
+    address3CRVlvUSDPool,
 
     /* ABIs */
     abiOUSDToken,
