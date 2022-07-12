@@ -134,7 +134,7 @@ describe("Arch Token test suit", function () {
 
             it("Should NOT decrease the spender allowance", async function () {
                 // transfer 1 eth
-                await r.archToken.transferFrom(r.addr1.address, r.addr2.address, ethers.utils.parseUnits("1"));
+                await r.archToken.transferFrom(r.addr1.address, r.addr2.address, amount1);
                 // get allowance amount after
                 // allowance(address owner, address spender)
                 const ownerAllowanceOnAddr1 = await r.archToken.allowance(r.addr1.address, treasuryAddress);

@@ -1,4 +1,4 @@
-import { BigNumber, Contract } from "ethers";
+import { Contract } from "ethers";
 import hre, { ethers } from "hardhat";
 import {
     addressOUSD, abiOUSDToken,
@@ -99,8 +99,6 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
 
     await context.lvUSD.approve(context.exchanger.address, ethers.constants.MaxUint256);
     await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
-
-    // await setRolesForEndToEnd(context);
 
     // Post init contracts
     await Promise.all([

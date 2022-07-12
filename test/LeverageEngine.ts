@@ -74,7 +74,6 @@ describe("LeverageEngine test suit", async function () {
             await prepForPositionCreation();
         });
         it("Should emit position creation event", async function () {
-            // console.log("actual treasury: await r.parameterStore.getTreasuryAddress()");
             const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
             await expect(promise).to.emit(r.leverageEngine, "PositionCreated").withArgs(
                 r.owner.address, 0, principle, await r.parameterStore.getAllowedLeverageForPosition(principle, maxCycles), archTokenToBurn,

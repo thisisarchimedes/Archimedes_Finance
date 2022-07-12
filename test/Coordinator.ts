@@ -27,7 +27,7 @@ describe("Coordinator Test suit", function () {
 
     before(async function () {
         r = await buildContractTestContext();
-        setCoordinatorAsExcecutive(r);
+        await setCoordinatorAsExcecutive(r);
         endUserSigner = r.owner;
         // Object under test
         coordinator = r.coordinator;
