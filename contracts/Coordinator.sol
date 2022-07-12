@@ -71,7 +71,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     /* Privileged functions: Executive */
 
     // Note: Expects funds to be under coordinator already
-    function depositCollateralUnderNFT(uint256 _nftId, uint256 _amountInOUSD) external override {
+    function depositCollateralUnderNFT(uint256 _nftId, uint256 _amountInOUSD) external override nonReentrant onlyExecutive {
         /// Transfer collateral to vault, mint shares to shares owner
         uint256 shares = _vault.archimedesDeposit(_amountInOUSD, address(this));
         // create CDP position with collateral
@@ -83,19 +83,19 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         uint256 _nftId,
         uint256 _amount,
         address _to
-    ) external override nonReentrant {
+    ) external override nonReentrant onlyExecutive {
         _withdrawCollateralUnderNFT(_nftId, _amount, _to);
     }
 
-    function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override {
+    function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override nonReentrant onlyExecutive {
         _borrowUnderNFT(_nftId, _amount);
     }
 
-    function repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) external override {
+    function repayUnderNFT(uint256 _nftId, uint256 _amountLvUSDToRepay) external override nonReentrant onlyExecutive {
         _repayUnderNFT(_nftId, _amountLvUSDToRepay);
     }
 
-    function getLeveragedOUSD(uint256 _nftId, uint256 _amountToLeverage) external override nonReentrant {
+    function getLeveragedOUSD(uint256 _nftId, uint256 _amountToLeverage) external override nonReentrant onlyExecutive {
         /* Flow
           1. basic sanity checks 
           2. borrow lvUSD
@@ -122,7 +122,13 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         _cdp.depositOUSDtoPosition(_nftId, positionLeveragedOUSDAfterFees);
     }
 
-    function unwindLeveragedOUSD(uint256 _nftId, address _userAddress) external override nonReentrant returns (uint256 positionWindfall) {
+    function unwindLeveragedOUSD(uint256 _nftId, address _userAddress)
+        external
+        override
+        nonReentrant
+        onlyExecutive
+        returns (uint256 positionWindfall)
+    {
         /* Flow
             1. sanity checks as needed
             2. get amount of shares for position

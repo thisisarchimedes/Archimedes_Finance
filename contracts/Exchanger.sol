@@ -88,7 +88,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
      * NOTE: There is no guarantee of a 1:1 exchange ratio, but should be close
      * Minimum is 90% * 90%  / _curveGuardPercentage * _curveGuardPercentage
      */
-    function swapLvUSDforOUSD(uint256 amountLvUSD) external returns (uint256 amountOUSD) {
+    function swapLvUSDforOUSD(uint256 amountLvUSD) external nonReentrant onlyExecutive returns (uint256 amountOUSD) {
         uint256 _returned3CRV = _xLvUSDfor3CRV(amountLvUSD);
         uint256 _returnedOUSD = _x3CRVforOUSD(_returned3CRV);
         _ousd.safeTransfer(_addressCoordinator, _returnedOUSD);
@@ -109,7 +109,12 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
      * NOTE: There is no gaurnatee of a 1:1 exchange ratio
      * @dev OUSD funds are already under Exchanger address, if called by Coordinator
      */
-    function swapOUSDforLvUSD(uint256 amountOUSD, uint256 minRequiredLvUSD) external returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
+    function swapOUSDforLvUSD(uint256 amountOUSD, uint256 minRequiredLvUSD)
+        external
+        nonReentrant
+        onlyExecutive
+        returns (uint256 lvUSDReturned, uint256 remainingOUSD)
+    {
         // Estimate "neededOUSD" using get_dy()
         uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(_indexLvUSD, _index3CRV, minRequiredLvUSD);
         uint256 _neededOUSD = _poolOUSD3CRV.get_dy(_index3CRV, _indexOUSD, _needed3CRV);
@@ -134,19 +139,19 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         return (_returnedLvUSD, remainingOUSD);
     }
 
-    function xLvUSDfor3CRV(uint256 amountLvUSD) external returns (uint256) {
+    function xLvUSDfor3CRV(uint256 amountLvUSD) external nonReentrant onlyExecutive returns (uint256) {
         return _xLvUSDfor3CRV(amountLvUSD);
     }
 
-    function x3CRVforOUSD(uint256 amount3CRV) external returns (uint256) {
+    function x3CRVforOUSD(uint256 amount3CRV) external nonReentrant onlyExecutive returns (uint256) {
         return _x3CRVforOUSD(amount3CRV);
     }
 
-    function xOUSDfor3CRV(uint256 amountOUSD) external returns (uint256) {
+    function xOUSDfor3CRV(uint256 amountOUSD) external nonReentrant onlyExecutive returns (uint256) {
         return _xOUSDfor3CRV(amountOUSD);
     }
 
-    function x3CRVforLvUSD(uint256 amount3CRV) external returns (uint256) {
+    function x3CRVforLvUSD(uint256 amount3CRV) external nonReentrant onlyExecutive returns (uint256) {
         return _x3CRVforLvUSD(amount3CRV);
     }
 

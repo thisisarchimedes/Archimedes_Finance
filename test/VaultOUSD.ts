@@ -31,9 +31,12 @@ describe("VaultOUSD test suit", function () {
 
         // deposit OUSD as a user (that gets shares) into vault. Shares goes to owner, not user.
         await r.externalOUSD.connect(r.addr1).approve(r.vault.address, getDecimal(addr1Deposit));
+        await r.vault.setExecutive(r.addr1.address);
         await r.vault.connect(r.addr1).archimedesDeposit(getDecimal(addr1Deposit), sharesOwnerAddress);
         await r.externalOUSD.connect(r.addr2).approve(r.vault.address, getDecimal(addr2Deposit));
+        await r.vault.setExecutive(r.addr2.address);
         await r.vault.connect(r.addr2).archimedesDeposit(getDecimal(addr2Deposit), sharesOwnerAddress);
+        await r.vault.setExecutive(r.owner.address);
     }
 
     describe("Addr1 and addr2 signer deposited OUSD into vault", function () {

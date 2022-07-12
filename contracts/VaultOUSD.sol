@@ -25,12 +25,16 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
 
     uint256 internal _assetsHandledByArchimedes;
 
-    function setDependencies(address _addressParamStore, address _addressOUSD) external {
+    fallback() external {
+        revert("VaultOUSD : Invalid access");
+    }
+
+    function setDependencies(address _addressParamStore, address _addressOUSD) external onlyAdmin {
         _paramStore = ParameterStore(_addressParamStore);
         _ousd = IERC20Upgradeable(_addressOUSD);
     }
 
-    function archimedesDeposit(uint256 assets, address receiver) external nonReentrant returns (uint256) {
+    function archimedesDeposit(uint256 assets, address receiver) external nonReentrant onlyExecutive returns (uint256) {
         _takeRebaseFees();
         _assetsHandledByArchimedes += assets;
         return deposit(assets, receiver);
@@ -40,14 +44,14 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
         uint256 shares,
         address receiver,
         address owner
-    ) external nonReentrant returns (uint256) {
+    ) external nonReentrant onlyExecutive returns (uint256) {
         _takeRebaseFees();
         uint256 redeemedAmountInAssets = redeem(shares, receiver, owner);
         _assetsHandledByArchimedes -= redeemedAmountInAssets;
         return redeemedAmountInAssets;
     }
 
-    function takeRebaseFees() external nonReentrant {
+    function takeRebaseFees() external nonReentrant onlyExecutive {
         _takeRebaseFees();
     }
 
