@@ -2,11 +2,13 @@
 import { expect } from "chai";
 import { Contract, Signer } from "ethers";
 import { ethers } from "hardhat";
-import { abilvUSD, abilvUSD3CRVPool, abiUSDC, abiZap } from "../test/ABIs";
-import { addressZap, addressUSDC, defaultBlockNumber, helperResetNetwork, address3CRVlvUSDPool } from "../test/MainnetHelper";
+import { abilvUSD, abilvUSD3CRVPool, abiUSDC, abiUSDTToken, abiZap } from "../test/ABIs";
+import { addressZap, addressUSDC, defaultBlockNumber, helperResetNetwork, address3CRVlvUSDPool, addressUSDT } from "../test/MainnetHelper";
 import { impersonateAccount, fundAccount, stopImpersonate, addresslvUSDToken } from "./IntegrationTestContext";
 
 const About4700 = "0x1000000000000000000";
+const tenK18Decimal = ethers.utils.parseUnits("10000", 18);
+const tenK6Decimal = ethers.utils.parseUnits("10000", 6);
 
 const addr1 = "0x55fe002aeff02f77364de339a1292923a15844b8"; // Circle's address
 const addresslvUSDMinter = "0x42208d094776c533ee96a4a57d50a6ac04af4aa2";
@@ -37,6 +39,9 @@ describe("3CRV/lvUSD curve pool test suit", function () {
         // grab random test address
         signerAddr1 = await impersonateAccount(addr1);
         fundAccount(addr1, About4700);
+
+        // get 3CRV/lvUSD contract
+        contractlvUSD3CRVPool = await ethers.getContractAt(abilvUSD3CRVPool, address3CRVlvUSDPool);
     });
 
     after(async function () {
@@ -46,9 +51,6 @@ describe("3CRV/lvUSD curve pool test suit", function () {
     });
 
     it("Add liquidity to 3CRV/lvUSD pool", async function () {
-        const tenK18Decimal = ethers.utils.parseUnits("10000", 18);
-        const tenK6Decimal = ethers.utils.parseUnits("10000", 6);
-
         // set lvUSD mint address
         await contractlvUSDToken.connect(signerlvUSDAdmin).setMintDestination(addr1);
         // mint a bit lvUSD
@@ -61,9 +63,6 @@ describe("3CRV/lvUSD curve pool test suit", function () {
         // approve Zap contract to grab lvUSD and USDC from addr1
         await contractlvUSDToken.connect(signerAddr1).approve(addressZap, tenK18Decimal);
         await contractUSDC.connect(signerAddr1).approve(addressZap, tenK6Decimal);
-
-        // get 3CRV/lvUSD contract
-        contractlvUSD3CRVPool = await ethers.getContractAt(abilvUSD3CRVPool, address3CRVlvUSDPool);
 
         // grab the "before" balances so we can check they increase after adding liquidity
         const balancePoolLvUSD = await contractlvUSD3CRVPool.balances(0);
@@ -78,5 +77,64 @@ describe("3CRV/lvUSD curve pool test suit", function () {
 
         expect(await contractlvUSD3CRVPool.balances(0)).to.be.gt(balancePoolLvUSD);
         expect(await contractlvUSD3CRVPool.balances(1)).to.be.gt(balancePoolUSDC);
+    });
+
+    it("Swap lvUSD with USDT", async function () {
+        let balanceLvUSDPre, balanceLvUSDPost;
+        let balanceUSDTPre, balanceUSDTPost;
+
+        // connect to USDT contract
+        const contractUSDT = await ethers.getContractAt(abiUSDTToken, addressUSDT);
+
+        // approve 3CRV/lvUSD contract to grab lvUSDC from addr1
+        await contractlvUSDToken.connect(signerAddr1).approve(address3CRVlvUSDPool, tenK18Decimal);
+
+        // record pre-swap lvUSD and USDT balances on addr1
+        balanceLvUSDPre = ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18);
+        balanceUSDTPre = ethers.utils.formatUnits(await contractUSDT.balanceOf(addr1), 6);
+
+        // swap lvUSD->USDT
+        // 0 = lvUSD index ; 3 = USDT index
+        await contractlvUSD3CRVPool.connect(signerAddr1).exchange_underlying(0, 3, ethers.utils.parseUnits("1", 18), 0);
+
+        // record post-swap lvUSD and USDT balances on addr1
+        balanceLvUSDPost = ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18);
+        balanceUSDTPost = ethers.utils.formatUnits(await contractUSDT.balanceOf(addr1), 6);
+
+        // if exchangeRate = 1 it means 1:1 rate with no fees. we expect somewhere between 0.998 <-> 1.002
+        const exchangeRate = (balanceLvUSDPre - balanceLvUSDPost) / (balanceUSDTPost - balanceUSDTPre);
+        expect(exchangeRate).to.be.closeTo(1, 0.005);
+    });
+
+    it("Swap USDC with lvUSD", async function () {
+        let balanceLvUSDPre, balanceLvUSDPost;
+        let balanceUSDCPre, balanceUSDCPost;
+
+        // approve 3CRV/lvUSD contract to grab USDC from addr1
+        await contractUSDC.connect(signerAddr1).approve(address3CRVlvUSDPool, tenK18Decimal);
+
+        // record pre-swap lvUSD and USDT balances on addr1
+        balanceLvUSDPre = ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18);
+        balanceUSDCPre = ethers.utils.formatUnits(await contractUSDC.balanceOf(addr1), 6);
+
+        // swap USDC->lvUSD
+        // 0 = lvUSD index ; 2 = USDC index
+        await contractlvUSD3CRVPool.connect(signerAddr1).exchange_underlying(2, 0, ethers.utils.parseUnits("1", 6), 0);
+
+        // record post-swap lvUSD and USDT balances on addr1
+        balanceLvUSDPost = ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18);
+        balanceUSDCPost = ethers.utils.formatUnits(await contractUSDC.balanceOf(addr1), 6);
+
+        // if exchangeRate = 1 it means 1:1 rate with no fees. we expect somewhere between 0.998 <-> 1.002
+        const exchangeRate = (balanceLvUSDPre - balanceLvUSDPost) / (balanceUSDCPost - balanceUSDCPre);
+        expect(exchangeRate).to.be.closeTo(1, 0.005);
+
+        /* // keep for debuging
+        console.log("pre lvUSD: " + balanceLvUSDPre);
+        console.log("pre USDC: " + balanceUSDCPre);
+        console.log("post lvUSD: " + balanceLvUSDPost);
+        console.log("post USDC: " + balanceUSDCPost);
+        console.log("Exchange Rate: " + exchangeRate);
+        */
     });
 });
