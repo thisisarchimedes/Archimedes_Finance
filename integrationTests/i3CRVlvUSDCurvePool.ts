@@ -3,12 +3,12 @@ import { expect } from "chai";
 import { Contract, Signer } from "ethers";
 import { ethers } from "hardhat";
 import { abilvUSD, abilvUSD3CRVPool, abiUSDC, abiZap } from "../test/ABIs";
-import { addressZap, address3CRV, addressUSDC, defaultBlockNumber, helperResetNetwork, address3CRVlvUSDPool } from "../test/MainnetHelper";
+import { addressZap, addressUSDC, defaultBlockNumber, helperResetNetwork, address3CRVlvUSDPool } from "../test/MainnetHelper";
 import { impersonateAccount, fundAccount, stopImpersonate, addresslvUSDToken } from "./IntegrationTestContext";
 
 const About4700 = "0x1000000000000000000";
 
-const addr1 = "0x55fe002aeff02f77364de339a1292923a15844b8"; // Circles address
+const addr1 = "0x55fe002aeff02f77364de339a1292923a15844b8"; // Circle's address
 const addresslvUSDMinter = "0x42208d094776c533ee96a4a57d50a6ac04af4aa2";
 const addresslvUSDAdmin = "0x7246dd11320eee513cefe5f50e8be2d28fb06426";
 
@@ -66,17 +66,17 @@ describe("3CRV/lvUSD curve pool test suit", function () {
         contractlvUSD3CRVPool = await ethers.getContractAt(abilvUSD3CRVPool, address3CRVlvUSDPool);
 
         // grab the "before" balances so we can check they increase after adding liquidity
-        const balancelvUSD = await contractlvUSD3CRVPool.balances(0);
-        const balanceUSDC = await contractlvUSD3CRVPool.balances(1);
+        const balancePoolLvUSD = await contractlvUSD3CRVPool.balances(0);
+        const balancePoolUSDC = await contractlvUSD3CRVPool.balances(1);
 
         // Seed 3CRV/lvUSD pool via Zap
-        // Indexes: 0 = lvusd, 1 = dai, 2 = usdc, 3 = usdt
-        // Indexes 123 are the 3curve token
         const zap = await ethers.getContractAt(abiZap, addressZap);
+        // Indexes: [lvUSD, DAI, USDC, USDT] - represent the amount of token added to pool
+        // Below we seed pool with 100 lvUSD and 100 USDC (and 0 USDT + 0 DAI)
         const coins = [ethers.utils.parseUnits("100", 18), "0x0", ethers.utils.parseUnits("100", 6), "0x0"];
         await zap.connect(signerAddr1).add_liquidity(address3CRVlvUSDPool, coins, 0);
 
-        expect(await contractlvUSD3CRVPool.balances(0)).to.be.gt(balancelvUSD);
-        expect(await contractlvUSD3CRVPool.balances(1)).to.be.gt(balanceUSDC);
+        expect(await contractlvUSD3CRVPool.balances(0)).to.be.gt(balancePoolLvUSD);
+        expect(await contractlvUSD3CRVPool.balances(1)).to.be.gt(balancePoolUSDC);
     });
 });
