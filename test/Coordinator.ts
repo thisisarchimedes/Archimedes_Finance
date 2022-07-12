@@ -51,9 +51,6 @@ describe("Coordinator Test suit", function () {
             // (this will happen in leverage engine in full Archimedes flow)
             await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, addr1CollateralAmount);
             expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr1CollateralAmount);
-            //
-            // await setCoordinatorAsExcecutive(r);
-            //
             await coordinator.depositCollateralUnderNFT(nftIdAddr1Position, addr1CollateralAmount, {
                 gasLimit: 3000000,
             });
