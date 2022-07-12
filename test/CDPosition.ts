@@ -26,6 +26,7 @@ describe("CDPosition test suit", async function () {
 
     beforeEach(async () => {
         const r = await buildContractTestContext();
+        r.cdp.setExecutive(r.owner.address);
         cdp = r.cdp;
     });
 
