@@ -78,7 +78,7 @@ describe("3CRV/lvUSD curve pool test suit", function () {
         expect(await contractlvUSD3CRVPool.balances(0)).to.be.gt(balancePoolLvUSD);
         expect(await contractlvUSD3CRVPool.balances(1)).to.be.gt(balancePoolUSDC);
     });
-    
+
     it("Swap lvUSD with USDT", async function () {
         // connect to USDT contract
         const contractUSDT = await ethers.getContractAt(abiUSDTToken, addressUSDT);
