@@ -1,7 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
-import { Contract } from "ethers";
-import { buildContractTestContext, ContractTestContext, signers } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 describe("PositionToken test suit", function () {
     let r: ContractTestContext;
@@ -14,43 +13,39 @@ describe("PositionToken test suit", function () {
     let secondTokenOwnerAddress: string;
     let thirdTokenOwner: SignerWithAddress;
     let thirdTokenOwnerAddress: string;
-    let positionTokenAsExecutive: Contract;
+
+    let executiveSigner: SignerWithAddress;
 
     before(async function () {
-        const [owner] = await signers;
-        r = await buildContractTestContext({
-            PositionToken: { executive: owner.address },
-        });
-        positionTokenAsExecutive = r.positionToken;
+        r = await buildContractTestContext();
         firstTokenOwner = r.addr1;
         firstTokenOwnerAddress = r.addr1.address;
         secondTokenOwner = r.addr2;
         secondTokenOwnerAddress = r.addr2.address;
-        thirdTokenOwner = r.addr3;
-        thirdTokenOwnerAddress = r.addr3.address;
-    });
+        thirdTokenOwner = r.owner;
+        thirdTokenOwnerAddress = r.owner.address;
+        executiveSigner = r.addr3;
 
-    it("Should be built properly by ContractTestContext", async function () {
-        expect(positionTokenAsExecutive).to.not.be.undefined;
+        await r.positionToken.setExecutive(executiveSigner.address);
     });
 
     it("Should not allow non executive to mint", async function () {
-        const mintPromise = positionTokenAsExecutive.connect(firstTokenOwner).safeMint(r.addr1.address);
+        const mintPromise = r.positionToken.connect(firstTokenOwner).safeMint(r.addr1.address);
         await expect(mintPromise).to.be.revertedWith("Caller is not Executive");
     });
 
     it("Should revert if the token id doesn't exist", async function () {
-        await expect(positionTokenAsExecutive.ownerOf(0)).to.be.reverted;
+        await expect(r.positionToken.ownerOf(0)).to.be.reverted;
     });
 
     it("Should be mintable from address designated executive", async function () {
-        await positionTokenAsExecutive.safeMint(r.addr1.address);
-        expect(await positionTokenAsExecutive.ownerOf(firstTokenId)).to.equal(firstTokenOwnerAddress);
+        await r.positionToken.connect(executiveSigner).safeMint(r.addr1.address);
+        expect(await r.positionToken.connect(executiveSigner).ownerOf(firstTokenId)).to.equal(firstTokenOwnerAddress);
     });
 
     it("Should increment the positionTokenId properly", async function () {
-        await positionTokenAsExecutive.safeMint(r.addr2.address);
-        expect(await positionTokenAsExecutive.ownerOf(secondTokenId)).to.equal(secondTokenOwnerAddress);
+        await r.positionToken.connect(executiveSigner).safeMint(r.addr2.address);
+        expect(await r.positionToken.connect(executiveSigner).ownerOf(secondTokenId)).to.equal(secondTokenOwnerAddress);
     });
 
     it("Should fail to burn if not executive", async function () {
@@ -64,15 +59,15 @@ describe("PositionToken test suit", function () {
     });
 
     it("Should allow executive to burn any token", async function () {
-        await positionTokenAsExecutive.burn(firstTokenId);
-        await positionTokenAsExecutive.burn(secondTokenId);
-        expect(await positionTokenAsExecutive.exists(firstTokenId)).to.be.false;
-        expect(await positionTokenAsExecutive.exists(secondTokenId)).to.be.false;
+        await r.positionToken.connect(executiveSigner).burn(firstTokenId);
+        await r.positionToken.connect(executiveSigner).burn(secondTokenId);
+        expect(await r.positionToken.connect(executiveSigner).exists(firstTokenId)).to.be.false;
+        expect(await r.positionToken.connect(executiveSigner).exists(secondTokenId)).to.be.false;
     });
 
     it("Should continue to increment id properly after tokens have been burned", async function () {
-        await positionTokenAsExecutive.safeMint(r.addr3.address);
-        expect(await positionTokenAsExecutive.ownerOf(thirdTokenId)).to.equal(thirdTokenOwnerAddress);
+        await r.positionToken.connect(executiveSigner).safeMint(thirdTokenOwnerAddress);
+        expect(await r.positionToken.ownerOf(thirdTokenId)).to.equal(thirdTokenOwnerAddress);
     });
 
     it("Should allow positionToken owner to transfer ownership", async function () {

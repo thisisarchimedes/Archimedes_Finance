@@ -32,6 +32,7 @@ const addressZap = "0xa79828df1850e8a3a3064576f380d90aecdd3359";
 const address3CRVlvUSDPool = "0x67C7f0a63BA70a2dAc69477B716551FC921aed00";
 const addressCurveRegistry = "0x81C46fECa27B31F3ADC2b91eE4be9717d1cd3DD7";
 
+
 const indexTripoolUSDT = 0;
 const indexTripoolWETH9 = 2;
 const indexCurveOUSDOUSD = 0;

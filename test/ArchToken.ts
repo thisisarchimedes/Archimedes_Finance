@@ -17,6 +17,9 @@ describe("Arch Token test suit", function () {
 
     beforeEach(async function () {
         r = await buildContractTestContext();
+        const totalSupply = await r.archToken.totalSupply();
+        // For unit test, make owner the entity that holds all ArchToken tokens
+        r.archToken.connect(r.treasurySigner).transfer(r.owner.address, totalSupply);
         treasuryAddress = r.owner.address;
     });
 
@@ -25,7 +28,7 @@ describe("Arch Token test suit", function () {
             const totalSupply = await r.archToken.totalSupply();
             expect(totalSupply).to.eq(expectedTotalSupply);
         });
-        it("Should be minted to the correct _addressTreasury correct amount", async function () {
+        it("Should be minted to the correct addressTreasury correct amount", async function () {
             const treasuryBalance = await r.archToken.balanceOf(treasuryAddress);
             expect(treasuryBalance).to.eq(expectedTotalSupply);
         });
@@ -36,8 +39,7 @@ describe("Arch Token test suit", function () {
         describe("transfer()", function () {
             it("Sender can transfer entire balance", async function () {
                 const totalSupply = await r.archToken.totalSupply();
-                const ownerBalance = await r.archToken.balanceOf(r.owner.address);
-                await r.archToken.transfer(r.addr1.address, ownerBalance);
+                await r.archToken.transfer(r.addr1.address, totalSupply);
                 const addr1Balance = await r.archToken.balanceOf(r.addr1.address);
                 expect(addr1Balance).to.eq(totalSupply);
             });
@@ -79,7 +81,7 @@ describe("Arch Token test suit", function () {
                 await r.archToken.transfer(r.addr2.address, amount2);
                 expect(await r.archToken.balanceOf(r.addr1.address)).to.eq(amount1);
                 expect(await r.archToken.balanceOf(r.addr2.address)).to.eq(amount2);
-                expect(await r.archToken.balanceOf(r.owner.address)).to.eq(ownerInitialBalance.sub(amount1).sub(amount2));
+                expect(await r.archToken.balanceOf(treasuryAddress)).to.eq(ownerInitialBalance.sub(amount1).sub(amount2));
             });
         });
 
@@ -116,7 +118,7 @@ describe("Arch Token test suit", function () {
             });
 
             it("Should revert when transferFrom() to the zeroAddress", async function () {
-                await expect(r.archToken.transferFrom(r.addr1.address, zeroAddress, amount1)).to.be.revertedWith(
+                await expect(r.archToken.transfer(zeroAddress, amount1)).to.be.revertedWith(
                     "transfer to the zero address",
                 );
             });
@@ -135,7 +137,7 @@ describe("Arch Token test suit", function () {
                 await r.archToken.transferFrom(r.addr1.address, r.addr2.address, amount1);
                 // get allowance amount after
                 // allowance(address owner, address spender)
-                const ownerAllowanceOnAddr1 = await r.archToken.allowance(r.addr1.address, r.owner.address);
+                const ownerAllowanceOnAddr1 = await r.archToken.allowance(r.addr1.address, treasuryAddress);
                 // should still be "unlimited"
                 expect(ownerAllowanceOnAddr1).to.eq(maxUint256);
             });
