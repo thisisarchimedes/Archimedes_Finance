@@ -187,7 +187,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         address _to
     ) internal {
         /// Method makes sure ousd recorded balance transfer
-        // TODO: Do we relly need this check? Seems exesive sdfsdaf
+        // TODO: Do we really need this check? Seems excessive
         uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
         _ousd.safeTransfer(_to, _amount);
         require(_ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount, "OUSD transfer balance incorrect");
