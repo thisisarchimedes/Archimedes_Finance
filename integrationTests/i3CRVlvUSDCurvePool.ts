@@ -80,9 +80,6 @@ describe("3CRV/lvUSD curve pool test suit", function () {
     });
 
     it("Swap lvUSD with USDT", async function () {
-        let balanceLvUSDPre, balanceLvUSDPost;
-        let balanceUSDTPre, balanceUSDTPost;
-
         // connect to USDT contract
         const contractUSDT = await ethers.getContractAt(abiUSDTToken, addressUSDT);
 
@@ -90,44 +87,53 @@ describe("3CRV/lvUSD curve pool test suit", function () {
         await contractlvUSDToken.connect(signerAddr1).approve(address3CRVlvUSDPool, tenK18Decimal);
 
         // record pre-swap lvUSD and USDT balances on addr1
-        balanceLvUSDPre = ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18);
-        balanceUSDTPre = ethers.utils.formatUnits(await contractUSDT.balanceOf(addr1), 6);
+        const balanceLvUSDPre = Number(ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18));
+        const balanceUSDTPre = Number(ethers.utils.formatUnits(await contractUSDT.balanceOf(addr1), 6));
 
         // swap lvUSD->USDT
         // 0 = lvUSD index ; 3 = USDT index
         await contractlvUSD3CRVPool.connect(signerAddr1).exchange_underlying(0, 3, ethers.utils.parseUnits("1", 18), 0);
 
         // record post-swap lvUSD and USDT balances on addr1
-        balanceLvUSDPost = ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18);
-        balanceUSDTPost = ethers.utils.formatUnits(await contractUSDT.balanceOf(addr1), 6);
+        const balanceLvUSDPost = Number(ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18));
+        const balanceUSDTPost = Number(ethers.utils.formatUnits(await contractUSDT.balanceOf(addr1), 6));
 
         // if exchangeRate = 1 it means 1:1 rate with no fees. we expect somewhere between 0.998 <-> 1.002
         const exchangeRate = (balanceLvUSDPre - balanceLvUSDPost) / (balanceUSDTPost - balanceUSDTPre);
         expect(exchangeRate).to.be.closeTo(1, 0.005);
+
+        // make sure we have less lvUSD after the swap
+        expect(balanceLvUSDPost).to.lt(balanceLvUSDPre);
+
+        // make sure we have more USDC after the swap
+        expect(balanceUSDTPost).to.gt(balanceUSDTPre);
     });
 
     it("Swap USDC with lvUSD", async function () {
-        let balanceLvUSDPre, balanceLvUSDPost;
-        let balanceUSDCPre, balanceUSDCPost;
-
         // approve 3CRV/lvUSD contract to grab USDC from addr1
         await contractUSDC.connect(signerAddr1).approve(address3CRVlvUSDPool, tenK18Decimal);
 
         // record pre-swap lvUSD and USDT balances on addr1
-        balanceLvUSDPre = ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18);
-        balanceUSDCPre = ethers.utils.formatUnits(await contractUSDC.balanceOf(addr1), 6);
+        const balanceLvUSDPre = Number(ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18));
+        const balanceUSDCPre = Number(ethers.utils.formatUnits(await contractUSDC.balanceOf(addr1), 6));
 
         // swap USDC->lvUSD
         // 0 = lvUSD index ; 2 = USDC index
         await contractlvUSD3CRVPool.connect(signerAddr1).exchange_underlying(2, 0, ethers.utils.parseUnits("1", 6), 0);
 
         // record post-swap lvUSD and USDT balances on addr1
-        balanceLvUSDPost = ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18);
-        balanceUSDCPost = ethers.utils.formatUnits(await contractUSDC.balanceOf(addr1), 6);
+        const balanceLvUSDPost = Number(ethers.utils.formatUnits(await contractlvUSDToken.balanceOf(addr1), 18));
+        const balanceUSDCPost = Number(ethers.utils.formatUnits(await contractUSDC.balanceOf(addr1), 6));
 
         // if exchangeRate = 1 it means 1:1 rate with no fees. we expect somewhere between 0.998 <-> 1.002
         const exchangeRate = (balanceLvUSDPre - balanceLvUSDPost) / (balanceUSDCPost - balanceUSDCPre);
         expect(exchangeRate).to.be.closeTo(1, 0.005);
+
+        // make sure we have less lvUSD after the swap
+        expect(balanceLvUSDPost).to.gt(balanceLvUSDPre);
+
+        // make sure we have more USDC after the swap
+        expect(balanceUSDCPost).to.lt(balanceUSDCPre);
 
         /* // keep for debuging
         console.log("pre lvUSD: " + balanceLvUSDPre);
