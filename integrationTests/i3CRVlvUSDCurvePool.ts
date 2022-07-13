@@ -132,7 +132,7 @@ describe("3CRV/lvUSD curve pool test suit", function () {
         // make sure we have less lvUSD after the swap
         expect(balanceLvUSDPost).to.gt(balanceLvUSDPre);
 
-        // make sure we have more USDC after the swap
+        // make sure we have less USDC after the swap
         expect(balanceUSDCPost).to.lt(balanceUSDCPre);
 
         /* // keep for debuging
