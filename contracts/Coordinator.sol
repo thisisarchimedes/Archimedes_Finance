@@ -160,13 +160,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         return remainingOUSD;
     }
 
-    function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
-
-    function withdrawCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
-
-    function borrowUnderAddress(uint256 _amount) external override notImplementedYet {}
-
-    function repayUnderAddress(uint256 _amount) external override notImplementedYet {}
 
     /* Privileged functions: Anyone */
 
@@ -195,6 +188,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         address _to
     ) internal {
         /// Method makes sure ousd recorded balance transfer
+        // TODO: Do we relly need this check? Seems exesive sdfsdaf   
         uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
         _ousd.safeTransfer(_to, _amount);
         require(_ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount, "OUSD transfer balance incorrect");

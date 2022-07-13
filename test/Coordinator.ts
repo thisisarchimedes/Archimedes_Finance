@@ -162,17 +162,6 @@ describe("Coordinator Test suit", function () {
                     // method under test
                     await coordinator.repayUnderNFT(nftIdFirstPosition, lvUSDAmountToRepayInTwoParts);
                 });
-                // it("Should transfer lvUSD to coordinator address", async function () {
-                //     /// we expect coordinator to have 99 ethers since we started with 98 ether lvUSD and repayed 1
-                //     expect(getFloatFromBigNum(await r.lvUSD.balanceOf(coordinator.address)))
-                //         .to.closeTo(getFloatFromBigNum(ethers.utils.parseUnits("99")), 0.2);
-                // });
-                // it("Should decrease Vault's lvUSD balance", async function () {
-                //     // Exchanger should still have half the lvUSD under it
-                //     expect(await r.lvUSD.balanceOf(r.exchanger.address)).to.equal(lvUSDAmountToRepayInTwoParts);
-                //     expect(getFloatFromBigNum(await r.lvUSD.balanceOf(r.exchanger.address)))
-                //         .to.closeTo(getFloatFromBigNum(lvUSDAmountToRepayInTwoParts), 0.2);
-                // });
                 it("Should update CDP with repayed lvUSD", async function () {
                     expect(getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)))
                         .to.closeTo(getFloatFromBigNum(lvUSDAmountToRepayInTwoParts), 0.2);
