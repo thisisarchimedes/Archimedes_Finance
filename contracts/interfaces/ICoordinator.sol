@@ -60,41 +60,6 @@ interface ICoordinator {
     /// @param _userAddress address to transfer leftover OUSD to
     function unwindLeveragedOUSD(uint256 _nftId, address _userAddress) external returns (uint256 positionWindfall);
 
-    /* Non-privileged functions */
-    /// TODO: Should this be accessed by admin only or not? <<<<
-    /// @dev deposit OUSD under address (vs. under NFT token ID)
-    ///
-    /// User sends OUSD to the contract. OUSD is written under msg.sender
-    ///
-    /// @param _amount the amount of OUSD sent to Archimedes
-    function depositCollateralUnderAddress(uint256 _amount) external;
-
-    /// @dev withraw OUSD under address (vs. under NFT token ID)
-    ///
-    /// User withraw OUSD to the contract
-    /// If user borrowed lvUSD against OUSD, they need to repay at least some of the
-    /// borrowed lvUSD first (to bring collateral ratio below the threshold)
-    ///
-    /// @param _amount the amount of OUSD user request to withdraw
-    function withdrawCollateralUnderAddress(uint256 _amount) external;
-
-    /// @dev Borrow lvUSD under address (vs. under NFT token ID)
-    ///
-    /// User borrow lvUSD against the OUSD deposited as collateral
-    /// Need to check collaterallization ratio
-    /// Need to collect origination fee and sent them to vault
-    ///
-    /// @param _amount the amount of lvUSD requested
-    function borrowUnderAddress(uint256 _amount) external;
-
-    /// @dev Borrow lvUSD under address (vs. under NFT token ID)
-    ///
-    /// User borrow lvUSD against the OUSD deposited as collateral
-    /// Need to check collaterallization ratio
-    ///
-    /// @param _amount the amount of lvUSD requested
-    function repayUnderAddress(uint256 _amount) external;
-
     /// @dev returns the address of lvUSD contract on file
     function addressOfLvUSDToken() external returns (address);
 

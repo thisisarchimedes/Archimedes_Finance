@@ -35,16 +35,14 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
     int128 internal _indexOUSD;
     int128 internal _index3CRV;
 
-    uint256 internal _slippage;
-
-    /** @dev curve stable metapools provide 1:1 swaps
-     * if the pools are very bent, this is a protection for users
-     * TODO: user should be able to override and force a trade
-     * @dev expressed as a percentage
-     * 100 would require a perfect 1:1 swap
-     * 90 allows at most, 1:.9 swaps
-     */
-    uint256 internal _curveGuardPercentage;
+    // /** @dev curve stable metapools provide 1:1 swaps
+    //  * if the pools are very bent, this is a protection for users
+    //  * TODO: user should be able to override and force a trade
+    //  * @dev expressed as a percentage
+    //  * 100 would require a perfect 1:1 swap
+    //  * 90 allows at most, 1:.9 swaps
+    //  */
+    // uint256 internal _curveGuardPercentage;
 
     /**
      * @dev initialize Exchanger
@@ -81,21 +79,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
     }
 
     /**
-     * @dev Exchanges LvUSD for OUSD using multiple CRV3Metapools
-     * @param amountLvUSD amount of LvUSD we will put in
-     * @return amountOUSD amount of OUSD returned from exchange
-     * - MUST emit an event
-     * NOTE: There is no guarantee of a 1:1 exchange ratio, but should be close
-     * Minimum is 90% * 90%  / _curveGuardPercentage * _curveGuardPercentage
-     */
-    function swapLvUSDforOUSD(uint256 amountLvUSD) external nonReentrant onlyExecutive returns (uint256 amountOUSD) {
-        uint256 _returned3CRV = _xLvUSDfor3CRV(amountLvUSD);
-        uint256 _returnedOUSD = _x3CRVforOUSD(_returned3CRV);
-        _ousd.safeTransfer(_addressCoordinator, _returnedOUSD);
-        return _returnedOUSD;
-    }
-
-    /**
      * @dev Exchanges OUSD for LvUSD using multiple CRV3Metapools
      * returns amount of LvUSD
      * - MUST emit an event
@@ -115,6 +98,38 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         onlyExecutive
         returns (uint256 lvUSDReturned, uint256 remainingOUSD)
     {
+        return _swapOUSDforLvUSD(amountOUSD, minRequiredLvUSD);
+    }
+
+    /**
+     * @dev Exchanges LvUSD for OUSD using multiple CRV3Metapools
+     * @param amountLvUSD amount of LvUSD we will put in
+     * @return amountOUSD amount of OUSD returned from exchange
+     * - MUST emit an event
+     * NOTE: There is no guarantee of a 1:1 exchange ratio, but should be close
+     * Minimum is 90% * 90%  / _curveGuardPercentage * _curveGuardPercentage
+     */
+    function swapLvUSDforOUSD(uint256 amountLvUSD) external nonReentrant onlyExecutive returns (uint256 amountOUSD) {
+        return _swapLvUSDforOUSD(amountLvUSD);
+    }
+
+    function xLvUSDfor3CRV(uint256 amountLvUSD) external nonReentrant onlyExecutive returns (uint256) {
+        return _xLvUSDfor3CRV(amountLvUSD);
+    }
+
+    function x3CRVforOUSD(uint256 amount3CRV) external nonReentrant onlyExecutive returns (uint256) {
+        return _x3CRVforOUSD(amount3CRV);
+    }
+
+    function xOUSDfor3CRV(uint256 amountOUSD) external nonReentrant onlyExecutive returns (uint256) {
+        return _xOUSDfor3CRV(amountOUSD);
+    }
+
+    function x3CRVforLvUSD(uint256 amount3CRV) external nonReentrant onlyExecutive returns (uint256) {
+        return _x3CRVforLvUSD(amount3CRV);
+    }
+
+    function _swapOUSDforLvUSD(uint256 amountOUSD, uint256 minRequiredLvUSD) internal returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
         // Estimate "neededOUSD" using get_dy()
         uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(_indexLvUSD, _index3CRV, minRequiredLvUSD);
         uint256 _neededOUSD = _poolOUSD3CRV.get_dy(_index3CRV, _indexOUSD, _needed3CRV);
@@ -139,20 +154,11 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         return (_returnedLvUSD, remainingOUSD);
     }
 
-    function xLvUSDfor3CRV(uint256 amountLvUSD) external nonReentrant onlyExecutive returns (uint256) {
-        return _xLvUSDfor3CRV(amountLvUSD);
-    }
-
-    function x3CRVforOUSD(uint256 amount3CRV) external nonReentrant onlyExecutive returns (uint256) {
-        return _x3CRVforOUSD(amount3CRV);
-    }
-
-    function xOUSDfor3CRV(uint256 amountOUSD) external nonReentrant onlyExecutive returns (uint256) {
-        return _xOUSDfor3CRV(amountOUSD);
-    }
-
-    function x3CRVforLvUSD(uint256 amount3CRV) external nonReentrant onlyExecutive returns (uint256) {
-        return _x3CRVforLvUSD(amount3CRV);
+    function _swapLvUSDforOUSD(uint256 amountLvUSD) internal returns (uint256 amountOUSD) {
+        uint256 _returned3CRV = _xLvUSDfor3CRV(amountLvUSD);
+        uint256 _returnedOUSD = _x3CRVforOUSD(_returned3CRV);
+        _ousd.safeTransfer(_addressCoordinator, _returnedOUSD);
+        return _returnedOUSD;
     }
 
     function initialize() public initializer {
@@ -164,6 +170,50 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _indexLvUSD = 0;
         _indexOUSD = 0;
         _index3CRV = 1;
+    }
+
+    /**
+     * @dev Exchange using the CurveFi LvUSD/3CRV Metapool
+     * @param amountLvUSD amount of LvUSD to exchange
+     * @return amount3CRV amount of 3CRV returned from exchange
+     */
+    function _xLvUSDfor3CRV(uint256 amountLvUSD) internal returns (uint256 amount3CRV) {
+        /**
+         * @param _expected3CRV uses get_dy() to estimate amount the exchange will give us
+         * @param _minimum3CRV mimimum accounting for slippage. (_expected3CRV * slippage)
+         * @param _returned3CRV amount we actually get from the pool
+         * @param _guard3CRV sanity check to protect user
+         */
+        uint256 _expected3CRV;
+        uint256 _minimum3CRV;
+        uint256 _returned3CRV;
+        uint256 _guard3CRV = (amountLvUSD * _paramStore.getCurveGuardPercentage()) / 100;
+
+        // Verify Exchanger has enough LvUSD to use
+        require(amountLvUSD <= _lvusd.balanceOf(address(this)), "Insufficient LvUSD in Exchanger.");
+
+        // Estimate expected amount of 3CRV
+        // get_dy(indexCoinSend, indexCoinRec, amount)
+        _expected3CRV = _poolLvUSD3CRV.get_dy(0, 1, amountLvUSD);
+
+        // Set minimum required accounting for slippage
+        _minimum3CRV = (_expected3CRV * (100 - _paramStore.getSlippage())) / 100;
+
+        // Make sure pool isn't too bent
+        // TODO allow user to override this protection
+        // TODO auto balance if pool is bent
+        require(_minimum3CRV >= _guard3CRV, "LvUSD pool too imbalanced.");
+
+        // Increase allowance
+        _lvusd.safeIncreaseAllowance(address(_poolLvUSD3CRV), amountLvUSD);
+
+        // Exchange LvUSD for 3CRV:
+        _returned3CRV = _poolLvUSD3CRV.exchange(0, 1, amountLvUSD, _minimum3CRV);
+
+        // Set approval to zero for safety
+        _lvusd.safeApprove(address(_poolLvUSD3CRV), 0);
+
+        return _returned3CRV;
     }
 
     /**
@@ -181,9 +231,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         uint256 _expected3CRV;
         uint256 _minimum3CRV;
         uint256 _returned3CRV;
-        _curveGuardPercentage = _paramStore.getCurveGuardPercentage();
-        _slippage = _paramStore.getSlippage();
-        uint256 _guard3CRV = (amountOUSD * _curveGuardPercentage) / 100;
+        uint256 _guard3CRV = (amountOUSD * _paramStore.getCurveGuardPercentage()) / 100;
 
         // Verify Exchanger has enough OUSD to use
         require(amountOUSD <= _ousd.balanceOf(address(this)), "Insufficient OUSD in Exchanger.");
@@ -193,7 +241,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _expected3CRV = _poolOUSD3CRV.get_dy(0, 1, amountOUSD);
 
         // Set minimum required accounting for slippage
-        _minimum3CRV = (_expected3CRV * (100 - _slippage)) / 100;
+        _minimum3CRV = (_expected3CRV * (100 - _paramStore.getSlippage())) / 100;
 
         // Make sure pool isn't too bent
         // TODO allow user to override this protection
@@ -227,9 +275,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         uint256 _expectedLvUSD;
         uint256 _minimumLvUSD;
         uint256 _returnedLvUSD;
-        _curveGuardPercentage = _paramStore.getCurveGuardPercentage();
-        _slippage = _paramStore.getSlippage();
-        uint256 _guardLvUSD = (amount3CRV * _curveGuardPercentage) / 100;
+        uint256 _guardLvUSD = (amount3CRV * _paramStore.getCurveGuardPercentage()) / 100;
 
         // Verify Exchanger has enough 3CRV to use
         require(amount3CRV <= _crv3.balanceOf(address(this)), "Insufficient 3CRV in Exchanger.");
@@ -239,7 +285,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _expectedLvUSD = _poolLvUSD3CRV.get_dy(1, 0, amount3CRV);
 
         // Set minimum required accounting for slippage
-        _minimumLvUSD = (_expectedLvUSD * (100 - _slippage)) / 100;
+        _minimumLvUSD = (_expectedLvUSD * (100 - _paramStore.getSlippage())) / 100;
 
         // Make sure pool isn't too bent
         // TODO allow user to override this protection
@@ -259,52 +305,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
     }
 
     /**
-     * @dev Exchange using the CurveFi LvUSD/3CRV Metapool
-     * @param amountLvUSD amount of LvUSD to exchange
-     * @return amount3CRV amount of 3CRV returned from exchange
-     */
-    function _xLvUSDfor3CRV(uint256 amountLvUSD) internal returns (uint256 amount3CRV) {
-        /**
-         * @param _expected3CRV uses get_dy() to estimate amount the exchange will give us
-         * @param _minimum3CRV mimimum accounting for slippage. (_expected3CRV * slippage)
-         * @param _returned3CRV amount we actually get from the pool
-         * @param _guard3CRV sanity check to protect user
-         */
-        uint256 _expected3CRV;
-        uint256 _minimum3CRV;
-        uint256 _returned3CRV;
-        _curveGuardPercentage = _paramStore.getCurveGuardPercentage();
-        _slippage = _paramStore.getSlippage();
-        uint256 _guard3CRV = (amountLvUSD * _curveGuardPercentage) / 100;
-
-        // Verify Exchanger has enough LvUSD to use
-        require(amountLvUSD <= _lvusd.balanceOf(address(this)), "Insufficient LvUSD in Exchanger.");
-
-        // Estimate expected amount of 3CRV
-        // get_dy(indexCoinSend, indexCoinRec, amount)
-        _expected3CRV = _poolLvUSD3CRV.get_dy(0, 1, amountLvUSD);
-
-        // Set minimum required accounting for slippage
-        _minimum3CRV = (_expected3CRV * (100 - _slippage)) / 100;
-
-        // Make sure pool isn't too bent
-        // TODO allow user to override this protection
-        // TODO auto balance if pool is bent
-        require(_minimum3CRV >= _guard3CRV, "LvUSD pool too imbalanced.");
-
-        // Increase allowance
-        _lvusd.safeIncreaseAllowance(address(_poolLvUSD3CRV), amountLvUSD);
-
-        // Exchange LvUSD for 3CRV:
-        _returned3CRV = _poolLvUSD3CRV.exchange(0, 1, amountLvUSD, _minimum3CRV);
-
-        // Set approval to zero for safety
-        _lvusd.safeApprove(address(_poolLvUSD3CRV), 0);
-
-        return _returned3CRV;
-    }
-
-    /**
      * @dev Exchange using the CurveFi OUSD/3CRV Metapool
      * @param amount3CRV amount of LvUSD to exchange
      * @return amountOUSD amount returned from exchange
@@ -319,9 +319,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         uint256 _expectedOUSD;
         uint256 _minimumOUSD;
         uint256 _returnedOUSD;
-        _curveGuardPercentage = _paramStore.getCurveGuardPercentage();
-        _slippage = _paramStore.getSlippage();
-        uint256 _guardOUSD = (amount3CRV * _curveGuardPercentage) / 100;
+        uint256 _guardOUSD = (amount3CRV * _paramStore.getCurveGuardPercentage()) / 100;
 
         // Verify Exchanger has enough 3CRV to use
         require(amount3CRV <= _crv3.balanceOf(address(this)), "Insufficient 3CRV in Exchanger.");
@@ -331,7 +329,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _expectedOUSD = _poolOUSD3CRV.get_dy(1, 0, amount3CRV);
 
         // Set minimum required accounting for slippage
-        _minimumOUSD = (_expectedOUSD * (100 - _slippage)) / 100;
+        _minimumOUSD = (_expectedOUSD * (100 - _paramStore.getSlippage())) / 100;
 
         // Make sure pool isn't too bent
         // TODO allow user to override this protection

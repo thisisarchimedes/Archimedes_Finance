@@ -160,12 +160,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         return remainingOUSD;
     }
 
-    function buyLvUSD(address buyerAddress, uint256 amoutLvUSDToBuy) external nonReentrant onlyAdmin {
-        /// Methos assumes that caller (which is admin), has allownce on buyerFunds
-        require(getAvailableLeverage() > amoutLvUSDToBuy, "insufficent lvUSD in Coordinator");
-        /// transfer OUSD to treasury 
-    }
-
     /* Privileged functions: Anyone */
 
     function getAvailableLeverage() external view returns (uint256) {
@@ -193,6 +187,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         address _to
     ) internal {
         /// Method makes sure ousd recorded balance transfer
+        // TODO: Do we really need this check? Seems excessive
         uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
         _ousd.safeTransfer(_to, _amount);
         require(_ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount, "OUSD transfer balance incorrect");
