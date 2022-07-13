@@ -160,7 +160,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         return remainingOUSD;
     }
 
-
     /* Privileged functions: Anyone */
 
     function getAvailableLeverage() external view returns (uint256) {
@@ -188,7 +187,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         address _to
     ) internal {
         /// Method makes sure ousd recorded balance transfer
-        // TODO: Do we relly need this check? Seems exesive sdfsdaf   
+        // TODO: Do we relly need this check? Seems exesive sdfsdaf
         uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
         _ousd.safeTransfer(_to, _amount);
         require(_ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount, "OUSD transfer balance incorrect");
