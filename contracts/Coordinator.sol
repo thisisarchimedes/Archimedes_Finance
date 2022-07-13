@@ -160,13 +160,11 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         return remainingOUSD;
     }
 
-    function depositCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
-
-    function withdrawCollateralUnderAddress(uint256 _amount) external override notImplementedYet {}
-
-    function borrowUnderAddress(uint256 _amount) external override notImplementedYet {}
-
-    function repayUnderAddress(uint256 _amount) external override notImplementedYet {}
+    function buyLvUSD(address buyerAddress, uint256 amoutLvUSDToBuy) external nonReentrant onlyAdmin {
+        /// Methos assumes that caller (which is admin), has allownce on buyerFunds
+        require(getAvailableLeverage() > amoutLvUSDToBuy, "insufficent lvUSD in Coordinator");
+        /// transfer OUSD to treasury 
+    }
 
     /* Privileged functions: Anyone */
 
