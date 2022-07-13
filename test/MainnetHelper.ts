@@ -30,6 +30,7 @@ const address3CRV = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
 const addressUSDC = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 const addressZap = "0xa79828df1850e8a3a3064576f380d90aecdd3359";
 const address3CRVlvUSDPool = "0x67C7f0a63BA70a2dAc69477B716551FC921aed00";
+const addressCurveRegistry = "0x81C46fECa27B31F3ADC2b91eE4be9717d1cd3DD7";
 
 const indexTripoolUSDT = 0;
 const indexTripoolWETH9 = 2;
@@ -211,6 +212,7 @@ export {
     addressUSDC,
     addressZap,
     address3CRVlvUSDPool,
+    addressCurveRegistry,
 
     /* ABIs */
     abiOUSDToken,
