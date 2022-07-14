@@ -30,6 +30,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     address internal _addressCDP;
     address internal _addressOUSD;
     address internal _addressExchanger;
+    address internal _addressPoolManager;
 
     VaultOUSD internal _vault;
     CDPosition internal _cdp;
@@ -49,13 +50,15 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         address addressCDP,
         address addressOUSD,
         address addressExchanger,
-        address addressParamStore
+        address addressParamStore,
+        address addressPoolManager
     ) external nonReentrant onlyAdmin {
         _addressLvUSD = addressLvUSD;
         _addressVaultOUSD = addressVaultOUSD;
         _addressCDP = addressCDP;
         _addressOUSD = addressOUSD;
         _addressExchanger = addressExchanger;
+        _addressPoolManager = addressPoolManager;
 
         _vault = VaultOUSD(_addressVaultOUSD);
         _cdp = CDPosition(_addressCDP);
@@ -66,6 +69,9 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
 
         // approve VaultOUSD address to spend OUSD on behalf of coordinator
         _ousd.safeApprove(_addressVaultOUSD, type(uint256).max);
+        /// TODO: change to
+        // console("Coordinator: Allow poolManager at %s to use lvUSD funds",)
+        _lvUSD.safeApprove(_addressPoolManager, type(uint256).max);
     }
 
     /* Privileged functions: Executive */

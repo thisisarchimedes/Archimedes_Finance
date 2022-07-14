@@ -5,6 +5,9 @@ import {
     addressUSDT, abiUSDTToken,
     address3CRV, abi3CRVToken,
     addressCurveOUSDPool,
+    address3CRVlvUSDPool,
+    addressZap,
+    addressUSDC,
     helperSwapETHWith3CRV,
     helperResetNetwork,
     defaultBlockNumber,
@@ -29,6 +32,7 @@ export type ContractTestContext ={
     vault: Contract;
     archToken: Contract;
     lvUSD: Contract;
+    poolManager: Contract;
     // External contracts
     externalOUSD: Contract;
     externalUSDT: Contract;
@@ -80,6 +84,9 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
     const vaultFactory = await ethers.getContractFactory("VaultOUSD");
     context.vault = await hre.upgrades.deployProxy(vaultFactory, [context.externalOUSD.address, "VaultOUSD", "VOUSD"], { kind: "uups" });
 
+    const poolManagerFactory = await ethers.getContractFactory("PoolManager");
+    context.poolManager = await hre.upgrades.deployProxy(poolManagerFactory, [], { kind: "uups" });
+
     const archTokenfactory = await ethers.getContractFactory("ArchToken");
     context.archToken = await archTokenfactory.deploy(context.treasurySigner.address);
 
@@ -117,6 +124,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.externalOUSD.address,
             context.exchanger.address,
             context.parameterStore.address,
+            context.poolManager.address,
         ),
 
         context.exchanger.setDependencies(
@@ -131,6 +139,17 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
         context.vault.setDependencies(context.parameterStore.address, context.externalOUSD.address),
 
         context.parameterStore.changeTreasuryAddress(context.treasurySigner.address),
+
+        context.poolManager.setDependencies(
+            context.parameterStore.address,
+            context.coordinator.address,
+            context.lvUSD.address,
+            addressUSDC,
+            context.external3CRV.address,
+            context.curveLvUSDPool.address,
+            addressZap),
+
+        console.log("PoolManager Address is ", context.poolManager.address),
     ]);
 
     return context;
