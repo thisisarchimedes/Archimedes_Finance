@@ -31,7 +31,7 @@ describe("PoolManager test suit", async function () {
     });
 
     it("Should fund pool with both lvUSD and USDC", async function () {
-        await r.poolManager.fundPoolWithUSDC(r.owner.address, oneK18Decimal);
+        await r.poolManager.fundPoolWith3CRV(r.owner.address, oneK18Decimal);
         expect(getFloatFromBigNum(await r.curveLvUSDPool.balances(0))).to.be.eq(1200);
         expect(getFloatFromBigNum(await r.curveLvUSDPool.balances(1))).to.be.eq(1200);
     });

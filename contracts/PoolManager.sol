@@ -60,7 +60,7 @@ contract PoolManager is AccessController, ReentrancyGuardUpgradeable, UUPSUpgrad
         _crv3.approve(_addressPoolLvUSD3CRV, type(uint256).max);
     }
 
-    function fundPoolWithUSDC(address buyerAddress, uint256 amoutToFundInLvUSD) external nonReentrant onlyAdmin returns (uint256) {
+    function fundPoolWith3CRV(address buyerAddress, uint256 amoutToFundInLvUSD) external nonReentrant onlyAdmin returns (uint256) {
         /// Method assumes that this contract , has allownce to spend buyerAddress 3CRV tokens
         /// Method assumes that this contract, has allownce to spend Coordinator lvUSD tokens
         require(_lvusd.balanceOf(_addressCoordinator) > amoutToFundInLvUSD, "Insufficent lvUSD on Coordinator");
