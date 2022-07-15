@@ -69,8 +69,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
 
         // approve VaultOUSD address to spend OUSD on behalf of coordinator
         _ousd.safeApprove(_addressVaultOUSD, type(uint256).max);
-        /// TODO: change to
-        // console("Coordinator: Allow poolManager at %s to use lvUSD funds",)
         _lvUSD.safeApprove(_addressPoolManager, type(uint256).max);
     }
 

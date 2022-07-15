@@ -144,12 +144,8 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
             context.parameterStore.address,
             context.coordinator.address,
             context.lvUSD.address,
-            addressUSDC,
             context.external3CRV.address,
-            context.curveLvUSDPool.address,
-            addressZap),
-
-        console.log("PoolManager Address is ", context.poolManager.address),
+            context.curveLvUSDPool.address),
     ]);
 
     return context;
