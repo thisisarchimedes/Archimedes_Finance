@@ -1,6 +1,7 @@
-import { helperSwapETHWithOUSD } from "./MainnetHelper";
+import { helperSwapETHWithOUSD, helperSwapETHWith3CRV } from "./MainnetHelper";
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { fundMetapool } from "./CurveHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
 function parseBN (bigNumValue) {
@@ -39,15 +40,31 @@ describe("Exchanger Test suit", function () {
         await ousd.transfer(exchanger.address, amountStarting);
     });
 
+    describe("Should not allow to exchange from very imbalanced pool", function () {
+        async function fundImbalancedPool () {
+            const lvUSDAmount = ethers.utils.parseUnits("2");
+            const crvAmount = ethers.utils.parseUnits("80000");
+            await lvUSD.setMintDestination(exchanger.address);
+            await lvUSD.mint(ethers.utils.parseUnits("1000"));
+            await lvUSD.setMintDestination(owner.address);
+            await lvUSD.mint(lvUSDAmount);
+            await helperSwapETHWith3CRV(r.owner, ethers.utils.parseUnits("70.0"));
+
+            await fundMetapool(r.curveLvUSDPool.address, [lvUSDAmount, crvAmount], owner, r);
+        }
+        it("Should not exchange lvUSD to 3CRV if pool is very imbalanced", async function () {
+            await fundImbalancedPool();
+            const promise = exchanger.swapLvUSDforOUSD(ethers.utils.parseUnits("200"));
+            await expect(promise).to.be.revertedWith("Expected return value too big");
+        });
+    });
+
     describe("Exchanges", function () {
         it("Tests should init with some funds", async function () {
             expect(await lvUSD.balanceOf(exchanger.address)).eq(amountStarting);
             expect(await ousd.balanceOf(exchanger.address)).eq(amountStarting);
         });
 
-        // TODO test a revert of imbalanced pool
-
-        // Create position
         describe("swapLvUSDforOUSD()", function () {
             it("Should send correct amount LvUSD", async function () {
                 await exchanger.swapLvUSDforOUSD(amountToExchange);

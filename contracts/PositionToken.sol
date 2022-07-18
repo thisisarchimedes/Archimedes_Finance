@@ -80,4 +80,8 @@ contract PositionToken is
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
     }
+
+    fallback() external {
+        revert("PositionToken : Invalid access");
+    }
 }
