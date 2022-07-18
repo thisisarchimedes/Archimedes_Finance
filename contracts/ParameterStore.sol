@@ -10,18 +10,38 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 /// @title ParameterStore is a contract for storing global parameters that can be modified by a privileged role
 /// @notice This contract (will be) proxy upgradable
 contract ParameterStore is AccessController, UUPSUpgradeable {
-    uint256 internal _maxNumberOfCycles; // regualr natural number
-    uint256 internal _originationFeeRate; // in ether percengr (see initalize for examples)
+    uint256 internal _maxNumberOfCycles; // regular natural number
+    uint256 internal _originationFeeRate; // in ether percentage (see initialize for examples)
     uint256 internal _globalCollateralRate; // in percentage
-    uint256 internal _rebaseFeeRate; // in ether percengr (see initalize for examples)
+    uint256 internal _rebaseFeeRate; // in ether percentage (see initialize for examples)
     address internal _treasuryAddress;
-    uint256 internal _curveGuardPercentage; // in regualer (0-100) percentges
-    uint256 internal _slippage; // in regualer (0-100) percentges
+    uint256 internal _curveGuardPercentage; // in regular (0-100) percentages
+    uint256 internal _slippage; // in regular (0-100) percentages
     /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
     uint256 internal _archToLevRatio;
+    // maximum allowed "extra" tokens when exchanging
+    uint256 internal _curveMaxExchangeGuard;
 
     event ParameterChange(string indexed _name, uint256 _newValue, uint256 _oldValue);
     event TreasuryChange(address indexed _newValue, address indexed _oldValue);
+
+    function initialize() public initializer {
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
+
+        _maxNumberOfCycles = 10;
+        _originationFeeRate = 5 ether / 100;
+        _globalCollateralRate = 90;
+        _rebaseFeeRate = 10 ether / 100; // meaning 10%
+        _treasuryAddress;
+        _curveGuardPercentage = 90;
+        _slippage = 2; // 2%;
+        _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
+        _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
+        _treasuryAddress = address(0);
+    }
 
     function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external onlyGovernor {
         // curveGuardPercentage must be a number between 80 and 100
@@ -71,6 +91,11 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _archToLevRatio = newArchToLevRatio;
     }
 
+    function changeCurveMaxExchangeGuard(uint256 newCurveMaxExchangeGuard) external onlyGovernor {
+        emit ParameterChange("curveMaxExchangeGuard", newCurveMaxExchangeGuard, _curveMaxExchangeGuard);
+        _curveMaxExchangeGuard = newCurveMaxExchangeGuard;
+    }
+
     function getMaxNumberOfCycles() external view returns (uint256) {
         return _maxNumberOfCycles;
     }
@@ -87,21 +112,8 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         return _rebaseFeeRate;
     }
 
-    function initialize() public initializer {
-        _grantRole(ADMIN_ROLE, _msgSender());
-        setGovernor(_msgSender());
-        setExecutive(_msgSender());
-        setGuardian(_msgSender());
-
-        _maxNumberOfCycles = 10;
-        _originationFeeRate = 5 ether / 100;
-        _globalCollateralRate = 90;
-        _rebaseFeeRate = 10 ether / 100; // meaning 10%
-        _treasuryAddress;
-        _curveGuardPercentage = 90;
-        _slippage = 2; // 2%;
-        _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
-        _treasuryAddress = address(0);
+    function getCurveMaxExchangeGuard() external view returns (uint256) {
+        return _curveMaxExchangeGuard;
     }
 
     function getTreasuryAddress() public view returns (address) {
@@ -167,5 +179,9 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
+    }
+
+    fallback() external {
+        revert("PositionToken : Invalid access");
     }
 }
