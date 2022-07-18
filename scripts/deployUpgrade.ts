@@ -24,6 +24,6 @@ it("is deployed", async function () {
     if (deployUpgrade) {
         const storeV2 = await hre.upgrades.upgradeProxy(store, this.ParamStoreV2);
         expect(await storeV2.version()).to.equal("V2");
-        console.log("upgraded contract adderess is %s", await storeV2.address);
+        console.log("upgraded contract address is %s", await storeV2.address);
     }
 });
