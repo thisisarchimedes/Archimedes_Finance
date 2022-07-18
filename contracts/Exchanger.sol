@@ -78,6 +78,17 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
     }
 
+    function initialize() public initializer {
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
+
+        _indexLvUSD = 0;
+        _indexOUSD = 0;
+        _index3CRV = 1;
+    }
+
     /**
      * @dev Exchanges OUSD for LvUSD using multiple CRV3Metapools
      * returns amount of LvUSD
@@ -161,17 +172,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         return _returnedOUSD;
     }
 
-    function initialize() public initializer {
-        _grantRole(ADMIN_ROLE, _msgSender());
-        setGovernor(_msgSender());
-        setExecutive(_msgSender());
-        setGuardian(_msgSender());
-
-        _indexLvUSD = 0;
-        _indexOUSD = 0;
-        _index3CRV = 1;
-    }
-
     /**
      * @dev Exchange using the CurveFi LvUSD/3CRV Metapool
      * @param amountLvUSD amount of LvUSD to exchange
@@ -179,10 +179,10 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
      */
     function _xLvUSDfor3CRV(uint256 amountLvUSD) internal returns (uint256 amount3CRV) {
         /**
-         * @param _expected3CRV uses get_dy() to estimate amount the exchange will give us
-         * @param _minimum3CRV mimimum accounting for slippage. (_expected3CRV * slippage)
-         * @param _returned3CRV amount we actually get from the pool
-         * @param _guard3CRV sanity check to protect user
+         * _expected3CRV uses get_dy() to estimate amount the exchange will give us
+         * _minimum3CRV minimum accounting for slippage. (_expected3CRV * slippage)
+         * _returned3CRV amount we actually get from the pool
+         * _guard3CRV sanity check to protect user
          */
         uint256 _expected3CRV;
         uint256 _minimum3CRV;
@@ -195,6 +195,14 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         // Estimate expected amount of 3CRV
         // get_dy(indexCoinSend, indexCoinRec, amount)
         _expected3CRV = _poolLvUSD3CRV.get_dy(0, 1, amountLvUSD);
+
+        /// Make sure expected3CRV is not too high!
+        console.log(
+            "When exchanging lvUSD for 3crv from imbalanced pool amountLvUSD = %s, _expected3CRV = %s",
+            amountLvUSD / 1 ether,
+            _expected3CRV / 1 ether
+        );
+        _checkExchangeExpectedReturnInLimit(amountLvUSD, _expected3CRV);
 
         // Set minimum required accounting for slippage
         _minimum3CRV = (_expected3CRV * (100 - _paramStore.getSlippage())) / 100;
@@ -224,7 +232,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
     function _xOUSDfor3CRV(uint256 amountOUSD) internal returns (uint256 amount3CRV) {
         /**
          * @param _expected3CRV uses get_dy() to estimate amount the exchange will give us
-         * @param _minimum3CRV mimimum accounting for slippage. (_expected3CRV * slippage)
+         * @param _minimum3CRV minimum accounting for slippage. (_expected3CRV * slippage)
          * @param _returned3CRV amount we actually get from the pool
          * @param _guard3CRV sanity check to protect user
          */
@@ -268,7 +276,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
     function _x3CRVforLvUSD(uint256 amount3CRV) internal returns (uint256 amountLvUSD) {
         /**
          * @param _expectedLvUSD uses get_dy() to estimate amount the exchange will give us
-         * @param _minimumLvUSD mimimum accounting for slippage. (_expectedLvUSD * slippage)
+         * @param _minimumLvUSD minimum accounting for slippage. (_expectedLvUSD * slippage)
          * @param _returnedLvUSD amount we actually get from the pool
          * @param _guardLvUSD sanity check to protect user
          */
@@ -312,7 +320,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
     function _x3CRVforOUSD(uint256 amount3CRV) internal returns (uint256 amountOUSD) {
         /**
          * @param _expectedOUSD uses get_dy() to estimate amount the exchange will give us
-         * @param _minimumOUSD mimimum accounting for slippage. (_expectedOUSD * slippage)
+         * @param _minimumOUSD minimum accounting for slippage. (_expectedOUSD * slippage)
          * @param _returnedOUSD amount we actually get from the pool
          * @param _guardOUSD sanity check to protect user
          */
@@ -348,8 +356,18 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         return _returnedOUSD;
     }
 
+    function _checkExchangeExpectedReturnInLimit(uint256 amountToExchange, uint256 expctedExchangeReturn) internal {
+        uint256 maxAllowedExchangeReturn = amountToExchange + (amountToExchange * _paramStore.getCurveMaxExchangeGuard()) / 100;
+        console.log("Exchanger maxAllowedExchangeReturn %s from %s amount", maxAllowedExchangeReturn / 1 ether, amountToExchange / 1 ether);
+        require(expctedExchangeReturn <= maxAllowedExchangeReturn, "Expected return value too big");
+    }
+
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
+    }
+
+    fallback() external {
+        revert("PositionToken : Invalid access");
     }
 }
