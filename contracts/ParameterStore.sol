@@ -169,7 +169,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     function calculateArchNeededForLeverage(uint256 leverageAmount) public view returns (uint256) {
-        return (leverageAmount / _archToLevRatio);
+        return (leverageAmount / _archToLevRatio) * 1 ether;
     }
 
     function calculateLeverageAllowedForArch(uint256 archAmount) public view returns (uint256) {
