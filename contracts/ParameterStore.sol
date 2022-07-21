@@ -178,7 +178,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
     }
-    
+
     fallback() external {
         revert("PositionToken : Invalid access");
     }
