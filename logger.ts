@@ -1,4 +1,4 @@
-let loggingEnabled = false;
+let loggingEnabled = true;
 
 export function setLoggingEnabled (newValue: boolean) {
     loggingEnabled = newValue;

@@ -128,55 +128,54 @@ async function setupEnvForIntegrationTests () {
     console.log("End of setup env for end to end tests");
 }
 
-describe("Test suit for setting up the stage", function () {
-    before(async function () {
-        await setupEnvForIntegrationTests();
-    });
+// describe("Test suit for setting up the stage", function () {
+//     before(async function () {
+//         await setupEnvForIntegrationTests();
+//     });
 
-    it("Should have initialCoordinatorLvUSDBalance lvUSD balance under coordinator", async function () {
-        const coordinatorLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
-        expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
-    });
+//     it("Should have initialCoordinatorLvUSDBalance lvUSD balance under coordinator", async function () {
+//         const coordinatorLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
+//         expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
+//     });
 
-    it("Should have setup OUSD pretender with OUSD to spend ", async function () {
-        const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretendOUSDRebaseSigner.getAddress()));
-        /// since we are exchanging 10 ethereum for the dollar value of token, price is not set. Checking for a reasonable value
-        expect(pretenderOUSDbalance).to.greaterThan(1000);
-    });
+//     it("Should have setup OUSD pretender with OUSD to spend ", async function () {
+//         const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretendOUSDRebaseSigner.getAddress()));
+//         /// since we are exchanging 10 ethereum for the dollar value of token, price is not set. Checking for a reasonable value
+//         expect(pretenderOUSDbalance).to.greaterThan(1000);
+//     });
 
-    it("Should have setup user with  enough OUSD to cover principle amount", async function () {
-        const userOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await user.getAddress()));
-        expect(userOUSDbalance).to.greaterThan(userOUSDPrinciple);
-    });
+//     it("Should have setup user with  enough OUSD to cover principle amount", async function () {
+//         const userOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await user.getAddress()));
+//         expect(userOUSDbalance).to.greaterThan(userOUSDPrinciple);
+//     });
 
-    it("Should have initialFundsInPool as balance of pool", async function () {
-        printPoolState(lvUSD3CRVPoolInstance);
-        const lvUSDCoinsInPool = await lvUSD3CRVPoolInstance.balances(0);
-        const crvCoinsInPool = await lvUSD3CRVPoolInstance.balances(1);
-        expect(lvUSDCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
-        expect(crvCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
-    });
+//     it("Should have initialFundsInPool as balance of pool", async function () {
+//         printPoolState(lvUSD3CRVPoolInstance);
+//         const lvUSDCoinsInPool = await lvUSD3CRVPoolInstance.balances(0);
+//         const crvCoinsInPool = await lvUSD3CRVPoolInstance.balances(1);
+//         expect(lvUSDCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
+//         expect(crvCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
+//     });
 
-    it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
-        const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
-        expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
-    });
+//     it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
+//         const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
+//         expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
+//     });
 
-    it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
-        const admin3CRVBalance = getFloatFromBigNum(await r.external3CRV.balanceOf(await owner.getAddress()));
-        expect(admin3CRVBalance).to.lessThan(adminInitial3CRVBalance);
-    });
-
-    // it("Should have set a big leverage allocation for user", async function () {
-    //     expect(await r.leverageAllocator.getAddressToLvUSDAvailable(await user.getAddress())).to.equal(parseUnitsNum(initialUserLevAllocation));
-    // });
-});
+//     it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
+//         const admin3CRVBalance = getFloatFromBigNum(await r.external3CRV.balanceOf(await owner.getAddress()));
+//         expect(admin3CRVBalance).to.lessThan(adminInitial3CRVBalance);
+//     });
+// });
 
 describe("Test suit for getting leverage", function () {
     let leverageUserIsTaking: number;
     let archCostOfLeverage: number;
+    let coordinatorlvUSDBalanceBeforePosition: number;
+    let borrowedlvUSD: number;
     before(async function () {
         await setupEnvForIntegrationTests();
+        coordinatorlvUSDBalanceBeforePosition = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleInEighteenDecimal, numberOfCycles);
         leverageUserIsTaking = getFloatFromBigNum(leverageUserIsTakingIn18Dec);
         const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
@@ -197,24 +196,76 @@ describe("Test suit for getting leverage", function () {
         expect(nftBalance).to.equal(1);
     });
 
-    // it("Should have assigned origination fee to treasury", async function () {
-    //     const treasuryBalance = getFloatFromBigNum(
-    //         await r.externalOUSD.balanceOf(r.treasurySigner.address),
-    //     );
-    //     /// origination fee is 5% at the moment, lvUSDBorrowed is 171 so 5% of it is roughly 8.5
-    //     expect(treasuryBalance).to.closeTo(8.5, 0.1);
-    // });
+    it("Should have assigned origination fee to treasury", async function () {
+        const treasuryBalance = getFloatFromBigNum(
+            await r.externalOUSD.balanceOf(r.treasurySigner.address),
+        );
+        /// origination fee is 5% at the moment, lvUSDBorrowed is 171 so 5% of it is roughly 8.5
+        borrowedlvUSD = getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(positionId));
+        console.log("\x1B[31mSimplePositionCreation: treasury got %s from %s borrowed lvUSD at an origination fee of %s",
+            treasuryBalance, borrowedlvUSD, getFloatFromBigNum(await r.parameterStore.getOriginationFeeRate()));
+        expect(treasuryBalance).to.closeTo(8.5, 0.1);
+    });
 
-    // it("Should have deposited leverage and principle in vault (minus fee)", async function () {
-    //     const vaultOUSDBalance = getFloatFromBigNum(await r.vault.totalAssets());
-    //     /// this should be equal to principle + leveraged OUSD - fees = 100 + 171 - 8.5 = 262.5
-    //     expect(vaultOUSDBalance).to.closeTo(262, 1);
-    // });
+    it("Should have deposited leverage and principle in vault (minus fee)", async function () {
+        const vaultOUSDBalance = getFloatFromBigNum(await r.vault.totalAssets());
+        /// this should be equal to principle + leveraged OUSD - fees = 100 + 171 - 8.5 = 262.5
+        console.log("\x1B[31mSimplePositionCreation: %s OUSD assets deposited in vault", vaultOUSDBalance);
+        expect(vaultOUSDBalance).to.closeTo(262, 1);
+    });
 
-    // it("Should have reduced lev allocation", async function () {
-    //     const allowedLev = getFloatFromBigNum(await r.leverageAllocator.getAddressToLvUSDAvailable(user.address));
-    //     expect(allowedLev).to.equal(initialUserLevAllocation - leverageUserIsTaking);
-    // });
+    it("Should have used lvUSD from coordinator", async function () {
+        const coordinatorCurrentlvUSD = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
+        console.log("\x1B[31mSimplePositionCreation: coordinator had %s lvUSD before creating position.", coordinatorlvUSDBalanceBeforePosition,
+            "\x1B[31mAfter creating position and using some lvUSD, coordinator has", coordinatorCurrentlvUSD, "\x1B[31mlvUSD");
+        expect(coordinatorCurrentlvUSD).to.equal(coordinatorlvUSDBalanceBeforePosition - borrowedlvUSD);
+    });
+
+    it("Should have set principle and leverage into vault's address on OUSD ERC20", async function () {
+        const vaultOusdBalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.vault.address));
+        const vaultTotalAssets = getFloatFromBigNum(await r.vault.totalAssets());
+        console.log("\x1B[31mSimplePositionCreation: vault address has %s OUSD under its address ", vaultOusdBalance);
+
+        expect(vaultOusdBalance).to.equal(vaultTotalAssets);
+    });
+
+    /// Rebase happens from here
+    const rebaseAmount = 20;
+    const rebadeAmountIn18Dec = parseUnitsNum(rebaseAmount);
+    let treasuryOUSDBalanceBeforeRebase;
+    it("Should increase funds in vault when an OUSD rebase happens", async function () {
+        // Save some state before we rebase
+        treasuryOUSDBalanceBeforeRebase = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.treasurySigner.address));
+        const vaultAssetsBeforeRebase = getFloatFromBigNum(await r.vault.totalAssets());
+
+        // Rebase
+        console.log("\x1B[31mSimplePositionCreation:------------REBASE EVENT-----------");
+        await r.externalOUSD.connect(pretendOUSDRebaseSigner).transfer(r.vault.address, rebadeAmountIn18Dec);
+        // collect fees from rebase
+        // temporary change vault executive. In real life, vault calls rebase fee at each deposit/withdraw transaction
+        await r.vault.setExecutive(r.owner.address);
+        await r.vault.takeRebaseFees();
+        // back to normal
+        await r.vault.setExecutive(r.coordinator.address);
+
+        const rebaseRateFee = getFloatFromBigNum(await r.parameterStore.getRebaseFeeRate());
+        const ousdInVaultAfterRebase = getFloatFromBigNum(await r.vault.totalAssets());
+
+        // actual test
+        console.log("\x1B[31mSimplePositionCreation: Created a rebase of %s OUSD. Total OUSD assets deposited in vault are %s",
+            rebaseAmount, ousdInVaultAfterRebase);
+        expect(ousdInVaultAfterRebase).to.equal(vaultAssetsBeforeRebase + rebaseAmount - rebaseRateFee * rebaseAmount);
+    });
+
+    it("Should update treasury with rebase fees", async function () {
+        const treasuryBalanceAfterRebase = getFloatFromBigNum(
+            await r.externalOUSD.balanceOf(r.treasurySigner.address),
+        );
+        const rebaseRateFee = getFloatFromBigNum(await r.parameterStore.getRebaseFeeRate());
+        /// treasury should have originationFee + rebaseFee = 8.5 + 20*0.1 = 8.5+2 = 10.5
+        console.log("\x1B[31mSimplePositionCreation: treasury now has %s (increased due to rebaseRateFee)", treasuryBalanceAfterRebase);
+        expect(treasuryBalanceAfterRebase).to.equal(treasuryOUSDBalanceBeforeRebase + rebaseAmount * rebaseRateFee);
+    });
 });
 
 // describe("test suit for rebase events", function () {
@@ -248,4 +299,4 @@ describe("Test suit for getting leverage", function () {
 //     // It can be a view that does a previewRedeem on vault with position shares and OUSDEarned is the delta with that and OUSDTotal
 // });
 
-const endthis = 0;
+// const endthis = 0;
