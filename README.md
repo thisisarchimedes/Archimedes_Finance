@@ -31,7 +31,7 @@ Then, choose the directory where you want to clone the project repository.
 $ cd PATH_TO_REPO
 
 # Clone this repository
-$ git clone git@github.com:thisisarchimedes/Archimedes_Finance.git
+$ git clone https://github.com/thisisarchimedes/Archimedes_Finance.git
 
 # Go to the root directory of the repository
 $ cd Archimedes_Finance
@@ -57,5 +57,5 @@ $ npx hardhat test
 
 - "ProviderError: Must be authenticated!": related to git hub private repo not being able to be checked out. One simple fix is to clone secrets repo inside this folder to have Archimedes_Finance/secrets:
 ```bash
-$ git clone git@github.com:thisisarchimedes/secrets.git
+$ git clone https://github.com/thisisarchimedes/secrets.git
 ```
