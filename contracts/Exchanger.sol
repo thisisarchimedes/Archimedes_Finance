@@ -367,7 +367,11 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _requireAdmin();
     }
 
+    // fallback() external {
+    //     revert("Exchanger : Invalid access");
+    // }
+
     fallback() external {
-        revert("PositionToken : Invalid access");
+        revert("ExchangerFB-Invalid access");
     }
 }

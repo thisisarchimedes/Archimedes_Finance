@@ -180,6 +180,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     fallback() external {
-        revert("PositionToken : Invalid access");
+        revert("ParamStore : Invalid access");
     }
 }
