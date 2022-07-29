@@ -130,45 +130,45 @@ async function setupEnvForIntegrationTests () {
     return r;
 }
 
-// describe("Test suit for setting up the stage", function () {
-//     before(async function () {
-//         await setupEnvForIntegrationTests();
-//     });
+describe("Test suit for setting up the stage", function () {
+    before(async function () {
+        await setupEnvForIntegrationTests();
+    });
 
-//     it("Should have initialCoordinatorLvUSDBalance lvUSD balance under coordinator", async function () {
-//         const coordinatorLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
-//         expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
-//     });
+    it("Should have initialCoordinatorLvUSDBalance lvUSD balance under coordinator", async function () {
+        const coordinatorLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
+        expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
+    });
 
-//     it("Should have setup OUSD pretender with OUSD to spend ", async function () {
-//         const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretendOUSDRebaseSigner.getAddress()));
-//         /// since we are exchanging 10 ethereum for the dollar value of token, price is not set. Checking for a reasonable value
-//         expect(pretenderOUSDbalance).to.greaterThan(1000);
-//     });
+    it("Should have setup OUSD pretender with OUSD to spend ", async function () {
+        const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretendOUSDRebaseSigner.getAddress()));
+        /// since we are exchanging 10 ethereum for the dollar value of token, price is not set. Checking for a reasonable value
+        expect(pretenderOUSDbalance).to.greaterThan(1000);
+    });
 
-//     it("Should have setup user with  enough OUSD to cover principle amount", async function () {
-//         const userOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await user.getAddress()));
-//         expect(userOUSDbalance).to.greaterThan(userOUSDPrinciple);
-//     });
+    it("Should have setup user with  enough OUSD to cover principle amount", async function () {
+        const userOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await user.getAddress()));
+        expect(userOUSDbalance).to.greaterThan(userOUSDPrinciple);
+    });
 
-//     it("Should have initialFundsInPool as balance of pool", async function () {
-//         printPoolState(lvUSD3CRVPoolInstance);
-//         const lvUSDCoinsInPool = await lvUSD3CRVPoolInstance.balances(0);
-//         const crvCoinsInPool = await lvUSD3CRVPoolInstance.balances(1);
-//         expect(lvUSDCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
-//         expect(crvCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
-//     });
+    it("Should have initialFundsInPool as balance of pool", async function () {
+        printPoolState(lvUSD3CRVPoolInstance);
+        const lvUSDCoinsInPool = await lvUSD3CRVPoolInstance.balances(0);
+        const crvCoinsInPool = await lvUSD3CRVPoolInstance.balances(1);
+        expect(lvUSDCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
+        expect(crvCoinsInPool).to.eq(parseUnitsNum(initialFundsInPool));
+    });
 
-//     it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
-//         const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
-//         expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
-//     });
+    it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
+        const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
+        expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
+    });
 
-//     it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
-//         const admin3CRVBalance = getFloatFromBigNum(await r.external3CRV.balanceOf(await owner.getAddress()));
-//         expect(admin3CRVBalance).to.lessThan(adminInitial3CRVBalance);
-//     });
-// });
+    it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
+        const admin3CRVBalance = getFloatFromBigNum(await r.external3CRV.balanceOf(await owner.getAddress()));
+        expect(admin3CRVBalance).to.lessThan(adminInitial3CRVBalance);
+    });
+});
 
 describe("Test suit for getting leverage", function () {
     let leverageUserIsTaking: number;

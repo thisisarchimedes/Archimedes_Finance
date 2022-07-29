@@ -22,7 +22,7 @@ async function fundLVUSDToCoordinator () {
 
 const fundARCH = async () => {
     console.log("Funding Arch to owner");
-    const archAmountToFund = 1000;
+    const archAmountToFund = "1000";
     await context.archToken.connect(context.treasurySigner).transfer(context.owner.address, ethers.utils.parseUnits(archAmountToFund));
     console.log(context.owner.address + " funded with " + archAmountToFund + " ARCH");
 };
@@ -43,7 +43,8 @@ async function verifyDeployment () {
 }
 
 const deployScript = async () => {
-    context = await buildContractTestContext(skipPoolBalances = true);
+    // hacky way to go around pool balances not working on local instance.. skipPoolBalances = true
+    context = await buildContractTestContext(true);
     await setRolesForEndToEnd(context);
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
     await fundLVUSDToCoordinator();

@@ -75,14 +75,12 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         require(availableLev >= lvUSDAmount, "Not enough available lvUSD");
         _burnArchTokenForPosition(msg.sender, archAmount);
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
-       
         _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple);
         _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
 
         emit PositionCreated(msg.sender, positionTokenId, ousdPrinciple, lvUSDAmount, archAmount);
 
-        // return 2;
         return positionTokenId;
     }
 
