@@ -104,27 +104,19 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
  * @param owner: signer
  * @param r: instance: ContractContextTest
  */
-async function createAndFundMetapool (owner, r) {
+async function createAndFundMetapool (owner, r, skipPoolBalances = false) {
     const lvUSD = r.lvUSD;
-    console.log("Creating metapool");
     const addressPool = await createMetapool(lvUSD, owner);
-    console.log("Created metapool at address %s", addressPool);
     const pool = await getMetapool(addressPool, owner);
-    console.log("Got lvUSD and pool address. Pool address is %s", pool.address);
     // Should not be able to call this multiple times
     // Check to make sure pool is empty
-    console.log("Getting pool balances...");
-
-    // const poolCoin0Bal = ethers.utils.formatUnits(await pool.connect(owner).balances(0));
-    // const poolCoin1Bal = ethers.utils.formatUnits(await pool.connect(owner).balances(1));
-
-    const poolCoin0Bal = "0.0";
-    const poolCoin1Bal = "0.0";
-
-    console.log("GOT!! pool balances...");
-
+    let poolCoin0Bal = "0.0";
+    let poolCoin1Bal = "0.0";
+    if (skipPoolBalances === false) {
+        poolCoin0Bal = ethers.utils.formatUnits(await pool.connect(owner).balances(0));
+        poolCoin1Bal = ethers.utils.formatUnits(await pool.connect(owner).balances(1));
+    }
     if (poolCoin0Bal === "0.0" && poolCoin1Bal === "0.0") {
-        console.log("inside fund pool");
         await fundMetapool(addressPool, [fundedPoolAmount, fundedPoolAmount], owner, r);
         return pool;
     } else {

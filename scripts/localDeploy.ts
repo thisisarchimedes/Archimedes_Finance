@@ -43,7 +43,7 @@ async function verifyDeployment () {
 }
 
 const deployScript = async () => {
-    context = await buildContractTestContext();
+    context = await buildContractTestContext(skipPoolBalances = true);
     await setRolesForEndToEnd(context);
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
     await fundLVUSDToCoordinator();

@@ -67,34 +67,20 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         uint256 cycles,
         uint256 archAmount
     ) external nonReentrant returns (uint256) {
-        // revert("Inside lev position!");
-        console.log("createLeveragedPosition: 1");
         uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
         uint256 lvUSDAmountAllocatedFromArch = _parameterStore.calculateLeverageAllowedForArch(archAmount);
         /// Revert if not enough Arch token for needed leverage. Continue if too much arch is given
         require(lvUSDAmountAllocatedFromArch >= lvUSDAmount, "Not enough Arch provided");
-        console.log("createLeveragedPosition: 2");
         uint256 availableLev = _coordinator.getAvailableLeverage();
         require(availableLev >= lvUSDAmount, "Not enough available lvUSD");
-        console.log("createLeveragedPosition: 3");
         _burnArchTokenForPosition(msg.sender, archAmount);
-        console.log("createLeveragedPosition: 3.1");
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
-        console.log(
-            "createLeveragedPosition: 4 - trying to transfer %s OUSD from sender to coordinator at %s",
-            ousdPrinciple / 1 ether,
-            _addressCoordinator
-        );
-        console.log("createLeveragedPosition: 4.1 - OUSD address is %s", _addressOUSD);
+       
         _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
-        console.log("createLeveragedPosition: 5");
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple);
-        console.log("createLeveragedPosition: 6");
         _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
-        console.log("createLeveragedPosition: 7");
 
         emit PositionCreated(msg.sender, positionTokenId, ousdPrinciple, lvUSDAmount, archAmount);
-        console.log("createLeveragedPosition: 8");
 
         // return 2;
         return positionTokenId;

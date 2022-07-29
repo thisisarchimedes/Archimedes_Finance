@@ -47,7 +47,7 @@ export async function setRolesForEndToEnd (r:ContractTestContext) {
 }
 export const signers = ethers.getSigners();
 export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("1000.0");
-export async function buildContractTestContext (): Promise<ContractTestContext> {
+export async function buildContractTestContext (skipPoolBalances: boolean = false): Promise<ContractTestContext> {
     await helperResetNetwork(defaultBlockNumber);
 
     const context = {} as ContractTestContext;
@@ -97,7 +97,7 @@ export async function buildContractTestContext (): Promise<ContractTestContext> 
     await helperSwapETHWith3CRV(context.owner, ethers.utils.parseUnits("3.0"));
 
     // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token
-    context.curveLvUSDPool = await createAndFundMetapool(context.owner, context);
+    context.curveLvUSDPool = await createAndFundMetapool(context.owner, context, skipPoolBalances);
     // Setup pool with approval
     await context.lvUSD.approve(context.curveLvUSDPool.address, ownerStartingLvUSDAmount);
 
