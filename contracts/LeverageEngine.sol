@@ -78,6 +78,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         require(availableLev >= lvUSDAmount, "Not enough available lvUSD");
         console.log("createLeveragedPosition: 3");
         _burnArchTokenForPosition(msg.sender, archAmount);
+        console.log("createLeveragedPosition: 3.1");
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
         console.log(
             "createLeveragedPosition: 4 - trying to transfer %s OUSD from sender to coordinator at %s",

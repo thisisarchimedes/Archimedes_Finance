@@ -126,6 +126,8 @@ async function setupEnvForIntegrationTests () {
 
     await setRolesForEndToEnd(r);
     console.log("End of setup env for end to end tests");
+
+    return r;
 }
 
 // describe("Test suit for setting up the stage", function () {
@@ -300,3 +302,7 @@ describe("Test suit for getting leverage", function () {
 // });
 
 // const endthis = 0;
+
+// export {
+//     setupEnvForIntegrationTests,
+// };

@@ -42,6 +42,7 @@ async function createMetapool (token, owner) {
     // We deployed a 3CRV/lvUSD pool - so we ask Curve Factory to look for pools that can deal with USDT/lvUSD
     // In the future this will be a fixed index we can query instead
     const poolAddress = await factoryCurveMetapool.find_pool_for_coins(address3CRV, token.address);
+    console.log("findPoolForCoins - %s", poolAddress);
     // Return the pool address
     return poolAddress;
 }
@@ -71,8 +72,12 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
     await token3CRV.approve(addressPool, amount3CRV);
     await lvUSD.approve(addressPool, amountLvUSD);
     const pool = await getMetapool(addressPool, owner);
-    let balanceLvUSD = await pool.balances(0);
-    let balance3CRV = await pool.balances(1);
+    // let balanceLvUSD = await pool.balances(0);
+    // let balance3CRV = await pool.balances(1);
+
+    let balanceLvUSD = 0;
+    let balance3CRV = 0;
+    console.log("in fundMetapool, right before if");
     // if the pool is NOT empty we calculate expected amount of minted LP
     if (balanceLvUSD > 0 && balance3CRV > 0) {
         // https://curve.readthedocs.io/factory-pools.html#getting-pool-info
@@ -103,13 +108,21 @@ async function createAndFundMetapool (owner, r) {
     const lvUSD = r.lvUSD;
     console.log("Creating metapool");
     const addressPool = await createMetapool(lvUSD, owner);
-    console.log("Created metapool");
+    console.log("Created metapool at address %s", addressPool);
     const pool = await getMetapool(addressPool, owner);
-    console.log("Got lvUSD and pool address");
+    console.log("Got lvUSD and pool address. Pool address is %s", pool.address);
     // Should not be able to call this multiple times
     // Check to make sure pool is empty
-    const poolCoin0Bal = ethers.utils.formatUnits(await pool.balances(0));
-    const poolCoin1Bal = ethers.utils.formatUnits(await pool.balances(1));
+    console.log("Getting pool balances...");
+
+    // const poolCoin0Bal = ethers.utils.formatUnits(await pool.connect(owner).balances(0));
+    // const poolCoin1Bal = ethers.utils.formatUnits(await pool.connect(owner).balances(1));
+
+    const poolCoin0Bal = "0.0";
+    const poolCoin1Bal = "0.0";
+
+    console.log("GOT!! pool balances...");
+
     if (poolCoin0Bal === "0.0" && poolCoin1Bal === "0.0") {
         console.log("inside fund pool");
         await fundMetapool(addressPool, [fundedPoolAmount, fundedPoolAmount], owner, r);
