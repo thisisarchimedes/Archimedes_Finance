@@ -2,7 +2,6 @@ import hre, { ethers } from "hardhat";
 
 import { helperSwapETHWithOUSD } from "../test/MainnetHelper";
 import { buildContractTestContext, setRolesForEndToEnd } from "../test/ContractTestContext";
-import { stopImpersonate } from "../integrationTests/IntegrationTestContext";
 import dotenv from "dotenv";
 
 dotenv.config({ path: "secrets/alchemy.env" });
@@ -11,11 +10,8 @@ export const signers = ethers.getSigners();
 
 let context;
 
-const addresslvUSDMinter = "0x42208d094776c533ee96a4a57d50a6ac04af4aa2";
-const addresslvUSDAdmin = "0x7246dd11320eee513cefe5f50e8be2d28fb06426";
-
-async function fundLVUSD () {
-    console.log("Funding lvUSD");
+async function fundLVUSDToCoordinator () {
+    console.log("Funding lvUSD to coordinator");
     const amount = "10000";
 
     await context.lvUSD.setMintDestination(context.coordinator.address);
@@ -25,19 +21,13 @@ async function fundLVUSD () {
 }
 
 const fundARCH = async () => {
-    console.log("Funding Arch");
+    console.log("Funding Arch to owner");
     const archAmountToFund = 1000;
     await context.archToken.connect(context.treasurySigner).transfer(context.owner.address, ethers.utils.parseUnits(archAmountToFund));
     console.log(context.owner.address + " funded with " + archAmountToFund + " ARCH");
 };
 
-const cleanup = async () => {
-    await stopImpersonate(addresslvUSDMinter);
-    await stopImpersonate(addresslvUSDAdmin);
-};
-
 async function verifyDeployment () {
-    console.log("ParamStore value rebaseFeeRate = %s", await context.parameterStore.getRebaseFeeRate());
     console.log("lvUSD address is", await context.lvUSD.address);
     console.log("Arch address is", await context.archToken.address);
     console.log("LevEngine address is", await context.leverageEngine.address);
@@ -56,10 +46,9 @@ const deployScript = async () => {
     context = await buildContractTestContext();
     await setRolesForEndToEnd(context);
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
-    await fundLVUSD();
+    await fundLVUSDToCoordinator();
     await fundARCH();
     await verifyDeployment();
-    await cleanup();
 };
 
 deployScript();
