@@ -47,7 +47,7 @@ export async function setRolesForEndToEnd (r:ContractTestContext) {
 }
 export const signers = ethers.getSigners();
 export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("1000.0");
-export async function buildContractTestContext (skipPoolBalances: boolean = false): Promise<ContractTestContext> {
+export async function buildContractTestContext (skipPoolBalances = false): Promise<ContractTestContext> {
     await helperResetNetwork(defaultBlockNumber);
 
     const context = {} as ContractTestContext;
