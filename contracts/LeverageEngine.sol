@@ -69,6 +69,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     ) external nonReentrant returns (uint256) {
         uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
         uint256 lvUSDAmountAllocatedFromArch = _parameterStore.calculateLeverageAllowedForArch(archAmount);
+        lvUSDAmountAllocatedFromArch = lvUSDAmountAllocatedFromArch + 10000000; /// add some safety margin
         /// Revert if not enough Arch token for needed leverage. Continue if too much arch is given
         require(lvUSDAmountAllocatedFromArch >= lvUSDAmount, "Not enough Arch provided");
         uint256 availableLev = _coordinator.getAvailableLeverage();

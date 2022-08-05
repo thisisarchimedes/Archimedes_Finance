@@ -40,11 +40,14 @@ async function verifyDeployment () {
     console.log("--CDP address is", await context.cdp.address);
     console.log("------ owner address is", await context.owner.address);
     console.log("------ curve pool address is", await context.curveLvUSDPool.address);
+    console.log("---- test calculateArchNeededForLeverage - ",
+        await context.parameterStore.calculateArchNeededForLeverage(ethers.utils.parseUnits("3.67")));
 }
 
 const deployScript = async () => {
     // hacky way to go around pool balances not working on local instance.. skipPoolBalances = true
     context = await buildContractTestContext(true);
+    // await context.parameterStore.changeArchToLevRatio(ethers.utils.parseUnits("1.0"));
     await setRolesForEndToEnd(context);
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
     await fundLVUSDToCoordinator();
