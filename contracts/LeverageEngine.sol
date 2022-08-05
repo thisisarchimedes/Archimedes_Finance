@@ -69,12 +69,11 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     ) external nonReentrant returns (uint256) {
         uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
         uint256 lvUSDAmountAllocatedFromArch = _parameterStore.calculateLeverageAllowedForArch(archAmount);
+        lvUSDAmountAllocatedFromArch = lvUSDAmountAllocatedFromArch + 10000000; /// add some safety margin
         /// Revert if not enough Arch token for needed leverage. Continue if too much arch is given
         require(lvUSDAmountAllocatedFromArch >= lvUSDAmount, "Not enough Arch provided");
-
         uint256 availableLev = _coordinator.getAvailableLeverage();
         require(availableLev >= lvUSDAmount, "Not enough available lvUSD");
-
         _burnArchTokenForPosition(msg.sender, archAmount);
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
         _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
@@ -82,6 +81,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
 
         emit PositionCreated(msg.sender, positionTokenId, ousdPrinciple, lvUSDAmount, archAmount);
+
         return positionTokenId;
     }
 
@@ -118,6 +118,6 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     }
 
     fallback() external {
-        revert("PositionToken : Invalid access");
+        revert("LevEngine : Invalid access");
     }
 }

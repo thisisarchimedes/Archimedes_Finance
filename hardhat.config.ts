@@ -75,6 +75,7 @@ export default {
 
         },
         hardhat: {
+            chainId: 1337,
             forking: {
                 url: alchemyUrl,
                 allowUnlimitedContractSize: true,

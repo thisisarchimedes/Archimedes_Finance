@@ -167,7 +167,8 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     function calculateArchNeededForLeverage(uint256 leverageAmount) public view returns (uint256) {
-        return (leverageAmount / _archToLevRatio);
+        uint256 naturalNumberRatio = _archToLevRatio / 1 ether;
+        return (leverageAmount / naturalNumberRatio);
     }
 
     function calculateLeverageAllowedForArch(uint256 archAmount) public view returns (uint256) {
@@ -180,6 +181,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     fallback() external {
-        revert("PositionToken : Invalid access");
+        revert("ParamStore : Invalid access");
     }
 }
