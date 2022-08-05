@@ -196,7 +196,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         // get_dy(indexCoinSend, indexCoinRec, amount)
         _expected3CRV = _poolLvUSD3CRV.get_dy(0, 1, amountLvUSD);
 
-        /// Make sure expected3CRV is not too high!
+        // /// Make sure expected3CRV is not too high!
         console.log(
             "When exchanging lvUSD for 3crv from imbalanced pool amountLvUSD = %s, _expected3CRV = %s",
             amountLvUSD / 1 ether,
@@ -358,7 +358,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
 
     function _checkExchangeExpectedReturnInLimit(uint256 amountToExchange, uint256 expctedExchangeReturn) internal {
         uint256 maxAllowedExchangeReturn = amountToExchange + (amountToExchange * _paramStore.getCurveMaxExchangeGuard()) / 100;
-        console.log("Exchanger maxAllowedExchangeReturn %s from %s amount", maxAllowedExchangeReturn / 1 ether, amountToExchange / 1 ether);
         require(expctedExchangeReturn <= maxAllowedExchangeReturn, "Expected return value too big");
     }
 
@@ -368,6 +367,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
     }
 
     fallback() external {
-        revert("PositionToken : Invalid access");
+        revert("Exchanger : Invalid access");
     }
 }

@@ -42,6 +42,7 @@ async function createMetapool (token, owner) {
     // We deployed a 3CRV/lvUSD pool - so we ask Curve Factory to look for pools that can deal with USDT/lvUSD
     // In the future this will be a fixed index we can query instead
     const poolAddress = await factoryCurveMetapool.find_pool_for_coins(address3CRV, token.address);
+    console.log("findPoolForCoins - %s", poolAddress);
     // Return the pool address
     return poolAddress;
 }
@@ -65,14 +66,18 @@ async function getMetapool (address, signer) {
  * @param owner: signer
  * @param r: instance: ContractContextTest
  */
-async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
+async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r, skipPoolBalances = false) {
     const token3CRV = r.external3CRV;
     const lvUSD = r.lvUSD;
     await token3CRV.approve(addressPool, amount3CRV);
     await lvUSD.approve(addressPool, amountLvUSD);
     const pool = await getMetapool(addressPool, owner);
-    let balanceLvUSD = await pool.balances(0);
-    let balance3CRV = await pool.balances(1);
+    let balanceLvUSD = 0;
+    let balance3CRV = 0;
+    if (skipPoolBalances === false) {
+        balanceLvUSD = await pool.balances(0);
+        balance3CRV = await pool.balances(1);
+    }
     // if the pool is NOT empty we calculate expected amount of minted LP
     if (balanceLvUSD > 0 && balance3CRV > 0) {
         // https://curve.readthedocs.io/factory-pools.html#getting-pool-info
@@ -99,16 +104,20 @@ async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r) {
  * @param owner: signer
  * @param r: instance: ContractContextTest
  */
-async function createAndFundMetapool (owner, r) {
+async function createAndFundMetapool (owner, r, skipPoolBalances = false) {
     const lvUSD = r.lvUSD;
     const addressPool = await createMetapool(lvUSD, owner);
     const pool = await getMetapool(addressPool, owner);
     // Should not be able to call this multiple times
     // Check to make sure pool is empty
-    const poolCoin0Bal = ethers.utils.formatUnits(await pool.balances(0));
-    const poolCoin1Bal = ethers.utils.formatUnits(await pool.balances(1));
+    let poolCoin0Bal = "0.0";
+    let poolCoin1Bal = "0.0";
+    if (skipPoolBalances === false) {
+        poolCoin0Bal = ethers.utils.formatUnits(await pool.connect(owner).balances(0));
+        poolCoin1Bal = ethers.utils.formatUnits(await pool.connect(owner).balances(1));
+    }
     if (poolCoin0Bal === "0.0" && poolCoin1Bal === "0.0") {
-        await fundMetapool(addressPool, [fundedPoolAmount, fundedPoolAmount], owner, r);
+        await fundMetapool(addressPool, [fundedPoolAmount, fundedPoolAmount], owner, r, skipPoolBalances);
         return pool;
     } else {
         throw new Error("Pool already created at [" + addressPool + "]. Use fundMetapool() instead.");
