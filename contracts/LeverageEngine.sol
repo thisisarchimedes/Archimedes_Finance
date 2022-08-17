@@ -71,6 +71,9 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         uint256 lvUSDAmountAllocatedFromArch = _parameterStore.calculateLeverageAllowedForArch(archAmount);
         lvUSDAmountAllocatedFromArch = lvUSDAmountAllocatedFromArch + 10000000; /// add some safety margin
         /// Revert if not enough Arch token for needed leverage. Continue if too much arch is given
+        console.log("When creation position - lvUSDAmountAllocatedFromArch %s", lvUSDAmountAllocatedFromArch);
+        console.log("When creation position - lvUSDAmount %s", lvUSDAmount);
+
         require(lvUSDAmountAllocatedFromArch >= lvUSDAmount, "Not enough Arch provided");
         uint256 availableLev = _coordinator.getAvailableLeverage();
         require(availableLev >= lvUSDAmount, "Not enough available lvUSD");

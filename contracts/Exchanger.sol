@@ -142,9 +142,26 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
 
     function _swapOUSDforLvUSD(uint256 amountOUSD, uint256 minRequiredLvUSD) internal returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
         // Estimate "neededOUSD" using get_dy()
+        uint256 _expected3CRV = 0;
+        uint256 _neededOUSDWithSlippage = 0;
+        uint256 estimatedReturnLvUSD = 0;
+        uint256 dynamicBuffer = 100;
+
         uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(_indexLvUSD, _index3CRV, minRequiredLvUSD);
         uint256 _neededOUSD = _poolOUSD3CRV.get_dy(_index3CRV, _indexOUSD, _needed3CRV);
-        uint256 _neededOUSDWithSlippage = (_neededOUSD * 101) / 100;
+        while ( (estimatedReturnLvUSD < minRequiredLvUSD) && (_neededOUSDWithSlippage < amountOUSD)) {
+            dynamicBuffer = dynamicBuffer + 1;
+            _neededOUSDWithSlippage = (_neededOUSD * dynamicBuffer) / 100;
+
+            require(amountOUSD >= _neededOUSDWithSlippage, "Not enough OUSD for exchange");
+
+            // simulate exchanges to make sure we get enough lvUSD 
+            _expected3CRV = _poolOUSD3CRV.get_dy(0, 1, _neededOUSDWithSlippage);
+            estimatedReturnLvUSD = _poolLvUSD3CRV.get_dy(1, 0, _expected3CRV);
+        }
+        // uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(_indexLvUSD, _index3CRV, minRequiredLvUSD);
+        // uint256 _neededOUSD = _poolOUSD3CRV.get_dy(_index3CRV, _indexOUSD, _needed3CRV);
+        // uint256 _neededOUSDWithSlippage = (_neededOUSD * 101) / 100;
 
         require(amountOUSD >= _neededOUSDWithSlippage, "Not enough OUSD for exchange");
 
@@ -153,7 +170,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         uint256 _returned3CRV = _xOUSDfor3CRV(_neededOUSDWithSlippage);
 
         uint256 _returnedLvUSD = _x3CRVforLvUSD(_returned3CRV);
-        require(_returnedLvUSD >= minRequiredLvUSD, "Not enough LvUSD in pool");
+        require(_returnedLvUSD >= minRequiredLvUSD, "3/lv insufficent exhange to lvUSD");
 
         // calculate remaining OUSD
         remainingOUSD = amountOUSD - _neededOUSDWithSlippage;
