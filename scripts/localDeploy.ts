@@ -1,6 +1,5 @@
 import hre, { ethers } from "hardhat";
-
-import { helperSwapETHWithOUSD } from "../test/MainnetHelper";
+import { helperSwapETHWithOUSD,addressOUSD, abiOUSDToken } from "../test/MainnetHelper";
 import { buildContractTestContext, setRolesForEndToEnd } from "../test/ContractTestContext";
 import dotenv from "dotenv";
 
@@ -55,4 +54,15 @@ const deployScript = async () => {
     await verifyDeployment();
 };
 
+const simulateRebase = async () => {
+    const [owner,addr1] = await ethers.getSigners();
+    const vaultAddress = "0x22a9B82A6c3D2BFB68F324B2e8367f346Dd6f32a"
+    await helperSwapETHWithOUSD(owner, ethers.utils.parseUnits("1.0"));
+    const externalOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, owner);
+    await externalOUSD.transfer(vaultAddress,ethers.utils.parseUnits("20.0"))
+
+}
+
 deployScript();
+// simulateRebase()
+

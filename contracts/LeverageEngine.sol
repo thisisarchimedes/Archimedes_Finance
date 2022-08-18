@@ -61,29 +61,31 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     ///
     /// @param ousdPrinciple the amount of OUSD sent to Archimedes
     /// @param cycles How many leverage cycles to do
-    /// @param archAmount Arch tokens to burn for position
+    /// @param maxArchAmount max amount of Arch tokens to burn for position
     function createLeveragedPosition(
         uint256 ousdPrinciple,
         uint256 cycles,
-        uint256 archAmount
+        uint256 maxArchAmount
     ) external nonReentrant returns (uint256) {
         uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
-        uint256 lvUSDAmountAllocatedFromArch = _parameterStore.calculateLeverageAllowedForArch(archAmount);
-        lvUSDAmountAllocatedFromArch = lvUSDAmountAllocatedFromArch + 10000000; /// add some safety margin
+        // uint256 lvUSDAmountAllocatedFromArch = _parameterStore.calculateLeverageAllowedForArch(archAmount);
+        uint256 archNeededToBurn = _parameterStore.calculateArchNeededForLeverage(lvUSDAmount);
+        require(archNeededToBurn <= maxArchAmount, "Not enough Arch given for Position");
+        // lvUSDAmountAllocatedFromArch = lvUSDAmountAllocatedFromArch + 10000000; /// add some safety margin
         /// Revert if not enough Arch token for needed leverage. Continue if too much arch is given
-        console.log("When creation position - lvUSDAmountAllocatedFromArch %s", lvUSDAmountAllocatedFromArch);
-        console.log("When creation position - lvUSDAmount %s", lvUSDAmount);
+        // console.log("When creation position - lvUSDAmountAllocatedFromArch %s", lvUSDAmountAllocatedFromArch);
+        // console.log("When creation position - lvUSDAmount %s", lvUSDAmount);
 
-        require(lvUSDAmountAllocatedFromArch >= lvUSDAmount, "Not enough Arch provided");
+        // require(lvUSDAmountAllocatedFromArch >= lvUSDAmount, "Not enough Arch provided");
         uint256 availableLev = _coordinator.getAvailableLeverage();
         require(availableLev >= lvUSDAmount, "Not enough available lvUSD");
-        _burnArchTokenForPosition(msg.sender, archAmount);
+        _burnArchTokenForPosition(msg.sender, archNeededToBurn);
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
         _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple);
         _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
 
-        emit PositionCreated(msg.sender, positionTokenId, ousdPrinciple, lvUSDAmount, archAmount);
+        emit PositionCreated(msg.sender, positionTokenId, ousdPrinciple, lvUSDAmount, archNeededToBurn);
 
         return positionTokenId;
     }
