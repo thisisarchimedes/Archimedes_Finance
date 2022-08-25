@@ -23,7 +23,7 @@ async function createMetapool (token, owner) {
     const factoryCurveMetapool = new ethers.Contract(addressCurveFactory, abiCurveFactory, owner);
     const tokenName = await token.symbol();
     const poolSymbol = tokenName + "3CRV";
-    const poolA = 1337;
+    const poolA = 40000;
     const poolFee = 4000000;
 
     // examples on Mainnet:

@@ -142,38 +142,108 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
 
     function _swapOUSDforLvUSD(uint256 amountOUSD, uint256 minRequiredLvUSD) internal returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
         // Estimate "neededOUSD" using get_dy()
-        uint256 _expected3CRV = 0;
-        uint256 _neededOUSDWithSlippage = 0;
-        uint256 estimatedReturnLvUSD = 0;
-        uint256 dynamicBuffer = 100;
+        // uint256 _expected3CRV = 0;
+        // uint256 _neededOUSDWithSlippage = 0;
+        // uint256 estimatedReturnLvUSD = 0;
+        // uint256 dynamicBuffer = 100;
 
-        uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(_indexLvUSD, _index3CRV, minRequiredLvUSD);
-        uint256 _neededOUSD = _poolOUSD3CRV.get_dy(_index3CRV, _indexOUSD, _needed3CRV);
-        while ( (estimatedReturnLvUSD < minRequiredLvUSD) && (_neededOUSDWithSlippage < amountOUSD)) {
-            dynamicBuffer = dynamicBuffer + 1;
-            _neededOUSDWithSlippage = (_neededOUSD * dynamicBuffer) / 100;
+        // uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(_indexLvUSD, _index3CRV, minRequiredLvUSD);
+        // uint256 _neededOUSD = _poolOUSD3CRV.get_dy(_index3CRV, _indexOUSD, _needed3CRV);
+        // while ( (estimatedReturnLvUSD < minRequiredLvUSD) && (_neededOUSDWithSlippage < amountOUSD) &&  (dynamicBuffer < 110)) {
+        //     console.log("estimatedReturnLvUSD < minRequiredLvUSD, %s < %s",estimatedReturnLvUSD / 1 ether , minRequiredLvUSD/ 1 ether );
+        //     console.log("_neededOUSDWithSlippage < amountOUSD, %s < %s",_neededOUSDWithSlippage / 1 ether , amountOUSD/ 1 ether );
 
-            require(amountOUSD >= _neededOUSDWithSlippage, "Not enough OUSD for exchange");
+        //     console.log("_swapOUSDforLvUSD1 : neededOUSD %s, minReqlvUSD %s, amountOUSD %s ", _neededOUSD / 1 ether,
+        //          minRequiredLvUSD / 1 ether, amountOUSD / 1 ether);
+        //     dynamicBuffer = dynamicBuffer + 1;
+        //     _neededOUSDWithSlippage = (_neededOUSD * dynamicBuffer) / 100;
 
-            // simulate exchanges to make sure we get enough lvUSD 
-            _expected3CRV = _poolOUSD3CRV.get_dy(0, 1, _neededOUSDWithSlippage);
-            estimatedReturnLvUSD = _poolLvUSD3CRV.get_dy(1, 0, _expected3CRV);
-        }
+        //     require(amountOUSD >= _neededOUSDWithSlippage, "Not enough OUSD for exchange");
+
+        //     // simulate exchanges to make sure we get enough lvUSD
+        //     _expected3CRV = _poolLvUSD3CRV.get_dy(_indexLvUSD, _index3CRV, minRequiredLvUSD);
+        //     estimatedReturnLvUSD = _poolLvUSD3CRV.get_dy(1, 0, _expected3CRV); //?WRONGGGG
+        //     console.log("_swapOUSDforLvUSD1 : estimatedReturnLvUSD %s, neededOUSDWithSpllipage", estimatedReturnLvUSD / 1 ether,
+        //         _neededOUSDWithSlippage / 1 ether);
+        // }
+
         // uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(_indexLvUSD, _index3CRV, minRequiredLvUSD);
         // uint256 _neededOUSD = _poolOUSD3CRV.get_dy(_index3CRV, _indexOUSD, _needed3CRV);
         // uint256 _neededOUSDWithSlippage = (_neededOUSD * 101) / 100;
 
-        require(amountOUSD >= _neededOUSDWithSlippage, "Not enough OUSD for exchange");
+        // require(amountOUSD >= _neededOUSDWithSlippage, "Not enough OUSD for exchange");
+
+        // // We lose some $ from fees and slippage
+        // // multiply _neededOUSD * 103%
+        // uint256 _returned3CRV = _xOUSDfor3CRV(_neededOUSDWithSlippage);
+
+        // uint256 _returnedLvUSD = _x3CRVforLvUSD(_returned3CRV);
+        // require(_returnedLvUSD >= minRequiredLvUSD, "3/lv insufficent exhange to lvUSD");
+
+        // // calculate remaining OUSD
+        // remainingOUSD = amountOUSD - _neededOUSDWithSlippage;
+        // _ousd.safeTransfer(_addressCoordinator, remainingOUSD);
+
+        // // send all swapped lvUSD to coordinator
+        // _lvusd.safeTransfer(_addressCoordinator, _returnedLvUSD);
+
+        // return (_returnedLvUSD, remainingOUSD);
+        uint256 tempMinLv = minRequiredLvUSD;
+        uint256 tempAmountOUSD = amountOUSD;
+        console.log("Unwinding logging");
+        console.log("0: tempMinLv %s ,tempAmountOUSD %s", tempMinLv / 1 ether, tempAmountOUSD / 1 ether);
+
+        uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(0, 1, minRequiredLvUSD);
+        uint256 _neededOUSD = _poolOUSD3CRV.get_dy(1, 0, _needed3CRV);
+        console.log("1: _needed3CRV %s, _neededOUSD %s", _needed3CRV / 1 ether, _neededOUSD / 1 ether);
+
+        _neededOUSD = (_neededOUSD * 1005) / 1000; // This will fix lower balances slippages
+        uint256 _obtained3CRV = _poolOUSD3CRV.get_dy(0, 1, _neededOUSD);
+        uint256 _obtainedLvUSD = _poolLvUSD3CRV.get_dy(1, 0, _obtained3CRV);
+        console.log("2: _obtained3CRV = %s , _obtainedLvUSD = %s", _obtained3CRV / 1 ether, _obtainedLvUSD / 1 ether);
+
+        if (_obtainedLvUSD < (minRequiredLvUSD)) {
+            uint256 _difference = (minRequiredLvUSD) - _obtainedLvUSD + 10**18; // +1 just in case
+            uint256 _3CRVDifference = _poolOUSD3CRV.get_dy(0, 1, _difference);
+            uint256 _LvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _3CRVDifference);
+            console.log(
+                "3: _difference: %s , _3CRVDifference %s ,_LvUSDDifference %s",
+                _difference / 1 ether,
+                _3CRVDifference / 1 ether,
+                _LvUSDDifference / 1 ether
+            );
+
+            uint256 finalAmount = _obtainedLvUSD + _LvUSDDifference;
+            _neededOUSD = _neededOUSD + _difference;
+
+            if (finalAmount < (minRequiredLvUSD)) {
+                console.log("Inside calc finalAmount");
+                _difference = (minRequiredLvUSD) - finalAmount + 10**18; // +1 just in case
+                _3CRVDifference = _poolOUSD3CRV.get_dy(0, 1, _difference);
+                _LvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _3CRVDifference);
+                console.log(
+                    "4: _difference: %s , _3CRVDifference %s ,_LvUSDDifference %s",
+                    _difference / 1 ether,
+                    _3CRVDifference / 1 ether,
+                    _LvUSDDifference / 1 ether
+                );
+                finalAmount = finalAmount + _LvUSDDifference;
+                _neededOUSD = _neededOUSD + _difference;
+            }
+            console.log("_swapOUSDforLvUSD_inside if: _neededOUSD %s, finalAmount(ofLUSD) %s", _neededOUSD / 1 ether, finalAmount / 1 ether);
+        }
+        console.log("_swapOUSDforLvUSD1 : _neededOUSD %s, _obtainedLvUSD %s", _neededOUSD / 1 ether, _obtainedLvUSD / 1 ether);
+        require(amountOUSD >= _neededOUSD, "Not enough OUSD for exchange");
 
         // We lose some $ from fees and slippage
         // multiply _neededOUSD * 103%
-        uint256 _returned3CRV = _xOUSDfor3CRV(_neededOUSDWithSlippage);
+        uint256 _returned3CRV = _xOUSDfor3CRV(_neededOUSD);
 
         uint256 _returnedLvUSD = _x3CRVforLvUSD(_returned3CRV);
-        require(_returnedLvUSD >= minRequiredLvUSD, "3/lv insufficent exhange to lvUSD");
+        require(_returnedLvUSD >= minRequiredLvUSD, "3/lv insuf eX to lvUSD");
 
         // calculate remaining OUSD
-        remainingOUSD = amountOUSD - _neededOUSDWithSlippage;
+        remainingOUSD = amountOUSD - _neededOUSD;
         _ousd.safeTransfer(_addressCoordinator, remainingOUSD);
 
         // send all swapped lvUSD to coordinator
@@ -259,6 +329,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         uint256 _guard3CRV = (amountOUSD * _paramStore.getCurveGuardPercentage()) / 100;
 
         // Verify Exchanger has enough OUSD to use
+        console.log("amountOUSD <= _ousd.balanceOf(address(this) %s <= %s", amountOUSD, _ousd.balanceOf(address(this)));
         require(amountOUSD <= _ousd.balanceOf(address(this)), "Insufficient OUSD in Exchanger.");
 
         // Estimate expected amount of 3CRV
@@ -381,6 +452,55 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
+    }
+
+    function estimateOusdReturnedOnUnwind(uint256 amountOUSD, uint256 minRequiredLvUSD) external view returns (uint256) {
+        // return (_returnedLvUSD, remainingOUSD);
+        uint256 tempMinLv = minRequiredLvUSD;
+        // uint256 tempAmountOUSD = amountOUSD;
+        console.log("Unwinding logging");
+        // console.log("0: tempMinLv %s ,tempAmountOUSD %s", tempMinLv / 1 ether, tempAmountOUSD / 1 ether);
+
+        uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(0, 1, minRequiredLvUSD);
+        uint256 _neededOUSD = _poolOUSD3CRV.get_dy(1, 0, _needed3CRV);
+        console.log("estimateOusdReturnedOnUnwind 1: _needed3CRV %s, _neededOUSD %s", _needed3CRV / 1 ether, _neededOUSD / 1 ether);
+
+        _neededOUSD = (_neededOUSD * 1005) / 1000; // This will fix lower balances slippages
+        uint256 _obtained3CRV = _poolOUSD3CRV.get_dy(0, 1, _neededOUSD);
+        uint256 _obtainedLvUSD = _poolLvUSD3CRV.get_dy(1, 0, _obtained3CRV);
+        console.log("estimateOusdReturnedOnUnwind 2: _obtained3CRV = %s , _obtainedLvUSD = %s", _obtained3CRV / 1 ether, _obtainedLvUSD / 1 ether);
+
+        if (_obtainedLvUSD < (minRequiredLvUSD)) {
+            uint256 _difference = (minRequiredLvUSD) - _obtainedLvUSD + 10**18; // +1 just in case
+            uint256 _3CRVDifference = _poolOUSD3CRV.get_dy(0, 1, _difference);
+            uint256 _LvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _3CRVDifference);
+            console.log(
+                "estimateOusdReturnedOnUnwind 3: _difference: %s , _3CRVDifference %s ,_LvUSDDifference %s",
+                _difference / 1 ether,
+                _3CRVDifference / 1 ether,
+                _LvUSDDifference / 1 ether
+            );
+
+            uint256 finalAmount = _obtainedLvUSD + _LvUSDDifference;
+            _neededOUSD = _neededOUSD + _difference;
+
+            if (finalAmount < (minRequiredLvUSD)) {
+                console.log("estimateOusdReturnedOnUnwind Inside calc finalAmount");
+                _difference = (minRequiredLvUSD) - finalAmount + 10**18; // +1 just in case
+                _3CRVDifference = _poolOUSD3CRV.get_dy(0, 1, _difference);
+                _LvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _3CRVDifference);
+                console.log(
+                    "estimateOusdReturnedOnUnwind 4: _difference: %s , _3CRVDifference %s ,_LvUSDDifference %s",
+                    _difference / 1 ether,
+                    _3CRVDifference / 1 ether,
+                    _LvUSDDifference / 1 ether
+                );
+                finalAmount = finalAmount + _LvUSDDifference;
+                _neededOUSD = _neededOUSD + _difference;
+            }
+            console.log("_swapOUSDforLvUSD_inside if: _neededOUSD %s, finalAmount(ofLUSD) %s", _neededOUSD / 1 ether, finalAmount / 1 ether);
+        }
+        return amountOUSD - _neededOUSD;
     }
 
     fallback() external {

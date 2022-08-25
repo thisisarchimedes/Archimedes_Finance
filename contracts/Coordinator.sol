@@ -186,11 +186,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         uint256 _amount,
         address _to
     ) internal {
-        /// Method makes sure ousd recorded balance transfer
-        // TODO: Do we really need this check? Seems excessive
-        uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
         _ousd.safeTransfer(_to, _amount);
-        require(_ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount, "OUSD transfer balance incorrect");
         _cdp.withdrawOUSDFromPosition(_nftId, _amount);
     }
 
@@ -207,6 +203,12 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         uint256 _fee = _paramStore.calculateOriginationFee(_leveragedOUSDAmount);
         _ousd.safeTransfer(_paramStore.getTreasuryAddress(), _fee);
         return _fee;
+    }
+
+    function _checkEqualBalanceWithBuffer(uint256 givenAmount, uint256 expectedAmount) internal returns (bool) {
+        uint256 expectedLowerBound = expectedAmount - 10; // to accomadte rounding in the 2 lowest digits
+        uint256 expectedUpperBound = expectedAmount + 10; // to accomadte rounding in the 2 lowest digits
+        return (expectedLowerBound <= givenAmount) && (givenAmount <= expectedUpperBound);
     }
 
     // solhint-disable-next-line

@@ -67,10 +67,14 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         uint256 cycles,
         uint256 maxArchAmount
     ) external nonReentrant returns (uint256) {
-        uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
+        uint256 maxArchAmountBUfferedDown = maxArchAmount - 100;
+        uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPositionWithArch(ousdPrinciple, cycles, maxArchAmountBUfferedDown);
+        // Take only whole lvUSD, no weis
         // uint256 lvUSDAmountAllocatedFromArch = _parameterStore.calculateLeverageAllowedForArch(archAmount);
-        uint256 archNeededToBurn = _parameterStore.calculateArchNeededForLeverage(lvUSDAmount);
-        require(archNeededToBurn <= maxArchAmount, "Not enough Arch given for Position");
+        uint256 archNeededToBurn = _parameterStore.calculateArchNeededForLeverage(lvUSDAmount) - 100; // minus 100 wei
+        console.log("lvUSDAmount %s, ousdPrinciple %s ", lvUSDAmount, ousdPrinciple);
+        console.log("%s<%s Not enough Arch given for Position", archNeededToBurn, maxArchAmountBUfferedDown);
+        require(archNeededToBurn <= maxArchAmountBUfferedDown, "Not enough Arch given for Position");
         // lvUSDAmountAllocatedFromArch = lvUSDAmountAllocatedFromArch + 10000000; /// add some safety margin
         /// Revert if not enough Arch token for needed leverage. Continue if too much arch is given
         // console.log("When creation position - lvUSDAmountAllocatedFromArch %s", lvUSDAmountAllocatedFromArch);
@@ -79,7 +83,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         // require(lvUSDAmountAllocatedFromArch >= lvUSDAmount, "Not enough Arch provided");
         uint256 availableLev = _coordinator.getAvailableLeverage();
         require(availableLev >= lvUSDAmount, "Not enough available lvUSD");
-        _burnArchTokenForPosition(msg.sender, archNeededToBurn);
+        _burnArchTokenForPosition(msg.sender, maxArchAmountBUfferedDown);
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
         _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple);
