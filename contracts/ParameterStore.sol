@@ -16,7 +16,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     uint256 internal _curveGuardPercentage; // in regular (0-100) percentages
     uint256 internal _slippage; // in regular (0-100) percentages
     /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
-    uint256 internal _archToLevRatio;
+    uint256 internal _archToLevRatio; // in 18 decimal 
     // maximum allowed "extra" tokens when exchanging
     uint256 internal _curveMaxExchangeGuard;
 
