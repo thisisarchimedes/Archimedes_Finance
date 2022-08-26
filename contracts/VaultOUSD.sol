@@ -73,7 +73,13 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
 
     function _takeRebaseFees() internal {
         uint256 roundingBuffer = 10; // wei
-        uint256 unhandledRebasePayment = totalAssets() - (_assetsHandledByArchimedes + roundingBuffer);
+        console.log("totalAssets() - (_assetsHandledByArchimedes + roundingBuffer)", totalAssets(), _assetsHandledByArchimedes, roundingBuffer);
+        if (totalAssets() > _assetsHandledByArchimedes) {
+            // This is due to drifting in handeling assets. reset drift
+            console.log("reseting drift in vault");
+            _assetsHandledByArchimedes = totalAssets();
+        }
+        uint256 unhandledRebasePayment = totalAssets() - _assetsHandledByArchimedes + roundingBuffer;
         /// only run fee collection if there are some rebased funds not handled
         if (unhandledRebasePayment > roundingBuffer) {
             uint256 feeToCollect = (unhandledRebasePayment * _paramStore.getRebaseFeeRate()) / 1 ether;
