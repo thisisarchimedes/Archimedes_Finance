@@ -2,6 +2,7 @@ import hre, { ethers } from "hardhat";
 import { helperSwapETHWithOUSD,addressOUSD, abiOUSDToken } from "../test/MainnetHelper";
 import { buildContractTestContext, setRolesForEndToEnd } from "../test/ContractTestContext";
 import dotenv from "dotenv";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 dotenv.config({ path: "secrets/alchemy.env" });
 
@@ -51,6 +52,7 @@ const deployScript = async () => {
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
     await fundLVUSDToCoordinator();
     await fundARCH();
+    await fundDemoAccount()
     await verifyDeployment();
 };
 
@@ -60,7 +62,22 @@ const simulateRebase = async () => {
     await helperSwapETHWithOUSD(owner, ethers.utils.parseUnits("1.0"));
     const externalOUSD = new ethers.Contract(addressOUSD, abiOUSDToken, owner);
     await externalOUSD.transfer(vaultAddress,ethers.utils.parseUnits("20.0"))
+}
 
+const fundDemoAccount = async () => {
+    let signers: SignerWithAddress[] = await ethers.getSigners();
+    
+    // remove owner and addr1 by shifting twice 
+    signers.shift();
+    signers.shift();
+    for (let i = 0; i < 9; i++) {
+        let signerToFund = signers[i];
+        const archAmountToFund = "200";
+        await context.archToken.connect(context.treasurySigner)
+            .transfer(signerToFund.address, ethers.utils.parseUnits(archAmountToFund));
+        await helperSwapETHWithOUSD(signerToFund, ethers.utils.parseUnits("0.1"));
+        console.log("Funded address "  + signerToFund.address);
+    }
 }
 
 deployScript();
