@@ -12,7 +12,7 @@ let context;
 
 async function fundLVUSDToCoordinator () {
     console.log("Funding lvUSD to coordinator");
-    const amount = "10000";
+    const amount = "100000000";
 
     await context.lvUSD.setMintDestination(context.coordinator.address);
     await context.lvUSD.mint(ethers.utils.parseUnits(amount, 18));
