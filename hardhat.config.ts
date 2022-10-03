@@ -71,10 +71,10 @@ export default {
     networks: {
         persistant: {
             url: "http://ec2-54-211-119-50.compute-1.amazonaws.com:8545",
-            accounts: ["0xf214f2b2cd398c806f84e317254e0f0b801d0643303237d97a22a48e01628897", 
-            "0x701b615bbdfb9de65240bc28bd21bbc0d996645a3dd57e7b12bc2bdf6f192c82", 
-            "0xa267530f49f8280200edf313ee7af6b827f2a8bce2897751d06a843f644967b1", 
-            "0x47c99abed3324a2707c28affff1267e45918ec8c3f20b8aa892e8b065d2942dd"],
+            accounts: ["0xf214f2b2cd398c806f84e317254e0f0b801d0643303237d97a22a48e01628897",
+                "0x701b615bbdfb9de65240bc28bd21bbc0d996645a3dd57e7b12bc2bdf6f192c82",
+                "0xa267530f49f8280200edf313ee7af6b827f2a8bce2897751d06a843f644967b1",
+                "0x47c99abed3324a2707c28affff1267e45918ec8c3f20b8aa892e8b065d2942dd"],
         },
         goerli: {
             url: `${goerliURL}`,
