@@ -49,7 +49,11 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
     }
 
     /// Used to block the unknown use of redeem without archimedesRedeem
-    function redeem(shares, receiver, owner) public override nonReentrant onlyExecutive return (uint256) {
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address owner
+    ) public override nonReentrant onlyExecutive returns (uint256) {
         _archimedesRedeem(shares, receiver, owner);
     }
 
