@@ -19,9 +19,14 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
         uint256 oUSDTotal; // Principle + OUSD acquired from selling borrowed lvUSD + Interest earned
         uint256 lvUSDBorrowed; // Total lvUSD borrowed under this position
         uint256 shares; // Total vault shares allocated to this position
+
+        // New values, need to implement changing values
+        uint256 openTimeStamp; // Open time
+        uint256 positionLifetimeInDays; // Position in days
+        uint256 positionExpiration; 
     }
 
-    uint256 internal _globalCollateralRate;
+    // uint256 internal _globalCollateralRate;
 
     mapping(uint256 => CDP) internal _nftCDP;
 
@@ -106,18 +111,18 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
         _nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
     }
 
-    /// @dev update collateral rate
-    ///
-    /// @notice Max lvUSD that can be minted for 1 OUSD
-    ///
-    /// @param rate new rate to set as collateral
-    function changeCollateralRate(uint256 rate) external {
-        _globalCollateralRate = rate;
-    }
+    // /// @dev update collateral rate
+    // ///
+    // /// @notice Max lvUSD that can be minted for 1 OUSD
+    // ///
+    // /// @param rate new rate to set as collateral
+    // function changeCollateralRate(uint256 rate) external {
+    //     _globalCollateralRate = rate;
+    // }
 
-    function getCollateralRate() external view returns (uint256) {
-        return _globalCollateralRate;
-    }
+    // function getCollateralRate() external view returns (uint256) {
+    //     return _globalCollateralRate;
+    // }
 
     // * CDP Getters *//
     function getOUSDPrinciple(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {

@@ -6,14 +6,14 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 dotenv.config({ path: "secrets/alchemy.env" });
 
-export const signers = ethers.getSigners();
+// export const signers = ethers.getSigners();
 
 let context;
 
 async function fundLVUSDToCoordinator () {
-    console.log("Funding lvUSD to coordinator");
-    const amount = "10000";
-
+    console.log("\nFunding lvUSD to coordinator\n");
+    const amount = "5000000";
+    
     await context.lvUSD.setMintDestination(context.coordinator.address);
     await context.lvUSD.mint(ethers.utils.parseUnits(amount, 18));
 
@@ -47,7 +47,7 @@ async function verifyDeployment () {
 const deployScript = async () => {
     // hacky way to go around pool balances not working on local instance.. skipPoolBalances = true
     context = await buildContractTestContext(true);
-    // await context.parameterStore.changeArchToLevRatio(ethers.utils.parseUnits("1.0"));
+    await context.parameterStore.changeArchToLevRatio(ethers.utils.parseUnits("300.0"));
     await setRolesForEndToEnd(context);
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
     await fundLVUSDToCoordinator();
@@ -65,18 +65,15 @@ const simulateRebase = async () => {
 }
 
 const fundDemoAccount = async () => {
-    let signers: SignerWithAddress[] = await ethers.getSigners();
-    
+    let SignersToFund: SignerWithAddress[] = await ethers.getSigners();
     // remove owner and addr1 by shifting twice 
-    signers.shift();
-    signers.shift();
-    for (let i = 0; i < 9; i++) {
-        let signerToFund = signers[i];
+    SignersToFund.shift();
+    SignersToFund.shift();
+    for (let i = 0; i < 17; i++) {
         const archAmountToFund = "200";
-        await context.archToken.connect(context.treasurySigner)
-            .transfer(signerToFund.address, ethers.utils.parseUnits(archAmountToFund));
-        await helperSwapETHWithOUSD(signerToFund, ethers.utils.parseUnits("0.1"));
-        console.log("Funded address "  + signerToFund.address);
+        await context.archToken.connect(context.treasurySigner).transfer(SignersToFund[i].address, ethers.utils.parseUnits(archAmountToFund));
+        await helperSwapETHWithOUSD(SignersToFund[i], ethers.utils.parseUnits("0.4"));
+        console.log("i: " + i + " - Funded address "  + SignersToFund[i].address);
     }
 }
 

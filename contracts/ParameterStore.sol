@@ -16,7 +16,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     uint256 internal _curveGuardPercentage; // in regular (0-100) percentages
     uint256 internal _slippage; // in regular (0-100) percentages
     /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
-    uint256 internal _archToLevRatio; // in 18 decimal 
+    uint256 internal _archToLevRatio; // in 18 decimal
     // maximum allowed "extra" tokens when exchanging
     uint256 internal _curveMaxExchangeGuard;
 
@@ -30,13 +30,12 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         setGuardian(_msgSender());
 
         _maxNumberOfCycles = 10;
-        _originationFeeRate = 5 ether / 100;
-        _globalCollateralRate = 90;
+        _originationFeeRate = 5 ether / 1000;
+        _globalCollateralRate = 95;
         _rebaseFeeRate = 10 ether / 100; // meaning 10%
-        _treasuryAddress;
-        _curveGuardPercentage = 90;
-        _slippage = 2; // 2%;
-        _archToLevRatio = 1 ether; // meaning 1 arch is equal 1 lvUSD
+        _curveGuardPercentage = 95;
+        _slippage = 1; // 2%;
+        _archToLevRatio = 300 ether; // meaning 1 arch is equal 1 lvUSD
         _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
         _treasuryAddress = address(0);
     }

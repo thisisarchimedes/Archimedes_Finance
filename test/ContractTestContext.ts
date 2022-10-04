@@ -46,7 +46,7 @@ export async function setRolesForEndToEnd (r:ContractTestContext) {
     await r.cdp.setExecutive(r.coordinator.address);
 }
 export const signers = ethers.getSigners();
-export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("1000.0");
+export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("10000000.0");
 export async function buildContractTestContext (skipPoolBalances = false): Promise<ContractTestContext> {
     await helperResetNetwork(defaultBlockNumber);
 
@@ -94,27 +94,29 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
     // expecting minter to be owner
     await context.lvUSD.setMintDestination(context.owner.address);
     await context.lvUSD.mint(ownerStartingLvUSDAmount);
-    await helperSwapETHWith3CRV(context.owner, ethers.utils.parseUnits("3.0"));
+    await helperSwapETHWith3CRV(context.owner, ethers.utils.parseUnits("9000.0"));
 
     // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token
     context.curveLvUSDPool = await createAndFundMetapool(context.owner, context, skipPoolBalances);
     // Setup pool with approval
+
     await context.lvUSD.approve(context.curveLvUSDPool.address, ownerStartingLvUSDAmount);
 
     await context.lvUSD.approve(context.exchanger.address, ethers.constants.MaxUint256);
     await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
 
+
     // Post init contracts
-    await Promise.all([
-        context.leverageEngine.setDependencies(
+    // await Promise.all([
+        await context.leverageEngine.setDependencies(
             context.coordinator.address,
             context.positionToken.address,
             context.parameterStore.address,
             context.archToken.address,
             context.externalOUSD.address,
-        ),
+        )
 
-        context.coordinator.setDependencies(
+        await context.coordinator.setDependencies(
             context.lvUSD.address,
             context.vault.address,
             context.cdp.address,
@@ -122,9 +124,9 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
             context.exchanger.address,
             context.parameterStore.address,
             context.poolManager.address,
-        ),
+        )
 
-        context.exchanger.setDependencies(
+        await context.exchanger.setDependencies(
             context.parameterStore.address,
             context.coordinator.address,
             context.lvUSD.address,
@@ -133,17 +135,17 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
             context.curveLvUSDPool.address,
             addressCurveOUSDPool,
         ),
-        context.vault.setDependencies(context.parameterStore.address, context.externalOUSD.address),
+        await context.vault.setDependencies(context.parameterStore.address, context.externalOUSD.address)
 
-        context.parameterStore.changeTreasuryAddress(context.treasurySigner.address),
+        await context.parameterStore.changeTreasuryAddress(context.treasurySigner.address)
 
-        context.poolManager.setDependencies(
+        await context.poolManager.setDependencies(
             context.parameterStore.address,
             context.coordinator.address,
             context.lvUSD.address,
             context.external3CRV.address,
-            context.curveLvUSDPool.address),
-    ]);
+            context.curveLvUSDPool.address)
+    // ]);
 
     return context;
 }

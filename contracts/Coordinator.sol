@@ -49,6 +49,9 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         address addressParamStore,
         address addressPoolManager
     ) external nonReentrant onlyAdmin {
+        _ousd.safeApprove(_addressVaultOUSD, 0);
+        _lvUSD.safeApprove(_addressPoolManager, 0);
+
         _addressLvUSD = addressLvUSD;
         _addressVaultOUSD = addressVaultOUSD;
         _addressCDP = addressCDP;

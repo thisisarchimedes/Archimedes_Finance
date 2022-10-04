@@ -45,6 +45,9 @@ contract PoolManager is AccessController, ReentrancyGuardUpgradeable, UUPSUpgrad
         address address3CRV,
         address addressPoolLvUSD3CRV
     ) external nonReentrant onlyAdmin {
+        _lvusd.approve(_addressPoolLvUSD3CRV, 0);
+        _crv3.approve(_addressPoolLvUSD3CRV, 0);
+
         // Set variables
         _addressParameterStore = addressParameterStore;
         _addressCoordinator = addressCoordinator;
