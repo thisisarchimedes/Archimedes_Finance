@@ -11,12 +11,12 @@ import {ArchToken} from "./ArchToken.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
+contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable, PausableUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    uint256 internal _positionId;
     address internal _addressCoordinator;
     address internal _addressPositionToken;
     address internal _addressParameterStore;
@@ -66,8 +66,11 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         uint256 ousdPrinciple,
         uint256 cycles,
         uint256 maxArchAmount
-    ) external nonReentrant returns (uint256) {
+    ) external nonReentrant whenNotPaused returns (uint256) {
         // add some minor buffer to the arch we will use for the position
+        if (ousdPrinciple < _parameterStore.getMinPositionCollateral()) {
+            revert("Collateral lower then min");
+        }
         uint256 maxArchAmountBUfferedDown = maxArchAmount - 100;
         uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPositionWithArch(ousdPrinciple, cycles, maxArchAmountBUfferedDown);
         // Take only whole lvUSD, no weis
@@ -102,7 +105,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     /// provide msg.sender address to coordinator destroy position
     ///
     /// @param positionTokenId the NFT ID of the position
-    function unwindLeveragedPosition(uint256 positionTokenId) external nonReentrant {
+    function unwindLeveragedPosition(uint256 positionTokenId) external nonReentrant whenNotPaused {
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
@@ -125,6 +128,14 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
+    }
+
+    function pauseContract() external onlyGuardian {
+        _pause();
+    }
+
+    function unPauseContract() external onlyGuardian {
+        _unpause();
     }
 
     fallback() external {

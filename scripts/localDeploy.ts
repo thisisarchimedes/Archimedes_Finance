@@ -52,7 +52,7 @@ const deployScript = async () => {
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
     await fundLVUSDToCoordinator();
     await fundARCH();
-    await fundDemoAccount()
+    // await fundDemoAccount()
     await verifyDeployment();
 };
 
@@ -67,11 +67,25 @@ const simulateRebase = async () => {
 const fundDemoAccount = async () => {
     let SignersToFund: SignerWithAddress[] = await ethers.getSigners();
     // remove owner and addr1 by shifting twice 
+    console.log("Starting to fund accounts");
+    const treasurySigner = SignersToFund[3];
+
     SignersToFund.shift();
     SignersToFund.shift();
-    for (let i = 0; i < 17; i++) {
+    SignersToFund.shift();
+
+    const archToken = new ethers.Contract("0x0a17FabeA4633ce714F1Fa4a2dcA62C3bAc4758d", abiOUSDToken);
+
+    for (let i = 0; i < 15; i++) { // was 17
+        // console.log("i: " + i + " - Funded address ");
+
+        // const archAmountToFund = "200";
+        // await context.archToken.connect(context.treasurySigner).transfer(SignersToFund[i].address, ethers.utils.parseUnits(archAmountToFund));
+        // await helperSwapETHWithOUSD(SignersToFund[i], ethers.utils.parseUnits("0.4"));
+        // console.log("i: " + i + " - Funded address "  + SignersToFund[i].address);
+
         const archAmountToFund = "200";
-        await context.archToken.connect(context.treasurySigner).transfer(SignersToFund[i].address, ethers.utils.parseUnits(archAmountToFund));
+        await archToken.connect(treasurySigner).transfer(SignersToFund[i].address, ethers.utils.parseUnits(archAmountToFund));
         await helperSwapETHWithOUSD(SignersToFund[i], ethers.utils.parseUnits("0.4"));
         console.log("i: " + i + " - Funded address "  + SignersToFund[i].address);
     }

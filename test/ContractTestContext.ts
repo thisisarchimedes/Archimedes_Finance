@@ -94,7 +94,7 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
     // expecting minter to be owner
     await context.lvUSD.setMintDestination(context.owner.address);
     await context.lvUSD.mint(ownerStartingLvUSDAmount);
-    await helperSwapETHWith3CRV(context.owner, ethers.utils.parseUnits("9000.0"));
+    await helperSwapETHWith3CRV(context.owner, ethers.utils.parseUnits("7000.0"));
 
     // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token
     context.curveLvUSDPool = await createAndFundMetapool(context.owner, context, skipPoolBalances);
@@ -145,6 +145,13 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
             context.lvUSD.address,
             context.external3CRV.address,
             context.curveLvUSDPool.address)
+        
+        await context.cdp.setDependencies(
+            context.vault.address,
+            context.parameterStore.address
+            )
+    
+        
     // ]);
 
     return context;

@@ -35,11 +35,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     IERC20Upgradeable internal _ousd;
     ParameterStore internal _paramStore;
 
-    modifier notImplementedYet() {
-        revert("Method not implemented yet");
-        _;
-    }
-
     function setDependencies(
         address addressLvUSD,
         address addressVaultOUSD,
@@ -49,9 +44,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         address addressParamStore,
         address addressPoolManager
     ) external nonReentrant onlyAdmin {
-        _ousd.safeApprove(_addressVaultOUSD, 0);
-        _lvUSD.safeApprove(_addressPoolManager, 0);
-
         _addressLvUSD = addressLvUSD;
         _addressVaultOUSD = addressVaultOUSD;
         _addressCDP = addressCDP;
@@ -65,6 +57,10 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         _lvUSD = IERC20Upgradeable(_addressLvUSD);
         _ousd = IERC20Upgradeable(_addressOUSD);
         _paramStore = ParameterStore(addressParamStore);
+
+        /// reset allownce
+        _ousd.safeApprove(_addressVaultOUSD, 0);
+        _lvUSD.safeApprove(_addressPoolManager, 0);
 
         // approve VaultOUSD address to spend OUSD on behalf of coordinator
         _ousd.safeApprove(_addressVaultOUSD, type(uint256).max);

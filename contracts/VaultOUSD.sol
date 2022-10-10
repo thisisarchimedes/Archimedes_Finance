@@ -45,31 +45,18 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
         address receiver,
         address owner
     ) external nonReentrant onlyExecutive returns (uint256) {
-        _archimedesRedeem(shares, owner, receiver);
-    }
-
-    /// Used to block the unknown use of redeem without archimedesRedeem
-    function redeem(
-        uint256 shares,
-        address receiver,
-        address owner
-    ) public override nonReentrant onlyExecutive returns (uint256) {
-        _archimedesRedeem(shares, receiver, owner);
-    }
-
-    function _archimedesRedeem(
-        uint256 shares,
-        address receiver,
-        address owner
-    ) private nonReentrant returns (uint256) {
         _takeRebaseFees();
         uint256 redeemedAmountInAssets = redeem(shares, receiver, owner);
         _assetsHandledByArchimedes -= redeemedAmountInAssets;
         return redeemedAmountInAssets;
     }
 
-    function takeRebaseFees() external nonReentrant onlyExecutive {
+    function takeRebaseFees() external nonReentrant onlyAdmin {
         _takeRebaseFees();
+    }
+
+    function optInForRebases() external nonReentrant onlyAdmin {
+        // _ousd.rebaseOptIn();
     }
 
     function initialize(
@@ -91,7 +78,8 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
     function _takeRebaseFees() internal {
         uint256 roundingBuffer = 10; // wei
         console.log("totalAssets() - (_assetsHandledByArchimedes + roundingBuffer)", totalAssets(), _assetsHandledByArchimedes, roundingBuffer);
-        if (totalAssets() > _assetsHandledByArchimedes) {
+        // If for some reason, _assetsHandledByArchimedes gor larger then total assets, reset _assetsHandledByArchimedes to max (ie total assets)
+        if (totalAssets() < _assetsHandledByArchimedes) {
             // This is due to drifting in handeling assets. reset drift
             console.log("reseting drift in vault");
             _assetsHandledByArchimedes = totalAssets();

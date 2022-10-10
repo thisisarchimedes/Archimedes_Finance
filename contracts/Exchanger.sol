@@ -454,7 +454,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _requireAdmin();
     }
 
-    function estimateOusdReturnedOnUnwind(uint256 amountOUSD, uint256 minRequiredLvUSD) external view returns (uint256) {
+    function estimateOusdReturnedOnUnwindMinusInterest(uint256 amountOUSD, uint256 minRequiredLvUSD) external view returns (uint256) {
         // return (_returnedLvUSD, remainingOUSD);
         uint256 tempMinLv = minRequiredLvUSD;
         // uint256 tempAmountOUSD = amountOUSD;

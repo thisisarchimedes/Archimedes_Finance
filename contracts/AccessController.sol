@@ -15,6 +15,9 @@ abstract contract AccessController is AccessControlUpgradeable {
     address private _addressGovernor;
     address private _addressGuardian;
 
+    address private _nominatedAdmin;
+    address private _oldAdmin;
+
     modifier onlyAdmin() {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not Admin");
         _;
@@ -35,12 +38,34 @@ abstract contract AccessController is AccessControlUpgradeable {
         _;
     }
 
-    function addAdmin(address newAdmin) public onlyAdmin {
-        _grantRole(ADMIN_ROLE, newAdmin);
+    function setAdmin(address newAdmin) public onlyAdmin {
+        if (newAdmin == _msgSender()) {
+            revert("new admin must be different");
+        }
+        _nominatedAdmin = newAdmin;
+        _oldAdmin = _msgSender();
     }
 
-    function revokeAdmin(address admin) public onlyAdmin {
-        _revokeRole(ADMIN_ROLE, admin);
+    function acceptAdminRole() public {
+        if (_nominatedAdmin == address(0) || _oldAdmin == address(0)) {
+            revert("no nominated admin");
+        }
+        if (_nominatedAdmin == _msgSender()) {
+            _grantRole(ADMIN_ROLE, _msgSender());
+            _revokeRole(ADMIN_ROLE, _oldAdmin);
+
+            _nominatedAdmin = address(0);
+            _oldAdmin = address(0);
+        }
+    }
+
+    function renounceRole(bytes32 role, address account) public virtual override {
+        if (hasRole(ADMIN_ROLE, msg.sender)) {
+            revert("Admin cant use renounceRole");
+        }
+        require(account == _msgSender(), "can only renounce roles for self");
+
+        _revokeRole(role, account);
     }
 
     function setGovernor(address newGovernor) public onlyAdmin {
@@ -63,8 +88,8 @@ abstract contract AccessController is AccessControlUpgradeable {
         address oldGuardian = _addressGuardian;
         require(oldGuardian != newGuardian, "New guardian must be different");
         _grantRole(GUARDIAN_ROLE, newGuardian);
-        _revokeRole(GOVERNOR_ROLE, oldGuardian);
-        _addressGovernor = newGuardian;
+        _revokeRole(GUARDIAN_ROLE, oldGuardian);
+        _addressGuardian = newGuardian;
     }
 
     function getAddressExecutive() public view returns (address) {

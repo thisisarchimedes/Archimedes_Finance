@@ -8,6 +8,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 /// @title ParameterStore is a contract for storing global parameters that can be modified by a privileged role
 /// @notice This contract (will be) proxy upgradable
 contract ParameterStore is AccessController, UUPSUpgradeable {
+    bytes32 public constant ARCH_GOVERNOR_ROLE = keccak256("ARCH_GOVERNOR_ROLE");
+    address private _addressArchGovernor;
+
     uint256 internal _maxNumberOfCycles; // regular natural number
     uint256 internal _originationFeeRate; // in ether percentage (see initialize for examples)
     uint256 internal _globalCollateralRate; // in percentage
@@ -19,6 +22,8 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     uint256 internal _archToLevRatio; // in 18 decimal
     // maximum allowed "extra" tokens when exchanging
     uint256 internal _curveMaxExchangeGuard;
+    uint256 internal _minPositionCollateral;
+    uint256 internal _positionTimeToLiveInDays;
 
     event ParameterChange(string indexed _name, uint256 _newValue, uint256 _oldValue);
     event TreasuryChange(address indexed _newValue, address indexed _oldValue);
@@ -28,15 +33,18 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         setGovernor(_msgSender());
         setExecutive(_msgSender());
         setGuardian(_msgSender());
+        setArchGovernor(_msgSender());
 
         _maxNumberOfCycles = 10;
         _originationFeeRate = 5 ether / 1000;
         _globalCollateralRate = 95;
-        _rebaseFeeRate = 10 ether / 100; // meaning 10%
+        _rebaseFeeRate = 30 ether / 100; // meaning 30%
         _curveGuardPercentage = 95;
         _slippage = 1; // 2%;
-        _archToLevRatio = 300 ether; // meaning 1 arch is equal 1 lvUSD
+        _archToLevRatio = 300 ether; // meaning 1 arch is equal 300 lvUSD
         _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
+        _minPositionCollateral = 100 ether;
+        _positionTimeToLiveInDays = 369;
         _treasuryAddress = address(0);
     }
 
@@ -72,6 +80,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     function changeMaxNumberOfCycles(uint256 newMaxNumberOfCycles) external onlyGovernor {
+        require(newMaxNumberOfCycles < 20 && newMaxNumberOfCycles > 0, "New max n of cycles out of range");
         emit ParameterChange("maxNumberOfCycles", newMaxNumberOfCycles, _maxNumberOfCycles);
         _maxNumberOfCycles = newMaxNumberOfCycles;
     }
@@ -83,7 +92,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _rebaseFeeRate = newRebaseFeeRate;
     }
 
-    function changeArchToLevRatio(uint256 newArchToLevRatio) external onlyGovernor {
+    function changeArchToLevRatio(uint256 newArchToLevRatio) external onlyArchGovernor {
         emit ParameterChange("archToLevRatio", newArchToLevRatio, _archToLevRatio);
         _archToLevRatio = newArchToLevRatio;
     }
@@ -91,6 +100,18 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     function changeCurveMaxExchangeGuard(uint256 newCurveMaxExchangeGuard) external onlyGovernor {
         emit ParameterChange("curveMaxExchangeGuard", newCurveMaxExchangeGuard, _curveMaxExchangeGuard);
         _curveMaxExchangeGuard = newCurveMaxExchangeGuard;
+    }
+
+    function changeMinPositionCollateral(uint256 newMinPositionCollateral) external onlyGovernor {
+        require(newMinPositionCollateral < (1000000 ether) && newMinPositionCollateral > (1 ether), "New min colleateral out of range");
+        emit ParameterChange("minPositionCollateral", newMinPositionCollateral, _minPositionCollateral);
+        _minPositionCollateral = newMinPositionCollateral;
+    }
+
+    function changePositionTimeToLiveInDays(uint256 newPositionTimeToLiveInDays) external onlyGovernor {
+        require(newPositionTimeToLiveInDays < 10000 && newPositionTimeToLiveInDays > 30, "newPositionTimeToLiveInDays OOR");
+        emit ParameterChange("newPositionTimeToLiveInDays", newPositionTimeToLiveInDays, _positionTimeToLiveInDays);
+        _positionTimeToLiveInDays = newPositionTimeToLiveInDays;
     }
 
     function getMaxNumberOfCycles() external view returns (uint256) {
@@ -130,6 +151,14 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         return _archToLevRatio;
     }
 
+    function getMinPositionCollateral() public view returns (uint256) {
+        return _minPositionCollateral;
+    }
+
+    function getPositionTimeToLiveInDays() public view returns (uint256) {
+        return _positionTimeToLiveInDays;
+    }
+
     /// Method returns the allowed leverage for principle and number of cycles
     /// Return value does not include principle!
     /// must be public as we need to access it in contract
@@ -137,7 +166,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         require(numberOfCycles <= _maxNumberOfCycles, "Cycles greater than max allowed");
         uint256 leverageAmount = 0;
         uint256 cyclePrinciple = principle;
-        for (uint256 i = 0; i < numberOfCycles; i++) {
+        for (uint256 i = 0; i < numberOfCycles; ++i) {
             cyclePrinciple = (cyclePrinciple * _globalCollateralRate) / 100;
             leverageAmount += cyclePrinciple;
         }
@@ -177,6 +206,19 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
+    }
+
+    function setArchGovernor(address newArchGovernor) public onlyAdmin {
+        address oldArchGov = _addressArchGovernor;
+        require(oldArchGov != newArchGovernor, "New gov must be different");
+        _grantRole(ARCH_GOVERNOR_ROLE, newArchGovernor);
+        _revokeRole(ARCH_GOVERNOR_ROLE, oldArchGov);
+        _addressArchGovernor = newArchGovernor;
+    }
+
+    modifier onlyArchGovernor() {
+        require(hasRole(ARCH_GOVERNOR_ROLE, msg.sender), "Caller is not Arch Governor");
+        _;
     }
 
     fallback() external {
