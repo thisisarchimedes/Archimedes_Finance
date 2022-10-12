@@ -71,14 +71,24 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         if (ousdPrinciple < _parameterStore.getMinPositionCollateral()) {
             revert("Collateral lower then min");
         }
-        uint256 maxArchAmountBUfferedDown = maxArchAmount - 100;
-        uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPositionWithArch(ousdPrinciple, cycles, maxArchAmountBUfferedDown);
+        uint256 maxArchAmountBufferedDown = maxArchAmount - 10;
+        uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPositionWithArch(ousdPrinciple, cycles, maxArchAmountBufferedDown);
+        uint256 lvUSDAmountNeedForArguments = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple - 100, cycles);
+        /// check that user gave enough arch allownce for cycle-principle combo
+        console.log(
+            "LeverageEngine: when creating position using %s (amount needed is %s) lvUSD for ousdPrinciple %s",
+            lvUSDAmount,
+            lvUSDAmountNeedForArguments,
+            ousdPrinciple / 1 ether
+        );
+        require(lvUSDAmountNeedForArguments - 1 <= lvUSDAmount, "cant get enough lvUSD");
+
         // Take only whole lvUSD, no weis
         // uint256 lvUSDAmountAllocatedFromArch = _parameterStore.calculateLeverageAllowedForArch(archAmount);
         uint256 archNeededToBurn = _parameterStore.calculateArchNeededForLeverage(lvUSDAmount) - 100; // minus 100 wei
         //console.log("lvUSDAmount %s, ousdPrinciple %s ", lvUSDAmount, ousdPrinciple);
         //console.log("%s<%s Not enough Arch given for Position", archNeededToBurn, maxArchAmountBUfferedDown);
-        require(archNeededToBurn <= maxArchAmountBUfferedDown, "Not enough Arch given for Pos");
+        require(archNeededToBurn <= maxArchAmountBufferedDown, "Not enough Arch given for Pos");
         // lvUSDAmountAllocatedFromArch = lvUSDAmountAllocatedFromArch + 10000000; /// add some safety margin
         /// Revert if not enough Arch token for needed leverage. Continue if too much arch is given
         // console.log("When creation position - lvUSDAmountAllocatedFromArch %s", lvUSDAmountAllocatedFromArch);
@@ -113,6 +123,10 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     }
 
     function initialize() public initializer {
+        __AccessControl_init();
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
         _grantRole(ADMIN_ROLE, _msgSender());
         setGovernor(_msgSender());
         setExecutive(_msgSender());

@@ -19,6 +19,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     uint256 internal _curveGuardPercentage; // in regular (0-100) percentages
     uint256 internal _slippage; // in regular (0-100) percentages
     /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
+    /// Important: Arch to lev Ratio has to be 
     uint256 internal _archToLevRatio; // in 18 decimal
     // maximum allowed "extra" tokens when exchanging
     uint256 internal _curveMaxExchangeGuard;
@@ -29,6 +30,9 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     event TreasuryChange(address indexed _newValue, address indexed _oldValue);
 
     function initialize() public initializer {
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+
         _grantRole(ADMIN_ROLE, _msgSender());
         setGovernor(_msgSender());
         setExecutive(_msgSender());
@@ -40,7 +44,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _globalCollateralRate = 95;
         _rebaseFeeRate = 30 ether / 100; // meaning 30%
         _curveGuardPercentage = 95;
-        _slippage = 1; // 2%;
+        _slippage = 1; // 1%;
         _archToLevRatio = 300 ether; // meaning 1 arch is equal 300 lvUSD
         _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
         _minPositionCollateral = 100 ether;
@@ -134,28 +138,28 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         return _curveMaxExchangeGuard;
     }
 
-    function getTreasuryAddress() public view returns (address) {
+    function getTreasuryAddress() external view returns (address) {
         require(_treasuryAddress != address(0), "Treasury address is not set");
         return _treasuryAddress;
     }
 
-    function getCurveGuardPercentage() public view returns (uint256) {
+    function getCurveGuardPercentage() external view returns (uint256) {
         return _curveGuardPercentage;
     }
 
-    function getSlippage() public view returns (uint256) {
+    function getSlippage() external view returns (uint256) {
         return _slippage;
     }
 
-    function getArchToLevRatio() public view returns (uint256) {
+    function getArchToLevRatio() external view returns (uint256) {
         return _archToLevRatio;
     }
 
-    function getMinPositionCollateral() public view returns (uint256) {
+    function getMinPositionCollateral() external view returns (uint256) {
         return _minPositionCollateral;
     }
 
-    function getPositionTimeToLiveInDays() public view returns (uint256) {
+    function getPositionTimeToLiveInDays() external view returns (uint256) {
         return _positionTimeToLiveInDays;
     }
 
@@ -166,10 +170,13 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         require(numberOfCycles <= _maxNumberOfCycles, "Cycles greater than max allowed");
         uint256 leverageAmount = 0;
         uint256 cyclePrinciple = principle;
-        for (uint256 i = 0; i < numberOfCycles; ++i) {
+        console.log("getAllowedLeverageForPosition principle %s, numberOfCycles %s", principle / 1 ether, numberOfCycles);
+        for (uint256 i = 0; i < numberOfCycles; i++) {
+            console.log("getAllowedLeverageForPosition looping on cycles");
             cyclePrinciple = (cyclePrinciple * _globalCollateralRate) / 100;
             leverageAmount += cyclePrinciple;
         }
+        console.log("getAllowedLeverageForPosition: leverageAmount %s", leverageAmount / 1 ether);
         return leverageAmount;
     }
 
@@ -177,26 +184,37 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         uint256 principle,
         uint256 numberOfCycles,
         uint256 archAmount
-    ) public view returns (uint256) {
+    ) external view returns (uint256) {
+        /// Use 100 wei less OUSD then given - TO REMOVE
         uint256 allowedLeverageNoArchLimit = getAllowedLeverageForPosition(principle, numberOfCycles);
         uint256 allowedLeverageWithGivenArch = calculateLeverageAllowedForArch(archAmount);
-        if (allowedLeverageWithGivenArch >= allowedLeverageNoArchLimit) {
-            // In this case, user is burning more(or exactly) arch tokens needed for leverage
+        console.log(
+            "getAllowedLeverageForPositionWithArch - values ( removing 4 first digiets) allowedLeverageNoArchLimit %s, allowedLeverageWithGivenArch %s",
+            allowedLeverageNoArchLimit / 10000,
+            allowedLeverageWithGivenArch / 10000
+        );
+        if (allowedLeverageWithGivenArch / 10000 >= allowedLeverageNoArchLimit / 10000) {
+            // In this case, user approved more(or exactly) arch tokens needed for leverage
             return allowedLeverageNoArchLimit;
         } else {
+            console.log("getAllowedLeverageForPositionWithArch - User did not burn enough Arch");
+            /// TODO : Should this return a revert? Most likely but other changes are needed as well. This can be misleading
+
+            revert("Not enough Arch for Pos");
             // user did not burn enough arch tokens,
             // send the max amount of leverage based on how much arch was burned
-            return allowedLeverageWithGivenArch;
+            // return allowedLeverageWithGivenArch;
         }
     }
 
-    function calculateOriginationFee(uint256 leverageAmount) public view returns (uint256) {
+    function calculateOriginationFee(uint256 leverageAmount) external view returns (uint256) {
         return (_originationFeeRate * leverageAmount) / 1 ether;
     }
 
-    function calculateArchNeededForLeverage(uint256 leverageAmount) public view returns (uint256) {
+    function calculateArchNeededForLeverage(uint256 leverageAmount) external view returns (uint256) {
+        /// This method add a bit more Arch then is needed to get around integer rounding
         uint256 naturalNumberRatio = _archToLevRatio / 1 ether;
-        return (leverageAmount / naturalNumberRatio);
+        return (leverageAmount / naturalNumberRatio) + 1000;
     }
 
     function calculateLeverageAllowedForArch(uint256 archAmount) public view returns (uint256) {

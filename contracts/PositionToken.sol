@@ -45,6 +45,10 @@ contract PositionToken is
     }
 
     function initialize() public initializer {
+        __AccessControl_init();
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
         __ERC721_init("ArchimedesPositionToken", "APNT");
         __ERC721Enumerable_init();
         __ERC721Burnable_init();

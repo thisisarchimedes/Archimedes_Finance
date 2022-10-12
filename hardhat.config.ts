@@ -103,14 +103,14 @@ export default {
             chainId: 1337,
             forking: {
                 url: alchemyUrl,
-                allowUnlimitedContractSize: true,
+                allowUnlimitedContractSize: false,
                 gas: 3000000,
             },
              
             localhost: {
                 url: "http://127.0.0.1:8545",
                 gas: 3000000,
-                allowUnlimitedContractSize: true,
+                allowUnlimitedContractSize: false,
             },
         },
     },

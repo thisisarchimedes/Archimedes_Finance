@@ -47,7 +47,21 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
     ) external nonReentrant onlyExecutive returns (uint256) {
         _takeRebaseFees();
         uint256 redeemedAmountInAssets = redeem(shares, receiver, owner);
-        _assetsHandledByArchimedes -= redeemedAmountInAssets;
+        console.log(" redeemedAmountInAssets %s,_assetsHandledByArchimedes %s", redeemedAmountInAssets, _assetsHandledByArchimedes);
+        // Option one:
+        // /// This is again due to integer rounding issues. If this is the case, reset _assetsHandledByArchimedes
+        // if (_assetsHandledByArchimedes < redeemedAmountInAssets) {
+        //     console.log(
+        //         "_assetsHandledByArchimedes is smaller then redeemedAmountInAssets, redeemedAmountInAssets %s, _assetsHandledByArchimedes %s ",
+        //         redeemedAmountInAssets,
+        //         _assetsHandledByArchimedes
+        //     );
+        //     _assetsHandledByArchimedes = 0;
+        // } else {
+        //     _assetsHandledByArchimedes = _assetsHandledByArchimedes - redeemedAmountInAssets;
+        // }
+        // OR option two which we are going with:
+        _assetsHandledByArchimedes = _assetsHandledByArchimedes - ((redeemedAmountInAssets / 10) * 10);
         return redeemedAmountInAssets;
     }
 
@@ -64,6 +78,10 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
         string memory name,
         string memory symbol
     ) public initializer {
+        __AccessControl_init();
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
         _grantRole(ADMIN_ROLE, _msgSender());
         setGovernor(_msgSender());
         setExecutive(_msgSender());
@@ -77,14 +95,21 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
 
     function _takeRebaseFees() internal {
         uint256 roundingBuffer = 10; // wei
-        console.log("totalAssets() - (_assetsHandledByArchimedes + roundingBuffer)", totalAssets(), _assetsHandledByArchimedes, roundingBuffer);
+        // console.log("totalAssets() - (_assetsHandledByArchimedes + roundingBuffer)", totalAssets(), _assetsHandledByArchimedes, roundingBuffer);
         // If for some reason, _assetsHandledByArchimedes gor larger then total assets, reset _assetsHandledByArchimedes to max (ie total assets)
         if (totalAssets() < _assetsHandledByArchimedes) {
             // This is due to drifting in handeling assets. reset drift
-            console.log("reseting drift in vault");
-            _assetsHandledByArchimedes = totalAssets();
+            uint256 totalAssetsCurrent = totalAssets();
+            console.log("reseting drift in vault _assetsHandledByArchimedes %s, total assets %s", _assetsHandledByArchimedes, totalAssetsCurrent);
+            _assetsHandledByArchimedes = totalAssetsCurrent;
         }
-        uint256 unhandledRebasePayment = totalAssets() - _assetsHandledByArchimedes + roundingBuffer;
+        // Another layer of securing from rounding errors - round down last 2 digits if possible
+        uint256 unhandledRebasePayment;
+        if ((totalAssets() - _assetsHandledByArchimedes) > 100) {
+            unhandledRebasePayment = ((totalAssets() - _assetsHandledByArchimedes) / 100) * 100;
+        } else {
+            unhandledRebasePayment = totalAssets() - _assetsHandledByArchimedes;
+        }
         /// only run fee collection if there are some rebased funds not handled
         if (unhandledRebasePayment > roundingBuffer) {
             uint256 feeToCollect = (unhandledRebasePayment * _paramStore.getRebaseFeeRate()) / 1 ether;

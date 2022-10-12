@@ -207,7 +207,7 @@ describe("Coordinator Test suit", function () {
                 it("Should have increased deposited (or totalOUSD) OUSD in CDPosition", async function () {
                     const existingOUSDBeforeLeverage = addr1CollateralAmount;
                     const expectedOUSDTotal = getFloatFromBigNum(leverageAmount.add(existingOUSDBeforeLeverage).sub(originationFee));
-                    expect(getFloatFromBigNum(await r.cdp.getOUSDTotal(nftIdFirstPosition)))
+                    expect(getFloatFromBigNum(await r.cdp.getOUSDTotalWithoutInterest(nftIdFirstPosition)))
                         .to.closeTo(expectedOUSDTotal, 10);
                 });
                 it("Should have update CDPosition with shares", async function () {
@@ -232,7 +232,7 @@ describe("Coordinator Test suit", function () {
                     let userExistingOUSDValueBeforeUnwind;
                     before(async function () {
                         vaultOUSDAmountBeforeUnwind = await r.vault.totalAssets();
-                        positionTotalOUSD = await r.cdp.getOUSDTotal(nftIdFirstPosition);
+                        positionTotalOUSD = await r.cdp.getOUSDTotalWithoutInterest(nftIdFirstPosition);
                         positionShares = await r.cdp.getShares(nftIdFirstPosition);
                         positionExpectedOUSDTotalPlusInterest = await r.vault.convertToAssets(positionShares);
                         positionInterestEarned = positionExpectedOUSDTotalPlusInterest.sub(positionTotalOUSD);
@@ -311,7 +311,7 @@ describe("Coordinator Test suit", function () {
         });
 
         it("Should have updated CDP getOUSDTotal with values for leveraged position", async function () {
-            expect(getFloatFromBigNum(await r.cdp.getOUSDTotal(endToEndTestNFTId)))
+            expect(getFloatFromBigNum(await r.cdp.getOUSDTotalWithoutInterest(endToEndTestNFTId)))
                 .to.closeTo(getFloatFromBigNum(collateralAmount.add(depositedLeveragedOUSD)), 10);
         });
 

@@ -10,7 +10,7 @@ describe("CDPosition test suit", async function () {
     async function validateCDP (nftID, principle, interestEarned, total, borrowed, shares) {
         expect(await cdp.getOUSDPrinciple(nftID)).to.equal(principle);
         expect(await cdp.getOUSDInterestEarned(nftID)).to.equal(interestEarned);
-        expect(await cdp.getOUSDTotal(nftID)).to.equal(total);
+        expect(await cdp.getOUSDTotalWithoutInterest(nftID)).to.equal(total);
         expect(await cdp.getLvUSDBorrowed(nftID)).to.equal(borrowed);
         expect(await cdp.getShares(nftID)).to.equal(shares);
     }

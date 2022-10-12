@@ -46,7 +46,7 @@ abstract contract AccessController is AccessControlUpgradeable {
         _oldAdmin = _msgSender();
     }
 
-    function acceptAdminRole() public {
+    function acceptAdminRole() external {
         if (_nominatedAdmin == address(0) || _oldAdmin == address(0)) {
             revert("no nominated admin");
         }
@@ -96,11 +96,11 @@ abstract contract AccessController is AccessControlUpgradeable {
         return _addressExecutive;
     }
 
-    function getAddressGovernor() public view returns (address) {
+    function getAddressGovernor() external view returns (address) {
         return _addressGovernor;
     }
 
-    function getAddressGuardian() public view returns (address) {
+    function getAddressGuardian() external view returns (address) {
         return _addressGuardian;
     }
 

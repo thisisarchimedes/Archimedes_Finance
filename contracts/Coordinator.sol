@@ -108,7 +108,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
             _amountToLeverage <= _paramStore.getAllowedLeverageForPosition(ousdPrinciple, _paramStore.getMaxNumberOfCycles()),
             "Leverage more than max allowed"
         );
-
+        console.log("getLeveragedOUSD: checked if LevMore then max");
         // borrowUnderNFT transfer lvUSD from Coordinator to Exchanger + mark borrowed lvUSD in CDP under nft ID
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
@@ -174,6 +174,10 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     }
 
     function initialize() public initializer {
+        __AccessControl_init();
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
         _grantRole(ADMIN_ROLE, _msgSender());
         setGovernor(_msgSender());
         setExecutive(_msgSender());
