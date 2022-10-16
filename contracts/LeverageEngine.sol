@@ -78,15 +78,19 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         if (cycles == 0 || cycles > _parameterStore.getMaxNumberOfCycles()) {
             revert("Invalid number of cycles");
         }
+        console.log("ousdPrinciple %s", ousdPrinciple);
         if (ousdPrinciple < _parameterStore.getMinPositionCollateral()) {
             revert("Collateral lower then min");
         }
-        uint256 maxArchAmountBufferedDown = maxArchAmount - 10;
+        console.log("maxArchAmountBufferedDown %s", maxArchAmount);
+        uint256 maxArchAmountBufferedDown = maxArchAmount;
         uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPositionWithArch(ousdPrinciple, cycles, maxArchAmountBufferedDown);
         uint256 lvUSDAmountNeedForArguments = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
         /// check that user gave enough arch allowance for cycle-principle combo
         require(lvUSDAmountNeedForArguments - 1 <= lvUSDAmount, "cant get enough lvUSD");
-        uint256 archNeededToBurn = _parameterStore.calculateArchNeededForLeverage(lvUSDAmount) - 100; // minus 100 wei
+        uint256 archNeededToBurn = (_parameterStore.calculateArchNeededForLeverage(lvUSDAmount) / 10000) * 10000; // minus 1000 wei
+        console.log("archNeededToBurn %s", maxArchAmount);
+
         require(archNeededToBurn <= maxArchAmountBufferedDown, "Not enough Arch given for Pos");
         uint256 availableLev = _coordinator.getAvailableLeverage();
         require(availableLev >= lvUSDAmount, "Not enough available lvUSD");

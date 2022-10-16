@@ -188,7 +188,7 @@ describe("Test suit for setting up the stage", function () {
     });
 
     it("Should be able to change Arch lev Ration as Arch Governor", async function () {
-        const newArchToLevRatio = 100;
+        const newArchToLevRatio = parseUnitsNum(100);
         await r.parameterStore.setArchGovernor(user.address);
         await r.parameterStore.connect(user).changeArchToLevRatio(newArchToLevRatio);
         expect(await r.parameterStore.getArchToLevRatio()).to.eq(newArchToLevRatio);
@@ -274,26 +274,31 @@ const spec3 = 0;
 
 // describe("Test suit for opening/unwinding positions on imbalanced pools", function () {
 //     const higherNumberOfCycles = 6;
-//     const tempUserOUSDPrinciple = 96
-//     const tempUserOUSDPrincipleIn18Decimal = parseUnitsNum(tempUserOUSDPrinciple
-//            + Math.random()).add(BigNumber.from(1 * Math.round(Math.random())));
+//     const tempUserOUSDPrinciple = 96;
+//     const tempUserOUSDPrincipleIn18Decimal = parseUnitsNum(tempUserOUSDPrinciple + Math.random()).add(BigNumber.from(1 * Math.round(Math.random())));
 //     let leverageUserIsTakingIn18Dec;
 //     let archCostOfLeverageIn18Dec;
 
 //     before(async function () {
 //         await setupEnvForIntegrationTests();
-//          // fund userOther
+//         // fund userOther
 //         await r.archToken.connect(r.treasurySigner).transfer(userOther.address, parseUnits("1000.0"));
 //         await helperSwapETHWithOUSD(userOther, parseUnits("1.0"));
 
-//         const leverageUserIsTakingIn18Dec =
-//                await r.parameterStore.getAllowedLeverageForPosition(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles);
-//         const archCostOfLeverageIn18Dec =
-//                   (await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec)).add(parseUnits("0.001"));
+//         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(
+//             tempUserOUSDPrincipleIn18Decimal,
+//             higherNumberOfCycles,
+//         );
+//         const archCostOfLeverageIn18Dec = (await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec)).add(
+//             parseUnits("0.001"),
+//         );
 
-//         console.log("\x1B[31mPrincipal  leverageUserIsTakingIn18Dec = %s, archCostOfLeverageIn18Dec = %s",
-//              getFloatFromBigNum(leverageUserIsTakingIn18Dec), getFloatFromBigNum(archCostOfLeverageIn18Dec));
-//         console.log("\x1B[31mPrincipal %s Principal in 18Dec ", tempUserOUSDPrinciple , tempUserOUSDPrincipleIn18Decimal);
+//         console.log(
+//             "\x1B[31mPrincipal  leverageUserIsTakingIn18Dec = %s, archCostOfLeverageIn18Dec = %s",
+//             getFloatFromBigNum(leverageUserIsTakingIn18Dec),
+//             getFloatFromBigNum(archCostOfLeverageIn18Dec),
+//         );
+//         console.log("\x1B[31mPrincipal %s Principal in 18Dec ", tempUserOUSDPrinciple, tempUserOUSDPrincipleIn18Decimal);
 
 //         await r.parameterStore.changeMinPositionCollateral(parseUnitsNum(20));
 //         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
@@ -310,7 +315,7 @@ const spec3 = 0;
 //         positionId = 0;
 //     });
 
-//     const numOfPositions = 5
+//     const numOfPositions = 5;
 
 //     it("Should have almost empty pool", async function () {
 //         /// calculate how much lvUSD was used based on numbers from CDP
@@ -321,94 +326,93 @@ const spec3 = 0;
 //             const ousdTotal = getFloatFromBigNum(await r.cdp.getOUSDTotalWithoutInterest(i));
 //             const principle = getFloatFromBigNum(await r.cdp.getOUSDPrinciple(i));
 
-//             spentOUSD += ousdTotal - principle
-//             usedlvUSD += lvUSDBorrowed
+//             spentOUSD += ousdTotal - principle;
+//             usedlvUSD += lvUSDBorrowed;
 //         }
 //         const lvUSDCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(0));
 //         const crvCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(1));
-//         console.log("\x1B[31m usedlvUSD %s, lvUSDCoinsInPool %s, initialFundsInPool %s", usedlvUSD,lvUSDCoinsInPool, initialFundsInPool )
-//         console.log("\x1B[31m spentOUSD %s, OUSDCoinsInPool %s, initialFundsInPool %s", spentOUSD,crvCoinsInPool, initialFundsInPool )
+//         console.log("\x1B[31m usedlvUSD %s, lvUSDCoinsInPool %s, initialFundsInPool %s", usedlvUSD, lvUSDCoinsInPool, initialFundsInPool);
+//         console.log("\x1B[31m spentOUSD %s, OUSDCoinsInPool %s, initialFundsInPool %s", spentOUSD, crvCoinsInPool, initialFundsInPool);
 
 //         expect(lvUSDCoinsInPool).to.closeTo(initialFundsInPool + usedlvUSD, 1);
-//         //// This is not scientific but we can get away with 2% of transations funds getting used as fees
-//         expect(crvCoinsInPool).to.closeTo(initialFundsInPool - spentOUSD, spentOUSD *0.02);
+//         /// / This is not scientific but we can get away with 2% of transations funds getting used as fees
+//         expect(crvCoinsInPool).to.closeTo(initialFundsInPool - spentOUSD, spentOUSD * 0.02);
 //     });
-
 // });
 
 const spec4 = 0;
 
-describe("Test suit for moving positions around", function () {
-    before(async function () {
-        await setupEnvForIntegrationTests();
-        // fund userOther
-        await r.archToken.connect(r.treasurySigner).transfer(userOther.address, parseUnits("1000.0"));
-        await helperSwapETHWithOUSD(userOther, parseUnits("1.0"));
+// describe("Test suit for moving positions around", function () {
+//     before(async function () {
+//         await setupEnvForIntegrationTests();
+//         // fund userOther
+//         await r.archToken.connect(r.treasurySigner).transfer(userOther.address, parseUnits("1000.0"));
+//         await helperSwapETHWithOUSD(userOther, parseUnits("1.0"));
 
-        const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
-        const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
-        console.log("\x1B[31mPrincipal %s Principal in 18Dec, ", userOUSDPrinciple, userOUSDPrincipleIn18Decimal);
+//         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
+//         const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
+//         console.log("\x1B[31mPrincipal %s Principal in 18Dec, ", userOUSDPrinciple, userOUSDPrincipleIn18Decimal);
 
-        // console.log(
-        //     "\x1B[32mLeverageUser %s  archCostOfLeverage %s",
-        //     getFloatFromBigNum(leverageUserIsTakingIn18Dec),
-        //     getFloatFromBigNum(archCostOfLeverageIn18Dec),
-        // );
+//         // console.log(
+//         //     "\x1B[32mLeverageUser %s  archCostOfLeverage %s",
+//         //     getFloatFromBigNum(leverageUserIsTakingIn18Dec),
+//         //     getFloatFromBigNum(archCostOfLeverageIn18Dec),
+//         // );
 
-        await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-        await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-        await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-        await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
-        await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
+//         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+//         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+//         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+//         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
+//         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
 
-        positionId = 0;
-    });
+//         positionId = 0;
+//     });
 
-    it("Should have logged all 5 positions in array", async function () {
-        const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
-        const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
-        // console.log("\x1B[31mPosition array of User %s, ", userTokenIdsArray);
-        expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
-        expect(userTokenIdsArray[1]).to.eq(BigNumber.from(1));
-        expect(userTokenIdsArray[2]).to.eq(BigNumber.from(2));
-        expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(3));
-        expect(userOtherTokenIdsArray[1]).to.eq(BigNumber.from(4));
-    });
+//     it("Should have logged all 5 positions in array", async function () {
+//         const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
+//         const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
+//         // console.log("\x1B[31mPosition array of User %s, ", userTokenIdsArray);
+//         expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
+//         expect(userTokenIdsArray[1]).to.eq(BigNumber.from(1));
+//         expect(userTokenIdsArray[2]).to.eq(BigNumber.from(2));
+//         expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(3));
+//         expect(userOtherTokenIdsArray[1]).to.eq(BigNumber.from(4));
+//     });
 
-    it("Should correctly log transfers of ownership", async function () {
-        const safeTransferAsUser = r.positionToken.connect(user)["safeTransferFrom(address,address,uint256)"];
-        const safeTransferAsUserOther = r.positionToken.connect(userOther)["safeTransferFrom(address,address,uint256)"];
+//     it("Should correctly log transfers of ownership", async function () {
+//         const safeTransferAsUser = r.positionToken.connect(user)["safeTransferFrom(address,address,uint256)"];
+//         const safeTransferAsUserOther = r.positionToken.connect(userOther)["safeTransferFrom(address,address,uint256)"];
 
-        await safeTransferAsUser(user.address, userOther.address, 1);
+//         await safeTransferAsUser(user.address, userOther.address, 1);
 
-        await safeTransferAsUserOther(userOther.address, user.address, 3);
+//         await safeTransferAsUserOther(userOther.address, user.address, 3);
 
-        /// now expecting User : [0,2,3] userOther : [1,4]
-        const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
-        const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
+//         /// now expecting User : [0,2,3] userOther : [1,4]
+//         const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
+//         const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
 
-        expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
-        expect(userTokenIdsArray[1]).to.eq(BigNumber.from(2));
-        expect(userTokenIdsArray[2]).to.eq(BigNumber.from(3));
-        expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(1));
-        expect(userOtherTokenIdsArray[1]).to.eq(BigNumber.from(4));
+//         expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
+//         expect(userTokenIdsArray[1]).to.eq(BigNumber.from(2));
+//         expect(userTokenIdsArray[2]).to.eq(BigNumber.from(3));
+//         expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(1));
+//         expect(userOtherTokenIdsArray[1]).to.eq(BigNumber.from(4));
 
-        // console.log("\x1B[31mPosition array of User %s :: otherUser %s", userTokenIdsArray,userOtherTokenIdsArray);
-    });
+//         // console.log("\x1B[31mPosition array of User %s :: otherUser %s", userTokenIdsArray,userOtherTokenIdsArray);
+//     });
 
-    it("Should be able to unwind positions with new owners", async function () {
-        await r.leverageEngine.connect(user).unwindLeveragedPosition(2);
-        await r.leverageEngine.connect(userOther).unwindLeveragedPosition(4);
+//     it("Should be able to unwind positions with new owners", async function () {
+//         await r.leverageEngine.connect(user).unwindLeveragedPosition(2);
+//         await r.leverageEngine.connect(userOther).unwindLeveragedPosition(4);
 
-        const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
-        const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
-        console.log("\x1B[31mPosition array of User After unwinding %s :: otherUser %s", userTokenIdsArray, userOtherTokenIdsArray);
+//         const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
+//         const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
+//         console.log("\x1B[31mPosition array of User After unwinding %s :: otherUser %s", userTokenIdsArray, userOtherTokenIdsArray);
 
-        expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
-        expect(userTokenIdsArray[1]).to.eq(BigNumber.from(3));
-        expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(1));
-    });
-});
+//         expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
+//         expect(userTokenIdsArray[1]).to.eq(BigNumber.from(3));
+//         expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(1));
+//     });
+// });
 
 const spe1 = 0;
 
@@ -432,9 +436,9 @@ describe("Test suit for getting leverage", function () {
         leverageUserIsTaking = getFloatFromBigNum(leverageUserIsTakingIn18Dec);
         /// adding buffer for arch
         archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
-        console.log("archCostOfLeverageIn18Dec is %s", archCostOfLeverageIn18Dec);
+        // console.log("archCostOfLeverageIn18Dec is %s", archCostOfLeverageIn18Dec);
         archCostOfLeverage = getFloatFromBigNum(archCostOfLeverageIn18Dec);
-        logger("Will take %s leverage that cost %s ArchToken", leverageUserIsTaking, archCostOfLeverage);
+        // logger("Will take %s leverage that cost %s ArchToken", leverageUserIsTaking, archCostOfLeverage);
         archApprovedForLeverageIn18Dec = archCostOfLeverageIn18Dec.add(parseUnits("10"));
         /// Notice that we approve more arch then needed
         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
@@ -446,8 +450,13 @@ describe("Test suit for getting leverage", function () {
     it("Should not have used all the Arch token given for opening Position", async function () {
         // test arch token taken from user is only what is needed
         const archTokenBalanceAfterOpeningPosition = getFloatFromBigNum(await r.archToken.balanceOf(user.address));
-        // console.log("\x1B[31mPosition ArchTokenBefore %s ArchTokenAfter %s , neededArch is %s, archApproved is %s",
-        // userArchTokenAmountBeforePosition, archTokenBalanceAfterOpeningPosition, archCostOfLeverage, getFloatFromBigNum(archApprovedForLeverageIn18Dec));
+        console.log(
+            "\x1B[31mPosition ArchTokenBefore %s ArchTokenAfter %s , neededArch is %s, archApproved is %s",
+            userArchTokenAmountBeforePosition,
+            archTokenBalanceAfterOpeningPosition,
+            archCostOfLeverage,
+            getFloatFromBigNum(archApprovedForLeverageIn18Dec),
+        );
         expect(archTokenBalanceAfterOpeningPosition).to.closeTo(userArchTokenAmountBeforePosition - archCostOfLeverage, 0.0001);
     });
 

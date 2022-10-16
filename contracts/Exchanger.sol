@@ -235,6 +235,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         // Make sure pool isn't too bent
         // TODO allow user to override this protection
         // TODO auto balance if pool is bent
+        console.log("Exchanger:req  _minimum3CRV >= _guard3CRV, %s >= %s", _minimum3CRV, _guard3CRV);
         require(_minimum3CRV >= _guard3CRV, "LvUSD pool too imbalanced.");
 
         // Increase allowance
@@ -267,7 +268,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         uint256 _guard3CRV = (amountOUSD * _paramStore.getCurveGuardPercentage()) / 100;
 
         // Verify Exchanger has enough OUSD to use
-        console.log("amountOUSD <= _ousd.balanceOf(address(this) %s <= %s", amountOUSD, _ousd.balanceOf(address(this)));
+        // console.log("amountOUSD <= _ousd.balanceOf(address(this) %s <= %s", amountOUSD, _ousd.balanceOf(address(this)));
         require(amountOUSD <= _ousd.balanceOf(address(this)), "Insufficient OUSD in Exchanger.");
 
         // Estimate expected amount of 3CRV

@@ -136,6 +136,12 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
         return _nftCDP[nftID].oUSDTotalWithoutInterest + getOUSDInterestEarned(nftID);
     }
 
+    // Older method for getting OUSD total without interest
+    /// TODO: Deprecate!
+    function getOUSDTotal(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
+        return _nftCDP[nftID].oUSDTotalWithoutInterest;
+    }
+
     function getOUSDTotalWithoutInterest(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
         return _nftCDP[nftID].oUSDTotalWithoutInterest;
     }

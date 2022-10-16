@@ -44,9 +44,9 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _rebaseFeeRate = 30 ether / 100; // meaning 30%
         _curveGuardPercentage = 95;
         _slippage = 1; // 1%;
-        _archToLevRatio = 300; // meaning 1 arch is equal 300 lvUSD
+        _archToLevRatio = 300 ether; // meaning 1 arch is equal 300 lvUSD
         _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
-        _minPositionCollateral = 100 ether;
+        _minPositionCollateral = 9 ether;
         _positionTimeToLiveInDays = 369;
         _treasuryAddress = address(0);
     }
@@ -97,7 +97,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     function changeArchToLevRatio(uint256 newArchToLevRatio) external onlyArchGovernor {
-        require(newArchToLevRatio < 500000 && newArchToLevRatio >= 1, "new ArchToLevRatio out of range");
+        require(newArchToLevRatio < 500000 ether && newArchToLevRatio >= 1 ether, "new ArchToLevRatio out of range");
         emit ParameterChange("archToLevRatio", newArchToLevRatio, _archToLevRatio);
         _archToLevRatio = newArchToLevRatio;
     }
@@ -211,12 +211,12 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
 
     function calculateArchNeededForLeverage(uint256 leverageAmount) external view returns (uint256) {
         /// This method add a bit more Arch then is needed to get around integer rounding
-        uint256 naturalNumberRatio = _archToLevRatio;
+        uint256 naturalNumberRatio = _archToLevRatio / 1 ether;
         return (leverageAmount / naturalNumberRatio) + 1000;
     }
 
     function calculateLeverageAllowedForArch(uint256 archAmount) public view returns (uint256) {
-        return (_archToLevRatio * archAmount);
+        return (_archToLevRatio / 1 ether) * archAmount;
     }
 
     // solhint-disable-next-line
