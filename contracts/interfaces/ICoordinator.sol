@@ -67,4 +67,8 @@ interface ICoordinator {
     function addressOfVaultOUSDToken() external returns (address);
 
     function getAvailableLeverage() external view returns (uint256);
+
+    /// @dev callthrough to CDP to get expiration timestamp
+    /// @param _nftId NFT ID
+    function getPositionExpireTime(uint256 _nftId) external view returns (uint256);
 }

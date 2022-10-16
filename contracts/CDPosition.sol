@@ -17,8 +17,8 @@ import {ParameterStore} from "./ParameterStore.sol";
 contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgradeable {
     struct CDP {
         uint256 oUSDPrinciple; // Amount of OUSD originally deposited by user
-        uint256 oUSDInterestEarned; // Total interest earned (and rebased) so far
-        uint256 oUSDTotalWithoutInterest; // Principle + OUSD acquired from selling borrowed lvUSD + Interest earned
+        // uint256 oUSDInterestEarned; // Total interest earned (and rebased) so far  -< /// TODO remove this item
+        uint256 oUSDTotalWithoutInterest; // Principle + OUSD acquired from selling borrowed lvUSD
         uint256 lvUSDBorrowed; // Total lvUSD borrowed under this position
         uint256 shares; // Total vault shares allocated to this position
         // // New values, need to implement changing values
@@ -58,7 +58,7 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
         uint256 blockTimestamp = block.timestamp;
         uint256 positionTimeToLive = _parameterStore.getPositionTimeToLiveInDays();
         uint256 positionEndDate = blockTimestamp + positionTimeToLive * 1 days;
-        _nftCDP[nftID] = CDP(oOUSDPrinciple, 0, oOUSDPrinciple, 0, 0, blockTimestamp, positionTimeToLive, positionEndDate);
+        _nftCDP[nftID] = CDP(oOUSDPrinciple, oOUSDPrinciple, 0, 0, blockTimestamp, positionTimeToLive, positionEndDate);
     }
 
     /// @dev delete entry in CDP --if-- lvUSD borrowed balance is zero

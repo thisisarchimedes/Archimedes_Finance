@@ -58,7 +58,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         _ousd = IERC20Upgradeable(_addressOUSD);
         _paramStore = ParameterStore(addressParamStore);
 
-        /// reset allownce
+        // /// reset allownce
         _ousd.safeApprove(_addressVaultOUSD, 0);
         _lvUSD.safeApprove(_addressPoolManager, 0);
 
@@ -108,7 +108,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
             _amountToLeverage <= _paramStore.getAllowedLeverageForPosition(ousdPrinciple, _paramStore.getMaxNumberOfCycles()),
             "Leverage more than max allowed"
         );
-        console.log("getLeveragedOUSD: checked if LevMore then max");
         // borrowUnderNFT transfer lvUSD from Coordinator to Exchanger + mark borrowed lvUSD in CDP under nft ID
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
@@ -165,6 +164,10 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         return _lvUSD.balanceOf(address(this));
     }
 
+    function getPositionExpireTime(uint256 _nftId) external view override returns (uint256) {
+        return _cdp.getPositionExpireTime(_nftId);
+    }
+
     function addressOfLvUSDToken() external view override returns (address) {
         return _addressLvUSD;
     }
@@ -172,6 +175,8 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     function addressOfVaultOUSDToken() external view override returns (address) {
         return _addressVaultOUSD;
     }
+
+     
 
     function initialize() public initializer {
         __AccessControl_init();

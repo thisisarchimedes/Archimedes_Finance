@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-// import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {IERC20MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC20MetadataUpgradeable.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {AccessController} from "./AccessController.sol";
 import {ParameterStore} from "./ParameterStore.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
+// import {OUSD} from "@origin-dollar/contracts/contracts/token/OUSD.sol";
 import "hardhat/console.sol";
 
 /// @title Archimedes OUSD vault
@@ -37,7 +36,19 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
     function archimedesDeposit(uint256 assets, address receiver) external nonReentrant onlyExecutive returns (uint256) {
         _takeRebaseFees();
         _assetsHandledByArchimedes += assets;
-        return deposit(assets, receiver);
+        return super.deposit(assets, receiver);
+    }
+
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address owner
+    ) public virtual override returns (uint256) {
+        revert("call ArchimedesRedeem instead");
+    }
+
+    function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
+        revert("call ArchimedesDeposit instead");
     }
 
     function archimedesRedeem(
@@ -46,22 +57,22 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
         address owner
     ) external nonReentrant onlyExecutive returns (uint256) {
         _takeRebaseFees();
-        uint256 redeemedAmountInAssets = redeem(shares, receiver, owner);
-        console.log(" redeemedAmountInAssets %s,_assetsHandledByArchimedes %s", redeemedAmountInAssets, _assetsHandledByArchimedes);
+        uint256 redeemedAmountInAssets = super.redeem(shares, receiver, owner);
+        // console.log(" redeemedAmountInAssets %s,_assetsHandledByArchimedes %s", redeemedAmountInAssets, _assetsHandledByArchimedes);
         // Option one:
-        // /// This is again due to integer rounding issues. If this is the case, reset _assetsHandledByArchimedes
-        // if (_assetsHandledByArchimedes < redeemedAmountInAssets) {
-        //     console.log(
-        //         "_assetsHandledByArchimedes is smaller then redeemedAmountInAssets, redeemedAmountInAssets %s, _assetsHandledByArchimedes %s ",
-        //         redeemedAmountInAssets,
-        //         _assetsHandledByArchimedes
-        //     );
-        //     _assetsHandledByArchimedes = 0;
-        // } else {
-        //     _assetsHandledByArchimedes = _assetsHandledByArchimedes - redeemedAmountInAssets;
-        // }
-        // OR option two which we are going with:
-        _assetsHandledByArchimedes = _assetsHandledByArchimedes - ((redeemedAmountInAssets / 10) * 10);
+        /// This is due to integer rounding issues. If this is the case, reset _assetsHandledByArchimedes
+        if (_assetsHandledByArchimedes < redeemedAmountInAssets) {
+            console.log(
+                "_assetsHandledByArchimedes is smaller then redeemedAmountInAssets, redeemedAmountInAssets %s, _assetsHandledByArchimedes %s ",
+                redeemedAmountInAssets,
+                _assetsHandledByArchimedes
+            );
+            _assetsHandledByArchimedes = 0;
+        } else {
+            _assetsHandledByArchimedes = _assetsHandledByArchimedes - redeemedAmountInAssets;
+        }
+        // OR option two which is not what we use:
+        // _assetsHandledByArchimedes = _assetsHandledByArchimedes - ((redeemedAmountInAssets / 10) * 10);
         return redeemedAmountInAssets;
     }
 
@@ -69,7 +80,8 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
         _takeRebaseFees();
     }
 
-    function optInForRebases() external nonReentrant onlyAdmin {
+    function _optInForRebases() internal {
+        /// TODO: THIS MUST be called, uncomment when you figure out how to get OUSD implementation
         // _ousd.rebaseOptIn();
     }
 
@@ -90,26 +102,34 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
         __ERC4626_init(asset);
         __ERC20_init(name, symbol);
 
+        _optInForRebases();
+
         _assetsHandledByArchimedes = 0;
     }
 
     function _takeRebaseFees() internal {
-        uint256 roundingBuffer = 10; // wei
+        uint256 roundingBuffer = 100; // wei
         // console.log("totalAssets() - (_assetsHandledByArchimedes + roundingBuffer)", totalAssets(), _assetsHandledByArchimedes, roundingBuffer);
         // If for some reason, _assetsHandledByArchimedes gor larger then total assets, reset _assetsHandledByArchimedes to max (ie total assets)
-        if (totalAssets() < _assetsHandledByArchimedes) {
-            // This is due to drifting in handeling assets. reset drift
-            uint256 totalAssetsCurrent = totalAssets();
+        // TODO: SEE note in notepad
+        uint256 totalAssetsCurrent = totalAssets();
+        if (totalAssetsCurrent < _assetsHandledByArchimedes) {
+            if (_assetsHandledByArchimedes - totalAssetsCurrent > 1000) {
+                revert("Err:ArchAssets > totalA");
+            }
+            // This is due to drifting in handling assets. reset drift
             console.log("reseting drift in vault _assetsHandledByArchimedes %s, total assets %s", _assetsHandledByArchimedes, totalAssetsCurrent);
             _assetsHandledByArchimedes = totalAssetsCurrent;
         }
+
         // Another layer of securing from rounding errors - round down last 2 digits if possible
         uint256 unhandledRebasePayment;
         if ((totalAssets() - _assetsHandledByArchimedes) > 100) {
             unhandledRebasePayment = ((totalAssets() - _assetsHandledByArchimedes) / 100) * 100;
         } else {
-            unhandledRebasePayment = totalAssets() - _assetsHandledByArchimedes;
+            unhandledRebasePayment = 0;
         }
+
         /// only run fee collection if there are some rebased funds not handled
         if (unhandledRebasePayment > roundingBuffer) {
             uint256 feeToCollect = (unhandledRebasePayment * _paramStore.getRebaseFeeRate()) / 1 ether;

@@ -83,7 +83,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
 
-
         _grantRole(ADMIN_ROLE, _msgSender());
         setGovernor(_msgSender());
         setExecutive(_msgSender());
@@ -129,39 +128,18 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         return _swapLvUSDforOUSD(amountLvUSD);
     }
 
-    // function xLvUSDfor3CRV(uint256 amountLvUSD) external nonReentrant onlyExecutive returns (uint256) {
-    //     return _xLvUSDfor3CRV(amountLvUSD);
-    // }
-
-    // function x3CRVforOUSD(uint256 amount3CRV) external nonReentrant onlyExecutive returns (uint256) {
-    //     return _x3CRVforOUSD(amount3CRV);
-    // }
-
-    // function xOUSDfor3CRV(uint256 amountOUSD) external nonReentrant onlyExecutive returns (uint256) {
-    //     return _xOUSDfor3CRV(amountOUSD);
-    // }
-
-    // function x3CRVforLvUSD(uint256 amount3CRV) external nonReentrant onlyExecutive returns (uint256) {
-    //     return _x3CRVforLvUSD(amount3CRV);
-    // }
-
     // Send OUSD, get lvUSD back and the reminder of OUSD
     function _swapOUSDforLvUSD(uint256 amountOUSD, uint256 minRequiredLvUSD) internal returns (uint256 lvUSDReturned, uint256 remainingOUSD) {
         /// process is go to OUSD/3CRV pool, exchange as much OUSD as needed for enough 3CRV. Exhange all the 3CRV you got for lvUSD on lvUSD/3CRV pool
-
         // Get the amount of 3CRV gotten from exhanging minRequiredLvUSD or lvUSD to 3CRV. This is actually the other way around then what we will actually do. Used as an indicator
         uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(0, 1, minRequiredLvUSD);
         // Get the amount of OUSD gotten from exhanging above amount of 3CRV on OUSD/3CRV pool
         uint256 _neededOUSD = _poolOUSD3CRV.get_dy(1, 0, _needed3CRV);
-        // console.log("1: _needed3CRV %s, _neededOUSD %s", _needed3CRV / 1 ether, _neededOUSD / 1 ether);
-
         // Add small buffer to needed OUSD and calculate in the right order (ie first exhange OUSD for 3CRV, then exhange that 3CRV for lvUSD)
-        /// Notice that the small slippage is startic here. Further below weh nwe actaully exhange funds we use the user defined slippage. 
+        /// Notice that the small slippage is static here. Further below when we actaully exhange funds we use the user defined slippage.
         _neededOUSD = (_neededOUSD * 1005) / 1000; // This will fix lower balances slippages
         uint256 _obtained3CRV = _poolOUSD3CRV.get_dy(0, 1, _neededOUSD);
         uint256 _obtainedLvUSD = _poolLvUSD3CRV.get_dy(1, 0, _obtained3CRV);
-        // console.log("2: _obtained3CRV = %s , _obtainedLvUSD = %s", _obtained3CRV / 1 ether, _obtainedLvUSD / 1 ether);
-
         /// if the amount of expected lvUSD (_obtainedLvUSD) is lower then the min amount of lvUSD we expect to get back, re-calculate
         // the important output of this code block is the correct amount of _neededOUSD to exhange through the flow of the two pools.
         if (_obtainedLvUSD < minRequiredLvUSD) {
@@ -181,7 +159,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
 
             /// Do same correction cycle as above again.
             if (finalAmount < (minRequiredLvUSD)) {
-                console.log("Inside calc finalAmount");
+                // console.log("Inside calc finalAmount");
                 _difference = (minRequiredLvUSD) - finalAmount + 10**18; // +1 just in case
                 _3CRVDifference = _poolOUSD3CRV.get_dy(0, 1, _difference);
                 _LvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _3CRVDifference);
@@ -248,11 +226,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _expected3CRV = _poolLvUSD3CRV.get_dy(0, 1, amountLvUSD);
 
         // /// Make sure expected3CRV is not too high!
-        console.log(
-            "When Exchanging - amountLvUSD = %s, _expected3CRV = %s",
-            amountLvUSD / 1 ether,
-            _expected3CRV / 1 ether
-        );
+        // console.log("When Exchanging - amountLvUSD = %s, _expected3CRV = %s", amountLvUSD / 1 ether, _expected3CRV / 1 ether);
         _checkExchangeExpectedReturnInLimit(amountLvUSD, _expected3CRV);
 
         // Set minimum required accounting for slippage
