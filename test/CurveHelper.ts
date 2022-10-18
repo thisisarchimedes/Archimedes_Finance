@@ -35,7 +35,7 @@ async function createMetapool(token, owner) {
     // We deployed a 3CRV/lvUSD pool - so we ask Curve Factory to look for pools that can deal with USDT/lvUSD
     // In the future this will be a fixed index we can query instead
     const poolAddress = await factoryCurveMetapool.find_pool_for_coins(address3CRV, token.address);
-    console.log("findPoolForCoins - %s", poolAddress);
+    // console.log("findPoolForCoins - %s", poolAddress);
     // Return the pool address
     return poolAddress;
 }

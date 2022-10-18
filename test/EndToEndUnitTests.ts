@@ -3,7 +3,7 @@ import { parseUnits, formatUnits, computePublicKey } from "ethers/lib/utils";
 import { expect } from "chai";
 import { buildContractTestContext, ContractTestContext, setRolesForEndToEnd } from "./ContractTestContext";
 import { helperSwapETHWithOUSD, helperSwapETHWith3CRV } from "./MainnetHelper";
-import { fundMetapool } from "./CurveHelper";
+import { fundMetapool, fundedPoolAmount } from "./CurveHelper";
 import { BigNumber } from "ethers";
 import { logger } from "../logger";
 import { ethers } from "hardhat";
@@ -16,7 +16,7 @@ let pretendOUSDRebaseSigner: SignerWithAddress;
 let lvUSD3CRVPoolInstance;
 
 const userOUSDPrinciple = 100 + Math.random();
-const fundsInPoolBase = 2000;
+const fundsInPoolBase = getFloatFromBigNum(fundedPoolAmount);
 const fundInPoolAddOnForTest = 600;
 const initialFundsInPool = fundInPoolAddOnForTest + fundsInPoolBase;
 const initialCoordinatorLvUSDBalance = 10000;
@@ -294,12 +294,12 @@ describe("Test suit for opening/unwinding positions on imbalanced pools", functi
         //     parseUnits("0.001"),
         // );
 
-        console.log(
-            "\x1B[31mPrincipal  leverageUserIsTakingIn18Dec = %s, archCostOfLeverageIn18Dec = %s",
-            getFloatFromBigNum(leverageUserIsTakingIn18Dec),
-            getFloatFromBigNum(archCostOfLeverageIn18Dec),
-        );
-        console.log("\x1B[31mPrincipal %s Principal in 18Dec ", tempUserOUSDPrinciple, tempUserOUSDPrincipleIn18Decimal);
+        // console.log(
+        //     "\x1B[31mPrincipal  leverageUserIsTakingIn18Dec = %s, archCostOfLeverageIn18Dec = %s",
+        //     getFloatFromBigNum(leverageUserIsTakingIn18Dec),
+        //     getFloatFromBigNum(archCostOfLeverageIn18Dec),
+        // );
+        // console.log("\x1B[31mPrincipal %s Principal in 18Dec ", tempUserOUSDPrinciple, tempUserOUSDPrincipleIn18Decimal);
 
         await r.parameterStore.changeMinPositionCollateral(parseUnitsNum(20));
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
@@ -332,8 +332,8 @@ describe("Test suit for opening/unwinding positions on imbalanced pools", functi
         }
         const lvUSDCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(0));
         const crvCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(1));
-        console.log("\x1B[31m usedlvUSD %s, lvUSDCoinsInPool %s, initialFundsInPool %s", usedlvUSD, lvUSDCoinsInPool, initialFundsInPool);
-        console.log("\x1B[31m spentOUSD %s, OUSDCoinsInPool %s, initialFundsInPool %s", spentOUSD, crvCoinsInPool, initialFundsInPool);
+        // console.log("\x1B[31m usedlvUSD %s, lvUSDCoinsInPool %s, initialFundsInPool %s", usedlvUSD, lvUSDCoinsInPool, initialFundsInPool);
+        // console.log("\x1B[31m spentOUSD %s, OUSDCoinsInPool %s, initialFundsInPool %s", spentOUSD, crvCoinsInPool, initialFundsInPool);
 
         expect(lvUSDCoinsInPool).to.closeTo(initialFundsInPool + usedlvUSD, 1);
         /// / This is not scientific but we can get away with 2% of transations funds getting used as fees
@@ -407,7 +407,7 @@ describe("Test suit for moving positions around", function () {
 
         const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
         const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
-        console.log("\x1B[31mPosition array of User After unwinding %s :: otherUser %s", userTokenIdsArray, userOtherTokenIdsArray);
+        // console.log("\x1B[31mPosition array of User After unwinding %s :: otherUser %s", userTokenIdsArray, userOtherTokenIdsArray);
 
         expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
         expect(userTokenIdsArray[1]).to.eq(BigNumber.from(3));
@@ -452,13 +452,13 @@ describe("Test suit for getting leverage", function () {
     it("Should not have used all the Arch token given for opening Position", async function () {
         // test arch token taken from user is only what is needed
         const archTokenBalanceAfterOpeningPosition = getFloatFromBigNum(await r.archToken.balanceOf(user.address));
-        console.log(
-            "\x1B[31mPosition ArchTokenBefore %s ArchTokenAfter %s , neededArch is %s, archApproved is %s",
-            userArchTokenAmountBeforePosition,
-            archTokenBalanceAfterOpeningPosition,
-            archCostOfLeverage,
-            getFloatFromBigNum(archApprovedForLeverageIn18Dec),
-        );
+        // console.log(
+        //     "\x1B[31mPosition ArchTokenBefore %s ArchTokenAfter %s , neededArch is %s, archApproved is %s",
+        //     userArchTokenAmountBeforePosition,
+        //     archTokenBalanceAfterOpeningPosition,
+        //     archCostOfLeverage,
+        //     getFloatFromBigNum(archApprovedForLeverageIn18Dec),
+        // );
         expect(archTokenBalanceAfterOpeningPosition).to.closeTo(userArchTokenAmountBeforePosition - archCostOfLeverage, 0.0001);
     });
 
@@ -491,7 +491,8 @@ describe("Test suit for getting leverage", function () {
             nowDate,
         );
 
-        /// Date from blockchain depends on the block we start from (blocks from the past happen in the past). Thats why we are checking for a specific date
+        /// Date from blockchain depends on the block we start from (blocks from the past happen in the past).
+        // Thats why we are checking for a specific date
         expect(positionTimeOpenedDay).to.eq(8);
         expect(positionExpireTimeDay).to.eq(12);
     });
@@ -572,14 +573,14 @@ describe("Test suit for getting leverage", function () {
         const ousdInVaultAfterRebase = getFloatFromBigNum(await r.vault.totalAssets());
 
         // actual test
-        console.log(
-            "\x1B[31mSimplePositionCreation: Created a rebase of %s OUSD with %s rebaseFee. Total OUSD assets deposited in vault are %s while before it was %s. Delta is %s",
-            rebaseAmount,
-            rebaseRateFee,
-            ousdInVaultAfterRebase,
-            vaultAssetsBeforeRebase,
-            ousdInVaultAfterRebase - vaultAssetsBeforeRebase,
-        );
+        // console.log(
+        //     "\x1B[31mSimplePositionCreation: Created a rebase of %s OUSD with %s rebaseFee. Total OUSD assets deposited in vault are %s while before it was %s. Delta is %s",
+        //     rebaseAmount,
+        //     rebaseRateFee,
+        //     ousdInVaultAfterRebase,
+        //     vaultAssetsBeforeRebase,
+        //     ousdInVaultAfterRebase - vaultAssetsBeforeRebase,
+        // );
         expect(ousdInVaultAfterRebase - vaultAssetsBeforeRebase).to.closeTo(rebaseAmount - rebaseRateFee * rebaseAmount, 0.01);
     });
 
@@ -626,12 +627,12 @@ describe("Test suit for getting leverage", function () {
             getFloatFromBigNum(userOUSDBalanceAferUnwindingIn18Dec) - getFloatFromBigNum(userOUSDBalanceBeforeUnwindingIn18Dec);
         const expectedUserGainsFromUnwinding =
             contractEstimatedReturnedOUSDMinusInterestFromUnwinding + getFloatFromBigNum(cdpInterestEarnedIn18Dec) - 0.005 * userOUSDPrinciple; // 2ed to last bit is originationFee, last bit is accepted curve loss
-        console.log(
-            "\x1B[31mSimplePositionCreation: expecting ousd delta of %s for user's address while got %s. Our contract method to estimate unwind OUSD windfall gave %s (minus interest)",
-            expectedUserGainsFromUnwinding,
-            userActualGainsFromUnwinding,
-            contractEstimatedReturnedOUSDMinusInterestFromUnwinding,
-        );
+        // console.log(
+        //     "\x1B[31mSimplePositionCreation: expecting ousd delta of %s for user's address while got %s. Our contract method to estimate unwind OUSD windfall gave %s (minus interest)",
+        //     expectedUserGainsFromUnwinding,
+        //     userActualGainsFromUnwinding,
+        //     contractEstimatedReturnedOUSDMinusInterestFromUnwinding,
+        // );
         expect(userActualGainsFromUnwinding).to.closeTo(expectedUserGainsFromUnwinding, 1);
     });
 

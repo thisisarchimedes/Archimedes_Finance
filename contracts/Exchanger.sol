@@ -235,7 +235,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         // Make sure pool isn't too bent
         // TODO allow user to override this protection
         // TODO auto balance if pool is bent
-        console.log("Exchanger:req  _minimum3CRV >= _guard3CRV, %s >= %s", _minimum3CRV, _guard3CRV);
+        // console.log("Exchanger:req  _minimum3CRV >= _guard3CRV, %s >= %s", _minimum3CRV, _guard3CRV);
         require(_minimum3CRV >= _guard3CRV, "LvUSD pool too imbalanced.");
 
         // Increase allowance

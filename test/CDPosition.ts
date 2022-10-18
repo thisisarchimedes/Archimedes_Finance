@@ -7,12 +7,27 @@ const getEighteenDecimal = (naturalNumber) => {
 };
 
 describe("CDPosition test suit", async function () {
-    async function validateCDP (nftID, principle, interestEarned, total, borrowed, shares) {
+    const getFloatFromBigNumNoDecimal = (bigNumber) => {
+        return parseFloat(ethers.utils.formatUnits(bigNumber, 0));
+    };
+    async function validateCDP(nftID, principle, interestEarned, total, borrowed, shares) {
         expect(await cdp.getOUSDPrinciple(nftID)).to.equal(principle);
-        expect(await cdp.getOUSDInterestEarned(nftID)).to.equal(interestEarned);
+        // We cant run this without actually having funds in the vault. Tested in integration tests
+        // expect(await cdp.getOUSDInterestEarned(nftID)).to.equal(interestEarned);
         expect(await cdp.getOUSDTotalWithoutInterest(nftID)).to.equal(total);
         expect(await cdp.getLvUSDBorrowed(nftID)).to.equal(borrowed);
         expect(await cdp.getShares(nftID)).to.equal(shares);
+
+        expect(getFloatFromBigNumNoDecimal(await cdp.getPositionTimeOpened(nftID))).to.closeTo(1657322079, 3);
+        expect(await cdp.getPositionTimeToLive(nftID)).to.equal(ethers.utils.parseUnits("369", 0));
+        expect(getFloatFromBigNumNoDecimal(await cdp.getPositionExpireTime(nftID))).to.closeTo(1689203679, 3);
+
+        // console.log(
+        //     "time opened, time to live, expires at",
+        //     await cdp.getPositionTimeOpened(nftID),
+        //     await cdp.getPositionTimeToLive(nftID),
+        //     await cdp.getPositionExpireTime(nftID),
+        // );
     }
 
     let cdp;
@@ -34,7 +49,6 @@ describe("CDPosition test suit", async function () {
         it("Should create position", async function () {
             // create a new position
             await cdp.createPosition(NFT_ID, BASIC_OUSD_PRINCIPLE);
-
             // validate CDP Values
             await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, 0);
         });
@@ -42,9 +56,7 @@ describe("CDPosition test suit", async function () {
             // create a new position
             await cdp.createPosition(NFT_ID, BASIC_OUSD_PRINCIPLE);
             // Try to create position again, expect to revert
-            await expect(
-                cdp.createPosition(NFT_ID, BASIC_OUSD_PRINCIPLE),
-            ).to.be.revertedWith("NFT ID must not exist");
+            await expect(cdp.createPosition(NFT_ID, BASIC_OUSD_PRINCIPLE)).to.be.revertedWith("NFT ID must not exist");
         });
     });
 
@@ -92,9 +104,7 @@ describe("CDPosition test suit", async function () {
         });
 
         it("Should revert when removing more shares than the position owns", async function () {
-            await expect(
-                cdp.removeSharesFromPosition(NFT_ID, 20),
-            ).to.be.revertedWith("Shares exceed position balance");
+            await expect(cdp.removeSharesFromPosition(NFT_ID, 20)).to.be.revertedWith("Shares exceed position balance");
         });
     });
 
@@ -121,28 +131,14 @@ describe("CDPosition test suit", async function () {
             await cdp.borrowLvUSDFromPosition(NFT_ID, LVUSD_AMOUNT);
 
             await cdp.repayLvUSDToPosition(NFT_ID, getEighteenDecimal(1000));
-            await validateCDP(
-                NFT_ID,
-                BASIC_OUSD_PRINCIPLE,
-                0,
-                BASIC_OUSD_PRINCIPLE,
-                getEighteenDecimal(LVUSD_AMOUNT_NATURAL - 1000),
-                0,
-            );
+            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, getEighteenDecimal(LVUSD_AMOUNT_NATURAL - 1000), 0);
         });
 
         /* depositOUSDtoPosition section */
 
         it("Should mark up deposited OUSD in NFT position", async function () {
             await cdp.depositOUSDtoPosition(NFT_ID, OUSD_AMOUNT);
-            await validateCDP(
-                NFT_ID,
-                BASIC_OUSD_PRINCIPLE,
-                0,
-                getEighteenDecimal(OUSD_AMOUNT_NATURAL + BASIC_OUSD_PRINCIPLE_NATURAL),
-                0,
-                0,
-            );
+            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, getEighteenDecimal(OUSD_AMOUNT_NATURAL + BASIC_OUSD_PRINCIPLE_NATURAL), 0, 0);
         });
 
         /* withdrawOUSDFromPosition */
@@ -150,44 +146,21 @@ describe("CDPosition test suit", async function () {
         it("Should mark down OUSD withdrawn from position", async function () {
             // await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, BASIC_OUSD_PRINCIPLE, 0, true)
             await cdp.withdrawOUSDFromPosition(NFT_ID, getEighteenDecimal(30000));
-            await validateCDP(
-                NFT_ID,
-                BASIC_OUSD_PRINCIPLE,
-                0,
-                getEighteenDecimal(BASIC_OUSD_PRINCIPLE_NATURAL - 30000),
-                0,
-                0,
-            );
+            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, getEighteenDecimal(BASIC_OUSD_PRINCIPLE_NATURAL - 30000), 0, 0);
         });
 
         it("Should mark down OUSD withdrawn from position except OUSD deposited after principle", async function () {
             // deposit OUSD before withdrawing from position
             await cdp.depositOUSDtoPosition(NFT_ID, OUSD_AMOUNT);
             const OUSDBalanceInTotalAfterDepositNatural = BASIC_OUSD_PRINCIPLE_NATURAL + OUSD_AMOUNT_NATURAL;
-            await validateCDP(
-                NFT_ID,
-                BASIC_OUSD_PRINCIPLE,
-                0,
-                getEighteenDecimal(OUSDBalanceInTotalAfterDepositNatural),
-                0,
-                0,
-            );
+            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, getEighteenDecimal(OUSDBalanceInTotalAfterDepositNatural), 0, 0);
 
             await cdp.withdrawOUSDFromPosition(NFT_ID, getEighteenDecimal(30000));
-            await validateCDP(
-                NFT_ID,
-                BASIC_OUSD_PRINCIPLE,
-                0,
-                getEighteenDecimal(OUSDBalanceInTotalAfterDepositNatural - 30000),
-                0,
-                0,
-            );
+            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, getEighteenDecimal(OUSDBalanceInTotalAfterDepositNatural - 30000), 0, 0);
         });
 
         it("Should revert if total deposited OUSD is lower then amount to withdraw", async function () {
-            await expect(cdp.withdrawOUSDFromPosition(NFT_ID, getEighteenDecimal(1100000))).to.be.revertedWith(
-                "Insufficient OUSD balance",
-            );
+            await expect(cdp.withdrawOUSDFromPosition(NFT_ID, getEighteenDecimal(1100000))).to.be.revertedWith("Insufficient OUSD balance");
         });
     });
 
@@ -219,16 +192,12 @@ describe("CDPosition test suit", async function () {
         it("Should update multiple fields in CDP struct for a specific address", async function () {
             await cdp.depositOUSDtoPosition(NFT_ID, amountInOUSDToDeposit);
             await cdp.borrowLvUSDFromPosition(NFT_ID, amountInLvUSDToBorrow);
-            await validateCDP(
-                NFT_ID, BASIC_OUSD_PRINCIPLE, 0, nftIDMainExpectedOUSDTotal, amountInLvUSDToBorrow, 0,
-            );
+            await validateCDP(NFT_ID, BASIC_OUSD_PRINCIPLE, 0, nftIDMainExpectedOUSDTotal, amountInLvUSDToBorrow, 0);
             await validateCDP(NFT_ID_SECONDARY, nftIDSecondaryPrinciple, 0, nftIDSecondaryPrinciple, 0, 0);
         });
 
         it("Should not alter any NFT ID CDP if it tried to alter a non existing NFT", async function () {
-            await expect(cdp.depositOUSDtoPosition(2349201840, amountInOUSDToDeposit)).to.be.revertedWith(
-                "NFT ID must exist",
-            );
+            await expect(cdp.depositOUSDtoPosition(2349201840, amountInOUSDToDeposit)).to.be.revertedWith("NFT ID must exist");
             // Check that no other entry was changed
             await validateCDP(NFT_ID, nftIDMainPrinciple, 0, nftIDMainPrinciple, 0, 0);
             await validateCDP(NFT_ID_SECONDARY, nftIDSecondaryPrinciple, 0, nftIDSecondaryPrinciple, 0, 0);

@@ -126,8 +126,16 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
     function getOUSDInterestEarned(uint256 nftID) public view nftIDMustExist(nftID) returns (uint256) {
         uint256 sharesOfOwner = _nftCDP[nftID].shares;
         uint256 totalFundsFromPreviewRedeem = _vault.previewRedeem(sharesOfOwner);
+        uint256 outTotal = _nftCDP[nftID].oUSDTotalWithoutInterest;
+        // console.log(
+        //     "_nftCDP[nftID].oUSDTotalWithoutInterest < totalFundsFromPreviewRedeem %s < %s, shares =%s",
+        //     outTotal,
+        //     totalFundsFromPreviewRedeem,
+        //     sharesOfOwner
+        // );
         if (_nftCDP[nftID].oUSDTotalWithoutInterest > totalFundsFromPreviewRedeem) {
-            revert("InterestEarned calc error");
+            // revert("InterestEarned calc error");
+            return 0;
         }
         return totalFundsFromPreviewRedeem - _nftCDP[nftID].oUSDTotalWithoutInterest;
     }

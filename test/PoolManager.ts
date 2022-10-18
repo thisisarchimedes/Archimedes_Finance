@@ -2,10 +2,11 @@ import { expect } from "chai";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 import { parseUnits, formatUnits } from "ethers/lib/utils";
 
-const oneK18Decimal = parseUnits("1000", 18);
+const oneK = 1000;
+const oneK18Decimal = parseUnits(oneK.toString(), 18);
 const twentyK18Decimal = parseUnits("20000", 18);
 
-function getFloatFromBigNum (bigNumValue, dec = 18) {
+function getFloatFromBigNum(bigNumValue, dec = 18) {
     return parseFloat(formatUnits(bigNumValue, dec));
 }
 
@@ -37,8 +38,11 @@ describe("PoolManager test suit", async function () {
     });
 
     it("Should fund pool with both lvUSD and USDC", async function () {
+        const tokenOneBalanceBefore = getFloatFromBigNum(await r.curveLvUSDPool.balances(0));
+        const tokenTwoBalanceBefore = getFloatFromBigNum(await r.curveLvUSDPool.balances(1));
+
         await r.poolManager.fundPoolWith3CRV(r.owner.address, oneK18Decimal);
-        expect(getFloatFromBigNum(await r.curveLvUSDPool.balances(0))).to.be.eq(1200);
-        expect(getFloatFromBigNum(await r.curveLvUSDPool.balances(1))).to.be.eq(1200);
+        expect(getFloatFromBigNum(await r.curveLvUSDPool.balances(0))).to.be.eq(tokenOneBalanceBefore + oneK);
+        expect(getFloatFromBigNum(await r.curveLvUSDPool.balances(1))).to.be.eq(tokenTwoBalanceBefore + oneK);
     });
 });
