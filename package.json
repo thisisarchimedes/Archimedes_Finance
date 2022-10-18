@@ -58,7 +58,7 @@
         "ethereum-waffle": "^3.4.4",
         "ethers": "^5.6.9",
         "hardhat": "^2.10.1",
-        "hardhat-watcher": "^2.3.0",
+        "hardhat-watcher": "^2.5.0",
         "mocha": "^10.0.0",
         "prettier": "^2.7.1",
         "prettier-plugin-solidity": "^1.0.0-dev.23",
