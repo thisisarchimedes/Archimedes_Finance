@@ -10,7 +10,7 @@ import {ParameterStore} from "./ParameterStore.sol";
 import {ERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-// import {OUSD} from "@origin-dollar/contracts/contracts/token/OUSD.sol";
+import {IOUSD} from "./interfaces/IOUSD.sol";
 import "hardhat/console.sol";
 
 /// @title Archimedes OUSD vault
@@ -20,7 +20,7 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     ParameterStore internal _paramStore;
-    IERC20Upgradeable internal _ousd;
+    IOUSD internal _ousd;
 
     uint256 internal _assetsHandledByArchimedes;
 
@@ -30,7 +30,7 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
 
     function setDependencies(address _addressParamStore, address _addressOUSD) external onlyAdmin {
         _paramStore = ParameterStore(_addressParamStore);
-        _ousd = IERC20Upgradeable(_addressOUSD);
+        _ousd = IOUSD(_addressOUSD);
     }
 
     function archimedesDeposit(uint256 assets, address receiver) external nonReentrant onlyExecutive returns (uint256) {
