@@ -151,124 +151,124 @@ async function setupEnvForIntegrationTests() {
 
 const spec2 = 0;
 
-// describe("Test suit for setting up the stage", function () {
-//     before(async function () {
-//         await setupEnvForIntegrationTests();
-//     });
+describe("Test suit for setting up the stage", function () {
+    before(async function () {
+        await setupEnvForIntegrationTests();
+    });
 
-//     //  Admin checks
+    //  Admin checks
 
-//     it("Should be able to transfer admin via two steps process", async function () {
-//         // userOther is not admin
-//         await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
-//         // suggest changing admin
-//         await r.vault.setAdmin(userOther.address);
-//         // userOther is still not admin as it did not accept it
-//         await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
-//         // Older admin can still call this
-//         await r.vault.takeRebaseFees();
-//         // otherUser accept role as admin
-//         await r.vault.connect(userOther).acceptAdminRole();
-//         // otherUser is now admin
-//         await r.vault.connect(userOther).takeRebaseFees();
-//         // old admin can not use onlyAdmin methods
-//         await expect(r.vault.takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
-//     });
+    it("Should be able to transfer admin via two steps process", async function () {
+        // userOther is not admin
+        await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
+        // suggest changing admin
+        await r.vault.setAdmin(userOther.address);
+        // userOther is still not admin as it did not accept it
+        await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
+        // Older admin can still call this
+        await r.vault.takeRebaseFees();
+        // otherUser accept role as admin
+        await r.vault.connect(userOther).acceptAdminRole();
+        // otherUser is now admin
+        await r.vault.connect(userOther).takeRebaseFees();
+        // old admin can not use onlyAdmin methods
+        await expect(r.vault.takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
+    });
 
-//     it("Should be able to transfer admin role back to owner", async function () {
-//         await r.vault.connect(userOther).setAdmin(owner.address);
-//         await r.vault.acceptAdminRole();
-//         await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
-//         await r.vault.takeRebaseFees();
-//     });
+    it("Should be able to transfer admin role back to owner", async function () {
+        await r.vault.connect(userOther).setAdmin(owner.address);
+        await r.vault.acceptAdminRole();
+        await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
+        await r.vault.takeRebaseFees();
+    });
 
-//     it("Should not not be able to change arch lev ratio as non Arch Governor ", async function () {
-//         const archlevRationChangePromise = r.parameterStore.connect(user).changeArchToLevRatio(parseUnitsNum("100"));
-//         await expect(archlevRationChangePromise).to.revertedWith("Caller is not Arch Governor");
-//     });
+    it("Should not not be able to change arch lev ratio as non Arch Governor ", async function () {
+        const archlevRationChangePromise = r.parameterStore.connect(user).changeArchToLevRatio(parseUnitsNum("100"));
+        await expect(archlevRationChangePromise).to.revertedWith("Caller is not Arch Governor");
+    });
 
-//     it("Should be able to change Arch lev Ration as Arch Governor", async function () {
-//         const newArchToLevRatio = parseUnitsNum(100);
-//         await r.parameterStore.setArchGovernor(user.address);
-//         await r.parameterStore.connect(user).changeArchToLevRatio(newArchToLevRatio);
-//         expect(await r.parameterStore.getArchToLevRatio()).to.eq(newArchToLevRatio);
-//     });
+    it("Should be able to change Arch lev Ration as Arch Governor", async function () {
+        const newArchToLevRatio = parseUnitsNum(100);
+        await r.parameterStore.setArchGovernor(user.address);
+        await r.parameterStore.connect(user).changeArchToLevRatio(newArchToLevRatio);
+        expect(await r.parameterStore.getArchToLevRatio()).to.eq(newArchToLevRatio);
+    });
 
-//     it("Should not allow regular Gov to change ArchToLevRatio", async function () {
-//         const archlevRationChangePromise = r.parameterStore.connect(owner).changeArchToLevRatio(parseUnitsNum("200"));
-//         await expect(archlevRationChangePromise).to.revertedWith("Caller is not Arch Governor");
-//     });
+    it("Should not allow regular Gov to change ArchToLevRatio", async function () {
+        const archlevRationChangePromise = r.parameterStore.connect(owner).changeArchToLevRatio(parseUnitsNum("200"));
+        await expect(archlevRationChangePromise).to.revertedWith("Caller is not Arch Governor");
+    });
 
-//     // Checking environment
+    // Checking environment
 
-//     it("Should have initialCoordinatorLvUSDBalance lvUSD balance under coordinator", async function () {
-//         const coordinatorLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
-//         expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
-//     });
+    it("Should have initialCoordinatorLvUSDBalance lvUSD balance under coordinator", async function () {
+        const coordinatorLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
+        expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
+    });
 
-//     it("Should have setup OUSD pretender with OUSD to spend ", async function () {
-//         const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretendOUSDRebaseSigner.getAddress()));
-//         /// since we are exchanging 10 ethereum for the dollar value of token, price is not set. Checking for a reasonable value
-//         expect(pretenderOUSDbalance).to.greaterThan(1000);
-//     });
+    it("Should have setup OUSD pretender with OUSD to spend ", async function () {
+        const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretendOUSDRebaseSigner.getAddress()));
+        /// since we are exchanging 10 ethereum for the dollar value of token, price is not set. Checking for a reasonable value
+        expect(pretenderOUSDbalance).to.greaterThan(1000);
+    });
 
-//     it("Should have setup user with  enough OUSD to cover principle amount", async function () {
-//         const userOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await user.getAddress()));
-//         expect(userOUSDbalance).to.greaterThan(userOUSDPrinciple);
-//     });
+    it("Should have setup user with  enough OUSD to cover principle amount", async function () {
+        const userOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await user.getAddress()));
+        expect(userOUSDbalance).to.greaterThan(userOUSDPrinciple);
+    });
 
-//     it("Should have initialFundsInPool as balance of pool", async function () {
-//         printPoolState(lvUSD3CRVPoolInstance);
-//         const lvUSDCoinsInPool = await lvUSD3CRVPoolInstance.balances(0);
-//         const crvCoinsInPool = await lvUSD3CRVPoolInstance.balances(1);
-//         expect(lvUSDCoinsInPool).to.gte(parseUnitsNum(initialFundsInPool));
-//         expect(crvCoinsInPool).to.gte(parseUnitsNum(initialFundsInPool));
-//     });
+    it("Should have initialFundsInPool as balance of pool", async function () {
+        printPoolState(lvUSD3CRVPoolInstance);
+        const lvUSDCoinsInPool = await lvUSD3CRVPoolInstance.balances(0);
+        const crvCoinsInPool = await lvUSD3CRVPoolInstance.balances(1);
+        expect(lvUSDCoinsInPool).to.gte(parseUnitsNum(initialFundsInPool));
+        expect(crvCoinsInPool).to.gte(parseUnitsNum(initialFundsInPool));
+    });
 
-//     it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
-//         const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
-//         expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
-//     });
+    it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
+        const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
+        expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
+    });
 
-//     it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
-//         const admin3CRVBalance = getFloatFromBigNum(await r.external3CRV.balanceOf(await owner.getAddress()));
-//         expect(admin3CRVBalance).to.lessThan(adminInitial3CRVBalance);
-//     });
+    it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
+        const admin3CRVBalance = getFloatFromBigNum(await r.external3CRV.balanceOf(await owner.getAddress()));
+        expect(admin3CRVBalance).to.lessThan(adminInitial3CRVBalance);
+    });
 
-//     it("Should only allow Guardian to pause/unpause contract", async function () {
-//         // Make user Guardian, this is to make sure that Admin can't pause
-//         await r.leverageEngine.setGuardian(user.address);
-//         expect(await r.leverageEngine.paused()).to.eq(false);
+    it("Should only allow Guardian to pause/unpause contract", async function () {
+        // Make user Guardian, this is to make sure that Admin can't pause
+        await r.leverageEngine.setGuardian(user.address);
+        expect(await r.leverageEngine.paused()).to.eq(false);
 
-//         const pausePromise = r.leverageEngine.pauseContract();
-//         await expect(pausePromise).to.revertedWith("Caller is not Guardian");
+        const pausePromise = r.leverageEngine.pauseContract();
+        await expect(pausePromise).to.revertedWith("Caller is not Guardian");
 
-//         await r.leverageEngine.connect(user).pauseContract();
-//         expect(await r.leverageEngine.paused()).to.eq(true);
+        await r.leverageEngine.connect(user).pauseContract();
+        expect(await r.leverageEngine.paused()).to.eq(true);
 
-//         await r.leverageEngine.connect(user).unPauseContract();
-//         expect(await r.leverageEngine.paused()).to.eq(false);
+        await r.leverageEngine.connect(user).unPauseContract();
+        expect(await r.leverageEngine.paused()).to.eq(false);
 
-//         await r.leverageEngine.setGuardian(owner.address);
-//     });
+        await r.leverageEngine.setGuardian(owner.address);
+    });
 
-//     it("Should not allow unwinding or creating positions if paused", async function () {
-//         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
-//         const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
+    it("Should not allow unwinding or creating positions if paused", async function () {
+        const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
+        const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
 
-//         await r.leverageEngine.pauseContract();
-//         const createPromise = approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-//         await expect(createPromise).to.revertedWith("Pausable: paused");
+        await r.leverageEngine.pauseContract();
+        const createPromise = approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+        await expect(createPromise).to.revertedWith("Pausable: paused");
 
-//         const unwindPromise = r.leverageEngine.connect(user).unwindLeveragedPosition(0);
-//         await expect(unwindPromise).to.revertedWith("Pausable: paused");
+        const unwindPromise = r.leverageEngine.connect(user).unwindLeveragedPosition(0);
+        await expect(unwindPromise).to.revertedWith("Pausable: paused");
 
-//         // Now unpause and check that we can create position and Unwind
-//         await r.leverageEngine.unPauseContract();
-//         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-//         await r.leverageEngine.connect(user).unwindLeveragedPosition(0);
-//     });
-// });
+        // Now unpause and check that we can create position and Unwind
+        await r.leverageEngine.unPauseContract();
+        await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+        await r.leverageEngine.connect(user).unwindLeveragedPosition(0);
+    });
+});
 
 const spec3 = 0;
 
@@ -294,12 +294,12 @@ describe("Test suit for opening/unwinding positions on imbalanced pools", functi
         //     parseUnits("0.001"),
         // );
 
-        // console.log(
-        //     "\x1B[31mPrincipal  leverageUserIsTakingIn18Dec = %s, archCostOfLeverageIn18Dec = %s",
-        //     getFloatFromBigNum(leverageUserIsTakingIn18Dec),
-        //     getFloatFromBigNum(archCostOfLeverageIn18Dec),
-        // );
-        // console.log("\x1B[31mPrincipal %s Principal in 18Dec ", tempUserOUSDPrinciple, tempUserOUSDPrincipleIn18Decimal);
+        console.log(
+            "\x1B[31mPrincipal  leverageUserIsTakingIn18Dec = %s, archCostOfLeverageIn18Dec = %s",
+            getFloatFromBigNum(leverageUserIsTakingIn18Dec),
+            getFloatFromBigNum(archCostOfLeverageIn18Dec),
+        );
+        console.log("\x1B[31mPrincipal %s Principal in 18Dec ", tempUserOUSDPrinciple, tempUserOUSDPrincipleIn18Decimal);
 
         await r.parameterStore.changeMinPositionCollateral(parseUnitsNum(20));
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
@@ -332,8 +332,8 @@ describe("Test suit for opening/unwinding positions on imbalanced pools", functi
         }
         const lvUSDCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(0));
         const crvCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(1));
-        // console.log("\x1B[31m usedlvUSD %s, lvUSDCoinsInPool %s, initialFundsInPool %s", usedlvUSD, lvUSDCoinsInPool, initialFundsInPool);
-        // console.log("\x1B[31m spentOUSD %s, OUSDCoinsInPool %s, initialFundsInPool %s", spentOUSD, crvCoinsInPool, initialFundsInPool);
+        console.log("\x1B[31m usedlvUSD %s, lvUSDCoinsInPool %s, initialFundsInPool %s", usedlvUSD, lvUSDCoinsInPool, initialFundsInPool);
+        console.log("\x1B[31m spentOUSD %s, OUSDCoinsInPool %s, initialFundsInPool %s", spentOUSD, crvCoinsInPool, initialFundsInPool);
 
         expect(lvUSDCoinsInPool).to.closeTo(initialFundsInPool + usedlvUSD, 1);
         /// / This is not scientific but we can get away with 2% of transations funds getting used as fees

@@ -31,6 +31,7 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
     function setDependencies(address _addressParamStore, address _addressOUSD) external onlyAdmin {
         _paramStore = ParameterStore(_addressParamStore);
         _ousd = IOUSD(_addressOUSD);
+        _optInForRebases();
     }
 
     function archimedesDeposit(uint256 assets, address receiver) external nonReentrant onlyExecutive returns (uint256) {
@@ -81,8 +82,7 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
     }
 
     function _optInForRebases() internal {
-        /// TODO: THIS MUST be called, uncomment when you figure out how to get OUSD implementation
-        // _ousd.rebaseOptIn();
+        _ousd.rebaseOptIn();
     }
 
     function initialize(
@@ -101,8 +101,6 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
 
         __ERC4626_init(asset);
         __ERC20_init(name, symbol);
-
-        _optInForRebases();
 
         _assetsHandledByArchimedes = 0;
     }
