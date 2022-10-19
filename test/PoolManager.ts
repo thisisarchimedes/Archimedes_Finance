@@ -26,7 +26,7 @@ describe("PoolManager test suit", async function () {
     });
 
     it("Should have enough funds in account and coordinator", async function () {
-        /// Sanity check for funds in account. Does not test anything in Pool Manager
+        /// Sanity check for funds in account. Does not test anything in Pool Manager.
         expect(getFloatFromBigNum(await r.external3CRV.balanceOf(r.owner.address))).to.be.gt(3400);
         expect(getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address))).to.be.eq(20000);
     });
