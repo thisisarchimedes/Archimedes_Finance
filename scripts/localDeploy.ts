@@ -10,7 +10,7 @@ dotenv.config({ path: "secrets/alchemy.env" });
 
 let context;
 
-async function fundLVUSDToCoordinator() {
+async function fundLVUSDToCoordinator () {
     console.log("\nFunding lvUSD to coordinator\n");
     const amount = "5000000";
 
@@ -27,7 +27,7 @@ const fundARCH = async () => {
     console.log(context.owner.address + " funded with " + archAmountToFund + " ARCH");
 };
 
-async function verifyDeployment() {
+async function verifyDeployment () {
     console.log("lvUSD address is", await context.lvUSD.address);
     console.log("Arch address is", await context.archToken.address);
     console.log("LevEngine address is", await context.leverageEngine.address);
