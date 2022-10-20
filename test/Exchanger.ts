@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 import { fundMetapool } from "./CurveHelper";
 import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
 
-function parseBN(bigNumValue) {
+function parseBN (bigNumValue) {
     return parseFloat(parseFloat(ethers.utils.formatUnits(bigNumValue)).toFixed(5));
 }
 

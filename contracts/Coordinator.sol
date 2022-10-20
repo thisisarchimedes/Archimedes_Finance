@@ -176,8 +176,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         return _addressVaultOUSD;
     }
 
-     
-
     function initialize() public initializer {
         __AccessControl_init();
         __ReentrancyGuard_init();

@@ -6,11 +6,11 @@ import { formatUnits } from "ethers/lib/utils";
 import { logger } from "../logger";
 import { Contract } from "ethers";
 
-function getFloatFromBigNum(bigNumValue) {
+function getFloatFromBigNum (bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
 }
 
-async function setCoordinatorAsExcecutive(r) {
+async function setCoordinatorAsExcecutive (r) {
     await r.vault.setExecutive(r.coordinator.address);
     await r.exchanger.setExecutive(r.coordinator.address);
     await r.cdp.setExecutive(r.coordinator.address);

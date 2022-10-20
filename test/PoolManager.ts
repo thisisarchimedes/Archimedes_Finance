@@ -6,7 +6,7 @@ const oneK = 1000;
 const oneK18Decimal = parseUnits(oneK.toString(), 18);
 const twentyK18Decimal = parseUnits("20000", 18);
 
-function getFloatFromBigNum(bigNumValue, dec = 18) {
+function getFloatFromBigNum (bigNumValue, dec = 18) {
     return parseFloat(formatUnits(bigNumValue, dec));
 }
 

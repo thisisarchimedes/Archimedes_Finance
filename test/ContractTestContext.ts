@@ -105,53 +105,52 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
     await context.lvUSD.approve(context.exchanger.address, ethers.constants.MaxUint256);
     await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
 
-
     // Post init contracts
     // await Promise.all([
-        await context.leverageEngine.setDependencies(
-            context.coordinator.address,
-            context.positionToken.address,
-            context.parameterStore.address,
-            context.archToken.address,
-            context.externalOUSD.address,
-        )
+    await context.leverageEngine.setDependencies(
+        context.coordinator.address,
+        context.positionToken.address,
+        context.parameterStore.address,
+        context.archToken.address,
+        context.externalOUSD.address,
+    );
 
-        await context.coordinator.setDependencies(
-            context.lvUSD.address,
-            context.vault.address,
-            context.cdp.address,
-            context.externalOUSD.address,
-            context.exchanger.address,
-            context.parameterStore.address,
-            context.poolManager.address,
-        )
+    await context.coordinator.setDependencies(
+        context.lvUSD.address,
+        context.vault.address,
+        context.cdp.address,
+        context.externalOUSD.address,
+        context.exchanger.address,
+        context.parameterStore.address,
+        context.poolManager.address,
+    );
 
-        await context.exchanger.setDependencies(
-            context.parameterStore.address,
-            context.coordinator.address,
-            context.lvUSD.address,
-            context.externalOUSD.address,
-            context.external3CRV.address,
-            context.curveLvUSDPool.address,
-            addressCurveOUSDPool,
-        ),
-        await context.vault.setDependencies(context.parameterStore.address, context.externalOUSD.address)
+    await context.exchanger.setDependencies(
+        context.parameterStore.address,
+        context.coordinator.address,
+        context.lvUSD.address,
+        context.externalOUSD.address,
+        context.external3CRV.address,
+        context.curveLvUSDPool.address,
+        addressCurveOUSDPool,
+    );
 
-        await context.parameterStore.changeTreasuryAddress(context.treasurySigner.address)
+    await context.vault.setDependencies(context.parameterStore.address, context.externalOUSD.address);
 
-        await context.poolManager.setDependencies(
-            context.parameterStore.address,
-            context.coordinator.address,
-            context.lvUSD.address,
-            context.external3CRV.address,
-            context.curveLvUSDPool.address)
-        
-        await context.cdp.setDependencies(
-            context.vault.address,
-            context.parameterStore.address
-            )
-    
-        
+    await context.parameterStore.changeTreasuryAddress(context.treasurySigner.address);
+
+    await context.poolManager.setDependencies(
+        context.parameterStore.address,
+        context.coordinator.address,
+        context.lvUSD.address,
+        context.external3CRV.address,
+        context.curveLvUSDPool.address);
+
+    await context.cdp.setDependencies(
+        context.vault.address,
+        context.parameterStore.address,
+    );
+
     // ]);
 
     return context;

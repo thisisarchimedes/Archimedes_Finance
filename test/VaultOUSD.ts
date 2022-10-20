@@ -19,7 +19,7 @@ describe("VaultOUSD test suit", function () {
     const addr2Deposit = 20;
     const interestIntoVault = 10;
 
-    async function setupAndResetState() {
+    async function setupAndResetState () {
         r = await buildContractTestContext();
 
         // Mint initial amount on OUSD token, will be used by all tests

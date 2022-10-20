@@ -15,7 +15,7 @@ describe("LeverageEngine test suit", async function () {
     let positionTokenId: BigNumber;
     let userInitialOUSD;
 
-    async function prepForPositionCreation(lvUSDAmountToMint: BigNumber = ethers.utils.parseUnits("5000")) {
+    async function prepForPositionCreation (lvUSDAmountToMint: BigNumber = ethers.utils.parseUnits("5000")) {
         r = await buildContractTestContext();
         maxCycles = await r.parameterStore.getMaxNumberOfCycles();
         const totalOUSD = await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("5"));
@@ -76,6 +76,7 @@ describe("LeverageEngine test suit", async function () {
         });
         it("Should emit position creation event", async function () {
             const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
             const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
             await expect(promise)
                 .to.emit(r.leverageEngine, "PositionCreated")

@@ -30,7 +30,7 @@ let positionId: number;
 let adminInitial3CRVBalance: number;
 let ownerLvUSDBalanceBeforeFunding: number;
 
-async function approveAndGetLeverageAsUser(
+async function approveAndGetLeverageAsUser (
     _principleOUSD: BigNumber,
     _numberOfCycles: number,
     _archTokenAmount: BigNumber,
@@ -49,15 +49,15 @@ async function approveAndGetLeverageAsUser(
     await _r.leverageEngine.connect(_user).createLeveragedPosition(_principleOUSD, _numberOfCycles, _archTokenAmount);
 }
 
-function parseUnitsNum(num): BigNumber {
+function parseUnitsNum (num): BigNumber {
     return parseUnits(num.toString());
 }
 
-function getFloatFromBigNum(bigNumValue) {
+function getFloatFromBigNum (bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
 }
 
-async function printPoolState(poolInstance) {
+async function printPoolState (poolInstance) {
     logger(
         "Pool has %s coin0/lvUSD and %s coin1/3CRV",
         getFloatFromBigNum(await poolInstance.balances(0)),
@@ -65,7 +65,7 @@ async function printPoolState(poolInstance) {
     );
 }
 
-async function printPositionState(_r, _positionId, overviewMessage = "Printing Position State") {
+async function printPositionState (_r, _positionId, overviewMessage = "Printing Position State") {
     logger(overviewMessage);
     const principle = getFloatFromBigNum(await _r.cdp.getOUSDPrinciple(_positionId));
     const ousdEarned = getFloatFromBigNum(await _r.cdp.getOUSDInterestEarned(_positionId));
@@ -83,14 +83,14 @@ async function printPositionState(_r, _positionId, overviewMessage = "Printing P
     );
 }
 
-async function printMiscInfo(_r, _user) {
+async function printMiscInfo (_r, _user) {
     const treasuryBalance = getFloatFromBigNum(await _r.externalOUSD.balanceOf(_r.treasurySigner.address));
     const userOUSDBalance = getFloatFromBigNum(await _r.externalOUSD.balanceOf(_user.address));
     const vaultOUSDBalance = getFloatFromBigNum(await _r.vault.totalAssets());
     logger("OUSD : Treasury balance is %s, Vault Balance is %s, User balance is %s", treasuryBalance, vaultOUSDBalance, userOUSDBalance);
 }
 
-async function setupEnvForIntegrationTests() {
+async function setupEnvForIntegrationTests () {
     // Setup & deploy contracts
     r = await buildContractTestContext();
     owner = r.owner;
@@ -574,7 +574,8 @@ describe("Test suit for getting leverage", function () {
 
         // actual test
         // console.log(
-        //     "\x1B[31mSimplePositionCreation: Created a rebase of %s OUSD with %s rebaseFee. Total OUSD assets deposited in vault are %s while before it was %s. Delta is %s",
+        //     "\x1B[31mSimplePositionCreation: Created a rebase of %s OUSD with %s rebaseFee.
+        //      Total OUSD assets deposited in vault are %s while before it was %s. Delta is %s",
         //     rebaseAmount,
         //     rebaseRateFee,
         //     ousdInVaultAfterRebase,
@@ -625,10 +626,12 @@ describe("Test suit for getting leverage", function () {
         const userOUSDBalanceAferUnwindingIn18Dec = await r.externalOUSD.balanceOf(user.address);
         const userActualGainsFromUnwinding =
             getFloatFromBigNum(userOUSDBalanceAferUnwindingIn18Dec) - getFloatFromBigNum(userOUSDBalanceBeforeUnwindingIn18Dec);
+        // 2ed to last bit is originationFee, last bit is accepted curve loss
         const expectedUserGainsFromUnwinding =
-            contractEstimatedReturnedOUSDMinusInterestFromUnwinding + getFloatFromBigNum(cdpInterestEarnedIn18Dec) - 0.005 * userOUSDPrinciple; // 2ed to last bit is originationFee, last bit is accepted curve loss
+            contractEstimatedReturnedOUSDMinusInterestFromUnwinding + getFloatFromBigNum(cdpInterestEarnedIn18Dec) - 0.005 * userOUSDPrinciple;
         // console.log(
-        //     "\x1B[31mSimplePositionCreation: expecting ousd delta of %s for user's address while got %s. Our contract method to estimate unwind OUSD windfall gave %s (minus interest)",
+        //     "\x1B[31mSimplePositionCreation: expecting ousd delta of %s f
+        //      or user's address while got %s. Our contract method to estimate unwind OUSD windfall gave %s (minus interest)",
         //     expectedUserGainsFromUnwinding,
         //     userActualGainsFromUnwinding,
         //     contractEstimatedReturnedOUSDMinusInterestFromUnwinding,

@@ -10,7 +10,7 @@ import {BasicAccessController} from "../contracts/BasicAccessController.sol";
 @title Archimedes Governance token
 @notice contract is ERC20Permit and ERC20Votes to allow voting
  **/
- 
+
 contract ArchToken is ERC20, BasicAccessController, ERC20Permit, ERC20Votes {
     constructor(address _addressTreasury) ERC20("Archimedes", "ARCH") ERC20Permit("ArchToken") {
         _mint(_addressTreasury, 100000000 ether);

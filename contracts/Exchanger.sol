@@ -145,31 +145,31 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         if (_obtainedLvUSD < minRequiredLvUSD) {
             // _difference will give us the delta of lvUSD we need to get (which means using more OUSD)
             uint256 _difference = (minRequiredLvUSD) - _obtainedLvUSD + 10**18; // +1 just in case
-            uint256 _3CRVDifference = _poolOUSD3CRV.get_dy(0, 1, _difference);
-            uint256 _LvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _3CRVDifference);
+            uint256 _crv3Difference = _poolOUSD3CRV.get_dy(0, 1, _difference);
+            uint256 _lvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _crv3Difference);
             // console.log(
-            //     "3: _difference: %s , _3CRVDifference %s ,_LvUSDDifference %s",
+            //     "3: _difference: %s , _crv3Difference %s ,_lvUSDDifference %s",
             //     _difference / 1 ether,
-            //     _3CRVDifference / 1 ether,
-            //     _LvUSDDifference / 1 ether
+            //     _crv3Difference / 1 ether,
+            //     _lvUSDDifference / 1 ether
             // );
 
-            uint256 finalAmount = _obtainedLvUSD + _LvUSDDifference;
+            uint256 finalAmount = _obtainedLvUSD + _lvUSDDifference;
             _neededOUSD = _neededOUSD + _difference;
 
             /// Do same correction cycle as above again.
             if (finalAmount < (minRequiredLvUSD)) {
                 // console.log("Inside calc finalAmount");
                 _difference = (minRequiredLvUSD) - finalAmount + 10**18; // +1 just in case
-                _3CRVDifference = _poolOUSD3CRV.get_dy(0, 1, _difference);
-                _LvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _3CRVDifference);
+                _crv3Difference = _poolOUSD3CRV.get_dy(0, 1, _difference);
+                _lvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _crv3Difference);
                 // console.log(
-                //     "4: _difference: %s , _3CRVDifference %s ,_LvUSDDifference %s",
+                //     "4: _difference: %s , _crv3Difference %s ,_lvUSDDifference %s",
                 //     _difference / 1 ether,
-                //     _3CRVDifference / 1 ether,
-                //     _LvUSDDifference / 1 ether
+                //     _crv3Difference / 1 ether,
+                //     _lvUSDDifference / 1 ether
                 // );
-                finalAmount = finalAmount + _LvUSDDifference;
+                finalAmount = finalAmount + _lvUSDDifference;
                 _neededOUSD = _neededOUSD + _difference;
             }
             // console.log("_swapOUSDforLvUSD_inside if: _neededOUSD %s, finalAmount(ofLUSD) %s", _neededOUSD / 1 ether, finalAmount / 1 ether);
@@ -411,30 +411,30 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
 
         if (_obtainedLvUSD < (minRequiredLvUSD)) {
             uint256 _difference = (minRequiredLvUSD) - _obtainedLvUSD + 10**18; // +1 just in case
-            uint256 _3CRVDifference = _poolOUSD3CRV.get_dy(0, 1, _difference);
-            uint256 _LvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _3CRVDifference);
+            uint256 _crv3Difference = _poolOUSD3CRV.get_dy(0, 1, _difference);
+            uint256 _lvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _crv3Difference);
             console.log(
-                "estimateOusdReturnedOnUnwind 3: _difference: %s , _3CRVDifference %s ,_LvUSDDifference %s",
+                "estimateOusdReturnedOnUnwind 3: _difference: %s , _crv3Difference %s ,_lvUSDDifference %s",
                 _difference / 1 ether,
-                _3CRVDifference / 1 ether,
-                _LvUSDDifference / 1 ether
+                _crv3Difference / 1 ether,
+                _lvUSDDifference / 1 ether
             );
 
-            uint256 finalAmount = _obtainedLvUSD + _LvUSDDifference;
+            uint256 finalAmount = _obtainedLvUSD + _lvUSDDifference;
             _neededOUSD = _neededOUSD + _difference;
 
             if (finalAmount < (minRequiredLvUSD)) {
                 console.log("estimateOusdReturnedOnUnwind Inside calc finalAmount");
                 _difference = (minRequiredLvUSD) - finalAmount + 10**18; // +1 just in case
-                _3CRVDifference = _poolOUSD3CRV.get_dy(0, 1, _difference);
-                _LvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _3CRVDifference);
+                _crv3Difference = _poolOUSD3CRV.get_dy(0, 1, _difference);
+                _lvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _crv3Difference);
                 console.log(
-                    "estimateOusdReturnedOnUnwind 4: _difference: %s , _3CRVDifference %s ,_LvUSDDifference %s",
+                    "estimateOusdReturnedOnUnwind 4: _difference: %s , _crv3Difference %s ,_lvUSDDifference %s",
                     _difference / 1 ether,
-                    _3CRVDifference / 1 ether,
-                    _LvUSDDifference / 1 ether
+                    _crv3Difference / 1 ether,
+                    _lvUSDDifference / 1 ether
                 );
-                finalAmount = finalAmount + _LvUSDDifference;
+                finalAmount = finalAmount + _lvUSDDifference;
                 _neededOUSD = _neededOUSD + _difference;
             }
             console.log("_swapOUSDforLvUSD_inside if: _neededOUSD %s, finalAmount(ofLUSD) %s", _neededOUSD / 1 ether, finalAmount / 1 ether);
