@@ -5,6 +5,8 @@ import "hardhat/console.sol";
 import {AccessController} from "./AccessController.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {VaultOUSD} from "../contracts/VaultOUSD.sol";
+import {ParameterStore} from "./ParameterStore.sol";
 
 /// @title CDPosition is ledger contract for all  NFT positions and regular positions
 /// @dev CDP creates and destroy NFT and address positions. It keep tracks of how many tokens user has borrowed.
@@ -15,15 +17,22 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/se
 contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgradeable {
     struct CDP {
         uint256 oUSDPrinciple; // Amount of OUSD originally deposited by user
-        uint256 oUSDInterestEarned; // Total interest earned (and rebased) so far
-        uint256 oUSDTotal; // Principle + OUSD acquired from selling borrowed lvUSD + Interest earned
+        // uint256 oUSDInterestEarned; // Total interest earned (and rebased) so far  -< /// TODO remove this item
+        uint256 oUSDTotalWithoutInterest; // Principle + OUSD acquired from selling borrowed lvUSD
         uint256 lvUSDBorrowed; // Total lvUSD borrowed under this position
         uint256 shares; // Total vault shares allocated to this position
+        // // New values, need to implement changing values
+        uint256 openTimeStamp; // Open time
+        uint256 positionLifetimeInDays; // Position in days
+        uint256 positionExpiration;
     }
 
-    uint256 internal _globalCollateralRate;
-
     mapping(uint256 => CDP) internal _nftCDP;
+
+    address internal _addressVaultOUSD;
+    address internal _addressParameterStore;
+    VaultOUSD internal _vault;
+    ParameterStore internal _parameterStore;
 
     // Maps return default value when entry is not present. OUSD principle will always be gt 0 if _nftCDP has
     // a valid value in nftID
@@ -46,7 +55,10 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
     /// @param nftID newly minted NFT
     /// @param oOUSDPrinciple initial OUSD investment (ie position principle)
     function createPosition(uint256 nftID, uint256 oOUSDPrinciple) external nftIDMustNotExist(nftID) nonReentrant onlyExecutive {
-        _nftCDP[nftID] = CDP(oOUSDPrinciple, 0, oOUSDPrinciple, 0, 0);
+        uint256 blockTimestamp = block.timestamp;
+        uint256 positionTimeToLive = _parameterStore.getPositionTimeToLiveInDays();
+        uint256 positionEndDate = blockTimestamp + positionTimeToLive * 1 days;
+        _nftCDP[nftID] = CDP(oOUSDPrinciple, oOUSDPrinciple, 0, 0, blockTimestamp, positionTimeToLive, positionEndDate);
     }
 
     /// @dev delete entry in CDP --if-- lvUSD borrowed balance is zero
@@ -95,28 +107,15 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
     /// @param nftID NFT position to update
     /// @param oUSDAmountToDeposit amount to add to position's existing deposited sum
     function depositOUSDtoPosition(uint256 nftID, uint256 oUSDAmountToDeposit) external nftIDMustExist(nftID) nonReentrant onlyExecutive {
-        _nftCDP[nftID].oUSDTotal += oUSDAmountToDeposit;
+        _nftCDP[nftID].oUSDTotalWithoutInterest += oUSDAmountToDeposit;
     }
 
     /// @dev update deposited OUSD in position. This method removed a delta to existing deposited value
     /// @param nftID NFT position to update
     /// @param oUSDAmountToWithdraw amount to remove to position's existing deposited sum
     function withdrawOUSDFromPosition(uint256 nftID, uint256 oUSDAmountToWithdraw) external nftIDMustExist(nftID) nonReentrant onlyExecutive {
-        require(_nftCDP[nftID].oUSDTotal >= oUSDAmountToWithdraw, "Insufficient OUSD balance");
-        _nftCDP[nftID].oUSDTotal -= oUSDAmountToWithdraw;
-    }
-
-    /// @dev update collateral rate
-    ///
-    /// @notice Max lvUSD that can be minted for 1 OUSD
-    ///
-    /// @param rate new rate to set as collateral
-    function changeCollateralRate(uint256 rate) external {
-        _globalCollateralRate = rate;
-    }
-
-    function getCollateralRate() external view returns (uint256) {
-        return _globalCollateralRate;
+        require(getOUSDTotalIncludeInterest(nftID) >= oUSDAmountToWithdraw, "Insufficient OUSD balance");
+        _nftCDP[nftID].oUSDTotalWithoutInterest -= oUSDAmountToWithdraw;
     }
 
     // * CDP Getters *//
@@ -124,12 +123,35 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
         return _nftCDP[nftID].oUSDPrinciple;
     }
 
-    function getOUSDInterestEarned(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
-        return _nftCDP[nftID].oUSDInterestEarned;
+    function getOUSDInterestEarned(uint256 nftID) public view nftIDMustExist(nftID) returns (uint256) {
+        uint256 sharesOfOwner = _nftCDP[nftID].shares;
+        uint256 totalFundsFromPreviewRedeem = _vault.previewRedeem(sharesOfOwner);
+        uint256 outTotal = _nftCDP[nftID].oUSDTotalWithoutInterest;
+        // console.log(
+        //     "_nftCDP[nftID].oUSDTotalWithoutInterest < totalFundsFromPreviewRedeem %s < %s, shares =%s",
+        //     outTotal,
+        //     totalFundsFromPreviewRedeem,
+        //     sharesOfOwner
+        // );
+        if (_nftCDP[nftID].oUSDTotalWithoutInterest > totalFundsFromPreviewRedeem) {
+            // revert("InterestEarned calc error");
+            return 0;
+        }
+        return totalFundsFromPreviewRedeem - _nftCDP[nftID].oUSDTotalWithoutInterest;
     }
 
+    function getOUSDTotalIncludeInterest(uint256 nftID) public view nftIDMustExist(nftID) returns (uint256) {
+        return _nftCDP[nftID].oUSDTotalWithoutInterest + getOUSDInterestEarned(nftID);
+    }
+
+    // Older method for getting OUSD total without interest
+    /// TODO: Deprecate!
     function getOUSDTotal(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
-        return _nftCDP[nftID].oUSDTotal;
+        return _nftCDP[nftID].oUSDTotalWithoutInterest;
+    }
+
+    function getOUSDTotalWithoutInterest(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
+        return _nftCDP[nftID].oUSDTotalWithoutInterest;
     }
 
     function getLvUSDBorrowed(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
@@ -140,11 +162,34 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
         return _nftCDP[nftID].shares;
     }
 
+    function getPositionTimeOpened(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
+        return _nftCDP[nftID].openTimeStamp; // Open time
+    }
+
+    function getPositionTimeToLive(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
+        return _nftCDP[nftID].positionLifetimeInDays; // Position in days
+    }
+
+    function getPositionExpireTime(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
+        return _nftCDP[nftID].positionExpiration;
+    }
+
     function initialize() public initializer {
+        __AccessControl_init();
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
         _grantRole(ADMIN_ROLE, _msgSender());
         setGovernor(_msgSender());
         setExecutive(_msgSender());
         setGuardian(_msgSender());
+    }
+
+    function setDependencies(address addressVaultOUSD, address addressParameterStore) external nonReentrant onlyAdmin {
+        _addressVaultOUSD = addressVaultOUSD;
+        _addressParameterStore = addressParameterStore;
+        _vault = VaultOUSD(_addressVaultOUSD);
+        _parameterStore = ParameterStore(addressParameterStore);
     }
 
     // solhint-disable-next-line

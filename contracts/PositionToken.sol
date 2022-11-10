@@ -26,6 +26,9 @@ contract PositionToken is
 
     event NFTCreated(uint256 indexed _positionId, address indexed _minter);
     event NFTBurned(uint256 indexed _positionId, address indexed _redeemer);
+    /// mapping of address to which TokenID it owns (only used for viewing methods)
+
+    mapping(address => uint256[]) internal _addressToTokensOwnedMapping;
 
     /* Privileged functions: Executive */
     function safeMint(address to) external onlyExecutive returns (uint256 positionTokenId) {
@@ -42,6 +45,10 @@ contract PositionToken is
     }
 
     function initialize() public initializer {
+        __AccessControl_init();
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
         __ERC721_init("ArchimedesPositionToken", "APNT");
         __ERC721Enumerable_init();
         __ERC721Burnable_init();
@@ -73,7 +80,45 @@ contract PositionToken is
         address to,
         uint256 tokenId
     ) internal virtual override(ERC721Upgradeable, ERC721EnumerableUpgradeable) {
+        uint256 tokenIdArrayIndex;
+        // remove prev owner from _addressToTokensOwnedMapping only if this is not from this contract (ie new position) and mapping exist
+        // console.log("_beforeTokenTransfer from %s, to %s, tokenId %s", from, to, tokenId);
+        if (from != address(this) && _addressToTokensOwnedMapping[from].length != 0) {
+            // console.log("_beforeTokenTransfer from %s, to %s, tokenId %s", from, to, tokenId);
+            for (uint256 i = 0; i < _addressToTokensOwnedMapping[from].length; i++) {
+                if (_addressToTokensOwnedMapping[from][i] == tokenId) {
+                    tokenIdArrayIndex = i;
+                    uint256 lastTokenIdInArray = _addressToTokensOwnedMapping[from][_addressToTokensOwnedMapping[from].length - 1];
+                    _addressToTokensOwnedMapping[from][tokenIdArrayIndex] = lastTokenIdInArray;
+                    _addressToTokensOwnedMapping[from].pop();
+                    break;
+                }
+            }
+        }
+
         return super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override(ERC721Upgradeable) {
+        super._afterTokenTransfer(from, to, tokenId);
+
+        // Add tokenID from To address to _addressToTokensOwnedMapping
+        // console.log("AfterTokenTransfer from %s, to %s, tokenId %s", from, to, tokenId);
+        if (to != address(0)) {
+            _addressToTokensOwnedMapping[to].push(tokenId);
+        }
+
+        /// set approval for executive to interact with tokenID
+        _setApprovalForAll(to, getAddressExecutive(), true);
+    }
+
+    function getTokenIDsArray(address owner) external view returns (uint256[] memory) {
+        uint256[] memory arrayToReturn = _addressToTokensOwnedMapping[owner];
+        return arrayToReturn;
     }
 
     // solhint-disable-next-line

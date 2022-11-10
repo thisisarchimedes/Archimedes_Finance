@@ -1,59 +1,52 @@
 import { ethers } from "hardhat";
-import {
-    abiCurveFactory,
-    abi3PoolImplementation,
-} from "./ABIs";
-import {
-    addressCurveFactory,
-    address3CRV,
-    addressCurve3Pool,
-} from "./MainnetHelper";
+import { abiCurveFactory, abi3PoolImplementation } from "./ABIs";
+import { addressCurveFactory, address3CRV, addressCurve3Pool } from "./MainnetHelper";
 
 // Hard-coded amount we use to fund the pool with
-const fundedPoolAmount = ethers.utils.parseUnits("200.0");
+const fundedPoolAmount = ethers.utils.parseUnits("20000.0");
 
 /** Create a Curve Meta Pool that uses 3CRV
-* @param token: ERC20 token balanced in the pool
-* @param owner: Signer used to deploy / own the pool
-* returns address of the new pool
-*/
+ * @param token: ERC20 token balanced in the pool
+ * @param owner: Signer used to deploy / own the pool
+ * returns address of the new pool
+ */
 async function createMetapool (token, owner) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore CurvePool Factory
     const factoryCurveMetapool = new ethers.Contract(addressCurveFactory, abiCurveFactory, owner);
     const tokenName = await token.symbol();
     const poolSymbol = tokenName + "3CRV";
-    const poolA = 1337;
+    const poolA = 40000;
     const poolFee = 4000000;
 
     // examples on Mainnet:
     // https://etherscan.io/address/0xB9fC157394Af804a3578134A6585C0dc9cc990d4?method=Deploy_metapool~de7fe3bf
     // https://curve.readthedocs.io/factory-deployer.html#Factory.deploy_metapool
     /**
-    * @param _base_pool: Address of the base pool to use within the new metapool.
-    * @param _name: Name of the new metapool.
-    * @param _symbol: Symbol for the new metapool’s LP token. This value will be concatenated with the base pool symbol.
-    * @param _coin: Address of the coin being used in the metapool
-    * @param _A: Amplification coefficient
-    * @param _fee: Trade fee, given as an integer with 1e10 precision.
-    */
+     * @param _base_pool: Address of the base pool to use within the new metapool.
+     * @param _name: Name of the new metapool.
+     * @param _symbol: Symbol for the new metapool’s LP token. This value will be concatenated with the base pool symbol.
+     * @param _coin: Address of the coin being used in the metapool
+     * @param _A: Amplification coefficient
+     * @param _fee: Trade fee, given as an integer with 1e10 precision.
+     */
     await factoryCurveMetapool.deploy_metapool(addressCurve3Pool, tokenName, poolSymbol, token.address, poolA, poolFee);
     // https://curve.readthedocs.io/factory-deployer.html#Factory.find_pool_for_coins
     // We deployed a 3CRV/lvUSD pool - so we ask Curve Factory to look for pools that can deal with USDT/lvUSD
     // In the future this will be a fixed index we can query instead
     const poolAddress = await factoryCurveMetapool.find_pool_for_coins(address3CRV, token.address);
-    console.log("findPoolForCoins - %s", poolAddress);
+    // console.log("findPoolForCoins - %s", poolAddress);
     // Return the pool address
     return poolAddress;
 }
 
 /** Gets the Metapool by address
-* We use the 3CRV Base Pool, so we can assume the correct ABI as given in docs:
-* https://curve.readthedocs.io/factory-pools.html#implementation-contracts
-* @param address: address of the metapool
-* @param signer: signer used to interact with pool
-* Returns a 3CRVMetapool instance (Curve StableSwap Contract)
-*/
+ * We use the 3CRV Base Pool, so we can assume the correct ABI as given in docs:
+ * https://curve.readthedocs.io/factory-pools.html#implementation-contracts
+ * @param address: address of the metapool
+ * @param signer: signer used to interact with pool
+ * Returns a 3CRVMetapool instance (Curve StableSwap Contract)
+ */
 async function getMetapool (address, signer) {
     // We assume its a 3CRV metapool, so we use the 3pool implementation abi
     return await ethers.getContractAt(abi3PoolImplementation, address, signer);
@@ -126,11 +119,15 @@ async function createAndFundMetapool (owner, r, skipPoolBalances = false) {
 
 // Swap LvUSD for 3CRV using the Metapool
 // TODO
-function exchangeLvUSDfor3CRV (amountLvUSD, owner) { return true; }
+function exchangeLvUSDfor3CRV (amountLvUSD, owner) {
+    return true;
+}
 
 // Swap 3CRV for LvUSD using the Metapool
 // TODO
-function exchange3CRVfor3LvUSD (amountLvUSD, owner) { return true; }
+function exchange3CRVfor3LvUSD (amountLvUSD, owner) {
+    return true;
+}
 
 export {
     /* helper functions */

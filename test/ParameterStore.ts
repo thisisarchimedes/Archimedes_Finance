@@ -15,24 +15,27 @@ describe("ParameterStore test suit", async function () {
         it("Should calculate correct fee", async function () {
             const leverageAmount = ethers.utils.parseUnits("1000");
             const calculatedFee = await parameterStore.calculateOriginationFee(leverageAmount);
-            expect(calculatedFee).to.equal(ethers.utils.parseUnits("50"));
+            /// Origination fee is 0.5% so 1000 lev * 0.005 = 5
+            expect(calculatedFee).to.equal(ethers.utils.parseUnits("5"));
         });
         it("Should calculate correct fee with really big numbers", async function () {
             const leverageAmount = ethers.utils.parseUnits("10000000000");
             const calculatedFee = await parameterStore.calculateOriginationFee(leverageAmount);
-            expect(calculatedFee).to.equal(ethers.utils.parseUnits("500000000"));
+            /// Origination fee is 0.5% so 10000000000 lev * 0.005 = 5
+            expect(calculatedFee).to.equal(ethers.utils.parseUnits("50000000"));
         });
         it("Should calculate correct fee with small numbers ", async function () {
             const leverageAmount = ethers.utils.parseUnits("10");
             const calculatedFee = await parameterStore.calculateOriginationFee(leverageAmount);
-            expect(calculatedFee).to.equal(ethers.utils.parseUnits("0.5"));
+            /// Origination fee is 0.5% so 10 lev * 0.005 =0.05
+            expect(calculatedFee).to.equal(ethers.utils.parseUnits("0.05"));
         });
     });
 
     describe("Rebase fee rate tests", function () {
         it("Should have default rebase rate fee", async function () {
             const rebaseRate = await parameterStore.getRebaseFeeRate();
-            expect(rebaseRate).to.equal(ethers.utils.parseUnits("0.1"));
+            expect(rebaseRate).to.equal(ethers.utils.parseUnits("0.3"));
         });
         it("Should be able to change default value", async function () {
             const newRebaseRateValue = ethers.utils.parseUnits("0.5");
@@ -46,29 +49,31 @@ describe("ParameterStore test suit", async function () {
             const oldRebaseRateValue = await parameterStore.getRebaseFeeRate();
             const newRebaseRateValue = ethers.utils.parseUnits("0.3");
             const promise = parameterStore.changeRebaseFeeRate(newRebaseRateValue);
-            await expect(promise).to.emit(parameterStore, "ParameterChange").withArgs(
-                "rebaseFeeRate", newRebaseRateValue.toString(), oldRebaseRateValue.toString(),
-            );
+            await expect(promise)
+                .to.emit(parameterStore, "ParameterChange")
+                .withArgs("rebaseFeeRate", newRebaseRateValue.toString(), oldRebaseRateValue.toString());
         });
 
         it("Should emit event on treasury address change", async function () {
             const newTreasurySigner = ethers.Wallet.createRandom();
             const promise = parameterStore.changeTreasuryAddress(newTreasurySigner.address);
-            await expect(promise).to.emit(parameterStore, "TreasuryChange").withArgs(
-                newTreasurySigner.address, r.treasurySigner.address,
-            );
+            await expect(promise).to.emit(parameterStore, "TreasuryChange").withArgs(newTreasurySigner.address, r.treasurySigner.address);
         });
     });
 
     describe("Treasury address tests", function () {
-        it("Should not be able to change to address zerp", async function () {
+        it("Should not be able to change to address zero", async function () {
             const promise = parameterStore.changeTreasuryAddress(ethers.constants.AddressZero);
             await expect(promise).to.revertedWith("Treasury can't be set to 0");
         });
         it("should have updated treasury address", async function () {
+            console.log("0--should have updated treasury address---");
             const newTreasurySigner = ethers.Wallet.createRandom();
+            console.log("1--should have updated treasury address---");
             await parameterStore.changeTreasuryAddress(newTreasurySigner.address);
+            console.log("2--should have updated treasury address---");
             const returnedTreasuryAddress = await parameterStore.getTreasuryAddress();
+            console.log("3--should have updated treasury address---");
             expect(returnedTreasuryAddress).to.equal(newTreasurySigner.address);
         });
     });
@@ -102,9 +107,9 @@ describe("ParameterStore test suit", async function () {
 
     describe("Origination fee tests", function () {
         // Note : when we have access control, check that only admin can change it
-        // 0.01 equals to 1%
+        // 0.005 equals to 0.5%
         it("Should have default origination fee value", async function () {
-            const originationFeeDefaultValue = ethers.utils.parseUnits("0.05");
+            const originationFeeDefaultValue = ethers.utils.parseUnits("0.005");
             const defaultOriginationFeeRate = await parameterStore.getOriginationFeeRate();
             expect(defaultOriginationFeeRate).to.equal(originationFeeDefaultValue);
         });
@@ -119,7 +124,7 @@ describe("ParameterStore test suit", async function () {
 
     describe("Get and update leverage related values", function () {
         it("Should have default value for globalCollateralRate", async function () {
-            expect(await parameterStore.getGlobalCollateralRate()).to.equal(90);
+            expect(await parameterStore.getGlobalCollateralRate()).to.equal(95);
         });
 
         it("Should have default value for maxNumberOfCycles", async function () {
@@ -132,9 +137,7 @@ describe("ParameterStore test suit", async function () {
         });
 
         it("Should revert if new globalCollateralRate is higher then 100", async function () {
-            await expect(parameterStore.changeGlobalCollateralRate(120)).to.revertedWith(
-                "New collateral rate out of range",
-            );
+            await expect(parameterStore.changeGlobalCollateralRate(120)).to.revertedWith("New collateral rate out of range");
         });
 
         it("Should update maxNumberOfCycles", async function () {
@@ -151,9 +154,7 @@ describe("ParameterStore test suit", async function () {
                 await parameterStore.changeMaxNumberOfCycles(10);
             });
             it("Should return zero if no cycles", async function () {
-                expect(await parameterStore.getAllowedLeverageForPosition(ethers.utils.parseUnits("100"), 0)).to.equal(
-                    ethers.utils.parseUnits("0"),
-                );
+                expect(await parameterStore.getAllowedLeverageForPosition(ethers.utils.parseUnits("100"), 0)).to.equal(ethers.utils.parseUnits("0"));
             });
             it("Should calculate allowed leverage for 2 cycles", async function () {
                 expect(await parameterStore.getAllowedLeverageForPosition(ethers.utils.parseUnits("100"), 2)).to.equal(
@@ -170,20 +171,26 @@ describe("ParameterStore test suit", async function () {
                     ethers.utils.parseUnits("368.559"),
                 );
             });
-            it("Should return lower leverage allowance if not enough ArchToken", async function () {
-                const leverageAllowed =
-                    await parameterStore.getAllowedLeverageForPositionWithArch(ethers.utils.parseUnits("100"), 5, ethers.utils.parseUnits("1"));
-                expect(leverageAllowed).to.equal(ethers.utils.parseUnits("1"));
+            it("Should revert if not enough ArchToken given for position", async function () {
+                const leverageAllowedPromise = parameterStore.getAllowedLeverageForPositionWithArch(
+                    ethers.utils.parseUnits("100"),
+                    5,
+                    ethers.utils.parseUnits("0.01"),
+                );
+                await expect(leverageAllowedPromise).to.revertedWith("Not enough Arch for Pos");
             });
             it("Should return leverage allowance if enough arch token is given", async function () {
-                const leverageAllowed =
-                    await parameterStore.getAllowedLeverageForPositionWithArch(ethers.utils.parseUnits("100"), 5, ethers.utils.parseUnits("1000"));
+                const leverageAllowed = await parameterStore.getAllowedLeverageForPositionWithArch(
+                    ethers.utils.parseUnits("100"),
+                    5,
+                    ethers.utils.parseUnits("1000"),
+                );
                 expect(leverageAllowed).to.equal(ethers.utils.parseUnits("368.559"));
             });
             it("Should revert if number of cycles is bigger then allowed max", async function () {
-                await expect(
-                    parameterStore.getAllowedLeverageForPosition(ethers.utils.parseUnits("100"), 20),
-                ).to.be.revertedWith("Cycles greater than max allowed");
+                await expect(parameterStore.getAllowedLeverageForPosition(ethers.utils.parseUnits("100"), 20)).to.be.revertedWith(
+                    "Cycles greater than max allowed",
+                );
             });
         });
     });

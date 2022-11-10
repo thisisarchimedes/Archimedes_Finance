@@ -133,7 +133,7 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
 
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
 
-    const balanceUSDT = helperSwapETHWithUSDT(destUser, ethAmountToSwap);
+    const balanceUSDT = await helperSwapETHWithUSDT(destUser, ethAmountToSwap);
 
     /// /////////// 2. USDT->3CRV on Curve /////////////////////////
 
@@ -171,7 +171,7 @@ async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSw
 
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
 
-    const balance3CRV = helperSwapETHWith3CRV(destUser, ethAmountToSwap);
+    const balance3CRV = await helperSwapETHWith3CRV(destUser, ethAmountToSwap);
 
     /// /////////// 2. USDT->OUSD with OUSD contract //////////////
 

@@ -24,6 +24,10 @@ contract PoolManager is AccessController, ReentrancyGuardUpgradeable, UUPSUpgrad
     ICurveFiCurve internal _poolLvUSD3CRV;
 
     function initialize() public initializer {
+        __AccessControl_init();
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
         _grantRole(ADMIN_ROLE, _msgSender());
         setGovernor(_msgSender());
         setExecutive(_msgSender());
@@ -56,8 +60,11 @@ contract PoolManager is AccessController, ReentrancyGuardUpgradeable, UUPSUpgrad
         _crv3 = IERC20Upgradeable(address3CRV);
         _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
 
-        _lvusd.approve(_addressPoolLvUSD3CRV, type(uint256).max);
-        _crv3.approve(_addressPoolLvUSD3CRV, type(uint256).max);
+        _lvusd.safeApprove(_addressPoolLvUSD3CRV, 0);
+        _crv3.safeApprove(_addressPoolLvUSD3CRV, 0);
+
+        _lvusd.safeApprove(_addressPoolLvUSD3CRV, type(uint256).max);
+        _crv3.safeApprove(_addressPoolLvUSD3CRV, type(uint256).max);
     }
 
     function fundPoolWith3CRV(address buyerAddress, uint256 amoutToFundInLvUSD) external nonReentrant onlyAdmin returns (uint256) {

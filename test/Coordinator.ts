@@ -1,4 +1,3 @@
-
 import { assert, expect } from "chai";
 import { ethers } from "hardhat";
 import { helperSwapETHWithOUSD } from "./MainnetHelper";
@@ -89,9 +88,7 @@ describe("Coordinator Test suit", function () {
                 // (this will happen in leverage engine in full Archimedes flow)
                 await r.externalOUSD.connect(r.addr2).transfer(coordinator.address, addr2CollateralAmount);
                 expect(await r.externalOUSD.balanceOf(coordinator.address)).to.equal(addr2CollateralAmount);
-                await coordinator.depositCollateralUnderNFT(
-                    nftIdAddr2Position, addr2CollateralAmount, { gasLimit: 3000000 },
-                );
+                await coordinator.depositCollateralUnderNFT(nftIdAddr2Position, addr2CollateralAmount, { gasLimit: 3000000 });
             });
 
             it("Should have increased vault balance on OUSD by second collateral amount", async function () {
@@ -149,12 +146,11 @@ describe("Coordinator Test suit", function () {
             it("Should update CDP with borrowed lvUSD", async function () {
                 expect(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)).to.equal(lvUSDAmountToBorrow);
             });
-            it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address",
-                async function () {
-                    await expect(
-                        coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseUnits("200")),
-                    ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
-                });
+            it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address", async function () {
+                await expect(coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseUnits("200"))).to.be.revertedWith(
+                    "ERC20: transfer amount exceeds balance",
+                );
+            });
 
             describe("Repay lvUSD for position", function () {
                 const lvUSDAmountToRepayInTwoParts = ethers.utils.parseUnits("1");
@@ -163,8 +159,10 @@ describe("Coordinator Test suit", function () {
                     await coordinator.repayUnderNFT(nftIdFirstPosition, lvUSDAmountToRepayInTwoParts);
                 });
                 it("Should update CDP with repayed lvUSD", async function () {
-                    expect(getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)))
-                        .to.closeTo(getFloatFromBigNum(lvUSDAmountToRepayInTwoParts), 0.2);
+                    expect(getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition))).to.closeTo(
+                        getFloatFromBigNum(lvUSDAmountToRepayInTwoParts),
+                        0.2,
+                    );
                 });
             });
 
@@ -178,7 +176,7 @@ describe("Coordinator Test suit", function () {
                 before(async function () {
                     /// Get initial state
                     borrowedLvUSDInPositionBeforeLeverage = await r.cdp.getLvUSDBorrowed(nftIdFirstPosition);
-                    logger("borrowedLvUSDInPositionBeforeLeverage", borrowedLvUSDInPositionBeforeLeverage);
+                    // logger("borrowedLvUSDInPositionBeforeLeverage", borrowedLvUSDInPositionBeforeLeverage);
                     /// Test artifact only, Once exchanger is functional we can use the exchange and
                     /// transfer OUSD directly to coordinator
                     await r.externalOUSD.connect(endUserSigner).transfer(coordinator.address, leverageAmount);
@@ -192,8 +190,7 @@ describe("Coordinator Test suit", function () {
                     await coordinator.getLeveragedOUSD(nftIdFirstPosition, leverageAmount);
                 });
                 it("Should have increase borrowed amount on CDP for NFT", async function () {
-                    expect(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)).to.equal(
-                        borrowedLvUSDInPositionBeforeLeverage.add(leverageAmount));
+                    expect(await r.cdp.getLvUSDBorrowed(nftIdFirstPosition)).to.equal(borrowedLvUSDInPositionBeforeLeverage.add(leverageAmount));
                 });
                 it("Should have increased OUSD deposited in vault", async function () {
                     const expectedTotalAssets = getFloatFromBigNum(leverageAmount.add(depositedOUSDBeforeLeverage).sub(originationFee));
@@ -201,14 +198,12 @@ describe("Coordinator Test suit", function () {
                     expect(getFloatFromBigNum(await r.vault.totalAssets())).to.closeTo(expectedTotalAssets, 10);
                 });
                 it("Should have minted (more) shares to owner address", async function () {
-                    expect(await r.vault.maxRedeem(sharesOwnerAddress)).to.gt(
-                        sharesTotalSupplyBeforeLeverage);
+                    expect(await r.vault.maxRedeem(sharesOwnerAddress)).to.gt(sharesTotalSupplyBeforeLeverage);
                 });
                 it("Should have increased deposited (or totalOUSD) OUSD in CDPosition", async function () {
                     const existingOUSDBeforeLeverage = addr1CollateralAmount;
                     const expectedOUSDTotal = getFloatFromBigNum(leverageAmount.add(existingOUSDBeforeLeverage).sub(originationFee));
-                    expect(getFloatFromBigNum(await r.cdp.getOUSDTotal(nftIdFirstPosition)))
-                        .to.closeTo(expectedOUSDTotal, 10);
+                    expect(getFloatFromBigNum(await r.cdp.getOUSDTotalWithoutInterest(nftIdFirstPosition))).to.closeTo(expectedOUSDTotal, 10);
                 });
                 it("Should have update CDPosition with shares", async function () {
                     // When getting leveraged OUSD and depositing it into Vault, shares are not always one to one
@@ -217,8 +212,7 @@ describe("Coordinator Test suit", function () {
                     const numberOfSharesFromLeverage = ethers.BigNumber.from("712500000000000000");
                     const expectedShares = getFloatFromBigNum(numberOfSharesFromLeverage.add(addr1CollateralAmount));
 
-                    expect(getFloatFromBigNum(await r.cdp.getShares(nftIdFirstPosition)))
-                        .to.closeTo(expectedShares, 10);
+                    expect(getFloatFromBigNum(await r.cdp.getShares(nftIdFirstPosition))).to.closeTo(expectedShares, 10);
                 });
                 // Commenting out till exchanger is done as unwind would not work yet
 
@@ -232,7 +226,7 @@ describe("Coordinator Test suit", function () {
                     let userExistingOUSDValueBeforeUnwind;
                     before(async function () {
                         vaultOUSDAmountBeforeUnwind = await r.vault.totalAssets();
-                        positionTotalOUSD = await r.cdp.getOUSDTotal(nftIdFirstPosition);
+                        positionTotalOUSD = await r.cdp.getOUSDTotalWithoutInterest(nftIdFirstPosition);
                         positionShares = await r.cdp.getShares(nftIdFirstPosition);
                         positionExpectedOUSDTotalPlusInterest = await r.vault.convertToAssets(positionShares);
                         positionInterestEarned = positionExpectedOUSDTotalPlusInterest.sub(positionTotalOUSD);
@@ -243,16 +237,16 @@ describe("Coordinator Test suit", function () {
 
                     it(`Should reduce assets in Vault by the entire OUSD amount of
                         position (principle, leveraged and interest)`, async function () {
-                        expect(await r.vault.totalAssets()).to.equal(
-                            vaultOUSDAmountBeforeUnwind.sub(positionExpectedOUSDTotalPlusInterest));
+                        expect(await r.vault.totalAssets()).to.equal(vaultOUSDAmountBeforeUnwind.sub(positionExpectedOUSDTotalPlusInterest));
                     });
                     it("Should transfer principle plus interest to user", async function () {
-                        const userExpectedOUSDBalance = parseFloat(ethers.utils.formatEther(
-                            addr1CollateralAmount.add(positionInterestEarned).add(userExistingOUSDValueBeforeUnwind).sub(originationFee)));
-                        const userActualOUSDBalance = parseFloat(ethers.utils.formatEther(
-                            await r.externalOUSD.balanceOf(endUserSigner.address)));
-                        expect(userActualOUSDBalance).to.be.closeTo(
-                            userExpectedOUSDBalance, 1.5);
+                        const userExpectedOUSDBalance = parseFloat(
+                            ethers.utils.formatEther(
+                                addr1CollateralAmount.add(positionInterestEarned).add(userExistingOUSDValueBeforeUnwind).sub(originationFee),
+                            ),
+                        );
+                        const userActualOUSDBalance = parseFloat(ethers.utils.formatEther(await r.externalOUSD.balanceOf(endUserSigner.address)));
+                        expect(userActualOUSDBalance).to.be.closeTo(userExpectedOUSDBalance, 1.5);
                     });
                     it("Should have deleted CDP position", async function () {
                         /// a view method does not revert but just throw an exception.
@@ -311,8 +305,10 @@ describe("Coordinator Test suit", function () {
         });
 
         it("Should have updated CDP getOUSDTotal with values for leveraged position", async function () {
-            expect(getFloatFromBigNum(await r.cdp.getOUSDTotal(endToEndTestNFTId)))
-                .to.closeTo(getFloatFromBigNum(collateralAmount.add(depositedLeveragedOUSD)), 10);
+            expect(getFloatFromBigNum(await r.cdp.getOUSDTotalWithoutInterest(endToEndTestNFTId))).to.closeTo(
+                getFloatFromBigNum(collateralAmount.add(depositedLeveragedOUSD)),
+                10,
+            );
         });
 
         it("Should have updated CDP getLvUSDBorrowed with values for leveraged position", async function () {
@@ -320,8 +316,10 @@ describe("Coordinator Test suit", function () {
         });
 
         it("Should have updated CDP getShares with values for leveraged position", async function () {
-            expect(getFloatFromBigNum(await r.cdp.getShares(endToEndTestNFTId)))
-                .to.closeTo(getFloatFromBigNum(collateralAmount.add(depositedLeveragedOUSD)), 10);
+            expect(getFloatFromBigNum(await r.cdp.getShares(endToEndTestNFTId))).to.closeTo(
+                getFloatFromBigNum(collateralAmount.add(depositedLeveragedOUSD)),
+                10,
+            );
         });
 
         it("Should have emptied coordinator OUSD reserves (they need to go to Vault)", async function () {
@@ -329,8 +327,7 @@ describe("Coordinator Test suit", function () {
         });
 
         it("Should have deposited principle plus leveraged OUSD into Vault minus origination fees", async function () {
-            expect(getFloatFromBigNum(await r.vault.totalAssets()))
-                .to.closeTo(getFloatFromBigNum(collateralAmount.add(depositedLeveragedOUSD)), 10);
+            expect(getFloatFromBigNum(await r.vault.totalAssets())).to.closeTo(getFloatFromBigNum(collateralAmount.add(depositedLeveragedOUSD)), 10);
         });
 
         it("Should have transferred lvUSD out of coordinator minted amount", async function () {

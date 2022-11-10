@@ -35,11 +35,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     IERC20Upgradeable internal _ousd;
     ParameterStore internal _paramStore;
 
-    modifier notImplementedYet() {
-        revert("Method not implemented yet");
-        _;
-    }
-
     function setDependencies(
         address addressLvUSD,
         address addressVaultOUSD,
@@ -62,6 +57,10 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         _lvUSD = IERC20Upgradeable(_addressLvUSD);
         _ousd = IERC20Upgradeable(_addressOUSD);
         _paramStore = ParameterStore(addressParamStore);
+
+        // /// reset allownce
+        _ousd.safeApprove(_addressVaultOUSD, 0);
+        _lvUSD.safeApprove(_addressPoolManager, 0);
 
         // approve VaultOUSD address to spend OUSD on behalf of coordinator
         _ousd.safeApprove(_addressVaultOUSD, type(uint256).max);
@@ -109,7 +108,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
             _amountToLeverage <= _paramStore.getAllowedLeverageForPosition(ousdPrinciple, _paramStore.getMaxNumberOfCycles()),
             "Leverage more than max allowed"
         );
-
         // borrowUnderNFT transfer lvUSD from Coordinator to Exchanger + mark borrowed lvUSD in CDP under nft ID
         _borrowUnderNFT(_nftId, _amountToLeverage);
 
@@ -166,6 +164,10 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         return _lvUSD.balanceOf(address(this));
     }
 
+    function getPositionExpireTime(uint256 _nftId) external view override returns (uint256) {
+        return _cdp.getPositionExpireTime(_nftId);
+    }
+
     function addressOfLvUSDToken() external view override returns (address) {
         return _addressLvUSD;
     }
@@ -175,6 +177,10 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     }
 
     function initialize() public initializer {
+        __AccessControl_init();
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
         _grantRole(ADMIN_ROLE, _msgSender());
         setGovernor(_msgSender());
         setExecutive(_msgSender());
@@ -186,11 +192,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         uint256 _amount,
         address _to
     ) internal {
-        /// Method makes sure ousd recorded balance transfer
-        // TODO: Do we really need this check? Seems excessive
-        uint256 userOusdBalanceBeforeWithdraw = _ousd.balanceOf(_to);
         _ousd.safeTransfer(_to, _amount);
-        require(_ousd.balanceOf(_to) == userOusdBalanceBeforeWithdraw + _amount, "OUSD transfer balance incorrect");
         _cdp.withdrawOUSDFromPosition(_nftId, _amount);
     }
 
@@ -207,6 +209,12 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         uint256 _fee = _paramStore.calculateOriginationFee(_leveragedOUSDAmount);
         _ousd.safeTransfer(_paramStore.getTreasuryAddress(), _fee);
         return _fee;
+    }
+
+    function _checkEqualBalanceWithBuffer(uint256 givenAmount, uint256 expectedAmount) internal returns (bool) {
+        uint256 expectedLowerBound = expectedAmount - 10; // to accomadte rounding in the 2 lowest digits
+        uint256 expectedUpperBound = expectedAmount + 10; // to accomadte rounding in the 2 lowest digits
+        return (expectedLowerBound <= givenAmount) && (givenAmount <= expectedUpperBound);
     }
 
     // solhint-disable-next-line
