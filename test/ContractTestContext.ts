@@ -40,7 +40,7 @@ export type ContractTestContext = {
     curveLvUSDPool: Contract;
 };
 
-export async function setRolesForEndToEnd(r: ContractTestContext) {
+export async function setRolesForEndToEnd (r: ContractTestContext) {
     await r.coordinator.setExecutive(r.leverageEngine.address);
     await r.positionToken.setExecutive(r.leverageEngine.address);
 
@@ -50,7 +50,7 @@ export async function setRolesForEndToEnd(r: ContractTestContext) {
 }
 export const signers = ethers.getSigners();
 export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("10000000.0");
-export async function buildContractTestContext(skipPoolBalances = false): Promise<ContractTestContext> {
+export async function buildContractTestContext (skipPoolBalances = false): Promise<ContractTestContext> {
     await helperResetNetwork(defaultBlockNumber);
 
     const context = {} as ContractTestContext;
