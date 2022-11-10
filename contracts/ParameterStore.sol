@@ -10,6 +10,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 contract ParameterStore is AccessController, UUPSUpgradeable {
     bytes32 public constant ARCH_GOVERNOR_ROLE = keccak256("ARCH_GOVERNOR_ROLE");
     address private _addressArchGovernor;
+    address internal _addressCoordinator;
+    address internal _addressExchanger;
 
     uint256 internal _maxNumberOfCycles; // regular natural number
     uint256 internal _originationFeeRate; // in ether percentage (see initialize for examples)
@@ -24,6 +26,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     uint256 internal _curveMaxExchangeGuard;
     uint256 internal _minPositionCollateral;
     uint256 internal _positionTimeToLiveInDays;
+    uint256 internal _coordinatorLeverageBalance;
 
     event ParameterChange(string indexed _name, uint256 _newValue, uint256 _oldValue);
     event TreasuryChange(address indexed _newValue, address indexed _oldValue);
@@ -48,7 +51,29 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
         _minPositionCollateral = 9 ether;
         _positionTimeToLiveInDays = 369;
+        _coordinatorLeverageBalance = 0;
+
         _treasuryAddress = address(0);
+        _addressCoordinator = address(0);
+        _addressExchanger = address(0);
+    }
+
+    function setDependencies(address addressCoordinator, address addressExchanger) external onlyAdmin {
+        _addressCoordinator = addressCoordinator;
+        _addressExchanger = addressExchanger;
+    }
+
+    modifier onlyInternalContracts() {
+        require(msg.sender == _addressCoordinator || msg.sender == _addressExchanger, "Caller is not internal contract");
+        _;
+    }
+
+    /* Privileged functions */
+
+    // TODO: Add protection that only exchanger and coordinator can do this
+    function changeCoordinatorLvUSDBalance(uint256 newCoordinatorLvUSDBalance) external onlyInternalContracts {
+        // require(_lvUSD.balanceOf(address(this)) == lvUSDBalanceToSet, "wrong lvUSD vs amount to set");
+        _coordinatorLeverageBalance = newCoordinatorLvUSDBalance;
     }
 
     function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external onlyGovernor {
@@ -118,6 +143,10 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         require(newPositionTimeToLiveInDays < 10000 && newPositionTimeToLiveInDays > 30, "newPositionTimeToLiveInDays OOR");
         emit ParameterChange("newPositionTimeToLiveInDays", newPositionTimeToLiveInDays, _positionTimeToLiveInDays);
         _positionTimeToLiveInDays = newPositionTimeToLiveInDays;
+    }
+
+    function getCoordinatorLeverageBalance() external view returns (uint256) {
+        return _coordinatorLeverageBalance;
     }
 
     function getMaxNumberOfCycles() external view returns (uint256) {

@@ -93,6 +93,16 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _index3CRV = 1;
     }
 
+    function _exhangerLvUSDTransfer(uint256 amount) internal {
+        /// Add change to coordinator lev value (not related to OUSD)
+        uint256 currentCoordinatorLvUSDBalance = _paramStore.getCoordinatorLeverageBalance();
+        // require(currentCoordinatorLvUSDBalance >= amount, "insuf lev Value on Coor");
+        // require(_lvUSD.balanceOf(address(this)) >= amount, "insuf lvUSD balance on Coor");
+
+        _paramStore.changeCoordinatorLvUSDBalance(currentCoordinatorLvUSDBalance + amount);
+        _lvusd.safeTransfer(_addressCoordinator, amount);
+    }
+
     /**
      * @dev Exchanges OUSD for LvUSD using multiple CRV3Metapools
      * returns amount of LvUSD
@@ -189,7 +199,8 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _ousd.safeTransfer(_addressCoordinator, remainingOUSD);
 
         // send all swapped lvUSD to coordinator
-        _lvusd.safeTransfer(_addressCoordinator, _returnedLvUSD);
+        _exhangerLvUSDTransfer(_returnedLvUSD);
+        // _lvusd.safeTransfer(_addressCoordinator, _returnedLvUSD);
 
         return (_returnedLvUSD, remainingOUSD);
     }

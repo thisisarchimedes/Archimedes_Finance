@@ -10,6 +10,7 @@ import {Exchanger} from "../contracts/Exchanger.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {AccessController} from "./AccessController.sol";
+import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
@@ -21,6 +22,7 @@ import "hardhat/console.sol";
 /// It is controlled (and called) by the leverage engine
 contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
+    // using SafeERC20Upgradeable for IERC20BurnableUpgradeable;
     address internal _addressLvUSD;
     address internal _addressVaultOUSD;
     address internal _addressCDP;
@@ -65,6 +67,31 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         // approve VaultOUSD address to spend OUSD on behalf of coordinator
         _ousd.safeApprove(_addressVaultOUSD, type(uint256).max);
         _lvUSD.safeApprove(_addressPoolManager, type(uint256).max);
+    }
+
+    ///
+
+    function _coordinatorLvUSDTransfer(uint256 amount) internal {
+        /// Add change to coordinator lev value (not related to OUSD)
+        uint256 currentCoordinatorLvUSDBalance = getAvailableLeverage();
+        require(currentCoordinatorLvUSDBalance >= amount, "insuf lev Value on Coor");
+        require(_lvUSD.balanceOf(address(this)) >= amount, "insuf lvUSD balance on Coor");
+
+        _paramStore.changeCoordinatorLvUSDBalance(currentCoordinatorLvUSDBalance - amount);
+        _lvUSD.safeTransfer(_addressExchanger, amount);
+    }
+
+    function acceptLeverageAmount(uint256 lvUSDBalanceToSet) external onlyAdmin nonReentrant {
+        // uint256 lvUSDBalanceOnContract = _lvUSD.balanceOf(address(this));
+        // console.log("Coor: lvUSDBalanceOnContract %s, lvUSDBalanceToSet %s", lvUSDBalanceOnContract, lvUSDBalanceToSet);
+        require(_lvUSD.balanceOf(address(this)) >= lvUSDBalanceToSet, "wrong lvUSD vs amount to set");
+        _paramStore.changeCoordinatorLvUSDBalance(lvUSDBalanceToSet);
+    }
+
+    function resetAndBurnLeverage() external onlyAdmin nonReentrant {
+        uint256 corrdinatorCurrentLvUSDBalance = _lvUSD.balanceOf(address(this));
+        ERC20Burnable(_addressLvUSD).burn(corrdinatorCurrentLvUSDBalance);
+        _paramStore.changeCoordinatorLvUSDBalance(0);
     }
 
     /* Privileged functions: Executive */
@@ -160,8 +187,9 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
 
     /* Privileged functions: Anyone */
 
-    function getAvailableLeverage() external view returns (uint256) {
-        return _lvUSD.balanceOf(address(this));
+    function getAvailableLeverage() public view returns (uint256) {
+        // return _lvUSD.balanceOf(address(this));
+        return _paramStore.getCoordinatorLeverageBalance();
     }
 
     function getPositionExpireTime(uint256 _nftId) external view override returns (uint256) {
@@ -197,7 +225,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     }
 
     function _borrowUnderNFT(uint256 _nftId, uint256 _amount) internal {
-        _lvUSD.transfer(_addressExchanger, _amount);
+        _coordinatorLvUSDTransfer(_amount);
         _cdp.borrowLvUSDFromPosition(_nftId, _amount);
     }
 

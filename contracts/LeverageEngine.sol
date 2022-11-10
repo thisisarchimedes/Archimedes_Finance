@@ -121,6 +121,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     }
 
     function initialize() public initializer {
+        __Pausable_init();
         __AccessControl_init();
         __ReentrancyGuard_init();
         __UUPSUpgradeable_init();

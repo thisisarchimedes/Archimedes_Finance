@@ -1,9 +1,12 @@
 import { Contract } from "ethers";
 import hre, { ethers } from "hardhat";
 import {
-    addressOUSD, abiOUSDToken,
-    addressUSDT, abiUSDTToken,
-    address3CRV, abi3CRVToken,
+    addressOUSD,
+    abiOUSDToken,
+    addressUSDT,
+    abiUSDTToken,
+    address3CRV,
+    abi3CRVToken,
     addressCurveOUSDPool,
     helperSwapETHWith3CRV,
     helperResetNetwork,
@@ -12,7 +15,7 @@ import {
 import { createAndFundMetapool } from "./CurveHelper";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-export type ContractTestContext ={
+export type ContractTestContext = {
     owner: SignerWithAddress;
     addr1: SignerWithAddress;
     addr2: SignerWithAddress;
@@ -35,9 +38,9 @@ export type ContractTestContext ={
     externalUSDT: Contract;
     external3CRV: Contract;
     curveLvUSDPool: Contract;
-}
+};
 
-export async function setRolesForEndToEnd (r:ContractTestContext) {
+export async function setRolesForEndToEnd(r: ContractTestContext) {
     await r.coordinator.setExecutive(r.leverageEngine.address);
     await r.positionToken.setExecutive(r.leverageEngine.address);
 
@@ -47,7 +50,7 @@ export async function setRolesForEndToEnd (r:ContractTestContext) {
 }
 export const signers = ethers.getSigners();
 export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("10000000.0");
-export async function buildContractTestContext (skipPoolBalances = false): Promise<ContractTestContext> {
+export async function buildContractTestContext(skipPoolBalances = false): Promise<ContractTestContext> {
     await helperResetNetwork(defaultBlockNumber);
 
     const context = {} as ContractTestContext;
@@ -144,14 +147,15 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
         context.coordinator.address,
         context.lvUSD.address,
         context.external3CRV.address,
-        context.curveLvUSDPool.address);
-
-    await context.cdp.setDependencies(
-        context.vault.address,
-        context.parameterStore.address,
+        context.curveLvUSDPool.address,
     );
 
-    // ]);
+    await context.parameterStore.setDependencies(context.coordinator.address, context.exchanger.address);
+
+    await context.cdp.setDependencies(context.vault.address, context.parameterStore.address);
+
+    /// After all is set and done, accept Lev amount on Coordinator
+    // await context.coordinator.acceptLeverageAmount(ownerStartingLvUSDAmount);
 
     return context;
 }
