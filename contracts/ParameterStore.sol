@@ -222,7 +222,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
             // In this case, user approved more(or exactly) arch tokens needed for leverage
             return allowedLeverageNoArchLimit;
         } else {
-            console.log("getAllowedLeverageForPositionWithArch - User did not burn enough Arch");
             /// TODO : Should this return a revert? Most likely but other changes are needed as well. This can be misleading
             revert("Not enough Arch for Pos");
         }

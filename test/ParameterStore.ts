@@ -67,13 +67,9 @@ describe("ParameterStore test suit", async function () {
             await expect(promise).to.revertedWith("Treasury can't be set to 0");
         });
         it("should have updated treasury address", async function () {
-            console.log("0--should have updated treasury address---");
             const newTreasurySigner = ethers.Wallet.createRandom();
-            console.log("1--should have updated treasury address---");
             await parameterStore.changeTreasuryAddress(newTreasurySigner.address);
-            console.log("2--should have updated treasury address---");
             const returnedTreasuryAddress = await parameterStore.getTreasuryAddress();
-            console.log("3--should have updated treasury address---");
             expect(returnedTreasuryAddress).to.equal(newTreasurySigner.address);
         });
     });
