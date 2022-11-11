@@ -59,21 +59,12 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
     ) external nonReentrant onlyExecutive returns (uint256) {
         _takeRebaseFees();
         uint256 redeemedAmountInAssets = super.redeem(shares, receiver, owner);
-        // console.log(" redeemedAmountInAssets %s,_assetsHandledByArchimedes %s", redeemedAmountInAssets, _assetsHandledByArchimedes);
-        // Option one:
         /// This is due to integer rounding issues. If this is the case, reset _assetsHandledByArchimedes
         if (_assetsHandledByArchimedes < redeemedAmountInAssets) {
-            console.log(
-                "_assetsHandledByArchimedes is smaller then redeemedAmountInAssets, redeemedAmountInAssets %s, _assetsHandledByArchimedes %s ",
-                redeemedAmountInAssets,
-                _assetsHandledByArchimedes
-            );
             _assetsHandledByArchimedes = 0;
         } else {
             _assetsHandledByArchimedes = _assetsHandledByArchimedes - redeemedAmountInAssets;
         }
-        // OR option two which is not what we use:
-        // _assetsHandledByArchimedes = _assetsHandledByArchimedes - ((redeemedAmountInAssets / 10) * 10);
         return redeemedAmountInAssets;
     }
 
@@ -107,9 +98,7 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
 
     function _takeRebaseFees() internal {
         uint256 roundingBuffer = 100; // wei
-        // console.log("totalAssets() - (_assetsHandledByArchimedes + roundingBuffer)", totalAssets(), _assetsHandledByArchimedes, roundingBuffer);
         // If for some reason, _assetsHandledByArchimedes gor larger then total assets, reset _assetsHandledByArchimedes to max (ie total assets)
-        // TODO: SEE note in notepad
         uint256 totalAssetsCurrent = totalAssets();
         if (totalAssetsCurrent < _assetsHandledByArchimedes) {
             if (_assetsHandledByArchimedes - totalAssetsCurrent > 1000) {

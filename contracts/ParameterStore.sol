@@ -214,14 +214,8 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         uint256 numberOfCycles,
         uint256 archAmount
     ) external view returns (uint256) {
-        /// Use 100 wei less OUSD then given - TO REMOVE
         uint256 allowedLeverageNoArchLimit = getAllowedLeverageForPosition(principle, numberOfCycles);
         uint256 allowedLeverageWithGivenArch = calculateLeverageAllowedForArch(archAmount);
-        // console.log(
-        //     "getAllowedLeverageForPositionWithArch - values ( removing 4 first digiets) allowedLeverageNoArchLimit %s, allowedLeverageWithGivenArch %s",
-        //     allowedLeverageNoArchLimit / 10000,
-        //     allowedLeverageWithGivenArch / 10000
-        // );
         if (allowedLeverageWithGivenArch / 10000 >= allowedLeverageNoArchLimit / 10000) {
             // In this case, user approved more(or exactly) arch tokens needed for leverage
             return allowedLeverageNoArchLimit;

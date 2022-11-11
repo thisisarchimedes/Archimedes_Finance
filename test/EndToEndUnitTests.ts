@@ -426,13 +426,6 @@ describe("Test suit for getting leverage", function () {
     it("Should not have used all the Arch token given for opening Position", async function () {
         // test arch token taken from user is only what is needed
         const archTokenBalanceAfterOpeningPosition = getFloatFromBigNum(await r.archToken.balanceOf(user.address));
-        // console.log(
-        //     "\x1B[31mPosition ArchTokenBefore %s ArchTokenAfter %s , neededArch is %s, archApproved is %s",
-        //     userArchTokenAmountBeforePosition,
-        //     archTokenBalanceAfterOpeningPosition,
-        //     archCostOfLeverage,
-        //     getFloatFromBigNum(archApprovedForLeverageIn18Dec),
-        // );
         expect(archTokenBalanceAfterOpeningPosition).to.closeTo(userArchTokenAmountBeforePosition - archCostOfLeverage, 0.0001);
     });
 
