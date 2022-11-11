@@ -71,6 +71,8 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     /* Privileged functions */
 
     function changeCoordinatorLeverageBalance(uint256 newCoordinatorLeverageBalance) external onlyInternalContracts {
+        // No checks that I can think of. Seems convoluted to add a check for lvUSD balance as we "trust" internal contracts to check lvUSD
+        // balance when needed.
         _coordinatorLeverageBalance = newCoordinatorLeverageBalance;
     }
 
@@ -132,7 +134,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     function changeMinPositionCollateral(uint256 newMinPositionCollateral) external onlyGovernor {
-        require(newMinPositionCollateral < (1000000 ether) && newMinPositionCollateral > (1 ether), "New min colleateral out of range");
+        require(newMinPositionCollateral < (1000000 ether) && newMinPositionCollateral > (1 ether), "New min collateral out of range");
         emit ParameterChange("minPositionCollateral", newMinPositionCollateral, _minPositionCollateral);
         _minPositionCollateral = newMinPositionCollateral;
     }

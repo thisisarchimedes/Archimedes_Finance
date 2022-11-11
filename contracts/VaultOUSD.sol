@@ -98,7 +98,8 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
 
     function _takeRebaseFees() internal {
         uint256 roundingBuffer = 100; // wei
-        // If for some reason, _assetsHandledByArchimedes gor larger then total assets, reset _assetsHandledByArchimedes to max (ie total assets)
+
+        // If for some reason, _assetsHandledByArchimedes is larger then total assets, reset _assetsHandledByArchimedes to max (ie total assets)
         uint256 totalAssetsCurrent = totalAssets();
         if (totalAssetsCurrent < _assetsHandledByArchimedes) {
             if (_assetsHandledByArchimedes - totalAssetsCurrent > 1000) {
@@ -117,7 +118,7 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
             unhandledRebasePayment = 0;
         }
 
-        /// only run fee collection if there are some rebased funds not handled
+        /// only run fee collection if there are some rebased funds not handled (pad by rounding buffer)
         if (unhandledRebasePayment > roundingBuffer) {
             uint256 feeToCollect = (unhandledRebasePayment * _paramStore.getRebaseFeeRate()) / 1 ether;
             uint256 handledRebaseValueToKeepInVault = unhandledRebasePayment - feeToCollect;

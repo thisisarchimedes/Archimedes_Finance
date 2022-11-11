@@ -68,10 +68,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         _lvUSD.safeApprove(_addressPoolManager, type(uint256).max);
     }
 
-    ///
-
     function _coordinatorLvUSDTransferToExchanger(uint256 amount) internal {
-        /// Add change to coordinator lev value (not related to OUSD)
         uint256 currentCoordinatorLvUSDBalance = getAvailableLeverage();
         uint256 currentBalanceOnLvUSDContract = _lvUSD.balanceOf(address(this));
         require(currentCoordinatorLvUSDBalance >= amount, "insuf levAv to trnsf");
@@ -187,7 +184,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     /* Privileged functions: Anyone */
 
     function getAvailableLeverage() public view returns (uint256) {
-        // return _lvUSD.balanceOf(address(this));
         return _paramStore.getCoordinatorLeverageBalance();
     }
 

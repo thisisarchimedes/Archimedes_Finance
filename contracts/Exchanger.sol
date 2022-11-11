@@ -391,7 +391,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
     }
 
     function estimateOusdReturnedOnUnwindMinusInterest(uint256 amountOUSD, uint256 minRequiredLvUSD) external view returns (uint256) {
-        uint256 tempMinLv = minRequiredLvUSD;
         uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(0, 1, minRequiredLvUSD);
         uint256 _neededOUSD = _poolOUSD3CRV.get_dy(1, 0, _needed3CRV);
         // console.log("estimateOusdReturnedOnUnwind 1: _needed3CRV %s, _neededOUSD %s", _needed3CRV / 1 ether, _neededOUSD / 1 ether);
@@ -399,7 +398,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _neededOUSD = (_neededOUSD * 1005) / 1000; // This will fix lower balances slippages
         uint256 _obtained3CRV = _poolOUSD3CRV.get_dy(0, 1, _neededOUSD);
         uint256 _obtainedLvUSD = _poolLvUSD3CRV.get_dy(1, 0, _obtained3CRV);
-        // console.log("estimateOusdReturnedOnUnwind 2: _obtained3CRV = %s , _obtainedLvUSD = %s", _obtained3CRV / 1 ether, _obtainedLvUSD / 1 ether);
 
         if (_obtainedLvUSD < (minRequiredLvUSD)) {
             uint256 _difference = (minRequiredLvUSD) - _obtainedLvUSD + 10**18; // +1 just in case
@@ -410,7 +408,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
             _neededOUSD = _neededOUSD + _difference;
 
             if (finalAmount < (minRequiredLvUSD)) {
-                // console.log("estimateOusdReturnedOnUnwind Inside calc finalAmount");
                 _difference = (minRequiredLvUSD) - finalAmount + 10**18; // +1 just in case
                 _crv3Difference = _poolOUSD3CRV.get_dy(0, 1, _difference);
                 _lvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _crv3Difference);
@@ -418,7 +415,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
                 finalAmount = finalAmount + _lvUSDDifference;
                 _neededOUSD = _neededOUSD + _difference;
             }
-            // console.log("_swapOUSDforLvUSD_inside if: _neededOUSD %s, finalAmount(ofLUSD) %s", _neededOUSD / 1 ether, finalAmount / 1 ether);
         }
         return amountOUSD - _neededOUSD;
     }

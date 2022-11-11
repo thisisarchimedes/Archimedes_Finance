@@ -152,7 +152,7 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
 
     await context.cdp.setDependencies(context.vault.address, context.parameterStore.address);
 
-    /// After all is set and done, accept Lev amount on Coordinator
+    // After all is set and done, accept Lev amount on Coordinator. Not used now as each test set its own coordinator lvUSD balance.
     // await context.coordinator.acceptLeverageAmount(ownerStartingLvUSDAmount);
 
     return context;
