@@ -36,6 +36,8 @@ describe("Exchanger Test suit", function () {
         // Fund exchanger
         await lvUSD.setMintDestination(exchanger.address);
         await lvUSD.mint(amountStarting);
+
+        /// Need to increase
         await helperSwapETHWithOUSD(owner, amountStarting);
         await ousd.transfer(exchanger.address, amountStarting);
     });

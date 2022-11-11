@@ -120,9 +120,7 @@ async function setupEnvForIntegrationTests () {
     await helperSwapETHWithOUSD(pretendOUSDRebaseSigner, parseUnits("10.0"));
 
     // fund user with Archtokens
-    console.log("transfering arch to user from treasury");
     await r.archToken.connect(r.treasurySigner).transfer(user.address, parseUnits("1000.0"));
-    console.log("end transfering arch to user from treasury");
 
     /* ====== admin manual processes ======
     Expected state:
@@ -144,7 +142,6 @@ async function setupEnvForIntegrationTests () {
     await fundMetapool(lvUSD3CRVPoolInstance.address, [parseUnits(fundInPoolAddOnForTestString), parseUnits(fundInPoolAddOnForTestString)], owner, r);
 
     await setRolesForEndToEnd(r);
-    console.log("End of setup env for end to end tests");
 
     return r;
 }
@@ -290,16 +287,6 @@ describe("Test suit for opening/unwinding positions on imbalanced pools", functi
             higherNumberOfCycles,
         );
         const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
-        // .add(
-        //     parseUnits("0.001"),
-        // );
-
-        // console.log(
-        //     "\x1B[31mPrincipal  leverageUserIsTakingIn18Dec = %s, archCostOfLeverageIn18Dec = %s",
-        //     getFloatFromBigNum(leverageUserIsTakingIn18Dec),
-        //     getFloatFromBigNum(archCostOfLeverageIn18Dec),
-        // );
-        // console.log("\x1B[31mPrincipal %s Principal in 18Dec ", tempUserOUSDPrinciple, tempUserOUSDPrincipleIn18Decimal);
 
         await r.parameterStore.changeMinPositionCollateral(parseUnitsNum(20));
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
@@ -308,9 +295,6 @@ describe("Test suit for opening/unwinding positions on imbalanced pools", functi
 
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
-
-        // await printPositionState(r,0)
-        // await printPositionState(r,5)
 
         positionId = 0;
     });
@@ -331,8 +315,6 @@ describe("Test suit for opening/unwinding positions on imbalanced pools", functi
         }
         const lvUSDCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(0));
         const crvCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(1));
-        // console.log("\x1B[31m usedlvUSD %s, lvUSDCoinsInPool %s, initialFundsInPool %s", usedlvUSD, lvUSDCoinsInPool, initialFundsInPool);
-        // console.log("\x1B[31m spentOUSD %s, OUSDCoinsInPool %s, initialFundsInPool %s", spentOUSD, crvCoinsInPool, initialFundsInPool);
 
         expect(lvUSDCoinsInPool).to.closeTo(initialFundsInPool + usedlvUSD, 1);
         /// / This is not scientific but we can get away with 2% of transations funds getting used as fees
@@ -352,12 +334,6 @@ describe("Test suit for moving positions around", function () {
         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
         const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
         console.log("\x1B[31mPrincipal %s Principal in 18Dec, ", userOUSDPrinciple, userOUSDPrincipleIn18Decimal);
-
-        // console.log(
-        //     "\x1B[32mLeverageUser %s  archCostOfLeverage %s",
-        //     getFloatFromBigNum(leverageUserIsTakingIn18Dec),
-        //     getFloatFromBigNum(archCostOfLeverageIn18Dec),
-        // );
 
         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
