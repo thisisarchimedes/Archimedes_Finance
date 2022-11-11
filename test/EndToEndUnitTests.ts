@@ -30,7 +30,7 @@ let positionId: number;
 let adminInitial3CRVBalance: number;
 let ownerLvUSDBalanceBeforeFunding: number;
 
-async function approveAndGetLeverageAsUser (
+async function approveAndGetLeverageAsUser(
     _principleOUSD: BigNumber,
     _numberOfCycles: number,
     _archTokenAmount: BigNumber,
@@ -50,15 +50,15 @@ async function approveAndGetLeverageAsUser (
     // await approveAndGetLeverageAsUserPromise(_principleOUSD, _numberOfCycles, _archTokenAmount, _r, _user);
 }
 
-function parseUnitsNum (num): BigNumber {
+function parseUnitsNum(num): BigNumber {
     return parseUnits(num.toString());
 }
 
-function getFloatFromBigNum (bigNumValue) {
+function getFloatFromBigNum(bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
 }
 
-async function printPoolState (poolInstance) {
+async function printPoolState(poolInstance) {
     logger(
         "Pool has %s coin0/lvUSD and %s coin1/3CRV",
         getFloatFromBigNum(await poolInstance.balances(0)),
@@ -66,7 +66,7 @@ async function printPoolState (poolInstance) {
     );
 }
 
-async function printPositionState (_r, _positionId, overviewMessage = "Printing Position State") {
+async function printPositionState(_r, _positionId, overviewMessage = "Printing Position State") {
     logger(overviewMessage);
     const principle = getFloatFromBigNum(await _r.cdp.getOUSDPrinciple(_positionId));
     const ousdEarned = getFloatFromBigNum(await _r.cdp.getOUSDInterestEarned(_positionId));
@@ -84,14 +84,14 @@ async function printPositionState (_r, _positionId, overviewMessage = "Printing 
     );
 }
 
-async function printMiscInfo (_r, _user) {
+async function printMiscInfo(_r, _user) {
     const treasuryBalance = getFloatFromBigNum(await _r.externalOUSD.balanceOf(_r.treasurySigner.address));
     const userOUSDBalance = getFloatFromBigNum(await _r.externalOUSD.balanceOf(_user.address));
     const vaultOUSDBalance = getFloatFromBigNum(await _r.vault.totalAssets());
     logger("OUSD : Treasury balance is %s, Vault Balance is %s, User balance is %s", treasuryBalance, vaultOUSDBalance, userOUSDBalance);
 }
 
-async function setupEnvForIntegrationTests () {
+async function setupEnvForIntegrationTests() {
     // Setup & deploy contracts
     r = await buildContractTestContext();
     owner = r.owner;
@@ -276,8 +276,7 @@ const spec3 = 0;
 describe("Test suit for opening/unwinding positions on imbalanced pools", function () {
     const higherNumberOfCycles = 6;
     const tempUserOUSDPrinciple = 96;
-    const tempUserOUSDPrincipleIn18Decimal =
-        parseUnitsNum(tempUserOUSDPrinciple + Math.random()).add(BigNumber.from(1 * Math.round(Math.random())));
+    const tempUserOUSDPrincipleIn18Decimal = parseUnitsNum(tempUserOUSDPrinciple + Math.random()).add(BigNumber.from(1 * Math.round(Math.random())));
     let leverageUserIsTakingIn18Dec;
     let archCostOfLeverageIn18Dec;
 
@@ -296,18 +295,17 @@ describe("Test suit for opening/unwinding positions on imbalanced pools", functi
         //     parseUnits("0.001"),
         // );
 
-        console.log(
-            "\x1B[31mPrincipal  leverageUserIsTakingIn18Dec = %s, archCostOfLeverageIn18Dec = %s",
-            getFloatFromBigNum(leverageUserIsTakingIn18Dec),
-            getFloatFromBigNum(archCostOfLeverageIn18Dec),
-        );
-        console.log("\x1B[31mPrincipal %s Principal in 18Dec ", tempUserOUSDPrinciple, tempUserOUSDPrincipleIn18Decimal);
+        // console.log(
+        //     "\x1B[31mPrincipal  leverageUserIsTakingIn18Dec = %s, archCostOfLeverageIn18Dec = %s",
+        //     getFloatFromBigNum(leverageUserIsTakingIn18Dec),
+        //     getFloatFromBigNum(archCostOfLeverageIn18Dec),
+        // );
+        // console.log("\x1B[31mPrincipal %s Principal in 18Dec ", tempUserOUSDPrinciple, tempUserOUSDPrincipleIn18Decimal);
 
         await r.parameterStore.changeMinPositionCollateral(parseUnitsNum(20));
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
-        // await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
 
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
@@ -334,8 +332,8 @@ describe("Test suit for opening/unwinding positions on imbalanced pools", functi
         }
         const lvUSDCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(0));
         const crvCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(1));
-        console.log("\x1B[31m usedlvUSD %s, lvUSDCoinsInPool %s, initialFundsInPool %s", usedlvUSD, lvUSDCoinsInPool, initialFundsInPool);
-        console.log("\x1B[31m spentOUSD %s, OUSDCoinsInPool %s, initialFundsInPool %s", spentOUSD, crvCoinsInPool, initialFundsInPool);
+        // console.log("\x1B[31m usedlvUSD %s, lvUSDCoinsInPool %s, initialFundsInPool %s", usedlvUSD, lvUSDCoinsInPool, initialFundsInPool);
+        // console.log("\x1B[31m spentOUSD %s, OUSDCoinsInPool %s, initialFundsInPool %s", spentOUSD, crvCoinsInPool, initialFundsInPool);
 
         expect(lvUSDCoinsInPool).to.closeTo(initialFundsInPool + usedlvUSD, 1);
         /// / This is not scientific but we can get away with 2% of transations funds getting used as fees
@@ -616,8 +614,7 @@ describe("Test suit for getting leverage", function () {
             totalOUSDPositionIn18Dec,
             totallvUSDBorrowForPositionIn18Dec,
         );
-        contractEstimatedReturnedOUSDMinusInterestFromUnwinding =
-            getFloatFromBigNum(contractEstimatedReturnedOUSDMinusInterestFromUnwindingIn18Dec);
+        contractEstimatedReturnedOUSDMinusInterestFromUnwinding = getFloatFromBigNum(contractEstimatedReturnedOUSDMinusInterestFromUnwindingIn18Dec);
 
         await r.leverageEngine.connect(user).unwindLeveragedPosition(positionId);
 
@@ -678,7 +675,7 @@ describe("Test suite for security", function () {
         positionId = 0;
     });
 
-    async function verifyPositionCreationFails (
+    async function verifyPositionCreationFails(
         message,
         ousdPrinciple = userOUSDPrincipleIn18Decimal,
         cycles = numberOfCycles,

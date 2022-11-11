@@ -15,13 +15,15 @@ describe("LeverageEngine test suit", async function () {
     let positionTokenId: BigNumber;
     let userInitialOUSD;
 
-    async function prepForPositionCreation (lvUSDAmountToMint: BigNumber = ethers.utils.parseUnits("5000")) {
+    async function prepForPositionCreation(lvUSDAmountToMint: BigNumber = ethers.utils.parseUnits("5000")) {
         r = await buildContractTestContext();
         maxCycles = await r.parameterStore.getMaxNumberOfCycles();
         const totalOUSD = await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("5"));
         await r.externalOUSD.approve(r.leverageEngine.address, totalOUSD);
         await r.lvUSD.setMintDestination(r.coordinator.address);
         await r.lvUSD.mint(lvUSDAmountToMint);
+        await r.coordinator.acceptLeverageAmount(lvUSDAmountToMint);
+
         await r.parameterStore.changeMinPositionCollateral(principle);
         // give owner ArchToken from minted tokens
         await r.archToken.connect(r.treasurySigner).transfer(r.owner.address, archTokenToBurn);

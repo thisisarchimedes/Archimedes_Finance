@@ -6,11 +6,11 @@ import { formatUnits } from "ethers/lib/utils";
 import { logger } from "../logger";
 import { Contract } from "ethers";
 
-function getFloatFromBigNum (bigNumValue) {
+function getFloatFromBigNum(bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
 }
 
-async function setCoordinatorAsExcecutive (r) {
+async function setCoordinatorAsExcecutive(r) {
     await r.vault.setExecutive(r.coordinator.address);
     await r.exchanger.setExecutive(r.coordinator.address);
     await r.cdp.setExecutive(r.coordinator.address);
@@ -132,6 +132,8 @@ describe("Coordinator Test suit", function () {
                 // mint lvUSD to be borrowed, assign all minted lvUSD to coordinator as it will spend it
                 await r.lvUSD.setMintDestination(r.coordinator.address);
                 await r.lvUSD.mint(ethers.utils.parseUnits("100"));
+                await r.coordinator.acceptLeverageAmount(ethers.utils.parseUnits("100"));
+
                 // method under test
                 await coordinator.borrowUnderNFT(nftIdFirstPosition, lvUSDAmountToBorrow);
             });
@@ -148,7 +150,7 @@ describe("Coordinator Test suit", function () {
             });
             it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address", async function () {
                 await expect(coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseUnits("200"))).to.be.revertedWith(
-                    "ERC20: transfer amount exceeds balance",
+                    "insuf lev Value on Coor",
                 );
             });
 
@@ -289,6 +291,7 @@ describe("Coordinator Test suit", function () {
             await r.externalOUSD.connect(endUserSigner).transfer(r.coordinator.address, collateralAmount);
             await r.lvUSD.setMintDestination(r.coordinator.address);
             await r.lvUSD.mint(mintedLvUSDAmount);
+            await r.coordinator.acceptLeverageAmount(mintedLvUSDAmount);
             /// Complete create position cycle from coordinator perspective
             await r.externalOUSD.approve(r.coordinator.address, collateralAmount);
             await r.coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount);
