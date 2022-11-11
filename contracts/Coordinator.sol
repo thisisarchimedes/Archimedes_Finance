@@ -22,7 +22,6 @@ import "hardhat/console.sol";
 /// It is controlled (and called) by the leverage engine
 contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
-    // using SafeERC20Upgradeable for IERC20BurnableUpgradeable;
     address internal _addressLvUSD;
     address internal _addressVaultOUSD;
     address internal _addressCDP;
@@ -71,26 +70,27 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
 
     ///
 
-    function _coordinatorLvUSDTransfer(uint256 amount) internal {
+    function _coordinatorLvUSDTransferToExchanger(uint256 amount) internal {
         /// Add change to coordinator lev value (not related to OUSD)
         uint256 currentCoordinatorLvUSDBalance = getAvailableLeverage();
         uint256 currentBalanceOnLvUSDContract = _lvUSD.balanceOf(address(this));
         require(currentCoordinatorLvUSDBalance >= amount, "insuf levAv to trnsf");
         require(currentBalanceOnLvUSDContract >= amount, "insuf lvUSD balance to trnsf");
 
-        _paramStore.changeCoordinatorLvUSDBalance(currentCoordinatorLvUSDBalance - amount);
+        _paramStore.changeCoordinatorLeverageBalance(currentCoordinatorLvUSDBalance - amount);
         _lvUSD.safeTransfer(_addressExchanger, amount);
     }
 
-    function acceptLeverageAmount(uint256 lvUSDBalanceToSet) external onlyAdmin nonReentrant {
-        require(_lvUSD.balanceOf(address(this)) >= lvUSDBalanceToSet, "wrong lvUSD vs amount to set");
-        _paramStore.changeCoordinatorLvUSDBalance(lvUSDBalanceToSet);
+    function acceptLeverageAmount(uint256 levergaeAmountToAccept) external onlyAdmin nonReentrant {
+        uint256 currentlvUSDBalance = _lvUSD.balanceOf(address(this));
+        require(currentlvUSDBalance >= levergaeAmountToAccept, "lvUSD != levAmt");
+        _paramStore.changeCoordinatorLeverageBalance(levergaeAmountToAccept);
     }
 
     function resetAndBurnLeverage() external onlyAdmin nonReentrant {
         uint256 corrdinatorCurrentLvUSDBalance = _lvUSD.balanceOf(address(this));
         ERC20Burnable(_addressLvUSD).burn(corrdinatorCurrentLvUSDBalance);
-        _paramStore.changeCoordinatorLvUSDBalance(0);
+        _paramStore.changeCoordinatorLeverageBalance(0);
     }
 
     /* Privileged functions: Executive */
@@ -224,7 +224,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     }
 
     function _borrowUnderNFT(uint256 _nftId, uint256 _amount) internal {
-        _coordinatorLvUSDTransfer(_amount);
+        _coordinatorLvUSDTransferToExchanger(_amount);
         _cdp.borrowLvUSDFromPosition(_nftId, _amount);
     }
 

@@ -24,7 +24,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
     address internal _addressCoordinator;
     address internal _addressPoolLvUSD3CRV;
     address internal _addressPoolOUSD3CRV;
-    IERC20Upgradeable internal _lvusd;
+    IERC20Upgradeable internal _lvUSD;
     IERC20Upgradeable internal _ousd;
     IERC20Upgradeable internal _crv3;
     ICurveFiCurve internal _poolLvUSD3CRV;
@@ -71,7 +71,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
 
         // Load contracts
         _paramStore = ParameterStore(addressParameterStore);
-        _lvusd = IERC20Upgradeable(addressLvUSD);
+        _lvUSD = IERC20Upgradeable(addressLvUSD);
         _ousd = IERC20Upgradeable(addressOUSD);
         _crv3 = IERC20Upgradeable(address3CRV);
         _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
@@ -93,14 +93,14 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _index3CRV = 1;
     }
 
-    function _exhangerLvUSDTransfer(uint256 amount) internal {
-        /// Add change to coordinator lev value (not related to OUSD)
-        uint256 currentCoordinatorLvUSDBalance = _paramStore.getCoordinatorLeverageBalance();
-        // require(currentCoordinatorLvUSDBalance >= amount, "insuf lev Value on Coor");
-        // require(_lvUSD.balanceOf(address(this)) >= amount, "insuf lvUSD balance on Coor");
+    function _exhangerLvUSDTransferToCoordinator(uint256 amount) internal {
+        uint256 currentCoordinatorLeverageBalance = _paramStore.getCoordinatorLeverageBalance();
+        uint256 currentCoordinatorLvUSDBalance = _lvUSD.balanceOf(address(this));
+        require(currentCoordinatorLeverageBalance >= amount, "insuf levAv to trnsf to Coor");
+        require(currentCoordinatorLvUSDBalance >= amount, "insuf lvUSD to trnsf to Coor");
 
-        _paramStore.changeCoordinatorLvUSDBalance(currentCoordinatorLvUSDBalance + amount);
-        _lvusd.safeTransfer(_addressCoordinator, amount);
+        _paramStore.changeCoordinatorLeverageBalance(currentCoordinatorLvUSDBalance + amount);
+        _lvUSD.safeTransfer(_addressCoordinator, amount);
     }
 
     /**
@@ -199,8 +199,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _ousd.safeTransfer(_addressCoordinator, remainingOUSD);
 
         // send all swapped lvUSD to coordinator
-        _exhangerLvUSDTransfer(_returnedLvUSD);
-        // _lvusd.safeTransfer(_addressCoordinator, _returnedLvUSD);
+        _exhangerLvUSDTransferToCoordinator(_returnedLvUSD);
 
         return (_returnedLvUSD, remainingOUSD);
     }
@@ -230,7 +229,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         uint256 _guard3CRV = (amountLvUSD * _paramStore.getCurveGuardPercentage()) / 100;
 
         // Verify Exchanger has enough LvUSD to use
-        require(amountLvUSD <= _lvusd.balanceOf(address(this)), "Insufficient LvUSD in Exchanger.");
+        require(amountLvUSD <= _lvUSD.balanceOf(address(this)), "Insufficient LvUSD in Exchanger.");
 
         // Estimate expected amount of 3CRV
         // get_dy(indexCoinSend, indexCoinRec, amount)
@@ -250,13 +249,13 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         require(_minimum3CRV >= _guard3CRV, "LvUSD pool too imbalanced.");
 
         // Increase allowance
-        _lvusd.safeIncreaseAllowance(address(_poolLvUSD3CRV), amountLvUSD);
+        _lvUSD.safeIncreaseAllowance(address(_poolLvUSD3CRV), amountLvUSD);
 
         // Exchange LvUSD for 3CRV:
         _returned3CRV = _poolLvUSD3CRV.exchange(0, 1, amountLvUSD, _minimum3CRV);
 
         // Set approval to zero for safety
-        _lvusd.safeApprove(address(_poolLvUSD3CRV), 0);
+        _lvUSD.safeApprove(address(_poolLvUSD3CRV), 0);
 
         return _returned3CRV;
     }
@@ -413,23 +412,23 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
 
         uint256 _needed3CRV = _poolLvUSD3CRV.get_dy(0, 1, minRequiredLvUSD);
         uint256 _neededOUSD = _poolOUSD3CRV.get_dy(1, 0, _needed3CRV);
-        console.log("estimateOusdReturnedOnUnwind 1: _needed3CRV %s, _neededOUSD %s", _needed3CRV / 1 ether, _neededOUSD / 1 ether);
+        // console.log("estimateOusdReturnedOnUnwind 1: _needed3CRV %s, _neededOUSD %s", _needed3CRV / 1 ether, _neededOUSD / 1 ether);
 
         _neededOUSD = (_neededOUSD * 1005) / 1000; // This will fix lower balances slippages
         uint256 _obtained3CRV = _poolOUSD3CRV.get_dy(0, 1, _neededOUSD);
         uint256 _obtainedLvUSD = _poolLvUSD3CRV.get_dy(1, 0, _obtained3CRV);
-        console.log("estimateOusdReturnedOnUnwind 2: _obtained3CRV = %s , _obtainedLvUSD = %s", _obtained3CRV / 1 ether, _obtainedLvUSD / 1 ether);
+        // console.log("estimateOusdReturnedOnUnwind 2: _obtained3CRV = %s , _obtainedLvUSD = %s", _obtained3CRV / 1 ether, _obtainedLvUSD / 1 ether);
 
         if (_obtainedLvUSD < (minRequiredLvUSD)) {
             uint256 _difference = (minRequiredLvUSD) - _obtainedLvUSD + 10**18; // +1 just in case
             uint256 _crv3Difference = _poolOUSD3CRV.get_dy(0, 1, _difference);
             uint256 _lvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _crv3Difference);
-            console.log(
-                "estimateOusdReturnedOnUnwind 3: _difference: %s , _crv3Difference %s ,_lvUSDDifference %s",
-                _difference / 1 ether,
-                _crv3Difference / 1 ether,
-                _lvUSDDifference / 1 ether
-            );
+            // console.log(
+            //     "estimateOusdReturnedOnUnwind 3: _difference: %s , _crv3Difference %s ,_lvUSDDifference %s",
+            //     _difference / 1 ether,
+            //     _crv3Difference / 1 ether,
+            //     _lvUSDDifference / 1 ether
+            // );
 
             uint256 finalAmount = _obtainedLvUSD + _lvUSDDifference;
             _neededOUSD = _neededOUSD + _difference;
@@ -439,16 +438,16 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
                 _difference = (minRequiredLvUSD) - finalAmount + 10**18; // +1 just in case
                 _crv3Difference = _poolOUSD3CRV.get_dy(0, 1, _difference);
                 _lvUSDDifference = _poolLvUSD3CRV.get_dy(1, 0, _crv3Difference);
-                console.log(
-                    "estimateOusdReturnedOnUnwind 4: _difference: %s , _crv3Difference %s ,_lvUSDDifference %s",
-                    _difference / 1 ether,
-                    _crv3Difference / 1 ether,
-                    _lvUSDDifference / 1 ether
-                );
+                // console.log(
+                //     "estimateOusdReturnedOnUnwind 4: _difference: %s , _crv3Difference %s ,_lvUSDDifference %s",
+                //     _difference / 1 ether,
+                //     _crv3Difference / 1 ether,
+                //     _lvUSDDifference / 1 ether
+                // );
                 finalAmount = finalAmount + _lvUSDDifference;
                 _neededOUSD = _neededOUSD + _difference;
             }
-            console.log("_swapOUSDforLvUSD_inside if: _neededOUSD %s, finalAmount(ofLUSD) %s", _neededOUSD / 1 ether, finalAmount / 1 ether);
+            // console.log("_swapOUSDforLvUSD_inside if: _neededOUSD %s, finalAmount(ofLUSD) %s", _neededOUSD / 1 ether, finalAmount / 1 ether);
         }
         return amountOUSD - _neededOUSD;
     }

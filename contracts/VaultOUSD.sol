@@ -116,7 +116,7 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
                 revert("Err:ArchAssets > totalA");
             }
             // This is due to drifting in handling assets. reset drift
-            console.log("reseting drift in vault _assetsHandledByArchimedes %s, total assets %s", _assetsHandledByArchimedes, totalAssetsCurrent);
+            // console.log("reseting drift in vault _assetsHandledByArchimedes %s, total assets %s", _assetsHandledByArchimedes, totalAssetsCurrent);
             _assetsHandledByArchimedes = totalAssetsCurrent;
         }
 

@@ -70,10 +70,8 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
 
     /* Privileged functions */
 
-    // TODO: Add protection that only exchanger and coordinator can do this
-    function changeCoordinatorLvUSDBalance(uint256 newCoordinatorLvUSDBalance) external onlyInternalContracts {
-        // require(_lvUSD.balanceOf(address(this)) == lvUSDBalanceToSet, "wrong lvUSD vs amount to set");
-        _coordinatorLeverageBalance = newCoordinatorLvUSDBalance;
+    function changeCoordinatorLeverageBalance(uint256 newCoordinatorLeverageBalance) external onlyInternalContracts {
+        _coordinatorLeverageBalance = newCoordinatorLeverageBalance;
     }
 
     function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external onlyGovernor {

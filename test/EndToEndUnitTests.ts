@@ -37,17 +37,16 @@ async function approveAndGetLeverageAsUser (
     _r: ContractTestContext,
     _user: SignerWithAddress,
 ) {
-    logger(
-        "Will deposit %s OUSD principle that cost %s ArchToken for %s cycles",
-        getFloatFromBigNum(_principleOUSD),
-        getFloatFromBigNum(_archTokenAmount),
-        _numberOfCycles,
-    );
+    // logger(
+    //     "Will deposit %s OUSD principle that cost %s ArchToken for %s cycles",
+    //     getFloatFromBigNum(_principleOUSD),
+    //     getFloatFromBigNum(_archTokenAmount),
+    //     _numberOfCycles,
+    // );
     // these two approvals will happen on the UI side when a customer actually creates a position via UI
     await _r.archToken.connect(_user).approve(_r.leverageEngine.address, _archTokenAmount);
     await _r.externalOUSD.connect(_user).approve(_r.leverageEngine.address, _principleOUSD);
     await _r.leverageEngine.connect(_user).createLeveragedPosition(_principleOUSD, _numberOfCycles, _archTokenAmount);
-    // await approveAndGetLeverageAsUserPromise(_principleOUSD, _numberOfCycles, _archTokenAmount, _r, _user);
 }
 
 function parseUnitsNum (num): BigNumber {
@@ -431,9 +430,9 @@ describe("Test suit for getting leverage", function () {
         await setupEnvForIntegrationTests();
         userArchTokenAmountBeforePosition = getFloatFromBigNum(await r.archToken.balanceOf(user.address));
         coordinatorlvUSDBalanceBeforePosition = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
-        console.log("1: userOUSDPrincipleInEighteenDecimal =" + userOUSDPrincipleIn18Decimal + " userOUSDPrinciple =" + userOUSDPrinciple);
+        // console.log("1: userOUSDPrincipleInEighteenDecimal =" + userOUSDPrincipleIn18Decimal + " userOUSDPrinciple =" + userOUSDPrinciple);
         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
-        console.log("2: Creating positions with leverage = ", leverageUserIsTakingIn18Dec, formatUnits(leverageUserIsTakingIn18Dec));
+        // console.log("2: Creating positions with leverage = ", leverageUserIsTakingIn18Dec, formatUnits(leverageUserIsTakingIn18Dec));
         leverageUserIsTaking = getFloatFromBigNum(leverageUserIsTakingIn18Dec);
         /// adding buffer for arch
         archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
@@ -441,8 +440,7 @@ describe("Test suit for getting leverage", function () {
         archCostOfLeverage = getFloatFromBigNum(archCostOfLeverageIn18Dec);
         // logger("Will take %s leverage that cost %s ArchToken", leverageUserIsTaking, archCostOfLeverage);
         archApprovedForLeverageIn18Dec = archCostOfLeverageIn18Dec;
-        // .add(parseUnits("10"));
-        /// Notice that we approve more arch then needed
+        /// Notice that it might be needed approve a tiny bit more arch then needed. Currently its exact approval.
         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
         console.log("5");
 
@@ -482,14 +480,14 @@ describe("Test suit for getting leverage", function () {
         const positionTimeOpenedDay = positionTimeOpenedDate.getDate();
         const positionExpireTimeDay = positionExpireTimeDate.getDate();
 
-        console.log(
-            "\x1B[31mPosition Opened Time %s, TTL %s, ExpireTime %s, day is %s, today is %s",
-            positionTimeOpenedDate,
-            positionTimeToLiveDate,
-            positionExpireTimeDate,
-            positionTimeOpenedDay,
-            nowDate,
-        );
+        // console.log(
+        //     "\x1B[31mPosition Opened Time %s, TTL %s, ExpireTime %s, day is %s, today is %s",
+        //     positionTimeOpenedDate,
+        //     positionTimeToLiveDate,
+        //     positionExpireTimeDate,
+        //     positionTimeOpenedDay,
+        //     nowDate,
+        // );
 
         /// Date from blockchain depends on the block we start from (blocks from the past happen in the past).
         // Thats why we are checking for a specific date
@@ -503,12 +501,12 @@ describe("Test suit for getting leverage", function () {
         /// origination fee is 0.5% at the moment, lvUSDBorrowed is 185.566111705638819675 so 0.5% of it is roughly
         borrowedlvUSD = getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(positionId));
         expectedTreasuryFundsFromPosition = originationFee * borrowedlvUSD;
-        console.log(
-            "\x1B[31mSimplePositionCreation: treasury got %s from %s borrowed lvUSD at an origination fee of %s",
-            treasuryBalance,
-            borrowedlvUSD,
-            getFloatFromBigNum(await r.parameterStore.getOriginationFeeRate()),
-        );
+        // console.log(
+        //     "\x1B[31mSimplePositionCreation: treasury got %s from %s borrowed lvUSD at an origination fee of %s",
+        //     treasuryBalance,
+        //     borrowedlvUSD,
+        //     getFloatFromBigNum(await r.parameterStore.getOriginationFeeRate()),
+        // );
         expect(treasuryBalance).to.closeTo(expectedTreasuryFundsFromPosition, 0.1);
     });
 
@@ -517,24 +515,24 @@ describe("Test suit for getting leverage", function () {
         /// this should be equal to principle + leveraged OUSD - fees = 100 + 171 - 8.5 = 262.5
         const expectedLossDueToBorrowingFromPools = leverageUserIsTaking * 0.001;
         const expectedVaultOUSDBalance = leverageUserIsTaking + userOUSDPrinciple - expectedTreasuryFundsFromPosition;
-        console.log(
-            "\x1B[31mSimplePositionCreation: %s OUSD assets deposited in vault, expecting %s +- expectedLossDueToBorrowingFromPools (%s) ",
-            vaultOUSDBalance,
-            expectedVaultOUSDBalance,
-            expectedLossDueToBorrowingFromPools,
-        );
+        // console.log(
+        //     "\x1B[31mSimplePositionCreation: %s OUSD assets deposited in vault, expecting %s +- expectedLossDueToBorrowingFromPools (%s) ",
+        //     vaultOUSDBalance,
+        //     expectedVaultOUSDBalance,
+        //     expectedLossDueToBorrowingFromPools,
+        // );
         expect(vaultOUSDBalance).to.closeTo(expectedVaultOUSDBalance, expectedLossDueToBorrowingFromPools);
     });
 
     it("Should have used lvUSD from coordinator", async function () {
         const coordinatorCurrentlvUSD = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
-        console.log(
-            "\x1B[31mSimplePositionCreation: coordinator had %s lvUSD before creating position.",
-            coordinatorlvUSDBalanceBeforePosition,
-            "\x1B[31mAfter creating position and using some lvUSD, coordinator has",
-            coordinatorCurrentlvUSD,
-            "\x1B[31mlvUSD",
-        );
+        // console.log(
+        //     "\x1B[31mSimplePositionCreation: coordinator had %s lvUSD before creating position.",
+        //     coordinatorlvUSDBalanceBeforePosition,
+        //     "\x1B[31mAfter creating position and using some lvUSD, coordinator has",
+        //     coordinatorCurrentlvUSD,
+        //     "\x1B[31mlvUSD",
+        // );
         // Using close to due to some integer rounding issues at the very last bit
         expect(coordinatorCurrentlvUSD).to.closeTo(coordinatorlvUSDBalanceBeforePosition - borrowedlvUSD, 0.0000001);
     });
@@ -542,7 +540,7 @@ describe("Test suit for getting leverage", function () {
     it("Should have set principle and leverage into vault's address on OUSD ERC20", async function () {
         const vaultOusdBalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.vault.address));
         const vaultTotalAssets = getFloatFromBigNum(await r.vault.totalAssets());
-        console.log("\x1B[31mSimplePositionCreation: vault address has %s OUSD under its address ", vaultOusdBalance);
+        // console.log("\x1B[31mSimplePositionCreation: vault address has %s OUSD under its address ", vaultOusdBalance);
         expect(vaultOusdBalance).to.equal(vaultTotalAssets);
     });
 
@@ -559,8 +557,8 @@ describe("Test suit for getting leverage", function () {
         vaultAssetsBeforeRebase = getFloatFromBigNum(await r.vault.totalAssets());
 
         // Rebase
-        console.log("\x1B[31mSimplePositionCreation:------------REBASE EVENT-----------");
-        console.log("\x1B[31mSimplePositionCreation:REBASE EVENT of  rebaseValue %s", rebadeAmountIn18Dec);
+        // console.log("\x1B[31mSimplePositionCreation:------------REBASE EVENT-----------");
+        // console.log("\x1B[31mSimplePositionCreation:REBASE EVENT of  rebaseValue %s", rebadeAmountIn18Dec);
         await r.externalOUSD.connect(pretendOUSDRebaseSigner).transfer(r.vault.address, rebadeAmountIn18Dec);
         // collect fees from rebase
         // temporary change vault executive. In real life, vault calls rebase fee at each deposit/withdraw transaction
@@ -588,14 +586,14 @@ describe("Test suit for getting leverage", function () {
     it("Should update treasury with rebase fees", async function () {
         const treasuryBalanceAfterRebase = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.treasurySigner.address));
         rebaseRateFee = getFloatFromBigNum(await r.parameterStore.getRebaseFeeRate());
-        console.log("\x1B[31mSimplePositionCreation: treasury now has %s (increased due to rebaseRateFee)", treasuryBalanceAfterRebase);
+        // console.log("\x1B[31mSimplePositionCreation: treasury now has %s (increased due to rebaseRateFee)", treasuryBalanceAfterRebase);
         expect(treasuryBalanceAfterRebase).to.closeTo(treasuryOUSDBalanceBeforeRebase + rebaseAmount * rebaseRateFee, 0.001);
     });
 
     it("Should register rebase amount as interest earned on position", async function () {
         cdpInterestEarnedIn18Dec = await r.cdp.getOUSDInterestEarned(positionId);
         const cdpInterestEarned = getFloatFromBigNum(cdpInterestEarnedIn18Dec);
-        console.log("\x1B[31mSimplePositionCreation: cdp returned %s %s interest earned on position", cdpInterestEarned, cdpInterestEarnedIn18Dec);
+        // console.log("\x1B[31mSimplePositionCreation: cdp returned %s %s interest earned on position", cdpInterestEarned, cdpInterestEarnedIn18Dec);
         expect(cdpInterestEarned).to.closeTo(rebaseAmount - rebaseAmount * rebaseRateFee, 0.001);
     });
 
@@ -669,9 +667,6 @@ describe("Test suite for security", function () {
         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
         archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-
-        // await r.lvUSD.setMintDestination(r.coordinator.address);
-        // await r.lvUSD.mint(parseUnitsNum(initialCoordinatorLvUSDBalance))
         positionId = 0;
     });
 
@@ -702,10 +697,8 @@ describe("Test suite for security", function () {
     });
 
     it("should not allow leverage to be risen if lvUSD balance is not correct", async () => {
-        // await r.lvUSD.setMintDestination(r.coordinator.address);
-        // await r.lvUSD.mint(parseUnitsNum(initialCoordinatorLvUSDBalance));
         const promise = r.coordinator.acceptLeverageAmount(parseUnitsNum(initialCoordinatorLvUSDBalance));
-        await expect(promise).to.be.revertedWith("wrong lvUSD vs amount to set");
+        await expect(promise).to.be.revertedWith("lvUSD != levAmt");
 
         // To be extra sure, try to open position and see it fails
         await verifyPositionCreationFails("Not enough available lvUSD");
@@ -731,10 +724,6 @@ describe("Test suite for security", function () {
         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
         const nftExists = await r.positionToken.exists(1);
         expect(nftExists).to.equal(true);
-
-        // secondPoisitionLvUSDBorrowed = await r.cdp.getLvUSDBorrowed(1);
-        // // console.log(getFloatFromBigNum(await r.parameterStore.getCoordinatorLeverageBalance()));
-        // // console.log(getFloatFromBigNum(secondPoisitionLvUSDBorrow));
     });
 
     it("Should update leverage available when taking position", async () => {
