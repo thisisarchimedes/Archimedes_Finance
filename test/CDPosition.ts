@@ -10,7 +10,7 @@ describe("CDPosition test suit", async function () {
     const getFloatFromBigNumNoDecimal = (bigNumber) => {
         return parseFloat(ethers.utils.formatUnits(bigNumber, 0));
     };
-    async function validateCDP(nftID, principle, interestEarned, total, borrowed, shares) {
+    async function validateCDP (nftID, principle, interestEarned, total, borrowed, shares) {
         expect(await cdp.getOUSDPrinciple(nftID)).to.equal(principle);
         // We cant run this without actually having funds in the vault. Tested in integration tests
         // expect(await cdp.getOUSDInterestEarned(nftID)).to.equal(interestEarned);
