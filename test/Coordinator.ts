@@ -6,11 +6,11 @@ import { formatUnits } from "ethers/lib/utils";
 import { logger } from "../logger";
 import { Contract } from "ethers";
 
-function getFloatFromBigNum (bigNumValue) {
+function getFloatFromBigNum(bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
 }
 
-async function setCoordinatorAsExcecutive (r) {
+async function setCoordinatorAsExcecutive(r) {
     await r.vault.setExecutive(r.coordinator.address);
     await r.exchanger.setExecutive(r.coordinator.address);
     await r.cdp.setExecutive(r.coordinator.address);
@@ -150,7 +150,7 @@ describe("Coordinator Test suit", function () {
             });
             it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address", async function () {
                 await expect(coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseUnits("200"))).to.be.revertedWith(
-                    "insuf lev Value on Coor",
+                    "insuf levAv to trnsf",
                 );
             });
 
@@ -189,6 +189,7 @@ describe("Coordinator Test suit", function () {
                     // we need more lvusd for exchanger
                     await r.lvUSD.setMintDestination(coordinator.address);
                     await r.lvUSD.mint(ethers.utils.parseUnits("100"));
+                    await r.coordinator.acceptLeverageAmount(ethers.utils.parseUnits("100"));
                     await coordinator.getLeveragedOUSD(nftIdFirstPosition, leverageAmount);
                 });
                 it("Should have increase borrowed amount on CDP for NFT", async function () {
@@ -239,7 +240,7 @@ describe("Coordinator Test suit", function () {
 
                     it(`Should reduce assets in Vault by the entire OUSD amount of
                         position (principle, leveraged and interest)`, async function () {
-                        expect(await r.vault.totalAssets()).to.equal(vaultOUSDAmountBeforeUnwind.sub(positionExpectedOUSDTotalPlusInterest));
+                        expect(await r.vault.totalAssets()).to.be.closeTo(vaultOUSDAmountBeforeUnwind.sub(positionExpectedOUSDTotalPlusInterest), 1);
                     });
                     it("Should transfer principle plus interest to user", async function () {
                         const userExpectedOUSDBalance = parseFloat(

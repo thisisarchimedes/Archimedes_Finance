@@ -74,16 +74,15 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     function _coordinatorLvUSDTransfer(uint256 amount) internal {
         /// Add change to coordinator lev value (not related to OUSD)
         uint256 currentCoordinatorLvUSDBalance = getAvailableLeverage();
-        require(currentCoordinatorLvUSDBalance >= amount, "insuf lev Value on Coor");
-        require(_lvUSD.balanceOf(address(this)) >= amount, "insuf lvUSD balance on Coor");
+        uint256 currentBalanceOnLvUSDContract = _lvUSD.balanceOf(address(this));
+        require(currentCoordinatorLvUSDBalance >= amount, "insuf levAv to trnsf");
+        require(currentBalanceOnLvUSDContract >= amount, "insuf lvUSD balance to trnsf");
 
         _paramStore.changeCoordinatorLvUSDBalance(currentCoordinatorLvUSDBalance - amount);
         _lvUSD.safeTransfer(_addressExchanger, amount);
     }
 
     function acceptLeverageAmount(uint256 lvUSDBalanceToSet) external onlyAdmin nonReentrant {
-        // uint256 lvUSDBalanceOnContract = _lvUSD.balanceOf(address(this));
-        // console.log("Coor: lvUSDBalanceOnContract %s, lvUSDBalanceToSet %s", lvUSDBalanceOnContract, lvUSDBalanceToSet);
         require(_lvUSD.balanceOf(address(this)) >= lvUSDBalanceToSet, "wrong lvUSD vs amount to set");
         _paramStore.changeCoordinatorLvUSDBalance(lvUSDBalanceToSet);
     }
