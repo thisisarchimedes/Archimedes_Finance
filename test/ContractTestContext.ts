@@ -22,7 +22,6 @@ export type ContractTestContext = {
     addr3: SignerWithAddress;
     treasurySigner: SignerWithAddress;
     // Archimedes contracts
-    // TODO - how to make this type of parameterStore? Failing when I just set it :(
     parameterStore: Contract;
     cdp: Contract;
     coordinator: Contract;
@@ -109,7 +108,6 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
     await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
 
     // Post init contracts
-    // await Promise.all([
     await context.leverageEngine.setDependencies(
         context.coordinator.address,
         context.positionToken.address,

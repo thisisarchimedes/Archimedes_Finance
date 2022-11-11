@@ -596,13 +596,6 @@ describe("Test suit for getting leverage", function () {
         // 2ed to last bit is originationFee, last bit is accepted curve loss
         const expectedUserGainsFromUnwinding =
             contractEstimatedReturnedOUSDMinusInterestFromUnwinding + getFloatFromBigNum(cdpInterestEarnedIn18Dec) - 0.005 * userOUSDPrinciple;
-        // console.log(
-        //     "\x1B[31mSimplePositionCreation: expecting ousd delta of %s f
-        //      or user's address while got %s. Our contract method to estimate unwind OUSD windfall gave %s (minus interest)",
-        //     expectedUserGainsFromUnwinding,
-        //     userActualGainsFromUnwinding,
-        //     contractEstimatedReturnedOUSDMinusInterestFromUnwinding,
-        // );
         expect(userActualGainsFromUnwinding).to.closeTo(expectedUserGainsFromUnwinding, 1);
     });
 
