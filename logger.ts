@@ -1,10 +1,10 @@
-let loggingEnabled = true;
+let loggingEnabled = false;
 
-export function setLoggingEnabled (newValue: boolean) {
+export function setLoggingEnabled(newValue: boolean) {
     loggingEnabled = newValue;
 }
 
-export function logger (...args: any[]) {
+export function logger(...args: any[]) {
     if (loggingEnabled) {
         console.log(...args);
     }

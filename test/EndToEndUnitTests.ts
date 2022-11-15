@@ -30,7 +30,7 @@ let positionId: number;
 let adminInitial3CRVBalance: number;
 let ownerLvUSDBalanceBeforeFunding: number;
 
-async function approveAndGetLeverageAsUser (
+async function approveAndGetLeverageAsUser(
     _principleOUSD: BigNumber,
     _numberOfCycles: number,
     _archTokenAmount: BigNumber,
@@ -49,15 +49,15 @@ async function approveAndGetLeverageAsUser (
     await _r.leverageEngine.connect(_user).createLeveragedPosition(_principleOUSD, _numberOfCycles, _archTokenAmount);
 }
 
-function parseUnitsNum (num): BigNumber {
+function parseUnitsNum(num): BigNumber {
     return parseUnits(num.toString());
 }
 
-function getFloatFromBigNum (bigNumValue) {
+function getFloatFromBigNum(bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
 }
 
-async function printPoolState (poolInstance) {
+async function printPoolState(poolInstance) {
     logger(
         "Pool has %s coin0/lvUSD and %s coin1/3CRV",
         getFloatFromBigNum(await poolInstance.balances(0)),
@@ -65,32 +65,32 @@ async function printPoolState (poolInstance) {
     );
 }
 
-async function printPositionState (_r, _positionId, overviewMessage = "Printing Position State") {
+async function printPositionState(_r, _positionId, overviewMessage = "Printing Position State") {
     logger(overviewMessage);
     const principle = getFloatFromBigNum(await _r.cdp.getOUSDPrinciple(_positionId));
     const ousdEarned = getFloatFromBigNum(await _r.cdp.getOUSDInterestEarned(_positionId));
     const ousdTotal = getFloatFromBigNum(await _r.cdp.getOUSDTotalWithoutInterest(_positionId));
     const lvUSDBorrowed = getFloatFromBigNum(await _r.cdp.getLvUSDBorrowed(_positionId));
     const shares = getFloatFromBigNum(await _r.cdp.getShares(_positionId));
-    logger(
-        "Stats for NFT %s: principle %s, ousdEarned %s, ousdTotal %s, lvUSDBorrowed %s, shares %s",
-        _positionId,
-        principle,
-        ousdEarned,
-        ousdTotal,
-        lvUSDBorrowed,
-        shares,
-    );
+    // logger(
+    //     "Stats for NFT %s: principle %s, ousdEarned %s, ousdTotal %s, lvUSDBorrowed %s, shares %s",
+    //     _positionId,
+    //     principle,
+    //     ousdEarned,
+    //     ousdTotal,
+    //     lvUSDBorrowed,
+    //     shares,
+    // );
 }
 
-async function printMiscInfo (_r, _user) {
+async function printMiscInfo(_r, _user) {
     const treasuryBalance = getFloatFromBigNum(await _r.externalOUSD.balanceOf(_r.treasurySigner.address));
     const userOUSDBalance = getFloatFromBigNum(await _r.externalOUSD.balanceOf(_user.address));
     const vaultOUSDBalance = getFloatFromBigNum(await _r.vault.totalAssets());
-    logger("OUSD : Treasury balance is %s, Vault Balance is %s, User balance is %s", treasuryBalance, vaultOUSDBalance, userOUSDBalance);
+    // logger("OUSD : Treasury balance is %s, Vault Balance is %s, User balance is %s", treasuryBalance, vaultOUSDBalance, userOUSDBalance);
 }
 
-async function setupEnvForIntegrationTests () {
+async function setupEnvForIntegrationTests() {
     // Setup & deploy contracts
     r = await buildContractTestContext();
     owner = r.owner;
@@ -631,7 +631,7 @@ describe("Test suite for security", function () {
         positionId = 0;
     });
 
-    async function verifyPositionCreationFails (
+    async function verifyPositionCreationFails(
         message,
         ousdPrinciple = userOUSDPrincipleIn18Decimal,
         cycles = numberOfCycles,
