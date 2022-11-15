@@ -95,10 +95,11 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
 
     function _exhangerLvUSDTransferToCoordinator(uint256 amount) internal {
         /// Is it possible to exploit via transferring lvUSD to exchanger which then go back to coordinator?
-        uint256 currentCoordinatorLvUSDBalance = _lvUSD.balanceOf(address(this));
-        require(currentCoordinatorLvUSDBalance >= amount, "insuf lvUSD to trnsf to Coor");
+        uint256 currentExchangerLvUSDBalance = _lvUSD.balanceOf(address(this));
+        uint256 currentCoordinatorLeverageBalance = _paramStore.getCoordinatorLeverageBalance();
+        require(currentExchangerLvUSDBalance >= amount, "insuf lvUSD to trnsf to Exhanger");
 
-        _paramStore.changeCoordinatorLeverageBalance(currentCoordinatorLvUSDBalance + amount);
+        _paramStore.changeCoordinatorLeverageBalance(currentCoordinatorLeverageBalance + amount);
         _lvUSD.safeTransfer(_addressCoordinator, amount);
     }
 

@@ -69,19 +69,19 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     }
 
     function _coordinatorLvUSDTransferToExchanger(uint256 amount) internal {
-        uint256 currentCoordinatorLvUSDBalance = getAvailableLeverage();
+        uint256 currentCoordinatorLeverageBalance = getAvailableLeverage();
         uint256 currentBalanceOnLvUSDContract = _lvUSD.balanceOf(address(this));
-        require(currentCoordinatorLvUSDBalance >= amount, "insuf levAv to trnsf");
+        require(currentCoordinatorLeverageBalance >= amount, "insuf levAv to trnsf");
         require(currentBalanceOnLvUSDContract >= amount, "insuf lvUSD balance to trnsf");
 
-        _paramStore.changeCoordinatorLeverageBalance(currentCoordinatorLvUSDBalance - amount);
+        _paramStore.changeCoordinatorLeverageBalance(currentCoordinatorLeverageBalance - amount);
         _lvUSD.safeTransfer(_addressExchanger, amount);
     }
 
-    function acceptLeverageAmount(uint256 levergaeAmountToAccept) external onlyAdmin nonReentrant {
+    function acceptLeverageAmount(uint256 leverageAmountToAccept) external onlyAdmin nonReentrant {
         uint256 currentlvUSDBalance = _lvUSD.balanceOf(address(this));
-        require(currentlvUSDBalance >= levergaeAmountToAccept, "lvUSD != levAmt");
-        _paramStore.changeCoordinatorLeverageBalance(levergaeAmountToAccept);
+        require(currentlvUSDBalance >= leverageAmountToAccept, "lvUSD !< levAmt");
+        _paramStore.changeCoordinatorLeverageBalance(leverageAmountToAccept);
     }
 
     function resetAndBurnLeverage() external onlyAdmin nonReentrant {

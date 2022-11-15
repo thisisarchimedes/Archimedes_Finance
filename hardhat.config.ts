@@ -106,13 +106,13 @@ export default {
                 url: alchemyUrl,
                 allowUnlimitedContractSize: true,
                 blockNumber: 15104872,
-                gas: 3000000,
+                gas: 30000000,
             },
 
             localhost: {
                 url: "http://127.0.0.1:8545",
                 blockNumber: 15104872,
-                gas: 3000000,
+                gas: 30000000,
                 allowUnlimitedContractSize: true,
             },
         },

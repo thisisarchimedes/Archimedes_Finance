@@ -654,15 +654,15 @@ describe("Test suite for security", function () {
     });
 
     it("Should not allow any opening of position as no leverage is available", async () => {
-        await verifyPositionCreationFails("Not enough available lvUSD");
+        await verifyPositionCreationFails("Not enough available leverage");
     });
 
     it("should not allow leverage to be risen if lvUSD balance is not correct", async () => {
         const promise = r.coordinator.acceptLeverageAmount(parseUnitsNum(initialCoordinatorLvUSDBalance));
-        await expect(promise).to.be.revertedWith("lvUSD != levAmt");
+        await expect(promise).to.be.revertedWith("lvUSD !< levAmt");
 
         // To be extra sure, try to open position and see it fails
-        await verifyPositionCreationFails("Not enough available lvUSD");
+        await verifyPositionCreationFails("Not enough available leverage");
     });
 
     it("Should not allow to open position even if lvUSD balance of Coordinator is high (if leverage is not set)", async () => {
@@ -670,7 +670,7 @@ describe("Test suite for security", function () {
         await r.lvUSD.mint(parseUnitsNum(newCoordinatorLvUSDBalance));
 
         // To be extra sure, try to open position and see it fails
-        await verifyPositionCreationFails("Not enough available lvUSD");
+        await verifyPositionCreationFails("Not enough available leverage");
 
         // Make sure available leverage does not change
         const leverageAvailable = await r.coordinator.getAvailableLeverage();
@@ -709,7 +709,7 @@ describe("Test suite for security", function () {
 
     it("Should not allow to open more positions even if lvUSD balance of coordinator is high enough, once leverage accepted is used", async () => {
         await approveAndGetLeverageAsUser(parseUnitsNum(100), 7, parseUnitsNum(100), r, user);
-        await verifyPositionCreationFails("Not enough available lvUSD", parseUnitsNum(100), 7, parseUnitsNum(100));
+        await verifyPositionCreationFails("Not enough available leverage", parseUnitsNum(100), 7, parseUnitsNum(100));
     });
 });
 

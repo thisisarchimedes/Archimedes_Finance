@@ -60,7 +60,7 @@ describe("LeverageEngine test suit", async function () {
         });
         it("Should fail because not enough lvUSD available to use", async function () {
             const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
-            await expect(promise).to.be.revertedWith("Not enough available lvUSD");
+            await expect(promise).to.be.revertedWith("Not enough available leverage");
         });
         it("Should fail because not enough arch tokens burned", async function () {
             await r.lvUSD.mint(ethers.utils.parseUnits("5000"));

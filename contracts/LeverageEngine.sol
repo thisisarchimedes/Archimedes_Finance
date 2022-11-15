@@ -91,7 +91,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
 
         require(archNeededToBurn <= maxArchAmountBufferedDown, "Not enough Arch given for Pos");
         uint256 availableLev = _coordinator.getAvailableLeverage();
-        require(availableLev >= lvUSDAmount, "Not enough available lvUSD");
+        require(availableLev >= lvUSDAmount, "Not enough available leverage");
         _burnArchTokenForPosition(msg.sender, archNeededToBurn);
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
         _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
