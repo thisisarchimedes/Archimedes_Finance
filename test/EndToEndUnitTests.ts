@@ -37,12 +37,12 @@ async function approveAndGetLeverageAsUser (
     _r: ContractTestContext,
     _user: SignerWithAddress,
 ) {
-    logger(
-        "Will deposit %s OUSD principle that cost %s ArchToken for %s cycles",
-        getFloatFromBigNum(_principleOUSD),
-        getFloatFromBigNum(_archTokenAmount),
-        _numberOfCycles,
-    );
+    // logger(
+    //     "Will deposit %s OUSD principle that cost %s ArchToken for %s cycles",
+    //     getFloatFromBigNum(_principleOUSD),
+    //     getFloatFromBigNum(_archTokenAmount),
+    //     _numberOfCycles,
+    // );
     // these two approvals will happen on the UI side when a customer actually creates a position via UI
     await _r.archToken.connect(_user).approve(_r.leverageEngine.address, _archTokenAmount);
     await _r.externalOUSD.connect(_user).approve(_r.leverageEngine.address, _principleOUSD);
@@ -72,22 +72,22 @@ async function printPositionState (_r, _positionId, overviewMessage = "Printing 
     const ousdTotal = getFloatFromBigNum(await _r.cdp.getOUSDTotalWithoutInterest(_positionId));
     const lvUSDBorrowed = getFloatFromBigNum(await _r.cdp.getLvUSDBorrowed(_positionId));
     const shares = getFloatFromBigNum(await _r.cdp.getShares(_positionId));
-    logger(
-        "Stats for NFT %s: principle %s, ousdEarned %s, ousdTotal %s, lvUSDBorrowed %s, shares %s",
-        _positionId,
-        principle,
-        ousdEarned,
-        ousdTotal,
-        lvUSDBorrowed,
-        shares,
-    );
+    // logger(
+    //     "Stats for NFT %s: principle %s, ousdEarned %s, ousdTotal %s, lvUSDBorrowed %s, shares %s",
+    //     _positionId,
+    //     principle,
+    //     ousdEarned,
+    //     ousdTotal,
+    //     lvUSDBorrowed,
+    //     shares,
+    // );
 }
 
 async function printMiscInfo (_r, _user) {
     const treasuryBalance = getFloatFromBigNum(await _r.externalOUSD.balanceOf(_r.treasurySigner.address));
     const userOUSDBalance = getFloatFromBigNum(await _r.externalOUSD.balanceOf(_user.address));
     const vaultOUSDBalance = getFloatFromBigNum(await _r.vault.totalAssets());
-    logger("OUSD : Treasury balance is %s, Vault Balance is %s, User balance is %s", treasuryBalance, vaultOUSDBalance, userOUSDBalance);
+    // logger("OUSD : Treasury balance is %s, Vault Balance is %s, User balance is %s", treasuryBalance, vaultOUSDBalance, userOUSDBalance);
 }
 
 async function setupEnvForIntegrationTests () {
@@ -120,9 +120,7 @@ async function setupEnvForIntegrationTests () {
     await helperSwapETHWithOUSD(pretendOUSDRebaseSigner, parseUnits("10.0"));
 
     // fund user with Archtokens
-    console.log("transfering arch to user from treasury");
     await r.archToken.connect(r.treasurySigner).transfer(user.address, parseUnits("1000.0"));
-    console.log("end transfering arch to user from treasury");
 
     /* ====== admin manual processes ======
     Expected state:
@@ -132,7 +130,7 @@ async function setupEnvForIntegrationTests () {
     // mint some lvUSD and pass it to coordinator. That lvUSD will be used by coordinator as needed to take leverage
     await r.lvUSD.setMintDestination(r.coordinator.address);
     await r.lvUSD.mint(parseUnitsNum(initialCoordinatorLvUSDBalance));
-
+    await r.coordinator.acceptLeverageAmount(parseUnitsNum(initialCoordinatorLvUSDBalance));
     /* ====== Setup Pools ===========
     expected state:
     - lvUSD/3CRV pool is set up and is funded with 700 tokens each
@@ -144,7 +142,6 @@ async function setupEnvForIntegrationTests () {
     await fundMetapool(lvUSD3CRVPoolInstance.address, [parseUnits(fundInPoolAddOnForTestString), parseUnits(fundInPoolAddOnForTestString)], owner, r);
 
     await setRolesForEndToEnd(r);
-    console.log("End of setup env for end to end tests");
 
     return r;
 }
@@ -290,28 +287,14 @@ describe("Test suit for opening/unwinding positions on imbalanced pools", functi
             higherNumberOfCycles,
         );
         const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
-        // .add(
-        //     parseUnits("0.001"),
-        // );
-
-        console.log(
-            "\x1B[31mPrincipal  leverageUserIsTakingIn18Dec = %s, archCostOfLeverageIn18Dec = %s",
-            getFloatFromBigNum(leverageUserIsTakingIn18Dec),
-            getFloatFromBigNum(archCostOfLeverageIn18Dec),
-        );
-        console.log("\x1B[31mPrincipal %s Principal in 18Dec ", tempUserOUSDPrinciple, tempUserOUSDPrincipleIn18Decimal);
 
         await r.parameterStore.changeMinPositionCollateral(parseUnitsNum(20));
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
-        // await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
 
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
-
-        // await printPositionState(r,0)
-        // await printPositionState(r,5)
 
         positionId = 0;
     });
@@ -332,8 +315,6 @@ describe("Test suit for opening/unwinding positions on imbalanced pools", functi
         }
         const lvUSDCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(0));
         const crvCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(1));
-        console.log("\x1B[31m usedlvUSD %s, lvUSDCoinsInPool %s, initialFundsInPool %s", usedlvUSD, lvUSDCoinsInPool, initialFundsInPool);
-        console.log("\x1B[31m spentOUSD %s, OUSDCoinsInPool %s, initialFundsInPool %s", spentOUSD, crvCoinsInPool, initialFundsInPool);
 
         expect(lvUSDCoinsInPool).to.closeTo(initialFundsInPool + usedlvUSD, 1);
         /// / This is not scientific but we can get away with 2% of transations funds getting used as fees
@@ -352,13 +333,6 @@ describe("Test suit for moving positions around", function () {
 
         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
         const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
-        console.log("\x1B[31mPrincipal %s Principal in 18Dec, ", userOUSDPrinciple, userOUSDPrincipleIn18Decimal);
-
-        // console.log(
-        //     "\x1B[32mLeverageUser %s  archCostOfLeverage %s",
-        //     getFloatFromBigNum(leverageUserIsTakingIn18Dec),
-        //     getFloatFromBigNum(archCostOfLeverageIn18Dec),
-        // );
 
         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
@@ -415,7 +389,7 @@ describe("Test suit for moving positions around", function () {
     });
 });
 
-const spe1 = 0;
+const spe5 = 0;
 
 describe("Test suit for getting leverage", function () {
     let leverageUserIsTaking: number;
@@ -431,9 +405,9 @@ describe("Test suit for getting leverage", function () {
         await setupEnvForIntegrationTests();
         userArchTokenAmountBeforePosition = getFloatFromBigNum(await r.archToken.balanceOf(user.address));
         coordinatorlvUSDBalanceBeforePosition = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
-        console.log("1: userOUSDPrincipleInEighteenDecimal =" + userOUSDPrincipleIn18Decimal + " userOUSDPrinciple =" + userOUSDPrinciple);
+        // console.log("1: userOUSDPrincipleInEighteenDecimal =" + userOUSDPrincipleIn18Decimal + " userOUSDPrinciple =" + userOUSDPrinciple);
         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
-        console.log("2: Creating positions with leverage = ", leverageUserIsTakingIn18Dec, formatUnits(leverageUserIsTakingIn18Dec));
+        // console.log("2: Creating positions with leverage = ", leverageUserIsTakingIn18Dec, formatUnits(leverageUserIsTakingIn18Dec));
         leverageUserIsTaking = getFloatFromBigNum(leverageUserIsTakingIn18Dec);
         /// adding buffer for arch
         archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
@@ -441,8 +415,7 @@ describe("Test suit for getting leverage", function () {
         archCostOfLeverage = getFloatFromBigNum(archCostOfLeverageIn18Dec);
         // logger("Will take %s leverage that cost %s ArchToken", leverageUserIsTaking, archCostOfLeverage);
         archApprovedForLeverageIn18Dec = archCostOfLeverageIn18Dec;
-        // .add(parseUnits("10"));
-        /// Notice that we approve more arch then needed
+        /// Notice that it might be needed approve a tiny bit more arch then needed. Currently its exact approval.
         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
         console.log("5");
 
@@ -452,13 +425,6 @@ describe("Test suit for getting leverage", function () {
     it("Should not have used all the Arch token given for opening Position", async function () {
         // test arch token taken from user is only what is needed
         const archTokenBalanceAfterOpeningPosition = getFloatFromBigNum(await r.archToken.balanceOf(user.address));
-        // console.log(
-        //     "\x1B[31mPosition ArchTokenBefore %s ArchTokenAfter %s , neededArch is %s, archApproved is %s",
-        //     userArchTokenAmountBeforePosition,
-        //     archTokenBalanceAfterOpeningPosition,
-        //     archCostOfLeverage,
-        //     getFloatFromBigNum(archApprovedForLeverageIn18Dec),
-        // );
         expect(archTokenBalanceAfterOpeningPosition).to.closeTo(userArchTokenAmountBeforePosition - archCostOfLeverage, 0.0001);
     });
 
@@ -482,14 +448,14 @@ describe("Test suit for getting leverage", function () {
         const positionTimeOpenedDay = positionTimeOpenedDate.getDate();
         const positionExpireTimeDay = positionExpireTimeDate.getDate();
 
-        console.log(
-            "\x1B[31mPosition Opened Time %s, TTL %s, ExpireTime %s, day is %s, today is %s",
-            positionTimeOpenedDate,
-            positionTimeToLiveDate,
-            positionExpireTimeDate,
-            positionTimeOpenedDay,
-            nowDate,
-        );
+        // console.log(
+        //     "\x1B[31mPosition Opened Time %s, TTL %s, ExpireTime %s, day is %s, today is %s",
+        //     positionTimeOpenedDate,
+        //     positionTimeToLiveDate,
+        //     positionExpireTimeDate,
+        //     positionTimeOpenedDay,
+        //     nowDate,
+        // );
 
         /// Date from blockchain depends on the block we start from (blocks from the past happen in the past).
         // Thats why we are checking for a specific date
@@ -503,12 +469,12 @@ describe("Test suit for getting leverage", function () {
         /// origination fee is 0.5% at the moment, lvUSDBorrowed is 185.566111705638819675 so 0.5% of it is roughly
         borrowedlvUSD = getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(positionId));
         expectedTreasuryFundsFromPosition = originationFee * borrowedlvUSD;
-        console.log(
-            "\x1B[31mSimplePositionCreation: treasury got %s from %s borrowed lvUSD at an origination fee of %s",
-            treasuryBalance,
-            borrowedlvUSD,
-            getFloatFromBigNum(await r.parameterStore.getOriginationFeeRate()),
-        );
+        // console.log(
+        //     "\x1B[31mSimplePositionCreation: treasury got %s from %s borrowed lvUSD at an origination fee of %s",
+        //     treasuryBalance,
+        //     borrowedlvUSD,
+        //     getFloatFromBigNum(await r.parameterStore.getOriginationFeeRate()),
+        // );
         expect(treasuryBalance).to.closeTo(expectedTreasuryFundsFromPosition, 0.1);
     });
 
@@ -517,24 +483,24 @@ describe("Test suit for getting leverage", function () {
         /// this should be equal to principle + leveraged OUSD - fees = 100 + 171 - 8.5 = 262.5
         const expectedLossDueToBorrowingFromPools = leverageUserIsTaking * 0.001;
         const expectedVaultOUSDBalance = leverageUserIsTaking + userOUSDPrinciple - expectedTreasuryFundsFromPosition;
-        console.log(
-            "\x1B[31mSimplePositionCreation: %s OUSD assets deposited in vault, expecting %s +- expectedLossDueToBorrowingFromPools (%s) ",
-            vaultOUSDBalance,
-            expectedVaultOUSDBalance,
-            expectedLossDueToBorrowingFromPools,
-        );
+        // console.log(
+        //     "\x1B[31mSimplePositionCreation: %s OUSD assets deposited in vault, expecting %s +- expectedLossDueToBorrowingFromPools (%s) ",
+        //     vaultOUSDBalance,
+        //     expectedVaultOUSDBalance,
+        //     expectedLossDueToBorrowingFromPools,
+        // );
         expect(vaultOUSDBalance).to.closeTo(expectedVaultOUSDBalance, expectedLossDueToBorrowingFromPools);
     });
 
     it("Should have used lvUSD from coordinator", async function () {
         const coordinatorCurrentlvUSD = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
-        console.log(
-            "\x1B[31mSimplePositionCreation: coordinator had %s lvUSD before creating position.",
-            coordinatorlvUSDBalanceBeforePosition,
-            "\x1B[31mAfter creating position and using some lvUSD, coordinator has",
-            coordinatorCurrentlvUSD,
-            "\x1B[31mlvUSD",
-        );
+        // console.log(
+        //     "\x1B[31mSimplePositionCreation: coordinator had %s lvUSD before creating position.",
+        //     coordinatorlvUSDBalanceBeforePosition,
+        //     "\x1B[31mAfter creating position and using some lvUSD, coordinator has",
+        //     coordinatorCurrentlvUSD,
+        //     "\x1B[31mlvUSD",
+        // );
         // Using close to due to some integer rounding issues at the very last bit
         expect(coordinatorCurrentlvUSD).to.closeTo(coordinatorlvUSDBalanceBeforePosition - borrowedlvUSD, 0.0000001);
     });
@@ -542,7 +508,7 @@ describe("Test suit for getting leverage", function () {
     it("Should have set principle and leverage into vault's address on OUSD ERC20", async function () {
         const vaultOusdBalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.vault.address));
         const vaultTotalAssets = getFloatFromBigNum(await r.vault.totalAssets());
-        console.log("\x1B[31mSimplePositionCreation: vault address has %s OUSD under its address ", vaultOusdBalance);
+        // console.log("\x1B[31mSimplePositionCreation: vault address has %s OUSD under its address ", vaultOusdBalance);
         expect(vaultOusdBalance).to.equal(vaultTotalAssets);
     });
 
@@ -559,8 +525,8 @@ describe("Test suit for getting leverage", function () {
         vaultAssetsBeforeRebase = getFloatFromBigNum(await r.vault.totalAssets());
 
         // Rebase
-        console.log("\x1B[31mSimplePositionCreation:------------REBASE EVENT-----------");
-        console.log("\x1B[31mSimplePositionCreation:REBASE EVENT of  rebaseValue %s", rebadeAmountIn18Dec);
+        // console.log("\x1B[31mSimplePositionCreation:------------REBASE EVENT-----------");
+        // console.log("\x1B[31mSimplePositionCreation:REBASE EVENT of  rebaseValue %s", rebadeAmountIn18Dec);
         await r.externalOUSD.connect(pretendOUSDRebaseSigner).transfer(r.vault.address, rebadeAmountIn18Dec);
         // collect fees from rebase
         // temporary change vault executive. In real life, vault calls rebase fee at each deposit/withdraw transaction
@@ -588,14 +554,14 @@ describe("Test suit for getting leverage", function () {
     it("Should update treasury with rebase fees", async function () {
         const treasuryBalanceAfterRebase = getFloatFromBigNum(await r.externalOUSD.balanceOf(r.treasurySigner.address));
         rebaseRateFee = getFloatFromBigNum(await r.parameterStore.getRebaseFeeRate());
-        console.log("\x1B[31mSimplePositionCreation: treasury now has %s (increased due to rebaseRateFee)", treasuryBalanceAfterRebase);
+        // console.log("\x1B[31mSimplePositionCreation: treasury now has %s (increased due to rebaseRateFee)", treasuryBalanceAfterRebase);
         expect(treasuryBalanceAfterRebase).to.closeTo(treasuryOUSDBalanceBeforeRebase + rebaseAmount * rebaseRateFee, 0.001);
     });
 
     it("Should register rebase amount as interest earned on position", async function () {
         cdpInterestEarnedIn18Dec = await r.cdp.getOUSDInterestEarned(positionId);
         const cdpInterestEarned = getFloatFromBigNum(cdpInterestEarnedIn18Dec);
-        console.log("\x1B[31mSimplePositionCreation: cdp returned %s %s interest earned on position", cdpInterestEarned, cdpInterestEarnedIn18Dec);
+        // console.log("\x1B[31mSimplePositionCreation: cdp returned %s %s interest earned on position", cdpInterestEarned, cdpInterestEarnedIn18Dec);
         expect(cdpInterestEarned).to.closeTo(rebaseAmount - rebaseAmount * rebaseRateFee, 0.001);
     });
 
@@ -629,13 +595,6 @@ describe("Test suit for getting leverage", function () {
         // 2ed to last bit is originationFee, last bit is accepted curve loss
         const expectedUserGainsFromUnwinding =
             contractEstimatedReturnedOUSDMinusInterestFromUnwinding + getFloatFromBigNum(cdpInterestEarnedIn18Dec) - 0.005 * userOUSDPrinciple;
-        // console.log(
-        //     "\x1B[31mSimplePositionCreation: expecting ousd delta of %s f
-        //      or user's address while got %s. Our contract method to estimate unwind OUSD windfall gave %s (minus interest)",
-        //     expectedUserGainsFromUnwinding,
-        //     userActualGainsFromUnwinding,
-        //     contractEstimatedReturnedOUSDMinusInterestFromUnwinding,
-        // );
         expect(userActualGainsFromUnwinding).to.closeTo(expectedUserGainsFromUnwinding, 1);
     });
 
@@ -654,6 +613,103 @@ describe("Test suit for getting leverage", function () {
 
         /// should be able to close position as new owner
         await r.leverageEngine.connect(userOther).unwindLeveragedPosition(positionIdToTransfer);
+    });
+});
+
+const spe6 = 0;
+
+describe("Test suite for security", function () {
+    let archCostOfLeverageIn18Dec;
+    const newCoordinatorLvUSDBalance = 1000;
+    let secondPoisitionLvUSDBorrowed;
+
+    before(async function () {
+        await setupEnvForIntegrationTests();
+        const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
+        archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
+        await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+        positionId = 0;
+    });
+
+    async function verifyPositionCreationFails (
+        message,
+        ousdPrinciple = userOUSDPrincipleIn18Decimal,
+        cycles = numberOfCycles,
+        archToGive = archCostOfLeverageIn18Dec,
+    ) {
+        await r.archToken.connect(user).approve(r.leverageEngine.address, archToGive);
+        await r.externalOUSD.connect(user).approve(r.leverageEngine.address, ousdPrinciple);
+        const promise = r.leverageEngine.connect(user).createLeveragedPosition(ousdPrinciple, cycles, archToGive);
+        await expect(promise).to.be.revertedWith(message);
+    }
+
+    it("Should make sure coordinator has no leverage", async () => {
+        await r.coordinator.resetAndBurnLeverage();
+
+        const coordinatorLvUSDBalance = await r.lvUSD.balanceOf(r.coordinator.address);
+        expect(coordinatorLvUSDBalance).to.eq(0);
+
+        const coordinatorLeverageBalance = await r.parameterStore.getCoordinatorLeverageBalance();
+        expect(coordinatorLeverageBalance).to.eq(0);
+    });
+
+    it("Should not allow any opening of position as no leverage is available", async () => {
+        await verifyPositionCreationFails("Not enough available leverage");
+    });
+
+    it("should not allow leverage to be risen if lvUSD balance is not correct", async () => {
+        const promise = r.coordinator.acceptLeverageAmount(parseUnitsNum(initialCoordinatorLvUSDBalance));
+        await expect(promise).to.be.revertedWith("lvUSD !< levAmt");
+
+        // To be extra sure, try to open position and see it fails
+        await verifyPositionCreationFails("Not enough available leverage");
+    });
+
+    it("Should not allow to open position even if lvUSD balance of Coordinator is high (if leverage is not set)", async () => {
+        await r.lvUSD.setMintDestination(r.coordinator.address);
+        await r.lvUSD.mint(parseUnitsNum(newCoordinatorLvUSDBalance));
+
+        // To be extra sure, try to open position and see it fails
+        await verifyPositionCreationFails("Not enough available leverage");
+
+        // Make sure available leverage does not change
+        const leverageAvailable = await r.coordinator.getAvailableLeverage();
+        expect(leverageAvailable).to.equal(0);
+    });
+
+    it("Should create position when setting leverage + lvUSD balance", async () => {
+        const nftShouldNotExists = await r.positionToken.exists(1);
+        expect(nftShouldNotExists).to.equal(false);
+        await r.coordinator.acceptLeverageAmount(parseUnitsNum(newCoordinatorLvUSDBalance));
+
+        await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+        const nftExists = await r.positionToken.exists(1);
+        expect(nftExists).to.equal(true);
+    });
+
+    it("Should update leverage available when taking position", async () => {
+        secondPoisitionLvUSDBorrowed = getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(1));
+        const leverageAvailable = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
+        expect(newCoordinatorLvUSDBalance - secondPoisitionLvUSDBorrowed).to.closeTo(leverageAvailable, 0.0000001);
+    });
+
+    it("Should not increase available leverage if more lvUSD is minted to coordinator", async () => {
+        const beforeMintingLeverageAmount = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
+        await r.lvUSD.setMintDestination(r.coordinator.address);
+        await r.lvUSD.mint(parseUnitsNum(newCoordinatorLvUSDBalance));
+        /// Make sure correct balanceOf on lvUSD
+        expect(getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address))).to.closeTo(
+            newCoordinatorLvUSDBalance + beforeMintingLeverageAmount,
+            1,
+        );
+        /// make sure leverage available doesn't change
+        const leverageAvailable = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
+        expect(beforeMintingLeverageAmount).to.eq(leverageAvailable);
+    });
+
+    it("Should not allow to open more positions even if lvUSD balance of coordinator is high enough, once leverage accepted is used", async () => {
+        await approveAndGetLeverageAsUser(parseUnitsNum(100), 7, parseUnitsNum(100), r, user);
+        await verifyPositionCreationFails("Not enough available leverage", parseUnitsNum(100), 7, parseUnitsNum(100));
     });
 });
 

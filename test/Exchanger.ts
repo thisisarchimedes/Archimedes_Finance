@@ -36,40 +36,11 @@ describe("Exchanger Test suit", function () {
         // Fund exchanger
         await lvUSD.setMintDestination(exchanger.address);
         await lvUSD.mint(amountStarting);
+
+        /// Need to increase
         await helperSwapETHWithOUSD(owner, amountStarting);
         await ousd.transfer(exchanger.address, amountStarting);
     });
-
-    // TODO: need to refactor this method to be able to create a new pool that is imbalanced
-    // describe("Should not allow to exchange from very imbalanced pool", function () {
-    //     async function fundImbalancedPool() {
-    //         const lvUSDAmount = ethers.utils.parseUnits("2");
-    //         const crvAmount = ethers.utils.parseUnits("80000");
-    //         console.log("1--fundImbalancedPool");
-    //         await lvUSD.setMintDestination(exchanger.address);
-    //         console.log("2--fundImbalancedPool");
-    //         await lvUSD.mint(ethers.utils.parseUnits("1000"));
-    //         console.log("3--fundImbalancedPool");
-    //         await lvUSD.setMintDestination(owner.address);
-    //         console.log("4--fundImbalancedPool");
-    //         await lvUSD.mint(lvUSDAmount);
-    //         console.log("5--fundImbalancedPool");
-    //         await helperSwapETHWith3CRV(r.owner, ethers.utils.parseUnits("70.0"));
-    //         console.log("6--fundImbalancedPool");
-
-    //         await fundMetapool(r.curveLvUSDPool.address, [lvUSDAmount, crvAmount], owner, r);
-    //         console.log("7--fundImbalancedPool");
-    //     }
-    //     it("Should not exchange lvUSD to 3CRV if pool is very imbalanced", async function () {
-    //         console.log("0--Should not exchange lvUSD to 3CRV if pool is very imbalanced");
-    //         await fundImbalancedPool();
-    //         console.log("1--Should not exchange lvUSD to 3CRV if pool is very imbalanced");
-    //         const promise = exchanger.swapLvUSDforOUSD(ethers.utils.parseUnits("200"));
-    //         console.log("2--Should not exchange lvUSD to 3CRV if pool is very imbalanced");
-
-    //         await expect(promise).to.be.revertedWith("Expected return value too big");
-    //     });
-    // });
 
     describe("Exchanges", function () {
         it("Tests should init with some funds", async function () {

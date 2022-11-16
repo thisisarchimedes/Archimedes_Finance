@@ -71,7 +71,8 @@ export default {
     networks: {
         persistant: {
             url: "http://ec2-54-211-119-50.compute-1.amazonaws.com:8545",
-            accounts: ["0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+            accounts: [
+                "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
                 "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",
                 "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a",
                 "0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6",
@@ -92,7 +93,6 @@ export default {
                 "0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0", // OG 8
                 "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e",
             ],
-            gas: 30000000,
             allowUnlimitedContractSize: true,
         },
         goerli: {
@@ -104,12 +104,12 @@ export default {
             forking: {
                 url: alchemyUrl,
                 allowUnlimitedContractSize: false,
-                gas: 3000000,
+                blockNumber: 15104872,
             },
 
             localhost: {
                 url: "http://127.0.0.1:8545",
-                gas: 3000000,
+                blockNumber: 15104872,
                 allowUnlimitedContractSize: false,
             },
         },
@@ -128,8 +128,5 @@ export default {
             files: ["./test/**/*", "./contracts/**/*"],
             verbose: true,
         },
-    },
-    mocha: {
-        timeout: 100000000,
     },
 };

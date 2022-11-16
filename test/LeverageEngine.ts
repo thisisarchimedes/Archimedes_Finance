@@ -22,6 +22,8 @@ describe("LeverageEngine test suit", async function () {
         await r.externalOUSD.approve(r.leverageEngine.address, totalOUSD);
         await r.lvUSD.setMintDestination(r.coordinator.address);
         await r.lvUSD.mint(lvUSDAmountToMint);
+        await r.coordinator.acceptLeverageAmount(lvUSDAmountToMint);
+
         await r.parameterStore.changeMinPositionCollateral(principle);
         // give owner ArchToken from minted tokens
         await r.archToken.connect(r.treasurySigner).transfer(r.owner.address, archTokenToBurn);
@@ -58,7 +60,7 @@ describe("LeverageEngine test suit", async function () {
         });
         it("Should fail because not enough lvUSD available to use", async function () {
             const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
-            await expect(promise).to.be.revertedWith("Not enough available lvUSD");
+            await expect(promise).to.be.revertedWith("Not enough available leverage");
         });
         it("Should fail because not enough arch tokens burned", async function () {
             await r.lvUSD.mint(ethers.utils.parseUnits("5000"));

@@ -10,6 +10,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 contract ParameterStore is AccessController, UUPSUpgradeable {
     bytes32 public constant ARCH_GOVERNOR_ROLE = keccak256("ARCH_GOVERNOR_ROLE");
     address private _addressArchGovernor;
+    address internal _addressCoordinator;
+    address internal _addressExchanger;
 
     uint256 internal _maxNumberOfCycles; // regular natural number
     uint256 internal _originationFeeRate; // in ether percentage (see initialize for examples)
@@ -24,6 +26,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     uint256 internal _curveMaxExchangeGuard;
     uint256 internal _minPositionCollateral;
     uint256 internal _positionTimeToLiveInDays;
+    uint256 internal _coordinatorLeverageBalance;
 
     event ParameterChange(string indexed _name, uint256 _newValue, uint256 _oldValue);
     event TreasuryChange(address indexed _newValue, address indexed _oldValue);
@@ -48,7 +51,29 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
         _minPositionCollateral = 9 ether;
         _positionTimeToLiveInDays = 369;
+        _coordinatorLeverageBalance = 0;
+
         _treasuryAddress = address(0);
+        _addressCoordinator = address(0);
+        _addressExchanger = address(0);
+    }
+
+    function setDependencies(address addressCoordinator, address addressExchanger) external onlyAdmin {
+        _addressCoordinator = addressCoordinator;
+        _addressExchanger = addressExchanger;
+    }
+
+    modifier onlyInternalContracts() {
+        require(msg.sender == _addressCoordinator || msg.sender == _addressExchanger, "Caller is not internal contract");
+        _;
+    }
+
+    /* Privileged functions */
+
+    function changeCoordinatorLeverageBalance(uint256 newCoordinatorLeverageBalance) external onlyInternalContracts {
+        // No checks that I can think of. Seems convoluted to add a check for lvUSD balance as we "trust" internal contracts to check lvUSD
+        // balance when needed.
+        _coordinatorLeverageBalance = newCoordinatorLeverageBalance;
     }
 
     function changeCurveGuardPercentage(uint256 newCurveGuardPercentage) external onlyGovernor {
@@ -109,7 +134,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     function changeMinPositionCollateral(uint256 newMinPositionCollateral) external onlyGovernor {
-        require(newMinPositionCollateral < (1000000 ether) && newMinPositionCollateral > (1 ether), "New min colleateral out of range");
+        require(newMinPositionCollateral < (1000000 ether) && newMinPositionCollateral > (1 ether), "New min collateral out of range");
         emit ParameterChange("minPositionCollateral", newMinPositionCollateral, _minPositionCollateral);
         _minPositionCollateral = newMinPositionCollateral;
     }
@@ -118,6 +143,10 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         require(newPositionTimeToLiveInDays < 10000 && newPositionTimeToLiveInDays > 30, "newPositionTimeToLiveInDays OOR");
         emit ParameterChange("newPositionTimeToLiveInDays", newPositionTimeToLiveInDays, _positionTimeToLiveInDays);
         _positionTimeToLiveInDays = newPositionTimeToLiveInDays;
+    }
+
+    function getCoordinatorLeverageBalance() external view returns (uint256) {
+        return _coordinatorLeverageBalance;
     }
 
     function getMaxNumberOfCycles() external view returns (uint256) {
@@ -187,19 +216,12 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         uint256 numberOfCycles,
         uint256 archAmount
     ) external view returns (uint256) {
-        /// Use 100 wei less OUSD then given - TO REMOVE
         uint256 allowedLeverageNoArchLimit = getAllowedLeverageForPosition(principle, numberOfCycles);
         uint256 allowedLeverageWithGivenArch = calculateLeverageAllowedForArch(archAmount);
-        // console.log(
-        //     "getAllowedLeverageForPositionWithArch - values ( removing 4 first digiets) allowedLeverageNoArchLimit %s, allowedLeverageWithGivenArch %s",
-        //     allowedLeverageNoArchLimit / 10000,
-        //     allowedLeverageWithGivenArch / 10000
-        // );
         if (allowedLeverageWithGivenArch / 10000 >= allowedLeverageNoArchLimit / 10000) {
             // In this case, user approved more(or exactly) arch tokens needed for leverage
             return allowedLeverageNoArchLimit;
         } else {
-            console.log("getAllowedLeverageForPositionWithArch - User did not burn enough Arch");
             /// TODO : Should this return a revert? Most likely but other changes are needed as well. This can be misleading
             revert("Not enough Arch for Pos");
         }

@@ -59,11 +59,6 @@ describe("Arch Token test suit", function () {
                 );
             });
 
-            it("Should be able to transfer() tokens between accounts", async function () {
-                await r.archToken.transfer(r.addr1.address, amount1);
-                expect(await r.archToken.balanceOf(r.addr1.address)).to.eq(amount1);
-            });
-
             it("transfer() should fail if sender doesn't have enough tokens", async function () {
                 // transfer addr2 1 eth
                 await r.archToken.transfer(r.addr2.address, amount1);

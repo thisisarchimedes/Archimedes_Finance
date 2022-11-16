@@ -18,9 +18,9 @@ describe("CDPosition test suit", async function () {
         expect(await cdp.getLvUSDBorrowed(nftID)).to.equal(borrowed);
         expect(await cdp.getShares(nftID)).to.equal(shares);
 
-        expect(getFloatFromBigNumNoDecimal(await cdp.getPositionTimeOpened(nftID))).to.closeTo(1657322079, 3);
+        expect(getFloatFromBigNumNoDecimal(await cdp.getPositionTimeOpened(nftID))).to.closeTo(1657322079, 10);
         expect(await cdp.getPositionTimeToLive(nftID)).to.equal(ethers.utils.parseUnits("369", 0));
-        expect(getFloatFromBigNumNoDecimal(await cdp.getPositionExpireTime(nftID))).to.closeTo(1689203679, 3);
+        expect(getFloatFromBigNumNoDecimal(await cdp.getPositionExpireTime(nftID))).to.closeTo(1689203679, 10);
 
         // console.log(
         //     "time opened, time to live, expires at",
