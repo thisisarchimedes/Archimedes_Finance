@@ -132,6 +132,8 @@ describe("Coordinator Test suit", function () {
                 // mint lvUSD to be borrowed, assign all minted lvUSD to coordinator as it will spend it
                 await r.lvUSD.setMintDestination(r.coordinator.address);
                 await r.lvUSD.mint(ethers.utils.parseUnits("100"));
+                await r.coordinator.acceptLeverageAmount(ethers.utils.parseUnits("100"));
+
                 // method under test
                 await coordinator.borrowUnderNFT(nftIdFirstPosition, lvUSDAmountToBorrow);
             });
@@ -148,7 +150,7 @@ describe("Coordinator Test suit", function () {
             });
             it("Should fail to borrow if trying to borrow more lvUSD token then are under coordinator address", async function () {
                 await expect(coordinator.borrowUnderNFT(nftIdFirstPosition, ethers.utils.parseUnits("200"))).to.be.revertedWith(
-                    "ERC20: transfer amount exceeds balance",
+                    "insuf levAv to trnsf",
                 );
             });
 
@@ -187,6 +189,7 @@ describe("Coordinator Test suit", function () {
                     // we need more lvusd for exchanger
                     await r.lvUSD.setMintDestination(coordinator.address);
                     await r.lvUSD.mint(ethers.utils.parseUnits("100"));
+                    await r.coordinator.acceptLeverageAmount(ethers.utils.parseUnits("100"));
                     await coordinator.getLeveragedOUSD(nftIdFirstPosition, leverageAmount);
                 });
                 it("Should have increase borrowed amount on CDP for NFT", async function () {
@@ -237,7 +240,7 @@ describe("Coordinator Test suit", function () {
 
                     it(`Should reduce assets in Vault by the entire OUSD amount of
                         position (principle, leveraged and interest)`, async function () {
-                        expect(await r.vault.totalAssets()).to.equal(vaultOUSDAmountBeforeUnwind.sub(positionExpectedOUSDTotalPlusInterest));
+                        expect(await r.vault.totalAssets()).to.be.closeTo(vaultOUSDAmountBeforeUnwind.sub(positionExpectedOUSDTotalPlusInterest), 1);
                     });
                     it("Should transfer principle plus interest to user", async function () {
                         const userExpectedOUSDBalance = parseFloat(
@@ -289,6 +292,7 @@ describe("Coordinator Test suit", function () {
             await r.externalOUSD.connect(endUserSigner).transfer(r.coordinator.address, collateralAmount);
             await r.lvUSD.setMintDestination(r.coordinator.address);
             await r.lvUSD.mint(mintedLvUSDAmount);
+            await r.coordinator.acceptLeverageAmount(mintedLvUSDAmount);
             /// Complete create position cycle from coordinator perspective
             await r.externalOUSD.approve(r.coordinator.address, collateralAmount);
             await r.coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount);

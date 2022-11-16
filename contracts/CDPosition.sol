@@ -127,12 +127,6 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
         uint256 sharesOfOwner = _nftCDP[nftID].shares;
         uint256 totalFundsFromPreviewRedeem = _vault.previewRedeem(sharesOfOwner);
         uint256 outTotal = _nftCDP[nftID].oUSDTotalWithoutInterest;
-        // console.log(
-        //     "_nftCDP[nftID].oUSDTotalWithoutInterest < totalFundsFromPreviewRedeem %s < %s, shares =%s",
-        //     outTotal,
-        //     totalFundsFromPreviewRedeem,
-        //     sharesOfOwner
-        // );
         if (_nftCDP[nftID].oUSDTotalWithoutInterest > totalFundsFromPreviewRedeem) {
             // revert("InterestEarned calc error");
             return 0;
@@ -142,12 +136,6 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
 
     function getOUSDTotalIncludeInterest(uint256 nftID) public view nftIDMustExist(nftID) returns (uint256) {
         return _nftCDP[nftID].oUSDTotalWithoutInterest + getOUSDInterestEarned(nftID);
-    }
-
-    // Older method for getting OUSD total without interest
-    /// TODO: Deprecate!
-    function getOUSDTotal(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {
-        return _nftCDP[nftID].oUSDTotalWithoutInterest;
     }
 
     function getOUSDTotalWithoutInterest(uint256 nftID) external view nftIDMustExist(nftID) returns (uint256) {

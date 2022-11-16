@@ -1,9 +1,12 @@
 import { Contract } from "ethers";
 import hre, { ethers } from "hardhat";
 import {
-    addressOUSD, abiOUSDToken,
-    addressUSDT, abiUSDTToken,
-    address3CRV, abi3CRVToken,
+    addressOUSD,
+    abiOUSDToken,
+    addressUSDT,
+    abiUSDTToken,
+    address3CRV,
+    abi3CRVToken,
     addressCurveOUSDPool,
     helperSwapETHWith3CRV,
     helperResetNetwork,
@@ -12,14 +15,13 @@ import {
 import { createAndFundMetapool } from "./CurveHelper";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-export type ContractTestContext ={
+export type ContractTestContext = {
     owner: SignerWithAddress;
     addr1: SignerWithAddress;
     addr2: SignerWithAddress;
     addr3: SignerWithAddress;
     treasurySigner: SignerWithAddress;
     // Archimedes contracts
-    // TODO - how to make this type of parameterStore? Failing when I just set it :(
     parameterStore: Contract;
     cdp: Contract;
     coordinator: Contract;
@@ -35,9 +37,9 @@ export type ContractTestContext ={
     externalUSDT: Contract;
     external3CRV: Contract;
     curveLvUSDPool: Contract;
-}
+};
 
-export async function setRolesForEndToEnd (r:ContractTestContext) {
+export async function setRolesForEndToEnd (r: ContractTestContext) {
     await r.coordinator.setExecutive(r.leverageEngine.address);
     await r.positionToken.setExecutive(r.leverageEngine.address);
 
@@ -106,7 +108,6 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
     await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
 
     // Post init contracts
-    // await Promise.all([
     await context.leverageEngine.setDependencies(
         context.coordinator.address,
         context.positionToken.address,
@@ -144,14 +145,15 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
         context.coordinator.address,
         context.lvUSD.address,
         context.external3CRV.address,
-        context.curveLvUSDPool.address);
-
-    await context.cdp.setDependencies(
-        context.vault.address,
-        context.parameterStore.address,
+        context.curveLvUSDPool.address,
     );
 
-    // ]);
+    await context.parameterStore.setDependencies(context.coordinator.address, context.exchanger.address);
+
+    await context.cdp.setDependencies(context.vault.address, context.parameterStore.address);
+
+    // After all is set and done, accept Lev amount on Coordinator. Not used now as each test set its own coordinator lvUSD balance.
+    // await context.coordinator.acceptLeverageAmount(ownerStartingLvUSDAmount);
 
     return context;
 }
