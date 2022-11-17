@@ -63,6 +63,14 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         address addressPoolLvUSD3CRV,
         address addressPoolOUSD3CRV
     ) external nonReentrant onlyAdmin {
+        require(addressParameterStore != address(0), "cant set to 0 A");
+        require(addressCoordinator != address(0), "cant set to 0 A");
+        require(addressLvUSD != address(0), "cant set to 0 A");
+        require(addressOUSD != address(0), "cant set to 0 A");
+        require(address3CRV != address(0), "cant set to 0 A");
+        require(addressPoolLvUSD3CRV != address(0), "cant set to 0 A");
+        require(addressPoolOUSD3CRV != address(0), "cant set to 0 A");
+
         // Set variables
         _addressParameterStore = addressParameterStore;
         _addressCoordinator = addressCoordinator;
@@ -76,6 +84,11 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _crv3 = IERC20Upgradeable(address3CRV);
         _poolLvUSD3CRV = ICurveFiCurve(addressPoolLvUSD3CRV);
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
     function initialize() public initializer {
