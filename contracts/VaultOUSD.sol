@@ -29,6 +29,9 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
     }
 
     function setDependencies(address _addressParamStore, address _addressOUSD) external onlyAdmin {
+        require(_addressParamStore != address(0), "cant set to 0 A");
+        require(_addressOUSD != address(0), "cant set to 0 A");
+
         _paramStore = ParameterStore(_addressParamStore);
         _ousd = IOUSD(_addressOUSD);
         _optInForRebases();
@@ -74,6 +77,11 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
 
     function _optInForRebases() internal {
         _ousd.rebaseOptIn();
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
     function initialize(

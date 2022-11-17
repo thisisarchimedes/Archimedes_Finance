@@ -47,6 +47,11 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         address addressArchToken,
         address addressOUSD
     ) external nonReentrant onlyAdmin {
+        require(addressCoordinator != address(0), "cant set to 0 A");
+        require(addressPositionToken != address(0), "cant set to 0 A");
+        require(addressParameterStore != address(0), "cant set to 0 A");
+        require(addressArchToken != address(0), "cant set to 0 A");
+        require(addressOUSD != address(0), "cant set to 0 A");
         _addressCoordinator = addressCoordinator;
         _coordinator = ICoordinator(addressCoordinator);
         _addressPositionToken = addressPositionToken;
@@ -81,20 +86,29 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         if (ousdPrinciple < _parameterStore.getMinPositionCollateral()) {
             revert("Collateral lower then min");
         }
-        uint256 maxArchAmountBufferedDown = maxArchAmount;
-        uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPositionWithArch(ousdPrinciple, cycles, maxArchAmountBufferedDown);
+        // this is how much lvUSD we can get with the given (max) arch
+        uint256 lvUSDAmount = _parameterStore.getAllowedLeverageForPositionWithArch(ousdPrinciple, cycles, maxArchAmount);
+        /// this is how much lvUSD we can get if we had "more then enough" Arch token to open a big position
         uint256 lvUSDAmountNeedForArguments = _parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
 
         /// check that user gave enough arch allowance for cycle-principle combo
         require(lvUSDAmountNeedForArguments - 1 <= lvUSDAmount, "cant get enough lvUSD");
         uint256 archNeededToBurn = (_parameterStore.calculateArchNeededForLeverage(lvUSDAmount) / 10000) * 10000; // minus 1000 wei
 
-        require(archNeededToBurn <= maxArchAmountBufferedDown, "Not enough Arch given for Pos");
+        require(archNeededToBurn <= maxArchAmount, "Not enough Arch given for Pos");
         uint256 availableLev = _coordinator.getAvailableLeverage();
         require(availableLev >= lvUSDAmount, "Not enough available leverage");
         _burnArchTokenForPosition(msg.sender, archNeededToBurn);
         uint256 positionTokenId = _positionToken.safeMint(msg.sender);
-        _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
+
+        // Checking allowance due to a potential bug in OUSD contract that can under some conditions, transfer much more then allowance.
+        // This bug is fixed in later versions of solidity but adding the check here as a precaution
+        if (_ousd.allowance(msg.sender, address(this)) >= ousdPrinciple) {
+            _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
+        } else {
+            revert("insuff OUSD allowance");
+        }
+
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple);
         _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
         uint256 psoitionExpireTime = _coordinator.getPositionExpireTime(positionTokenId);
@@ -116,6 +130,11 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         _positionToken.burn(positionTokenId);
         uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
         emit PositionUnwind(msg.sender, positionTokenId, positionWindfall);
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
     function initialize() public initializer {

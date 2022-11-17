@@ -45,6 +45,14 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         address addressParamStore,
         address addressPoolManager
     ) external nonReentrant onlyAdmin {
+        require(addressLvUSD != address(0), "cant set to 0 A");
+        require(addressVaultOUSD != address(0), "cant set to 0 A");
+        require(addressCDP != address(0), "cant set to 0 A");
+        require(addressOUSD != address(0), "cant set to 0 A");
+        require(addressExchanger != address(0), "cant set to 0 A");
+        require(addressParamStore != address(0), "cant set to 0 A");
+        require(addressPoolManager != address(0), "cant set to 0 A");
+
         _addressLvUSD = addressLvUSD;
         _addressVaultOUSD = addressVaultOUSD;
         _addressCDP = addressCDP;
@@ -163,7 +171,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
 
         uint256 numberOfSharesInPosition = _cdp.getShares(_nftId);
         uint256 borrowedLvUSD = _cdp.getLvUSDBorrowed(_nftId);
-        require(numberOfSharesInPosition > 0, "Position has no shares");
+        require(numberOfSharesInPosition != 0, "Position has no shares");
 
         uint256 redeemedOUSD = _vault.archimedesRedeem(numberOfSharesInPosition, _addressExchanger, address(this));
 
@@ -197,6 +205,11 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
 
     function addressOfVaultOUSDToken() external view override returns (address) {
         return _addressVaultOUSD;
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
     function initialize() public initializer {

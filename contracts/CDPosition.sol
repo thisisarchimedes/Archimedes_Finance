@@ -37,7 +37,7 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
     // Maps return default value when entry is not present. OUSD principle will always be gt 0 if _nftCDP has
     // a valid value in nftID
     modifier nftIDMustExist(uint256 nftID) {
-        require(_nftCDP[nftID].oUSDPrinciple > 0, "NFT ID must exist");
+        require(_nftCDP[nftID].oUSDPrinciple != 0, "NFT ID must exist");
         _;
     }
     modifier nftIDMustNotExist(uint256 nftID) {
@@ -162,6 +162,11 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
         return _nftCDP[nftID].positionExpiration;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize() public initializer {
         __AccessControl_init();
         __ReentrancyGuard_init();
@@ -174,6 +179,8 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
     }
 
     function setDependencies(address addressVaultOUSD, address addressParameterStore) external nonReentrant onlyAdmin {
+        require(addressVaultOUSD != address(0), "cant set to 0 A");
+        require(addressParameterStore != address(0), "cant set to 0 A");
         _addressVaultOUSD = addressVaultOUSD;
         _addressParameterStore = addressParameterStore;
         _vault = VaultOUSD(_addressVaultOUSD);

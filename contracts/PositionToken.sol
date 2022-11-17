@@ -44,6 +44,11 @@ contract PositionToken is
         return _exists(positionTokenId);
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize() public initializer {
         __AccessControl_init();
         __ReentrancyGuard_init();

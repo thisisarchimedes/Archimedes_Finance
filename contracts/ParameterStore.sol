@@ -31,6 +31,11 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     event ParameterChange(string indexed _name, uint256 _newValue, uint256 _oldValue);
     event TreasuryChange(address indexed _newValue, address indexed _oldValue);
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize() public initializer {
         __AccessControl_init();
         __UUPSUpgradeable_init();
@@ -59,6 +64,9 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     function setDependencies(address addressCoordinator, address addressExchanger) external onlyAdmin {
+        require(addressCoordinator != address(0), "cant set to 0 A");
+        require(addressExchanger != address(0), "cant set to 0 A");
+
         _addressCoordinator = addressCoordinator;
         _addressExchanger = addressExchanger;
     }
@@ -85,7 +93,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
 
     function changeSlippage(uint256 newSlippage) external onlyGovernor {
         // slippage must be a number between 0 and 5
-        require(newSlippage > 0 && newSlippage < 5, "New slippage out of range");
+        require(newSlippage != 0 && newSlippage < 5, "New slippage out of range");
         emit ParameterChange("slippage", newSlippage, _slippage);
         _slippage = newSlippage;
     }
@@ -103,13 +111,13 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     function changeGlobalCollateralRate(uint256 newGlobalCollateralRate) external onlyGovernor {
-        require(newGlobalCollateralRate <= 100 && newGlobalCollateralRate > 0, "New collateral rate out of range");
+        require(newGlobalCollateralRate <= 100 && newGlobalCollateralRate != 0, "New collateral rate out of range");
         emit ParameterChange("globalCollateralRate", newGlobalCollateralRate, _globalCollateralRate);
         _globalCollateralRate = newGlobalCollateralRate;
     }
 
     function changeMaxNumberOfCycles(uint256 newMaxNumberOfCycles) external onlyGovernor {
-        require(newMaxNumberOfCycles < 20 && newMaxNumberOfCycles > 0, "New max n of cycles out of range");
+        require(newMaxNumberOfCycles < 20 && newMaxNumberOfCycles != 0, "New max n of cycles out of range");
         emit ParameterChange("maxNumberOfCycles", newMaxNumberOfCycles, _maxNumberOfCycles);
         _maxNumberOfCycles = newMaxNumberOfCycles;
     }

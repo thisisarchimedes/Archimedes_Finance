@@ -16,6 +16,7 @@ async function fundLVUSDToCoordinator () {
 
     await context.lvUSD.setMintDestination(context.coordinator.address);
     await context.lvUSD.mint(ethers.utils.parseUnits(amount, 18));
+    await context.coordinator.acceptLeverageAmount(ethers.utils.parseUnits(amount, 18));
 
     console.log(context.coordinator.address + " funded with " + amount + " LVUSD");
 }
@@ -50,9 +51,10 @@ const deployScript = async () => {
     // hacky way to go around pool balances not working on local instance.. skipPoolBalances = true
     context = await buildContractTestContext(true);
     await context.parameterStore.changeArchToLevRatio(ethers.utils.parseUnits("300.0"));
+    await fundLVUSDToCoordinator();
     await setRolesForEndToEnd(context);
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
-    await fundLVUSDToCoordinator();
+    // await fundLVUSDToCoordinator();
     await fundARCH();
     // await fundDemoAccount();
     await verifyDeployment();
