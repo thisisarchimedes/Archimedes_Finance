@@ -2,39 +2,71 @@
 pragma solidity 0.8.13;
 
 import {IAuction} from "../contracts/interfaces/IAuction.sol";
+import {AccessController} from "./AccessController.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
 import "hardhat/console.sol";
 
-contract Auction is IAuction {
+
+
+contract Auction is IAuction, AccessController , UUPSUpgradeable{
     uint256 internal _currentAuctionId;
     uint256 internal _startBlock;
     uint256 internal _endBlock;
     uint256 internal _startPrice;
     uint256 internal _endPrice;
 
+    bool internal _isAuctionClosed;
+    
+    function startAuctionWithLength(uint256 length, uint256 startPrice, uint256 endPrice) external override {
+        uint256 endBlock = block.number + length;
+        _startAuction(endBlock, startPrice, endPrice);
+    }
+
     function startAuction(
         uint256 endBlock,
         uint256 startPrice,
         uint256 endPrice
     ) external override {
-        // uint256 currentBlock = block.number;
+        _startAuction(endBlock, startPrice, endPrice);
+    }
+
+    function _startAuction(
+        uint256 endBlock,
+        uint256 startPrice,
+        uint256 endPrice
+    ) internal {
         // console.log("starting action with currentBlock : %s, endBlock: %s startPrice: %s endPrice: %s",
         //     currentBlock, endBlock, startPrice, endPrice
         // );
-        if (_isValidAuctionParams(endBlock, startPrice, endPrice)) {
-            _setAuctionPrivateMembers(endBlock, startPrice, endPrice);
-        } else {
-            revert("could not start auction");
-        }
+        require(isAuctionClosed() == true, "err:auction currently running");
+        _validateAuctionParams(endBlock, startPrice, endPrice);
+        _setAuctionPrivateMembers(endBlock, startPrice, endPrice);
+        _emitAuctionStart();
+        _isAuctionClosed = false;
+    }
+
+    function stopAuction() external {
+        _isAuctionClosed = true;
+        _emitAuctionForcedStopped();
     }
 
     function getCurrentBiddingPrice() external view override returns (uint256 auctionBiddingPrice) {
         /// If reached endBlock , handle auction that is "closed"
         /// ELSE calculate current price for an open auction.
-        console.log("endBlock %s currentBlock %s", _endBlock, block.number);
+        // console.log("endBlock %s currentBlock %s", _endBlock, block.number);
+        uint256 biddingPrice; 
         if (_endBlock < block.number) {
-            return _getCurrentPriceClosedAuction();
+            biddingPrice = _getCurrentPriceClosedAuction();
         } else {
-            return _calcCurrentPriceOpenAuction();
+            biddingPrice =  _calcCurrentPriceOpenAuction();
+        }
+        console.log("biddingPrice is %s", biddingPrice);
+
+        if (biddingPrice == 0) {
+            revert("err:biddingPrice cant be 0");
+        } else {
+            return biddingPrice;
         }
     }
 
@@ -58,20 +90,19 @@ contract Auction is IAuction {
         uint256 deltaInPrices = _startPrice - _endPrice;
         uint256 deltaInPriceMulCurrentTime = (deltaInPrices * (block.number - _startBlock)) / (_endBlock - _startBlock);
         uint256 maxPriceForAuction = _startPrice;
-
         uint256 currentPrice = maxPriceForAuction - deltaInPriceMulCurrentTime;
-        // console.log("deltaInPrices %s deltaInPriceMulCurrentTime %s ,maxPriceForAuction %s", deltaInPrices, deltaInPriceMulCurrentTime, maxPriceForAuction);
         return currentPrice;
     }
 
     /// helper methods
 
-    function _isValidAuctionParams(
+    function _validateAuctionParams(
         uint256 endBlock,
         uint256 startPrice,
         uint256 endPrice
-    ) internal pure returns (bool) {
-        return true;
+    ) internal view {
+        require(endBlock > block.number, "err:endBlock<=block.number");
+        require(startPrice > endPrice, "err:startPrice<endPrice");
     }
 
     function _setAuctionPrivateMembers(
@@ -86,8 +117,41 @@ contract Auction is IAuction {
         _endPrice = endPrice;
     }
 
-    /// Deplyment functionality
-    constructor() {
-        /// Remove once its upgradable
+    function isAuctionClosed() public view returns (bool) {
+        if (_isAuctionClosed == true || _endBlock < block.number) {
+            return true;
+        } else {
+            return false;
+        }
     }
+
+    function _emitAuctionStart() internal {
+            emit AuctionStart(_currentAuctionId, _startBlock, _endBlock, _startPrice, _endPrice);
+    }
+
+    function _emitAuctionForcedStopped() internal {
+            emit AuctionForcedStoped(_currentAuctionId);
+    }
+
+    /// Deplyment functionality
+    function initialize() public initializer {
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+        _grantRole(ADMIN_ROLE, _msgSender());
+        setGovernor(_msgSender());
+        setExecutive(_msgSender());
+        setGuardian(_msgSender());
+    }
+
+    // solhint-disable-next-line
+    function _authorizeUpgrade(address newImplementation) internal override {
+        _requireAdmin();
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    
 }

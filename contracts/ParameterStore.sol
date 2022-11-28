@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import "hardhat/console.sol";
 import {AccessController} from "./AccessController.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {IAuction} from "./interfaces/IAuction.sol";
 
 /// @title ParameterStore is a contract for storing global parameters that can be modified by a privileged role
 /// @notice This contract (will be) proxy upgradable
@@ -13,6 +14,8 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     address internal _addressCoordinator;
     address internal _addressExchanger;
 
+    IAuction internal _auction;
+
     uint256 internal _maxNumberOfCycles; // regular natural number
     uint256 internal _originationFeeRate; // in ether percentage (see initialize for examples)
     uint256 internal _globalCollateralRate; // in percentage
@@ -21,7 +24,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     uint256 internal _curveGuardPercentage; // in regular (0-100) percentages
     uint256 internal _slippage; // in regular (0-100) percentages
     /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
-    uint256 internal _archToLevRatio;
+    // uint256 internal _archToLevRatio;
     // maximum allowed "extra" tokens when exchanging
     uint256 internal _curveMaxExchangeGuard;
     uint256 internal _minPositionCollateral;
@@ -52,7 +55,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _rebaseFeeRate = 30 ether / 100; // meaning 30%
         _curveGuardPercentage = 95;
         _slippage = 1; // 1%;
-        _archToLevRatio = 300 ether; // meaning 1 arch is equal 300 lvUSD
+        // _archToLevRatio = 300 ether; // meaning 1 arch is equal 300 lvUSD
         _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
         _minPositionCollateral = 9 ether;
         _positionTimeToLiveInDays = 369;
@@ -63,12 +66,16 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _addressExchanger = address(0);
     }
 
-    function setDependencies(address addressCoordinator, address addressExchanger) external onlyAdmin {
+    function setDependencies(address addressCoordinator, address addressExchanger, address addressAuction) external onlyAdmin {
         require(addressCoordinator != address(0), "cant set to 0 A");
         require(addressExchanger != address(0), "cant set to 0 A");
+        require(addressAuction != address(0), "cant set to 0 A");
 
         _addressCoordinator = addressCoordinator;
         _addressExchanger = addressExchanger;
+        _auction = IAuction(addressAuction);
+
+
     }
 
     modifier onlyInternalContracts() {
@@ -129,11 +136,11 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _rebaseFeeRate = newRebaseFeeRate;
     }
 
-    function changeArchToLevRatio(uint256 newArchToLevRatio) external onlyArchGovernor {
-        require(newArchToLevRatio < 500000 ether && newArchToLevRatio >= 1 ether, "new ArchToLevRatio out of range");
-        emit ParameterChange("archToLevRatio", newArchToLevRatio, _archToLevRatio);
-        _archToLevRatio = newArchToLevRatio;
-    }
+    // function changeArchToLevRatio(uint256 newArchToLevRatio) external onlyArchGovernor {
+    //     require(newArchToLevRatio < 500000 ether && newArchToLevRatio >= 1 ether, "new ArchToLevRatio out of range");
+    //     emit ParameterChange("archToLevRatio", newArchToLevRatio, _archToLevRatio);
+    //     _archToLevRatio = newArchToLevRatio;
+    // }
 
     function changeCurveMaxExchangeGuard(uint256 newCurveMaxExchangeGuard) external onlyGovernor {
         require(newCurveMaxExchangeGuard < 100 && newCurveMaxExchangeGuard > 1, "newCurveMaxExGuard out of range");
@@ -190,8 +197,9 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         return _slippage;
     }
 
-    function getArchToLevRatio() external view returns (uint256) {
-        return _archToLevRatio;
+    function getArchToLevRatio() public view returns (uint256) {
+        return _auction.getCurrentBiddingPrice();
+        // return _archToLevRatio;
     }
 
     function getMinPositionCollateral() external view returns (uint256) {
@@ -241,12 +249,12 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
 
     function calculateArchNeededForLeverage(uint256 leverageAmount) external view returns (uint256) {
         /// This method add a bit more Arch then is needed to get around integer rounding
-        uint256 naturalNumberRatio = _archToLevRatio / 1 ether;
+        uint256 naturalNumberRatio = getArchToLevRatio() / 1 ether;
         return (leverageAmount / naturalNumberRatio) + 1000;
     }
 
     function calculateLeverageAllowedForArch(uint256 archAmount) public view returns (uint256) {
-        return (_archToLevRatio / 1 ether) * archAmount;
+        return (getArchToLevRatio() / 1 ether) * archAmount;
     }
 
     // solhint-disable-next-line

@@ -150,252 +150,252 @@ describe("Building basic environment", function () {
         return { r };
     }
 
-    describe("Test suit for setting up the stage", function () {
-        //  Admin checks
+    // describe("Test suit for setting up the stage", function () {
+    //     //  Admin checks
 
-        it("Should be able to transfer admin via two steps process", async function () {
-            await loadFixture(setupEnvForIntegrationTestsFixture);
+    //     it("Should be able to transfer admin via two steps process", async function () {
+    //         await loadFixture(setupEnvForIntegrationTestsFixture);
 
-            // userOther is not admin
-            await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
-            // suggest changing admin
-            await r.vault.setAdmin(userOther.address);
-            // userOther is still not admin as it did not accept it
-            await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
-            // Older admin can still call this
-            await r.vault.takeRebaseFees();
-            // otherUser accept role as admin
-            await r.vault.connect(userOther).acceptAdminRole();
-            // otherUser is now admin
-            await r.vault.connect(userOther).takeRebaseFees();
-            // old admin can not use onlyAdmin methods
-            await expect(r.vault.takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
-        });
+    //         // userOther is not admin
+    //         await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
+    //         // suggest changing admin
+    //         await r.vault.setAdmin(userOther.address);
+    //         // userOther is still not admin as it did not accept it
+    //         await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
+    //         // Older admin can still call this
+    //         await r.vault.takeRebaseFees();
+    //         // otherUser accept role as admin
+    //         await r.vault.connect(userOther).acceptAdminRole();
+    //         // otherUser is now admin
+    //         await r.vault.connect(userOther).takeRebaseFees();
+    //         // old admin can not use onlyAdmin methods
+    //         await expect(r.vault.takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
+    //     });
 
-        it("Should be able to transfer admin role back to owner", async function () {
-            // const {r} = await loadFixture(setupEnvForIntegrationTestsFixture);
-            await r.vault.connect(userOther).setAdmin(owner.address);
-            await r.vault.acceptAdminRole();
-            await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
-            await r.vault.takeRebaseFees();
-        });
+    //     it("Should be able to transfer admin role back to owner", async function () {
+    //         // const {r} = await loadFixture(setupEnvForIntegrationTestsFixture);
+    //         await r.vault.connect(userOther).setAdmin(owner.address);
+    //         await r.vault.acceptAdminRole();
+    //         await expect(r.vault.connect(userOther).takeRebaseFees()).to.be.revertedWith("Caller is not Admin");
+    //         await r.vault.takeRebaseFees();
+    //     });
 
-        it("Should not not be able to change arch lev ratio as non Arch Governor ", async function () {
-            // const {r} = await loadFixture(setupEnvForIntegrationTestsFixture);
-            const archlevRationChangePromise = r.parameterStore.connect(user).changeArchToLevRatio(parseUnitsNum("100"));
-            await expect(archlevRationChangePromise).to.revertedWith("Caller is not Arch Governor");
-        });
+    //     it("Should not not be able to change arch lev ratio as non Arch Governor ", async function () {
+    //         // const {r} = await loadFixture(setupEnvForIntegrationTestsFixture);
+    //         const archlevRationChangePromise = r.parameterStore.connect(user).changeArchToLevRatio(parseUnitsNum("100"));
+    //         await expect(archlevRationChangePromise).to.revertedWith("Caller is not Arch Governor");
+    //     });
 
-        it("Should be able to change Arch lev Ration as Arch Governor", async function () {
-            const newArchToLevRatio = parseUnitsNum(100);
-            await r.parameterStore.setArchGovernor(user.address);
-            await r.parameterStore.connect(user).changeArchToLevRatio(newArchToLevRatio);
-            expect(await r.parameterStore.getArchToLevRatio()).to.eq(newArchToLevRatio);
-        });
+    //     it("Should be able to change Arch lev Ration as Arch Governor", async function () {
+    //         const newArchToLevRatio = parseUnitsNum(100);
+    //         await r.parameterStore.setArchGovernor(user.address);
+    //         await r.parameterStore.connect(user).changeArchToLevRatio(newArchToLevRatio);
+    //         expect(await r.parameterStore.getArchToLevRatio()).to.eq(newArchToLevRatio);
+    //     });
 
-        it("Should not allow regular Gov to change ArchToLevRatio", async function () {
-            const archlevRationChangePromise = r.parameterStore.connect(owner).changeArchToLevRatio(parseUnitsNum("200"));
-            await expect(archlevRationChangePromise).to.revertedWith("Caller is not Arch Governor");
-        });
+    //     it("Should not allow regular Gov to change ArchToLevRatio", async function () {
+    //         const archlevRationChangePromise = r.parameterStore.connect(owner).changeArchToLevRatio(parseUnitsNum("200"));
+    //         await expect(archlevRationChangePromise).to.revertedWith("Caller is not Arch Governor");
+    //     });
 
-        // Checking environment
+    //     // Checking environment
 
-        it("Should have initialCoordinatorLvUSDBalance lvUSD balance under coordinator", async function () {
-            const coordinatorLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
-            expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
-        });
+    //     it("Should have initialCoordinatorLvUSDBalance lvUSD balance under coordinator", async function () {
+    //         const coordinatorLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
+    //         expect(coordinatorLvUSDBalance).to.equal(initialCoordinatorLvUSDBalance);
+    //     });
 
-        it("Should have setup OUSD pretender with OUSD to spend ", async function () {
-            const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretendOUSDRebaseSigner.getAddress()));
-            /// since we are exchanging 10 ethereum for the dollar value of token, price is not set. Checking for a reasonable value
-            expect(pretenderOUSDbalance).to.greaterThan(1000);
-        });
+    //     it("Should have setup OUSD pretender with OUSD to spend ", async function () {
+    //         const pretenderOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await pretendOUSDRebaseSigner.getAddress()));
+    //         /// since we are exchanging 10 ethereum for the dollar value of token, price is not set. Checking for a reasonable value
+    //         expect(pretenderOUSDbalance).to.greaterThan(1000);
+    //     });
 
-        it("Should have setup user with  enough OUSD to cover principle amount", async function () {
-            const userOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await user.getAddress()));
-            expect(userOUSDbalance).to.greaterThan(userOUSDPrinciple);
-        });
+    //     it("Should have setup user with  enough OUSD to cover principle amount", async function () {
+    //         const userOUSDbalance = getFloatFromBigNum(await r.externalOUSD.balanceOf(await user.getAddress()));
+    //         expect(userOUSDbalance).to.greaterThan(userOUSDPrinciple);
+    //     });
 
-        it("Should have initialFundsInPool as balance of pool", async function () {
-            printPoolState(lvUSD3CRVPoolInstance);
-            const lvUSDCoinsInPool = await lvUSD3CRVPoolInstance.balances(0);
-            const crvCoinsInPool = await lvUSD3CRVPoolInstance.balances(1);
-            expect(lvUSDCoinsInPool).to.gte(parseUnitsNum(initialFundsInPool));
-            expect(crvCoinsInPool).to.gte(parseUnitsNum(initialFundsInPool));
-        });
+    //     it("Should have initialFundsInPool as balance of pool", async function () {
+    //         printPoolState(lvUSD3CRVPoolInstance);
+    //         const lvUSDCoinsInPool = await lvUSD3CRVPoolInstance.balances(0);
+    //         const crvCoinsInPool = await lvUSD3CRVPoolInstance.balances(1);
+    //         expect(lvUSDCoinsInPool).to.gte(parseUnitsNum(initialFundsInPool));
+    //         expect(crvCoinsInPool).to.gte(parseUnitsNum(initialFundsInPool));
+    //     });
 
-        it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
-            const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
-            expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
-        });
+    //     it("Should have reduced balance of lvUSD of owner since pool is funded", async function () {
+    //         const adminLvUSDBalance = getFloatFromBigNum(await r.lvUSD.balanceOf(await owner.getAddress()));
+    //         expect(adminLvUSDBalance).to.equal(ownerLvUSDBalanceBeforeFunding - 600);
+    //     });
 
-        it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
-            const admin3CRVBalance = getFloatFromBigNum(await r.external3CRV.balanceOf(await owner.getAddress()));
-            expect(admin3CRVBalance).to.lessThan(adminInitial3CRVBalance);
-        });
+    //     it("Should have reduced balance of 3CRV of owner since pool is funded", async function () {
+    //         const admin3CRVBalance = getFloatFromBigNum(await r.external3CRV.balanceOf(await owner.getAddress()));
+    //         expect(admin3CRVBalance).to.lessThan(adminInitial3CRVBalance);
+    //     });
 
-        it("Should only allow Guardian to pause/unpause contract", async function () {
-            // Make user Guardian, this is to make sure that Admin can't pause
-            await r.leverageEngine.setGuardian(user.address);
-            expect(await r.leverageEngine.paused()).to.eq(false);
+    //     it("Should only allow Guardian to pause/unpause contract", async function () {
+    //         // Make user Guardian, this is to make sure that Admin can't pause
+    //         await r.leverageEngine.setGuardian(user.address);
+    //         expect(await r.leverageEngine.paused()).to.eq(false);
 
-            const pausePromise = r.leverageEngine.pauseContract();
-            await expect(pausePromise).to.revertedWith("Caller is not Guardian");
+    //         const pausePromise = r.leverageEngine.pauseContract();
+    //         await expect(pausePromise).to.revertedWith("Caller is not Guardian");
 
-            await r.leverageEngine.connect(user).pauseContract();
-            expect(await r.leverageEngine.paused()).to.eq(true);
+    //         await r.leverageEngine.connect(user).pauseContract();
+    //         expect(await r.leverageEngine.paused()).to.eq(true);
 
-            await r.leverageEngine.connect(user).unPauseContract();
-            expect(await r.leverageEngine.paused()).to.eq(false);
+    //         await r.leverageEngine.connect(user).unPauseContract();
+    //         expect(await r.leverageEngine.paused()).to.eq(false);
 
-            await r.leverageEngine.setGuardian(owner.address);
-        });
+    //         await r.leverageEngine.setGuardian(owner.address);
+    //     });
 
-        it("Should not allow unwinding or creating positions if paused", async function () {
-            const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
-            const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
+    //     it("Should not allow unwinding or creating positions if paused", async function () {
+    //         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
+    //         const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
 
-            await r.leverageEngine.pauseContract();
-            const createPromise = approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            await expect(createPromise).to.revertedWith("Pausable: paused");
+    //         await r.leverageEngine.pauseContract();
+    //         const createPromise = approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         await expect(createPromise).to.revertedWith("Pausable: paused");
 
-            const unwindPromise = r.leverageEngine.connect(user).unwindLeveragedPosition(0);
-            await expect(unwindPromise).to.revertedWith("Pausable: paused");
+    //         const unwindPromise = r.leverageEngine.connect(user).unwindLeveragedPosition(0);
+    //         await expect(unwindPromise).to.revertedWith("Pausable: paused");
 
-            // Now unpause and check that we can create position and Unwind
-            await r.leverageEngine.unPauseContract();
-            await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            await r.leverageEngine.connect(user).unwindLeveragedPosition(0);
-        });
-    });
+    //         // Now unpause and check that we can create position and Unwind
+    //         await r.leverageEngine.unPauseContract();
+    //         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         await r.leverageEngine.connect(user).unwindLeveragedPosition(0);
+    //     });
+    // });
 
-    const spec3 = 0;
+    // const spec3 = 0;
 
-    describe("Test suit for opening/unwinding positions on imbalanced pools", function () {
-        const higherNumberOfCycles = 6;
-        const tempUserOUSDPrinciple = 96;
-        const tempUserOUSDPrincipleIn18Decimal = parseUnitsNum(tempUserOUSDPrinciple + Math.random())
-            .add(BigNumber.from(1 * Math.round(Math.random())));
-        let leverageUserIsTakingIn18Dec;
-        let archCostOfLeverageIn18Dec;
+    // describe("Test suit for opening/unwinding positions on imbalanced pools", function () {
+    //     const higherNumberOfCycles = 6;
+    //     const tempUserOUSDPrinciple = 96;
+    //     const tempUserOUSDPrincipleIn18Decimal = parseUnitsNum(tempUserOUSDPrinciple + Math.random())
+    //         .add(BigNumber.from(1 * Math.round(Math.random())));
+    //     let leverageUserIsTakingIn18Dec;
+    //     let archCostOfLeverageIn18Dec;
 
-        async function setUpEnvForTestSuiteFixture () {
-            // await loadFixture(setupEnvForIntegrationTestsFixture);
-            // fund userOther
-            await r.archToken.connect(r.treasurySigner).transfer(userOther.address, parseUnits("1000.0"));
-            await helperSwapETHWithOUSD(userOther, parseUnits("1.0"));
+    //     async function setUpEnvForTestSuiteFixture () {
+    //         // await loadFixture(setupEnvForIntegrationTestsFixture);
+    //         // fund userOther
+    //         await r.archToken.connect(r.treasurySigner).transfer(userOther.address, parseUnits("1000.0"));
+    //         await helperSwapETHWithOUSD(userOther, parseUnits("1.0"));
 
-            const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(
-                tempUserOUSDPrincipleIn18Decimal,
-                higherNumberOfCycles,
-            );
-            const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
+    //         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(
+    //             tempUserOUSDPrincipleIn18Decimal,
+    //             higherNumberOfCycles,
+    //         );
+    //         const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
 
-            await r.parameterStore.changeMinPositionCollateral(parseUnitsNum(20));
-            await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         await r.parameterStore.changeMinPositionCollateral(parseUnitsNum(20));
+    //         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, user);
 
-            await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
-            await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
+    //         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
+    //         await approveAndGetLeverageAsUser(tempUserOUSDPrincipleIn18Decimal, higherNumberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
 
-            positionId = 0;
-        }
+    //         positionId = 0;
+    //     }
 
-        const numOfPositions = 5;
+    //     const numOfPositions = 5;
 
-        it("Should have almost empty pool", async function () {
-            /// setup fixture
-            await loadFixture(setupEnvForIntegrationTestsFixture);
-            await loadFixture(setUpEnvForTestSuiteFixture);
+    //     it("Should have almost empty pool", async function () {
+    //         /// setup fixture
+    //         await loadFixture(setupEnvForIntegrationTestsFixture);
+    //         await loadFixture(setUpEnvForTestSuiteFixture);
 
-            /// calculate how much lvUSD was used based on numbers from CDP
-            let usedlvUSD = 0;
-            let spentOUSD = 0;
-            for (let i = 0; i < numOfPositions; i++) {
-                const lvUSDBorrowed = getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(i));
-                const ousdTotal = getFloatFromBigNum(await r.cdp.getOUSDTotalWithoutInterest(i));
-                const principle = getFloatFromBigNum(await r.cdp.getOUSDPrinciple(i));
+    //         /// calculate how much lvUSD was used based on numbers from CDP
+    //         let usedlvUSD = 0;
+    //         let spentOUSD = 0;
+    //         for (let i = 0; i < numOfPositions; i++) {
+    //             const lvUSDBorrowed = getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(i));
+    //             const ousdTotal = getFloatFromBigNum(await r.cdp.getOUSDTotalWithoutInterest(i));
+    //             const principle = getFloatFromBigNum(await r.cdp.getOUSDPrinciple(i));
 
-                spentOUSD += ousdTotal - principle;
-                usedlvUSD += lvUSDBorrowed;
-            }
-            const lvUSDCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(0));
-            const crvCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(1));
+    //             spentOUSD += ousdTotal - principle;
+    //             usedlvUSD += lvUSDBorrowed;
+    //         }
+    //         const lvUSDCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(0));
+    //         const crvCoinsInPool = getFloatFromBigNum(await lvUSD3CRVPoolInstance.balances(1));
 
-            expect(lvUSDCoinsInPool).to.closeTo(initialFundsInPool + usedlvUSD, 1);
-            /// / This is not scientific but we can get away with 2% of transations funds getting used as fees
-            expect(crvCoinsInPool).to.closeTo(initialFundsInPool - spentOUSD, spentOUSD * 0.02);
-        });
-    });
+    //         expect(lvUSDCoinsInPool).to.closeTo(initialFundsInPool + usedlvUSD, 1);
+    //         /// / This is not scientific but we can get away with 2% of transations funds getting used as fees
+    //         expect(crvCoinsInPool).to.closeTo(initialFundsInPool - spentOUSD, spentOUSD * 0.02);
+    //     });
+    // });
 
-    const spec4 = 0;
+    // const spec4 = 0;
 
-    describe("Test suit for moving positions around", function () {
-        async function setUpEnvForTestSuiteFixture () {
-            await r.archToken.connect(r.treasurySigner).transfer(userOther.address, parseUnits("1000.0"));
-            await helperSwapETHWithOUSD(userOther, parseUnits("1.0"));
+    // describe("Test suit for moving positions around", function () {
+    //     async function setUpEnvForTestSuiteFixture () {
+    //         await r.archToken.connect(r.treasurySigner).transfer(userOther.address, parseUnits("1000.0"));
+    //         await helperSwapETHWithOUSD(userOther, parseUnits("1.0"));
 
-            const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
-            const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
+    //         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
+    //         const archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
 
-            await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
-            await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
+    //         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
+    //         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, userOther);
 
-            positionId = 0;
-        }
+    //         positionId = 0;
+    //     }
 
-        it("Should have logged all 5 positions in array", async function () {
-            await loadFixture(setupEnvForIntegrationTestsFixture);
-            await loadFixture(setUpEnvForTestSuiteFixture);
+    //     it("Should have logged all 5 positions in array", async function () {
+    //         await loadFixture(setupEnvForIntegrationTestsFixture);
+    //         await loadFixture(setUpEnvForTestSuiteFixture);
 
-            const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
-            const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
-            // console.log("\x1B[31mPosition array of User %s, ", userTokenIdsArray);
-            expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
-            expect(userTokenIdsArray[1]).to.eq(BigNumber.from(1));
-            expect(userTokenIdsArray[2]).to.eq(BigNumber.from(2));
-            expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(3));
-            expect(userOtherTokenIdsArray[1]).to.eq(BigNumber.from(4));
-        });
+    //         const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
+    //         const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
+    //         // console.log("\x1B[31mPosition array of User %s, ", userTokenIdsArray);
+    //         expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
+    //         expect(userTokenIdsArray[1]).to.eq(BigNumber.from(1));
+    //         expect(userTokenIdsArray[2]).to.eq(BigNumber.from(2));
+    //         expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(3));
+    //         expect(userOtherTokenIdsArray[1]).to.eq(BigNumber.from(4));
+    //     });
 
-        it("Should correctly log transfers of ownership", async function () {
-            const safeTransferAsUser = r.positionToken.connect(user)["safeTransferFrom(address,address,uint256)"];
-            const safeTransferAsUserOther = r.positionToken.connect(userOther)["safeTransferFrom(address,address,uint256)"];
+    //     it("Should correctly log transfers of ownership", async function () {
+    //         const safeTransferAsUser = r.positionToken.connect(user)["safeTransferFrom(address,address,uint256)"];
+    //         const safeTransferAsUserOther = r.positionToken.connect(userOther)["safeTransferFrom(address,address,uint256)"];
 
-            await safeTransferAsUser(user.address, userOther.address, 1);
+    //         await safeTransferAsUser(user.address, userOther.address, 1);
 
-            await safeTransferAsUserOther(userOther.address, user.address, 3);
+    //         await safeTransferAsUserOther(userOther.address, user.address, 3);
 
-            /// now expecting User : [0,2,3] userOther : [1,4]
-            const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
-            const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
+    //         /// now expecting User : [0,2,3] userOther : [1,4]
+    //         const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
+    //         const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
 
-            expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
-            expect(userTokenIdsArray[1]).to.eq(BigNumber.from(2));
-            expect(userTokenIdsArray[2]).to.eq(BigNumber.from(3));
-            expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(1));
-            expect(userOtherTokenIdsArray[1]).to.eq(BigNumber.from(4));
+    //         expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
+    //         expect(userTokenIdsArray[1]).to.eq(BigNumber.from(2));
+    //         expect(userTokenIdsArray[2]).to.eq(BigNumber.from(3));
+    //         expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(1));
+    //         expect(userOtherTokenIdsArray[1]).to.eq(BigNumber.from(4));
 
-            // console.log("\x1B[31mPosition array of User %s :: otherUser %s", userTokenIdsArray,userOtherTokenIdsArray);
-        });
+    //         // console.log("\x1B[31mPosition array of User %s :: otherUser %s", userTokenIdsArray,userOtherTokenIdsArray);
+    //     });
 
-        it("Should be able to unwind positions with new owners", async function () {
-            await r.leverageEngine.connect(user).unwindLeveragedPosition(2);
-            await r.leverageEngine.connect(userOther).unwindLeveragedPosition(4);
+    //     it("Should be able to unwind positions with new owners", async function () {
+    //         await r.leverageEngine.connect(user).unwindLeveragedPosition(2);
+    //         await r.leverageEngine.connect(userOther).unwindLeveragedPosition(4);
 
-            const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
-            const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
-            // console.log("\x1B[31mPosition array of User After unwinding %s :: otherUser %s", userTokenIdsArray, userOtherTokenIdsArray);
+    //         const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
+    //         const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
+    //         // console.log("\x1B[31mPosition array of User After unwinding %s :: otherUser %s", userTokenIdsArray, userOtherTokenIdsArray);
 
-            expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
-            expect(userTokenIdsArray[1]).to.eq(BigNumber.from(3));
-            expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(1));
-        });
-    });
+    //         expect(userTokenIdsArray[0]).to.eq(BigNumber.from(0));
+    //         expect(userTokenIdsArray[1]).to.eq(BigNumber.from(3));
+    //         expect(userOtherTokenIdsArray[0]).to.eq(BigNumber.from(1));
+    //     });
+    // });
 
     const spe5 = 0;
 
@@ -632,102 +632,102 @@ describe("Building basic environment", function () {
 
     const spe6 = 0;
 
-    describe("Test suite for security", function () {
-        let archCostOfLeverageIn18Dec;
-        const newCoordinatorLvUSDBalance = 1000;
-        let secondPoisitionLvUSDBorrowed;
-        async function setUpEnvForTestSuiteFixture () {
-            const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
-            archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
-            await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            positionId = 0;
-        }
+    // describe("Test suite for security", function () {
+    //     let archCostOfLeverageIn18Dec;
+    //     const newCoordinatorLvUSDBalance = 1000;
+    //     let secondPoisitionLvUSDBorrowed;
+    //     async function setUpEnvForTestSuiteFixture () {
+    //         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
+    //         archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
+    //         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         positionId = 0;
+    //     }
 
-        async function verifyPositionCreationFails (
-            message,
-            ousdPrinciple = userOUSDPrincipleIn18Decimal,
-            cycles = numberOfCycles,
-            archToGive = archCostOfLeverageIn18Dec,
-        ) {
-            await r.archToken.connect(user).approve(r.leverageEngine.address, archToGive);
-            await r.externalOUSD.connect(user).approve(r.leverageEngine.address, ousdPrinciple);
-            const promise = r.leverageEngine.connect(user).createLeveragedPosition(ousdPrinciple, cycles, archToGive);
-            await expect(promise).to.be.revertedWith(message);
-        }
+    //     async function verifyPositionCreationFails (
+    //         message,
+    //         ousdPrinciple = userOUSDPrincipleIn18Decimal,
+    //         cycles = numberOfCycles,
+    //         archToGive = archCostOfLeverageIn18Dec,
+    //     ) {
+    //         await r.archToken.connect(user).approve(r.leverageEngine.address, archToGive);
+    //         await r.externalOUSD.connect(user).approve(r.leverageEngine.address, ousdPrinciple);
+    //         const promise = r.leverageEngine.connect(user).createLeveragedPosition(ousdPrinciple, cycles, archToGive);
+    //         await expect(promise).to.be.revertedWith(message);
+    //     }
 
-        it("Should make sure coordinator has no leverage", async () => {
-            await loadFixture(setupEnvForIntegrationTestsFixture);
-            await loadFixture(setUpEnvForTestSuiteFixture);
+    //     it("Should make sure coordinator has no leverage", async () => {
+    //         await loadFixture(setupEnvForIntegrationTestsFixture);
+    //         await loadFixture(setUpEnvForTestSuiteFixture);
 
-            await r.coordinator.resetAndBurnLeverage();
+    //         await r.coordinator.resetAndBurnLeverage();
 
-            const coordinatorLvUSDBalance = await r.lvUSD.balanceOf(r.coordinator.address);
-            expect(coordinatorLvUSDBalance).to.eq(0);
+    //         const coordinatorLvUSDBalance = await r.lvUSD.balanceOf(r.coordinator.address);
+    //         expect(coordinatorLvUSDBalance).to.eq(0);
 
-            const coordinatorLeverageBalance = await r.parameterStore.getCoordinatorLeverageBalance();
-            expect(coordinatorLeverageBalance).to.eq(0);
-        });
+    //         const coordinatorLeverageBalance = await r.parameterStore.getCoordinatorLeverageBalance();
+    //         expect(coordinatorLeverageBalance).to.eq(0);
+    //     });
 
-        it("Should not allow any opening of position as no leverage is available", async () => {
-            await verifyPositionCreationFails("Not enough available leverage");
-        });
+    //     it("Should not allow any opening of position as no leverage is available", async () => {
+    //         await verifyPositionCreationFails("Not enough available leverage");
+    //     });
 
-        it("should not allow leverage to be risen if lvUSD balance is not correct", async () => {
-            const promise = r.coordinator.acceptLeverageAmount(parseUnitsNum(initialCoordinatorLvUSDBalance));
-            await expect(promise).to.be.revertedWith("lvUSD !< levAmt");
+    //     it("should not allow leverage to be risen if lvUSD balance is not correct", async () => {
+    //         const promise = r.coordinator.acceptLeverageAmount(parseUnitsNum(initialCoordinatorLvUSDBalance));
+    //         await expect(promise).to.be.revertedWith("lvUSD !< levAmt");
 
-            // To be extra sure, try to open position and see it fails
-            await verifyPositionCreationFails("Not enough available leverage");
-        });
+    //         // To be extra sure, try to open position and see it fails
+    //         await verifyPositionCreationFails("Not enough available leverage");
+    //     });
 
-        it("Should not allow to open position even if lvUSD balance of Coordinator is high (if leverage is not set)", async () => {
-            await r.lvUSD.setMintDestination(r.coordinator.address);
-            await r.lvUSD.mint(parseUnitsNum(newCoordinatorLvUSDBalance));
+    //     it("Should not allow to open position even if lvUSD balance of Coordinator is high (if leverage is not set)", async () => {
+    //         await r.lvUSD.setMintDestination(r.coordinator.address);
+    //         await r.lvUSD.mint(parseUnitsNum(newCoordinatorLvUSDBalance));
 
-            // To be extra sure, try to open position and see it fails
-            await verifyPositionCreationFails("Not enough available leverage");
+    //         // To be extra sure, try to open position and see it fails
+    //         await verifyPositionCreationFails("Not enough available leverage");
 
-            // Make sure available leverage does not change
-            const leverageAvailable = await r.coordinator.getAvailableLeverage();
-            expect(leverageAvailable).to.equal(0);
-        });
+    //         // Make sure available leverage does not change
+    //         const leverageAvailable = await r.coordinator.getAvailableLeverage();
+    //         expect(leverageAvailable).to.equal(0);
+    //     });
 
-        it("Should create position when setting leverage + lvUSD balance", async () => {
-            const nftShouldNotExists = await r.positionToken.exists(1);
-            expect(nftShouldNotExists).to.equal(false);
-            await r.coordinator.acceptLeverageAmount(parseUnitsNum(newCoordinatorLvUSDBalance));
+    //     it("Should create position when setting leverage + lvUSD balance", async () => {
+    //         const nftShouldNotExists = await r.positionToken.exists(1);
+    //         expect(nftShouldNotExists).to.equal(false);
+    //         await r.coordinator.acceptLeverageAmount(parseUnitsNum(newCoordinatorLvUSDBalance));
 
-            await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            const nftExists = await r.positionToken.exists(1);
-            expect(nftExists).to.equal(true);
-        });
+    //         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         const nftExists = await r.positionToken.exists(1);
+    //         expect(nftExists).to.equal(true);
+    //     });
 
-        it("Should update leverage available when taking position", async () => {
-            secondPoisitionLvUSDBorrowed = getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(1));
-            const leverageAvailable = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
-            expect(newCoordinatorLvUSDBalance - secondPoisitionLvUSDBorrowed).to.closeTo(leverageAvailable, 0.0000001);
-        });
+    //     it("Should update leverage available when taking position", async () => {
+    //         secondPoisitionLvUSDBorrowed = getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(1));
+    //         const leverageAvailable = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
+    //         expect(newCoordinatorLvUSDBalance - secondPoisitionLvUSDBorrowed).to.closeTo(leverageAvailable, 0.0000001);
+    //     });
 
-        it("Should not increase available leverage if more lvUSD is minted to coordinator", async () => {
-            const beforeMintingLeverageAmount = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
-            await r.lvUSD.setMintDestination(r.coordinator.address);
-            await r.lvUSD.mint(parseUnitsNum(newCoordinatorLvUSDBalance));
-            /// Make sure correct balanceOf on lvUSD
-            expect(getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address))).to.closeTo(
-                newCoordinatorLvUSDBalance + beforeMintingLeverageAmount,
-                1,
-            );
-            /// make sure leverage available doesn't change
-            const leverageAvailable = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
-            expect(beforeMintingLeverageAmount).to.eq(leverageAvailable);
-        });
+    //     it("Should not increase available leverage if more lvUSD is minted to coordinator", async () => {
+    //         const beforeMintingLeverageAmount = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
+    //         await r.lvUSD.setMintDestination(r.coordinator.address);
+    //         await r.lvUSD.mint(parseUnitsNum(newCoordinatorLvUSDBalance));
+    //         /// Make sure correct balanceOf on lvUSD
+    //         expect(getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address))).to.closeTo(
+    //             newCoordinatorLvUSDBalance + beforeMintingLeverageAmount,
+    //             1,
+    //         );
+    //         /// make sure leverage available doesn't change
+    //         const leverageAvailable = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
+    //         expect(beforeMintingLeverageAmount).to.eq(leverageAvailable);
+    //     });
 
-        it("Should not allow to open more positions even if lvUSD balance of coordinator is high enough, once leverage accepted is used",
-            async () => {
-                await approveAndGetLeverageAsUser(parseUnitsNum(100), 7, parseUnitsNum(100), r, user);
-                await verifyPositionCreationFails("Not enough available leverage", parseUnitsNum(100), 7, parseUnitsNum(100));
-            });
-    });
+    //     it("Should not allow to open more positions even if lvUSD balance of coordinator is high enough, once leverage accepted is used",
+    //         async () => {
+    //             await approveAndGetLeverageAsUser(parseUnitsNum(100), 7, parseUnitsNum(100), r, user);
+    //             await verifyPositionCreationFails("Not enough available leverage", parseUnitsNum(100), 7, parseUnitsNum(100));
+    //         });
+    // });
 
     const endthis = 0;
 });

@@ -1,4 +1,4 @@
-import { Contract } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import hre, { ethers } from "hardhat";
 import {
     addressOUSD,
@@ -32,6 +32,7 @@ export type ContractTestContext = {
     archToken: Contract;
     lvUSD: Contract;
     poolManager: Contract;
+    auction: Contract;
     // External contracts
     externalOUSD: Contract;
     externalUSDT: Contract;
@@ -46,6 +47,20 @@ export async function setRolesForEndToEnd (r: ContractTestContext) {
     await r.exchanger.setExecutive(r.coordinator.address);
     await r.vault.setExecutive(r.coordinator.address);
     await r.cdp.setExecutive(r.coordinator.address);
+}
+
+export async function startAndEndAuction(
+     r: ContractTestContext,
+     length: number, 
+     startPrice: BigNumber = ethers.utils.parseUnits("301.0"), 
+     endPrice: BigNumber = ethers.utils.parseUnits("300.0"))
+{
+      /// start Auction and end it to get a static endPrice
+      const startBlock = await ethers.provider.blockNumber;
+      await r.auction.startAuctionWithLength(length ,startPrice, endPrice)
+      for (let i = 0; i < length +1 ; i++) {
+          await ethers.provider.send("evm_mine");
+      }
 }
 export const signers = ethers.getSigners();
 export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("10000000.0");
@@ -91,6 +106,9 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
 
     const lvUSDfactory = await ethers.getContractFactory("LvUSDToken");
     context.lvUSD = await lvUSDfactory.deploy(context.owner.address);
+
+    const auctionfactory = await ethers.getContractFactory("Auction");
+    context.auction = await hre.upgrades.deployProxy(auctionfactory, [], { kind: "uups" });
 
     // Give context.owner some funds:
     // expecting minter to be owner
@@ -148,10 +166,14 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
         context.curveLvUSDPool.address,
     );
 
-    await context.parameterStore.setDependencies(context.coordinator.address, context.exchanger.address);
+    await context.parameterStore.setDependencies(
+        context.coordinator.address,
+        context.exchanger.address,
+        context.auction.address);
 
     await context.cdp.setDependencies(context.vault.address, context.parameterStore.address);
-
+    
+    await startAndEndAuction(context, 5);
     // After all is set and done, accept Lev amount on Coordinator. Not used now as each test set its own coordinator lvUSD balance.
     // await context.coordinator.acceptLeverageAmount(ownerStartingLvUSDAmount);
 
