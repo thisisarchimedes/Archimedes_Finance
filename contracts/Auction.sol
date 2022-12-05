@@ -56,7 +56,7 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
         /// ELSE calculate current price for an open auction.
         // console.log("endBlock %s currentBlock %s", _endBlock, block.number);
         uint256 biddingPrice; 
-        if (_endBlock < block.number) {
+        if (isAuctionClosed()) {
             biddingPrice = _getCurrentPriceClosedAuction();
         } else {
             biddingPrice =  _calcCurrentPriceOpenAuction();
@@ -101,6 +101,7 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
         uint256 startPrice,
         uint256 endPrice
     ) internal view {
+        console.log("endBlock: %s current block: %s" ,endBlock, block.number);
         require(endBlock > block.number, "err:endBlock<=block.number");
         require(startPrice > endPrice, "err:startPrice<endPrice");
     }
@@ -153,5 +154,5 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
         _disableInitializers();
     }
 
-    
+
 }
