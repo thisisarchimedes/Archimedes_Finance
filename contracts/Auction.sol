@@ -7,9 +7,12 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "hardhat/console.sol";
 
+contract Auction is IAuction, AccessController, UUPSUpgradeable {
+    /// access control variables. In V2 move to dedicated lib/class
+    bytes32 public constant AUCTIONEER = keccak256("AUCTIONEER");
+    address private _addressAuctioneer;
+    // ^^end access control variables
 
-
-contract Auction is IAuction, AccessController , UUPSUpgradeable{
     uint256 internal _currentAuctionId;
     uint256 internal _startBlock;
     uint256 internal _endBlock;
@@ -17,8 +20,12 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
     uint256 internal _endPrice;
 
     bool internal _isAuctionClosed;
-    
-    function startAuctionWithLength(uint256 length, uint256 startPrice, uint256 endPrice) external override {
+
+    function startAuctionWithLength(
+        uint256 length,
+        uint256 startPrice,
+        uint256 endPrice
+    ) external override onlyAuctioneer {
         uint256 endBlock = block.number + length;
         _startAuction(endBlock, startPrice, endPrice);
     }
@@ -27,7 +34,7 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
         uint256 endBlock,
         uint256 startPrice,
         uint256 endPrice
-    ) external override {
+    ) external override onlyAuctioneer {
         _startAuction(endBlock, startPrice, endPrice);
     }
 
@@ -36,9 +43,7 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
         uint256 startPrice,
         uint256 endPrice
     ) internal {
-        // console.log("starting action with currentBlock : %s, endBlock: %s startPrice: %s endPrice: %s",
-        //     currentBlock, endBlock, startPrice, endPrice
-        // );
+        console.log("starting action with endBlock: %s startPrice: %s endPrice: %s", endBlock, startPrice, endPrice);
         require(isAuctionClosed() == true, "err:auction currently running");
         _validateAuctionParams(endBlock, startPrice, endPrice);
         _setAuctionPrivateMembers(endBlock, startPrice, endPrice);
@@ -46,7 +51,7 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
         _isAuctionClosed = false;
     }
 
-    function stopAuction() external {
+    function stopAuction() external onlyAuctioneer {
         _isAuctionClosed = true;
         _emitAuctionForcedStopped();
     }
@@ -55,13 +60,13 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
         /// If reached endBlock , handle auction that is "closed"
         /// ELSE calculate current price for an open auction.
         // console.log("endBlock %s currentBlock %s", _endBlock, block.number);
-        uint256 biddingPrice; 
+        uint256 biddingPrice;
         if (isAuctionClosed()) {
             biddingPrice = _getCurrentPriceClosedAuction();
         } else {
-            biddingPrice =  _calcCurrentPriceOpenAuction();
+            biddingPrice = _calcCurrentPriceOpenAuction();
         }
-        console.log("biddingPrice is %s", biddingPrice);
+        // console.log("biddingPrice is %s", biddingPrice);
 
         if (biddingPrice == 0) {
             revert("err:biddingPrice cant be 0");
@@ -87,10 +92,18 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
         /// b = startPrice. b has to equal startPrice since t=0 at that point
         /// a = (startingPrice - endPrice)
         // curentPrice =  b - ax = startPrice - (startingPrice - endPrice) * t(0...1 only)
-        uint256 deltaInPrices = _startPrice - _endPrice;
+        uint256 deltaInPrices = _endPrice - _startPrice;
+        console.log("deltaInPrices = %s", deltaInPrices);
+        console.log("start block %s, end block %s", _startBlock, _endBlock);
         uint256 deltaInPriceMulCurrentTime = (deltaInPrices * (block.number - _startBlock)) / (_endBlock - _startBlock);
+        console.log("deltaInPriceMulCurrentTime = %s", deltaInPriceMulCurrentTime);
+
         uint256 maxPriceForAuction = _startPrice;
-        uint256 currentPrice = maxPriceForAuction - deltaInPriceMulCurrentTime;
+        console.log("maxPriceForAuction = %s", maxPriceForAuction);
+
+        uint256 currentPrice = maxPriceForAuction + deltaInPriceMulCurrentTime;
+        console.log("currentPrice = %s", currentPrice);
+
         return currentPrice;
     }
 
@@ -101,9 +114,9 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
         uint256 startPrice,
         uint256 endPrice
     ) internal view {
-        console.log("endBlock: %s current block: %s" ,endBlock, block.number);
+        console.log("endBlock: %s current block: %s", endBlock, block.number);
         require(endBlock > block.number, "err:endBlock<=block.number");
-        require(startPrice > endPrice, "err:startPrice<endPrice");
+        require(startPrice < endPrice, "err:startPrice<endPrice");
     }
 
     function _setAuctionPrivateMembers(
@@ -127,11 +140,11 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
     }
 
     function _emitAuctionStart() internal {
-            emit AuctionStart(_currentAuctionId, _startBlock, _endBlock, _startPrice, _endPrice);
+        emit AuctionStart(_currentAuctionId, _startBlock, _endBlock, _startPrice, _endPrice);
     }
 
     function _emitAuctionForcedStopped() internal {
-            emit AuctionForcedStoped(_currentAuctionId);
+        emit AuctionForcedStopped(_currentAuctionId);
     }
 
     /// Deplyment functionality
@@ -142,6 +155,8 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
         setGovernor(_msgSender());
         setExecutive(_msgSender());
         setGuardian(_msgSender());
+        setAuctioneer(_msgSender());
+        _isAuctionClosed = true;
     }
 
     // solhint-disable-next-line
@@ -154,5 +169,16 @@ contract Auction is IAuction, AccessController , UUPSUpgradeable{
         _disableInitializers();
     }
 
+    function setAuctioneer(address newAuctioneer) public onlyAdmin {
+        address oldAuctioneer = _addressAuctioneer;
+        require(oldAuctioneer != newAuctioneer, "New Auctioneer must be diff");
+        _grantRole(AUCTIONEER, newAuctioneer);
+        _revokeRole(AUCTIONEER, oldAuctioneer);
+        _addressAuctioneer = newAuctioneer;
+    }
 
+    modifier onlyAuctioneer() {
+        require(hasRole(AUCTIONEER, msg.sender), "Caller is not Auctioneer");
+        _;
+    }
 }

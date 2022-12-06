@@ -9,8 +9,6 @@ import {IAuction} from "./interfaces/IAuction.sol";
 /// @title ParameterStore is a contract for storing global parameters that can be modified by a privileged role
 /// @notice This contract (will be) proxy upgradable
 contract ParameterStore is AccessController, UUPSUpgradeable {
-    bytes32 public constant ARCH_GOVERNOR_ROLE = keccak256("ARCH_GOVERNOR_ROLE");
-    address private _addressArchGovernor;
     address internal _addressCoordinator;
     address internal _addressExchanger;
 
@@ -23,8 +21,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     address internal _treasuryAddress;
     uint256 internal _curveGuardPercentage; // in regular (0-100) percentages
     uint256 internal _slippage; // in regular (0-100) percentages
-    /// example for _archToLevRatio: If each arch is worth 1000 lvUSD, set this to 1000
-    // uint256 internal _archToLevRatio;
     // maximum allowed "extra" tokens when exchanging
     uint256 internal _curveMaxExchangeGuard;
     uint256 internal _minPositionCollateral;
@@ -47,7 +43,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         setGovernor(_msgSender());
         setExecutive(_msgSender());
         setGuardian(_msgSender());
-        setArchGovernor(_msgSender());
 
         _maxNumberOfCycles = 10;
         _originationFeeRate = 5 ether / 1000; // meaning 0.5%
@@ -55,7 +50,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _rebaseFeeRate = 30 ether / 100; // meaning 30%
         _curveGuardPercentage = 95;
         _slippage = 1; // 1%;
-        // _archToLevRatio = 300 ether; // meaning 1 arch is equal 300 lvUSD
         _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
         _minPositionCollateral = 9 ether;
         _positionTimeToLiveInDays = 369;
@@ -66,7 +60,11 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _addressExchanger = address(0);
     }
 
-    function setDependencies(address addressCoordinator, address addressExchanger, address addressAuction) external onlyAdmin {
+    function setDependencies(
+        address addressCoordinator,
+        address addressExchanger,
+        address addressAuction
+    ) external onlyAdmin {
         require(addressCoordinator != address(0), "cant set to 0 A");
         require(addressExchanger != address(0), "cant set to 0 A");
         require(addressAuction != address(0), "cant set to 0 A");
@@ -74,8 +72,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _addressCoordinator = addressCoordinator;
         _addressExchanger = addressExchanger;
         _auction = IAuction(addressAuction);
-
-
     }
 
     modifier onlyInternalContracts() {
@@ -136,12 +132,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _rebaseFeeRate = newRebaseFeeRate;
     }
 
-    // function changeArchToLevRatio(uint256 newArchToLevRatio) external onlyArchGovernor {
-    //     require(newArchToLevRatio < 500000 ether && newArchToLevRatio >= 1 ether, "new ArchToLevRatio out of range");
-    //     emit ParameterChange("archToLevRatio", newArchToLevRatio, _archToLevRatio);
-    //     _archToLevRatio = newArchToLevRatio;
-    // }
-
     function changeCurveMaxExchangeGuard(uint256 newCurveMaxExchangeGuard) external onlyGovernor {
         require(newCurveMaxExchangeGuard < 100 && newCurveMaxExchangeGuard > 1, "newCurveMaxExGuard out of range");
         emit ParameterChange("curveMaxExchangeGuard", newCurveMaxExchangeGuard, _curveMaxExchangeGuard);
@@ -199,7 +189,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
 
     function getArchToLevRatio() public view returns (uint256) {
         return _auction.getCurrentBiddingPrice();
-        // return _archToLevRatio;
     }
 
     function getMinPositionCollateral() external view returns (uint256) {
@@ -260,19 +249,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
-    }
-
-    function setArchGovernor(address newArchGovernor) public onlyAdmin {
-        address oldArchGov = _addressArchGovernor;
-        require(oldArchGov != newArchGovernor, "New Arch gov must be diff");
-        _grantRole(ARCH_GOVERNOR_ROLE, newArchGovernor);
-        _revokeRole(ARCH_GOVERNOR_ROLE, oldArchGov);
-        _addressArchGovernor = newArchGovernor;
-    }
-
-    modifier onlyArchGovernor() {
-        require(hasRole(ARCH_GOVERNOR_ROLE, msg.sender), "Caller is not Arch Governor");
-        _;
     }
 
     fallback() external {

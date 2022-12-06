@@ -52,8 +52,8 @@ export async function setRolesForEndToEnd (r: ContractTestContext) {
 export async function startAndEndAuction(
      r: ContractTestContext,
      length: number, 
-     startPrice: BigNumber = ethers.utils.parseUnits("301.0"), 
-     endPrice: BigNumber = ethers.utils.parseUnits("300.0"))
+     startPrice: BigNumber = ethers.utils.parseUnits("300.0"), 
+     endPrice: BigNumber = ethers.utils.parseUnits("301.0"))
 {
       /// start Auction and end it to get a static endPrice
       const startBlock = await ethers.provider.blockNumber;
