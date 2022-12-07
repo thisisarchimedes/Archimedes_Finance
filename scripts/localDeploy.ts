@@ -1,6 +1,6 @@
 import hre, { ethers } from "hardhat";
 import { helperSwapETHWithOUSD, addressOUSD, abiOUSDToken } from "../test/MainnetHelper";
-import { buildContractTestContext, setRolesForEndToEnd,startAndEndAuction } from "../test/ContractTestContext";
+import { buildContractTestContext, setRolesForEndToEnd, startAndEndAuction } from "../test/ContractTestContext";
 import dotenv from "dotenv";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
@@ -55,7 +55,7 @@ const deployScript = async () => {
     // await context.auction.startAuction(startBlock + 1,ethers.utils.parseUnits("301.0"), ethers.utils.parseUnits("300.0"))
     await fundLVUSDToCoordinator();
     await setRolesForEndToEnd(context);
-    await startAndEndAuction(context,5);
+    await startAndEndAuction(context, 5);
 
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
     // await fundLVUSDToCoordinator();

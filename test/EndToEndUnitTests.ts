@@ -189,9 +189,9 @@ describe("Building basic environment", function () {
 
         it("Should be able to change start auction as Auctioneer", async function () {
             await r.auction.setAuctioneer(user.address);
-            /// need to stop auction? 
-        
-            await r.auction.connect(user).startAuctionWithLength(5,parseUnitsNum(100), parseUnitsNum(300) );
+            /// need to stop auction?
+
+            await r.auction.connect(user).startAuctionWithLength(5, parseUnitsNum(100), parseUnitsNum(300));
             // mine a block
             await ethers.provider.send("evm_mine");
 

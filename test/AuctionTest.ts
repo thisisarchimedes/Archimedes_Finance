@@ -28,7 +28,7 @@ describe("Auction test suite", function () {
     const incrementalPricePerBlock: BigNumber = bnFromNum((300 - 200) / length);
     let owner;
     async function setupFixture () {
-        [owner] = await ethers.getSigners();;
+        [owner] = await ethers.getSigners();
         const auctionFactory = await ethers.getContractFactory("Auction");
         const auction = await hre.upgrades.deployProxy(auctionFactory, [], { kind: "uups" });
         await startAuction(auction);
@@ -87,7 +87,7 @@ describe("Auction test suite", function () {
         });
     });
 
-    describe("Auction start/stop test suite", function (){ 
+    describe("Auction start/stop test suite", function () {
         it("Should not be able to start auction if there is a running auction", async function () {
             const auction = await loadFixture(setupFixture);
             await expect(startAuction(auction)).to.be.revertedWith("err:auction currently running");
@@ -95,12 +95,12 @@ describe("Auction test suite", function () {
 
         it("should be able to close auction and get endPrice", async function () {
             const auction = await loadFixture(setupFixture);
-           
+
             await auction.stopAuction();
             await mineBlocks(1);
 
-            //expect auction to be closed
-            const isAuctionClosed = await auction.isAuctionClosed()
+            // expect auction to be closed
+            const isAuctionClosed = await auction.isAuctionClosed();
             expect(isAuctionClosed).to.equal(true);
 
             // expect price to equql end price since auction is closed
@@ -109,29 +109,29 @@ describe("Auction test suite", function () {
         });
 
         it("Should be able to stop action and then start a new auction", async function () {
-            const auction = await setupFixture(); // No load fixture on purpose 
+            const auction = await setupFixture(); // No load fixture on purpose
             // expect auction to be open
-            let isAuctionClosed = await auction.isAuctionClosed()
+            let isAuctionClosed = await auction.isAuctionClosed();
             expect(isAuctionClosed).to.equal(false);
 
             await auction.stopAuction();
 
             // expect auction to be closed
-            isAuctionClosed = await auction.isAuctionClosed()
+            isAuctionClosed = await auction.isAuctionClosed();
             expect(isAuctionClosed).to.equal(true);
 
             const currentBlock = await ethers.provider.blockNumber + 2;
             console.log("currentBlock from test" + currentBlock);
-            
+
             await startAuction(auction);
 
             // expect auction to be open
-            isAuctionClosed = await auction.isAuctionClosed()
+            isAuctionClosed = await auction.isAuctionClosed();
             expect(isAuctionClosed).to.equal(false);
 
             // exepct starting price
             const currentAuctionPrice = await auction.getCurrentBiddingPrice();
             expect(startPrice).to.equal(currentAuctionPrice);
         });
-    })
+    });
 });
