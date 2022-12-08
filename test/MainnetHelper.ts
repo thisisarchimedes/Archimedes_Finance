@@ -78,6 +78,7 @@ async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     expect(ret).to.equal(addressWETH9);
 
     /// /////////// 1. ETH->WETH9 //////////////
+    await ethers.provider.send("evm_mine");
 
     // read current signer balance from WETH9 contract (so we can validate increase later)
     let weth9Balance = await weth9.balanceOf(destUser.address);
@@ -105,6 +106,7 @@ async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     // dx: The amount of i being exchanged.
     // min_dy: The minimum amount of j to receive. If the swap would result in less, the transaction will revert.
     await triPool.exchange(indexTripoolWETH9, indexTripoolUSDT, ethAmountToSwap, 1);
+    await ethers.provider.send("evm_mine");
 
     // read balance again and make sure it increased
     expect(await usdtToken.balanceOf(destUser.address)).to.gt(usdtBalance);
@@ -132,8 +134,9 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     const contractCurve3Pool = new ethers.Contract(addressCurve3Pool, abiCurve3Pool, destUser);
 
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
-
+    
     const balanceUSDT = await helperSwapETHWithUSDT(destUser, ethAmountToSwap);
+    await ethers.provider.send("evm_mine");
 
     /// /////////// 2. USDT->3CRV on Curve /////////////////////////
 
@@ -144,6 +147,7 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     let balance3CRV = await token3CRV.balanceOf(destUser.address);
     // Exchange USDT->3CRV
     await contractCurve3Pool.add_liquidity([0, 0, balanceUSDT], 1);
+    await ethers.provider.send("evm_mine");
 
     expect(await token3CRV.balanceOf(destUser.address)).to.gt(balance3CRV);
 
@@ -172,6 +176,7 @@ async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSw
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
 
     const balance3CRV = await helperSwapETHWith3CRV(destUser, ethAmountToSwap);
+    await ethers.provider.send("evm_mine");
 
     /// /////////// 2. USDT->OUSD with OUSD contract //////////////
 
@@ -180,6 +185,7 @@ async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSw
 
     // get user balance
     let balanceOUSD = await tokenOUSD.balanceOf(destUser.address);
+    await ethers.provider.send("evm_mine");
 
     // Exchange USDT->OUSD
     await contractCurveOUSDPool.exchange(indexCurveOUSD3CRV, indexCurveOUSDOUSD, balance3CRV, 1);
