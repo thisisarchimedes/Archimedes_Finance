@@ -10,7 +10,7 @@ import "hardhat/console.sol";
 contract Auction is IAuction, AccessController, UUPSUpgradeable {
     /// access control variables. In V2 move to dedicated lib/class
     bytes32 public constant AUCTIONEER = keccak256("AUCTIONEER");
-    address private _addressAuctioneer;
+    address internal _addressAuctioneer;
     // ^^end access control variables
 
     uint256 internal _currentAuctionId;
@@ -66,8 +66,7 @@ contract Auction is IAuction, AccessController, UUPSUpgradeable {
         } else {
             biddingPrice = _calcCurrentPriceOpenAuction();
         }
-        // console.log("biddingPrice is %s", biddingPrice);
-
+        // sanity and security check
         if (biddingPrice == 0) {
             revert("err:biddingPrice cant be 0");
         } else {
@@ -88,10 +87,10 @@ contract Auction is IAuction, AccessController, UUPSUpgradeable {
         /// might be easier to think about this as y = b - ax
         /// time is the X axis here so when we start auction t=0, when we end t=delt(startBlock, endBlock)
         /// we want to get time that is between 0 and 1 so we'll do
-        /// so this means t_current = (currentBlock - startBlock)/delt(startBlock, endBlock)
+        /// so this means t_current = (currentBlock - startBlock)/delta(startBlock, endBlock)
         /// b = startPrice. b has to equal startPrice since t=0 at that point
         /// a = (startingPrice - endPrice)
-        // curentPrice =  b - ax = startPrice - (startingPrice - endPrice) * t(0...1 only)
+        // currentPrice =  b - ax = startPrice - (startingPrice - endPrice) * t(0...1 only)
         uint256 deltaInPrices = _endPrice - _startPrice;
         console.log("deltaInPrices = %s", deltaInPrices);
         console.log("start block %s, end block %s", _startBlock, _endBlock);
@@ -109,6 +108,14 @@ contract Auction is IAuction, AccessController, UUPSUpgradeable {
 
     /// helper methods
 
+    function isAuctionClosed() public view returns (bool) {
+        if (_isAuctionClosed == true || _endBlock < block.number) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     function _validateAuctionParams(
         uint256 endBlock,
         uint256 startPrice,
@@ -116,7 +123,7 @@ contract Auction is IAuction, AccessController, UUPSUpgradeable {
     ) internal view {
         console.log("endBlock: %s current block: %s", endBlock, block.number);
         require(endBlock > block.number, "err:endBlock<=block.number");
-        require(startPrice < endPrice, "err:startPrice<endPrice");
+        require(startPrice < endPrice, "err:startPrice>endPrice");
     }
 
     function _setAuctionPrivateMembers(
@@ -129,14 +136,6 @@ contract Auction is IAuction, AccessController, UUPSUpgradeable {
         _endBlock = endBlock;
         _startPrice = startPrice;
         _endPrice = endPrice;
-    }
-
-    function isAuctionClosed() public view returns (bool) {
-        if (_isAuctionClosed == true || _endBlock < block.number) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     function _emitAuctionStart() internal {

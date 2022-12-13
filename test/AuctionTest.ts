@@ -8,15 +8,15 @@ import { logger } from "../logger";
 import { BigNumber, Contract } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-function bnFromNum (num:number): BigNumber {
+function bnFromNum (num: number): BigNumber {
     return ethers.utils.parseUnits(num.toString());
 }
 
-function bnFromStr (num:string): BigNumber {
+function bnFromStr (num: string): BigNumber {
     return ethers.utils.parseUnits(num.toString());
 }
 
-function numFromBn (num:BigNumber) : number {
+function numFromBn (num: BigNumber): number {
     return Number(ethers.utils.formatUnits(num));
 }
 
@@ -120,16 +120,13 @@ describe("Auction test suite", function () {
             isAuctionClosed = await auction.isAuctionClosed();
             expect(isAuctionClosed).to.equal(true);
 
-            const currentBlock = await ethers.provider.blockNumber + 2;
-            console.log("currentBlock from test" + currentBlock);
-
             await startAuction(auction);
 
             // expect auction to be open
             isAuctionClosed = await auction.isAuctionClosed();
             expect(isAuctionClosed).to.equal(false);
 
-            // exepct starting price
+            // expect starting price
             const currentAuctionPrice = await auction.getCurrentBiddingPrice();
             expect(startPrice).to.equal(currentAuctionPrice);
         });
