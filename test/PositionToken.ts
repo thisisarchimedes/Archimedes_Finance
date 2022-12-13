@@ -75,7 +75,7 @@ describe("PositionToken test suit", function () {
         await safeTransferAsThirdOwner(
             thirdTokenOwnerAddress,
             secondTokenOwnerAddress,
-            thirdTokenId,
+        thirdTokenId,
         );
         expect(await r.positionToken.ownerOf(thirdTokenId)).to.equal(secondTokenOwnerAddress);
     });

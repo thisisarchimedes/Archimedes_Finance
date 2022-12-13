@@ -176,8 +176,9 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         uint256 ousdPrinciple,
         uint256 cycles,
         uint256 maxArchAmount,
-        address zapperAddress
+        address userAddress
     ) external nonReentrant whenNotPaused returns (uint256) {
+        console.log("in createLeveragedPositionFromZapper: msg.sender is %s", msg.sender);
         // add some minor buffer to the arch we will use for the position
         if (cycles == 0 || cycles > _parameterStore.getMaxNumberOfCycles()) {
             revert("Invalid number of cycles");
@@ -197,13 +198,13 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         require(archNeededToBurn <= maxArchAmount, "Not enough Arch given for Pos");
         uint256 availableLev = _coordinator.getAvailableLeverage();
         require(availableLev >= lvUSDAmount, "Not enough available leverage");
-        _burnArchTokenForPosition(zapperAddress, archNeededToBurn);
-        uint256 positionTokenId = _positionToken.safeMint(msg.sender);
+        _burnArchTokenForPosition(msg.sender, archNeededToBurn);
+        uint256 positionTokenId = _positionToken.safeMint(userAddress);
 
         // Checking allowance due to a potential bug in OUSD contract that can under some conditions, transfer much more then allowance.
         // This bug is fixed in later versions of solidity but adding the check here as a precaution
-        if (_ousd.allowance(zapperAddress, address(this)) >= ousdPrinciple) {
-            _ousd.safeTransferFrom(zapperAddress, _addressCoordinator, ousdPrinciple);
+        if (_ousd.allowance(msg.sender, address(this)) >= ousdPrinciple) {
+            _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
         } else {
             revert("insuff OUSD allowance");
         }
@@ -212,7 +213,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
         uint256 positionExpireTime = _coordinator.getPositionExpireTime(positionTokenId);
 
-        emit PositionCreated(zapperAddress, positionTokenId, ousdPrinciple, lvUSDAmount, archNeededToBurn, positionExpireTime);
+        emit PositionCreated(userAddress, positionTokenId, ousdPrinciple, lvUSDAmount, archNeededToBurn, positionExpireTime);
 
         return positionTokenId;
     }
