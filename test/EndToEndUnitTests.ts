@@ -180,22 +180,22 @@ describe("Building basic environment", function () {
             await r.vault.takeRebaseFees();
         });
 
-        it("Should not not be able to change arch lev ratio as non Arch Governor ", async function () {
+        it("Should not not be able to effect auction as not auctioner ", async function () {
             // const {r} = await loadFixture(setupEnvForIntegrationTestsFixture);
-            const archlevRationChangePromise = r.parameterStore.connect(user).changeArchToLevRatio(parseUnitsNum("100"));
-            await expect(archlevRationChangePromise).to.revertedWith("Caller is not Arch Governor");
+            const stopAuctionPromise = r.auction.connect(userOther).stopAuction();
+            // const archlevRationChangePromise = r.parameterStore.connect(user).changeArchToLevRatio(parseUnitsNum("100"));
+            await expect(stopAuctionPromise).to.revertedWith("Caller is not Auctioneer");
         });
 
-        it("Should be able to change Arch lev Ration as Arch Governor", async function () {
-            const newArchToLevRatio = parseUnitsNum(100);
-            await r.parameterStore.setArchGovernor(user.address);
-            await r.parameterStore.connect(user).changeArchToLevRatio(newArchToLevRatio);
-            expect(await r.parameterStore.getArchToLevRatio()).to.eq(newArchToLevRatio);
-        });
+        it("Should be able to change start auction as Auctioneer", async function () {
+            await r.auction.setAuctioneer(user.address);
+            /// need to stop auction?
 
-        it("Should not allow regular Gov to change ArchToLevRatio", async function () {
-            const archlevRationChangePromise = r.parameterStore.connect(owner).changeArchToLevRatio(parseUnitsNum("200"));
-            await expect(archlevRationChangePromise).to.revertedWith("Caller is not Arch Governor");
+            await r.auction.connect(user).startAuctionWithLength(5, parseUnitsNum(100), parseUnitsNum(300));
+            // mine a block
+            await ethers.provider.send("evm_mine");
+
+            expect(await r.auction.getCurrentBiddingPrice()).to.eq(parseUnitsNum(140));
         });
 
         // Checking environment
@@ -549,16 +549,6 @@ describe("Building basic environment", function () {
             rebaseRateFee = getFloatFromBigNum(await r.parameterStore.getRebaseFeeRate());
             const ousdInVaultAfterRebase = getFloatFromBigNum(await r.vault.totalAssets());
 
-            // actual test
-            // console.log(
-            //     "\x1B[31mSimplePositionCreation: Created a rebase of %s OUSD with %s rebaseFee.
-            //      Total OUSD assets deposited in vault are %s while before it was %s. Delta is %s",
-            //     rebaseAmount,
-            //     rebaseRateFee,
-            //     ousdInVaultAfterRebase,
-            //     vaultAssetsBeforeRebase,
-            //     ousdInVaultAfterRebase - vaultAssetsBeforeRebase,
-            // );
             expect(ousdInVaultAfterRebase - vaultAssetsBeforeRebase).to.closeTo(rebaseAmount - rebaseRateFee * rebaseAmount, 0.01);
         });
 
@@ -632,102 +622,102 @@ describe("Building basic environment", function () {
 
     const spe6 = 0;
 
-    describe("Test suite for security", function () {
-        let archCostOfLeverageIn18Dec;
-        const newCoordinatorLvUSDBalance = 1000;
-        let secondPoisitionLvUSDBorrowed;
-        async function setUpEnvForTestSuiteFixture () {
-            const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
-            archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
-            await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            positionId = 0;
-        }
+    // describe("Test suite for security", function () {
+    //     let archCostOfLeverageIn18Dec;
+    //     const newCoordinatorLvUSDBalance = 1000;
+    //     let secondPoisitionLvUSDBorrowed;
+    //     async function setUpEnvForTestSuiteFixture () {
+    //         const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
+    //         archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
+    //         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         positionId = 0;
+    //     }
 
-        async function verifyPositionCreationFails (
-            message,
-            ousdPrinciple = userOUSDPrincipleIn18Decimal,
-            cycles = numberOfCycles,
-            archToGive = archCostOfLeverageIn18Dec,
-        ) {
-            await r.archToken.connect(user).approve(r.leverageEngine.address, archToGive);
-            await r.externalOUSD.connect(user).approve(r.leverageEngine.address, ousdPrinciple);
-            const promise = r.leverageEngine.connect(user).createLeveragedPosition(ousdPrinciple, cycles, archToGive);
-            await expect(promise).to.be.revertedWith(message);
-        }
+    //     async function verifyPositionCreationFails (
+    //         message,
+    //         ousdPrinciple = userOUSDPrincipleIn18Decimal,
+    //         cycles = numberOfCycles,
+    //         archToGive = archCostOfLeverageIn18Dec,
+    //     ) {
+    //         await r.archToken.connect(user).approve(r.leverageEngine.address, archToGive);
+    //         await r.externalOUSD.connect(user).approve(r.leverageEngine.address, ousdPrinciple);
+    //         const promise = r.leverageEngine.connect(user).createLeveragedPosition(ousdPrinciple, cycles, archToGive);
+    //         await expect(promise).to.be.revertedWith(message);
+    //     }
 
-        it("Should make sure coordinator has no leverage", async () => {
-            await loadFixture(setupEnvForIntegrationTestsFixture);
-            await loadFixture(setUpEnvForTestSuiteFixture);
+    //     it("Should make sure coordinator has no leverage", async () => {
+    //         await loadFixture(setupEnvForIntegrationTestsFixture);
+    //         await loadFixture(setUpEnvForTestSuiteFixture);
 
-            await r.coordinator.resetAndBurnLeverage();
+    //         await r.coordinator.resetAndBurnLeverage();
 
-            const coordinatorLvUSDBalance = await r.lvUSD.balanceOf(r.coordinator.address);
-            expect(coordinatorLvUSDBalance).to.eq(0);
+    //         const coordinatorLvUSDBalance = await r.lvUSD.balanceOf(r.coordinator.address);
+    //         expect(coordinatorLvUSDBalance).to.eq(0);
 
-            const coordinatorLeverageBalance = await r.parameterStore.getCoordinatorLeverageBalance();
-            expect(coordinatorLeverageBalance).to.eq(0);
-        });
+    //         const coordinatorLeverageBalance = await r.parameterStore.getCoordinatorLeverageBalance();
+    //         expect(coordinatorLeverageBalance).to.eq(0);
+    //     });
 
-        it("Should not allow any opening of position as no leverage is available", async () => {
-            await verifyPositionCreationFails("Not enough available leverage");
-        });
+    //     it("Should not allow any opening of position as no leverage is available", async () => {
+    //         await verifyPositionCreationFails("Not enough available leverage");
+    //     });
 
-        it("should not allow leverage to be risen if lvUSD balance is not correct", async () => {
-            const promise = r.coordinator.acceptLeverageAmount(parseUnitsNum(initialCoordinatorLvUSDBalance));
-            await expect(promise).to.be.revertedWith("lvUSD !< levAmt");
+    //     it("should not allow leverage to be risen if lvUSD balance is not correct", async () => {
+    //         const promise = r.coordinator.acceptLeverageAmount(parseUnitsNum(initialCoordinatorLvUSDBalance));
+    //         await expect(promise).to.be.revertedWith("lvUSD !< levAmt");
 
-            // To be extra sure, try to open position and see it fails
-            await verifyPositionCreationFails("Not enough available leverage");
-        });
+    //         // To be extra sure, try to open position and see it fails
+    //         await verifyPositionCreationFails("Not enough available leverage");
+    //     });
 
-        it("Should not allow to open position even if lvUSD balance of Coordinator is high (if leverage is not set)", async () => {
-            await r.lvUSD.setMintDestination(r.coordinator.address);
-            await r.lvUSD.mint(parseUnitsNum(newCoordinatorLvUSDBalance));
+    //     it("Should not allow to open position even if lvUSD balance of Coordinator is high (if leverage is not set)", async () => {
+    //         await r.lvUSD.setMintDestination(r.coordinator.address);
+    //         await r.lvUSD.mint(parseUnitsNum(newCoordinatorLvUSDBalance));
 
-            // To be extra sure, try to open position and see it fails
-            await verifyPositionCreationFails("Not enough available leverage");
+    //         // To be extra sure, try to open position and see it fails
+    //         await verifyPositionCreationFails("Not enough available leverage");
 
-            // Make sure available leverage does not change
-            const leverageAvailable = await r.coordinator.getAvailableLeverage();
-            expect(leverageAvailable).to.equal(0);
-        });
+    //         // Make sure available leverage does not change
+    //         const leverageAvailable = await r.coordinator.getAvailableLeverage();
+    //         expect(leverageAvailable).to.equal(0);
+    //     });
 
-        it("Should create position when setting leverage + lvUSD balance", async () => {
-            const nftShouldNotExists = await r.positionToken.exists(1);
-            expect(nftShouldNotExists).to.equal(false);
-            await r.coordinator.acceptLeverageAmount(parseUnitsNum(newCoordinatorLvUSDBalance));
+    //     it("Should create position when setting leverage + lvUSD balance", async () => {
+    //         const nftShouldNotExists = await r.positionToken.exists(1);
+    //         expect(nftShouldNotExists).to.equal(false);
+    //         await r.coordinator.acceptLeverageAmount(parseUnitsNum(newCoordinatorLvUSDBalance));
 
-            await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            const nftExists = await r.positionToken.exists(1);
-            expect(nftExists).to.equal(true);
-        });
+    //         await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+    //         const nftExists = await r.positionToken.exists(1);
+    //         expect(nftExists).to.equal(true);
+    //     });
 
-        it("Should update leverage available when taking position", async () => {
-            secondPoisitionLvUSDBorrowed = getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(1));
-            const leverageAvailable = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
-            expect(newCoordinatorLvUSDBalance - secondPoisitionLvUSDBorrowed).to.closeTo(leverageAvailable, 0.0000001);
-        });
+    //     it("Should update leverage available when taking position", async () => {
+    //         secondPoisitionLvUSDBorrowed = getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(1));
+    //         const leverageAvailable = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
+    //         expect(newCoordinatorLvUSDBalance - secondPoisitionLvUSDBorrowed).to.closeTo(leverageAvailable, 0.0000001);
+    //     });
 
-        it("Should not increase available leverage if more lvUSD is minted to coordinator", async () => {
-            const beforeMintingLeverageAmount = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
-            await r.lvUSD.setMintDestination(r.coordinator.address);
-            await r.lvUSD.mint(parseUnitsNum(newCoordinatorLvUSDBalance));
-            /// Make sure correct balanceOf on lvUSD
-            expect(getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address))).to.closeTo(
-                newCoordinatorLvUSDBalance + beforeMintingLeverageAmount,
-                1,
-            );
-            /// make sure leverage available doesn't change
-            const leverageAvailable = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
-            expect(beforeMintingLeverageAmount).to.eq(leverageAvailable);
-        });
+    //     it("Should not increase available leverage if more lvUSD is minted to coordinator", async () => {
+    //         const beforeMintingLeverageAmount = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
+    //         await r.lvUSD.setMintDestination(r.coordinator.address);
+    //         await r.lvUSD.mint(parseUnitsNum(newCoordinatorLvUSDBalance));
+    //         /// Make sure correct balanceOf on lvUSD
+    //         expect(getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address))).to.closeTo(
+    //             newCoordinatorLvUSDBalance + beforeMintingLeverageAmount,
+    //             1,
+    //         );
+    //         /// make sure leverage available doesn't change
+    //         const leverageAvailable = getFloatFromBigNum(await r.coordinator.getAvailableLeverage());
+    //         expect(beforeMintingLeverageAmount).to.eq(leverageAvailable);
+    //     });
 
-        it("Should not allow to open more positions even if lvUSD balance of coordinator is high enough, once leverage accepted is used",
-            async () => {
-                await approveAndGetLeverageAsUser(parseUnitsNum(100), 7, parseUnitsNum(100), r, user);
-                await verifyPositionCreationFails("Not enough available leverage", parseUnitsNum(100), 7, parseUnitsNum(100));
-            });
-    });
+    //     it("Should not allow to open more positions even if lvUSD balance of coordinator is high enough, once leverage accepted is used",
+    //         async () => {
+    //             await approveAndGetLeverageAsUser(parseUnitsNum(100), 7, parseUnitsNum(100), r, user);
+    //             await verifyPositionCreationFails("Not enough available leverage", parseUnitsNum(100), 7, parseUnitsNum(100));
+    //         });
+    // });
 
     const endthis = 0;
 });
