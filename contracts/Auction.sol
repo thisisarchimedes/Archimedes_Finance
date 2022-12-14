@@ -92,16 +92,9 @@ contract Auction is IAuction, AccessController, UUPSUpgradeable {
         /// a = (startingPrice - endPrice)
         // currentPrice =  b - ax = startPrice - (startingPrice - endPrice) * t(0...1 only)
         uint256 deltaInPrices = _endPrice - _startPrice;
-        console.log("deltaInPrices = %s", deltaInPrices);
-        console.log("start block %s, end block %s", _startBlock, _endBlock);
         uint256 deltaInPriceMulCurrentTime = (deltaInPrices * (block.number - _startBlock)) / (_endBlock - _startBlock);
-        console.log("deltaInPriceMulCurrentTime = %s", deltaInPriceMulCurrentTime);
-
         uint256 maxPriceForAuction = _startPrice;
-        console.log("maxPriceForAuction = %s", maxPriceForAuction);
-
         uint256 currentPrice = maxPriceForAuction + deltaInPriceMulCurrentTime;
-        console.log("currentPrice = %s", currentPrice);
 
         return currentPrice;
     }
