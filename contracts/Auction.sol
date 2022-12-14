@@ -43,7 +43,6 @@ contract Auction is IAuction, AccessController, UUPSUpgradeable {
         uint256 startPrice,
         uint256 endPrice
     ) internal {
-        console.log("starting action with endBlock: %s startPrice: %s endPrice: %s", endBlock, startPrice, endPrice);
         require(isAuctionClosed() == true, "err:auction currently running");
         _validateAuctionParams(endBlock, startPrice, endPrice);
         _setAuctionPrivateMembers(endBlock, startPrice, endPrice);
