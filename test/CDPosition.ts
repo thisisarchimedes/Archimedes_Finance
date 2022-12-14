@@ -10,7 +10,7 @@ describe("CDPosition test suit", async function () {
     const getFloatFromBigNumNoDecimal = (bigNumber) => {
         return parseFloat(ethers.utils.formatUnits(bigNumber, 0));
     };
-    async function validateCDP (nftID, principle, interestEarned, total, borrowed, shares) {
+    async function validateCDP(nftID, principle, interestEarned, total, borrowed, shares) {
         expect(await cdp.getOUSDPrinciple(nftID)).to.equal(principle);
         // We cant run this without actually having funds in the vault. Tested in integration tests
         // expect(await cdp.getOUSDInterestEarned(nftID)).to.equal(interestEarned);
@@ -18,9 +18,9 @@ describe("CDPosition test suit", async function () {
         expect(await cdp.getLvUSDBorrowed(nftID)).to.equal(borrowed);
         expect(await cdp.getShares(nftID)).to.equal(shares);
 
-        expect(getFloatFromBigNumNoDecimal(await cdp.getPositionTimeOpened(nftID))).to.closeTo(1657322079, 10);
+        expect(getFloatFromBigNumNoDecimal(await cdp.getPositionTimeOpened(nftID))).to.closeTo(1657322079, 100000);
         expect(await cdp.getPositionTimeToLive(nftID)).to.equal(ethers.utils.parseUnits("369", 0));
-        expect(getFloatFromBigNumNoDecimal(await cdp.getPositionExpireTime(nftID))).to.closeTo(1689203679, 10);
+        expect(getFloatFromBigNumNoDecimal(await cdp.getPositionExpireTime(nftID))).to.closeTo(1689203679, 100000);
 
         // console.log(
         //     "time opened, time to live, expires at",

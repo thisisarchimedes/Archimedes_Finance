@@ -113,9 +113,8 @@ contract Auction is IAuction, AccessController, UUPSUpgradeable {
         uint256 startPrice,
         uint256 endPrice
     ) internal view {
-        console.log("endBlock: %s current block: %s", endBlock, block.number);
         require(endBlock > block.number, "err:endBlock<=block.number");
-        require(startPrice > 0, "err:allows for initial biddingPrice of 0");
+        require(startPrice > 0, "err:start price cant be 0");
         require(startPrice < endPrice, "err:startPrice>endPrice");
     }
 
