@@ -52,7 +52,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _rebaseFeeRate = 30 ether / 100; // meaning 30%
         _curveGuardPercentage = 95;
         _slippage = 1; // 1%;
-        _archToLevRatio = 300 ether; // meaning 1 arch is equal 300 lvUSD
+        _archToLevRatio = 10 ether; // meaning 1 arch is equal 300 lvUSD
         _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
         _minPositionCollateral = 9 ether;
         _positionTimeToLiveInDays = 369;
