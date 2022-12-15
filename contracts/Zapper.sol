@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.13;
 
 import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
@@ -30,12 +32,70 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     address constant _addressUniswapFactory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
     int128 constant ousdTokenIndex = 0;
 
-    function getPath() internal view returns (address[] memory) {
+    function getPath(address addressBaseStable) internal view returns (address[] memory) {
         address[] memory path = new address[](3);
-        path[0] = _addressUSDT;
+        path[0] = addressBaseStable;
         path[1] = _addressWETH9;
         path[2] = address(_archToken);
         return path;
+    }
+
+    function _getCollateralAmount(
+        uint256 crvAmount,
+        uint256 cycles,
+        address[] memory path
+    ) internal view returns (uint256) {
+        /// Figure out how much Arch and OUSD IsNeeded to pay for the position, assume OUSD to 3crv exchange rate is 1:1
+        uint256 archToLevRatio = _paramStore.getArchToLevRatio();
+        uint256 multiplierOfLeverageFromOneCollateral = _paramStore.getAllowedLeverageForPosition(1 ether, cycles);
+        console.log(
+            "multiplierOfLeverageFromOneCollateral %s, %s",
+            multiplierOfLeverageFromOneCollateral / 1 ether,
+            multiplierOfLeverageFromOneCollateral
+        );
+
+        /// Get the price of 1 arch token in usdt
+        uint256[] memory amounts = _uniswapRouter.getAmountsIn(1 ether, path);
+        uint256 archPriceInUSDT = amounts[0];
+        console.log("--1st: archPriceInUSDT %s %s", archPriceInUSDT, archPriceInUSDT / 10**6);
+
+        // uint256 archPriceInUSDTNoDecimals = archPriceInUSDT / 10**6;
+        // console.log(
+        //     "Price of 1 arch in USDT - amounts[0] %s, amount[1] %s, amount[2] %s ",
+        //     archPriceInUSDT / 10**6,
+        //     amounts[1],
+        //     amounts[2] / 1 ether
+        // );
+
+        /// Change all values to 18 decimals
+        uint256 tempCalc = (multiplierOfLeverageFromOneCollateral * archPriceInUSDT) / 1 ether;
+        uint256 ratioOfColl = (archToLevRatio * 10**6) / (archToLevRatio + tempCalc * 10**12);
+        // console.log("1st: loweDemitor %s", ratioOfColl);
+        uint256 collateralAmount = (crvAmount * ratioOfColl) / 10**6;
+        console.log("1st:collateralAmount %s", collateralAmount);
+        console.log("!rchToLevRatio %s, amountToSpend(usdt) %s", archToLevRatio / 1 ether, crvAmount / 10**6);
+
+        /// Now we have an estimate of how much collateral have, so we can calc how much Arch we need
+        /// Do a second round of calc where everything is the same, just with the Arch price being more accurate
+        /// TODO: Add another rounc
+
+        uint256 archAmountEstimated = _paramStore.calculateArchNeededForLeverage(
+            ((collateralAmount * 10**12) * multiplierOfLeverageFromOneCollateral) / 1 ether
+        );
+        console.log("2nd archAmountEstimated %s %s", archAmountEstimated, archAmountEstimated / 1 ether);
+        amounts = _uniswapRouter.getAmountsIn(archAmountEstimated, path);
+        archPriceInUSDT = ((amounts[0] * 1 ether) / archAmountEstimated);
+        console.log("--2nd archPriceInUSDT %s %s", archPriceInUSDT, archPriceInUSDT / 10**6);
+
+        tempCalc = (multiplierOfLeverageFromOneCollateral * archPriceInUSDT) / 1 ether;
+        ratioOfColl = (archToLevRatio * 10**6) / (archToLevRatio + tempCalc * 10**12);
+        console.log("2nd loweDemitor %s", ratioOfColl);
+        collateralAmount = (crvAmount * ratioOfColl) / 10**6;
+        console.log("2nd collateralAmount %s", collateralAmount);
+
+        uint256 collateralAmountWithBuffer = (collateralAmount * 101) / 99;
+        console.log("!collateralAmountWithBuffer %s", collateralAmountWithBuffer);
+        return collateralAmountWithBuffer;
     }
 
     /// Coin 0 in pool is OUSD
@@ -50,7 +110,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         uint256 crvAmount,
         uint256 minCollateralReturned,
         uint256 cycles,
-        int128 tokenIndex
+        int128 tokenIndex,
+        address addressBaseStable
     ) external {
         // Whats needs to happen?
         // 1) figure out how much of stable goes to lvUSD and how much to pay as arch tokens
@@ -60,50 +121,31 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         // 4) open position
         // 5) return NFT
 
-        // USDT to Arch path, need to move to method
-        address[] memory path = getPath();
-        // path[0] = _addressUSDT;
-        // path[1] = _addressWETH9;
-        // path[2] = address(_archToken);
+        address[] memory path = getPath(addressBaseStable);
 
-        /// Figure out how much Arch and OUSD IsNeeded to pay for the position, assume OUSD to 3crv exchange rate is 1:1
-        uint256 archToLevRatio = _paramStore.getArchToLevRatio();
-        // uint256 archToLevRationNoDecimals = archToLevRatio / 1 ether;
-        /// Get the price of 1 arch token in usdt
-        //function getAmountsIn(address factory, uint amountOut, address[] memory path) internal view returns (uint[] memory amounts);
-        uint256[] memory amounts = _uniswapRouter.getAmountsIn(1 ether, path);
-        uint256 archPriceInUSDT = amounts[0];
-        // uint256 archPriceInUSDTNoDecimals = archPriceInUSDT / 10**6;
-        console.log(
-            "Price of 1 arch in USDT - amounts[0] %s, amount[1] %s, amount[2] %s ",
-            archPriceInUSDT / 10**6,
-            amounts[1],
-            amounts[2] / 1 ether
-        );
-
-        /// Change all values to 18 decimals
-        uint256 ratioOfColl = (archToLevRatio * 10**6) / (archToLevRatio + archPriceInUSDT * 10**12);
-        console.log("loweDemitor %s", ratioOfColl);
-        uint256 collateralAmount = (crvAmount * ratioOfColl) / 10**6;
-        console.log("collateralAmount %s", collateralAmount);
-
-        // uint256 usdtBalance = _usdt.balanceOf(address(this));
-        console.log("!rchToLevRatio %s, amountToSpend(usdt) %s", archToLevRatio / 1 ether, crvAmount / 10**6);
+        // Figure out how much of stable goes to OUSD and how much to pay as arch tokens
+        uint256 collateralInBaseStableAmount = _getCollateralAmount(crvAmount, cycles, path);
+        uint256 coinsToPayForArchAmount = crvAmount - collateralInBaseStableAmount;
 
         /// Exchange Token for Arch
-        // Exchange token for Arch
-        // uint256 _usdtBalance = _usdt.balanceOf(address(this));
-        // console.log("!!!!before exchange to arch!!! %s, %s , %s", address(_uniswapRouter), _usdtBalance, crvAmount);
-        _usdt.safeApprove(address(_uniswapRouter), crvAmount);
-        _uniswapRouter.swapExactTokensForTokens(crvAmount, 0, path, address(this), 1670978314);
-        // uint256 archAmount = _exchangeToArch(tokenIndex, crvAmount, minCollateralReturned);
-        uint256 _usdtBalanceAfter = _usdt.balanceOf(address(this));
-        uint256 _archBalanceAfter = _archToken.balanceOf(address(this));
-        console.log("!!!!after exchange to arch!!! %s,%s", _usdtBalanceAfter, _archBalanceAfter / 10**16);
-
+        _uniswapRouter.swapExactTokensForTokens(coinsToPayForArchAmount, 0, path, address(this), 1670978314);
         /// Exchange OUSD from any of the 3CRV
-        uint256 collateral = _exchangeToOUSD(tokenIndex, crvAmount, minCollateralReturned);
-        uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(collateral, cycles, 100 ether, msg.sender);
+        uint256 collateralInOusd = _exchangeToOUSD(collateralInBaseStableAmount, minCollateralReturned, tokenIndex);
+        /// get Arch and OUSD balances
+        uint256 archBalance = _archToken.balanceOf(address(this));
+        uint256 ousdBalance = _ousd.balanceOf(address(this));
+        uint256 usdtBalance = _usdt.balanceOf(address(this));
+        uint256 calculatedLeveragePerGivenArch = _paramStore.calculateLeverageAllowedForArch(archBalance);
+        uint256 calcLeverageNeededForCollateral = _paramStore.getAllowedLeverageForPosition(ousdBalance, cycles);
+        console.log(
+            "calculatedLeveragePerGivenArch %s, calcLeverageNeededForCollateral %s",
+            calculatedLeveragePerGivenArch / 1 ether,
+            calcLeverageNeededForCollateral / 1 ether
+        );
+
+        console.log("archBalance %s, ousdBalance %s, usdtBalance %s", archBalance, ousdBalance, usdtBalance);
+        /// create position
+        uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(ousdBalance, cycles, archBalance, msg.sender);
 
         // return tokenId;
         /// One way to do it:
@@ -122,9 +164,9 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     // }
 
     function _exchangeToOUSD(
-        int128 fromTokenIndex,
         uint256 amount,
-        uint256 minAmountToReceive
+        uint256 minAmountToReceive,
+        int128 fromTokenIndex
     ) internal returns (uint256 amountOUSDReceived) {
         _usdt.safeApprove(address(_poolOUSD3CRV), amount);
         uint256 amountReceived = _poolOUSD3CRV.exchange_underlying(fromTokenIndex, ousdTokenIndex, amount, minAmountToReceive);
@@ -190,5 +232,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         /// Need to approve for both Arch and ousd
         _archToken.safeApprove(addressLevEngine, 0);
         _archToken.safeApprove(addressLevEngine, type(uint256).max);
+
+        _usdt.safeApprove(address(_uniswapRouter), 0);
+        _usdt.safeApprove(address(_uniswapRouter), type(uint256).max);
     }
 }

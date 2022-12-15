@@ -250,7 +250,7 @@ describe("Zapper test suite", function () {
             const archTokenBalancBefore = await r.archToken.balanceOf(zapper.address)
             console.log("archTokenBalancBefore is " + numFromBn(archTokenBalancBefore))
             console.log("usdtBalanceBefore is " + ethers.utils.formatUnits(usdtBalance, 6));
-            await zapper.zapIn(exchangeAmount, bnFromNum(1), 5, 3);
+            await zapper.zapIn(exchangeAmount, bnFromNum(1), 5, 3, addressUSDT);
 
             // console out both usdtBalance after and archTokenBalance after
             const archTokenBalancAfter = await r.archToken.balanceOf(zapper.address)
@@ -289,7 +289,7 @@ describe("Zapper test suite", function () {
 
         //     /// transfer funds to Zapper. Curve API require funds be on who ever calls it.
         //     await r.externalUSDT.transfer(zapper.address, exchangeAmount)
-        //     await zapper.zapIn(exchangeAmount, bnFromNum(1), 5, 3);
+        //     await zapper.zapIn(exchangeAmount, bnFromNum(1), 5, 3, addressUSDT);
 
 
         //     const newPositionExists = await r.positionToken.balanceOf(zapper.address)
