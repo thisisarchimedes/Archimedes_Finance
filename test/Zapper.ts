@@ -11,6 +11,7 @@ import {
     abiWETH9Token,
     addressCurveOUSDPool,
     helperSwapETHWith3CRV,
+    helperSwapETHWithOUSD,
     helperSwapETHWithUSDT,
     helperResetNetwork,
     defaultBlockNumber,
