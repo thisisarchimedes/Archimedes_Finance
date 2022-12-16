@@ -250,7 +250,7 @@ describe("Zapper test suite", function () {
             const archTokenBalancBefore = await r.archToken.balanceOf(zapper.address)
             console.log("archTokenBalancBefore is " + numFromBn(archTokenBalancBefore))
             console.log("usdtBalanceBefore is " + ethers.utils.formatUnits(usdtBalance, 6));
-            await zapper.zapIn(exchangeAmount, bnFromNum(1), 5, 3, addressUSDT);
+            await zapper.zapIn(exchangeAmount, 5, addressUSDT);
 
             // console out both usdtBalance after and archTokenBalance after
             const archTokenBalancAfter = await r.archToken.balanceOf(zapper.address)
