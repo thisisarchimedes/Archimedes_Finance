@@ -17,7 +17,7 @@ import {
 } from "./MainnetHelper";
 import { helperSwapETHWithOUSD } from "./MainnetHelper";
 import { buildContractTestContext, ContractTestContext, setRolesForEndToEnd } from "./ContractTestContext";
-import { formatUnits } from "ethers/lib/utils";
+import { formatUnits, zeroPad } from "ethers/lib/utils";
 import { logger } from "../logger";
 import { BigNumber, Contract } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -108,54 +108,11 @@ describe("Zapper test suite", function () {
 
         await addLiquidityToPairViaRouter(r, pairToken);
 
-        await ethers.provider.send("evm_mine");
+        // await ethers.provider.send("evm_mine");
 
-        const router = await getRouter(r);
+        // const router = await getRouter(r);
 
-        await ethers.provider.send("evm_mine");
-
-
-        const tokenUSDT = new ethers.Contract(addressUSDT, abiUSDTToken, owner);
-        await helperSwapETHWithUSDT(owner, bnFromNum(1));
-        const usdtBalance = await tokenUSDT.balanceOf(owner.address);
-        await tokenUSDT.approve(routeAddress, usdtBalance);
-
-        await ethers.provider.send("evm_mine");
-
-
-        const archTokenBalancBefore = await r.archToken.balanceOf(owner.address);
-        const wethBalanceBefore = await externalWETH.balanceOf(owner.address);
-        const usdtBalanceBefore = await tokenUSDT.balanceOf(owner.address);
-        // console.log("USDT balance before : ", ethers.utils.formatUnits(usdtBalanceBefore, 6))
-        // console.log("arch balance before : %s %s ", numFromBn(archTokenBalancBefore), archTokenBalancBefore)
-        // console.log("weth balance before : ", numFromBn(wethBalanceBefore));
-        /* 
-        function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
-            external
-            payable
-            returns (uint[] memory amounts);
-        */
-        // await router.swapETHForExactTokens(ethers.utils.parseUnits("5", 6), [addressWETH9, tokenUSDT.address], owner.address, 1670978314, { value: bnFromNum(12) })
-        // await router.swapExactTokensForETH(ethers.utils.parseUnits("200", 6), 0, [tokenUSDT.address, addressWETH9], owner.address, 1670978314)
-
-        /// THIS ONE works!
-        await router.swapExactTokensForTokens(ethers.utils.parseUnits("50", 6), 0, [tokenUSDT.address, addressWETH9, r.archToken.address], owner.address, 1670978314)
-        /// ^^
-
-        /// Now lets try to get 
-
-        await ethers.provider.send("evm_mine");
-
-        const archTokenBalancAfter = await r.archToken.balanceOf(owner.address);
-        const wethBalanceAfter = await externalWETH.balanceOf(owner.address);
-        const usdtBalanceAfter = await tokenUSDT.balanceOf(owner.address);
-        // console.log("USDT balance AFTER : ", ethers.utils.formatUnits(usdtBalanceAfter, 6))
-        // console.log("arch balance after : %s %s", numFromBn(archTokenBalancAfter), archTokenBalancAfter);
-        // console.log("weth balance after : ", numFromBn(wethBalanceAfter));
-        // const reserves = await pairToken.getReserves();
-        // console.log("reserves : ", reserves);
-        /// Take liquidity
-
+        // await ethers.provider.send("evm_mine");
 
 
         // const tokenUSDT = new ethers.Contract(addressUSDT, abiUSDTToken, owner);
@@ -163,31 +120,12 @@ describe("Zapper test suite", function () {
         // const usdtBalance = await tokenUSDT.balanceOf(owner.address);
         // await tokenUSDT.approve(routeAddress, usdtBalance);
 
-        // console.log("usdt balance : ", ethers.utils.formatUnits(usdtBalance, 6));
+        /// THIS ONE works!
+        // await router.swapExactTokensForTokens(ethers.utils.parseUnits("50", 6), 0, [tokenUSDT.address, addressWETH9, r.archToken.address], owner.address, 1670978314);
+        /// ^^
+
 
         await ethers.provider.send("evm_mine");
-
-        /*
-        function swapTokensForExactTokens(
-        uint amountOut,
-        uint amountInMax,
-        address[] calldata path,
-        address to,
-        uint deadline
-        ) external returns (uint[] memory amounts); 
-        */
-
-        // const amountIn = await router.getAmountsIn(bnFromNum(1), [addressUSDT, addressWETH9, r.archToken.address]);
-        // console.log("amountIn : ", amountIn);
-
-        //   function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
-        //   external
-        //   returns (uint[] memory amounts);
-
-        // await router.swapTokensForExactETH(ethers.utils.parseUnits("1", 18), ethers.utils.parseUnits("10", 6), [addressUSDT, addressWETH9], owner.address, 1670978314);
-
-        // await router.swapExactTokensForTokens(ethers.utils.parseUnits("10", 6), ethers.utils.parseUnits("1", 18), [addressUSDT, addressWETH9, r.archToken.address], owner.address, 1670978314);
-
     }
     async function setupFixture() {
         // build mainnet fork and deploy archimedes
@@ -213,94 +151,130 @@ describe("Zapper test suite", function () {
         await r.coordinator.acceptLeverageAmount(bnFromNum(10000));
         await setRolesForEndToEnd(r);
 
-
-        // tokenUSDT = new ethers.Contract(addressUSDT, abiUSDTToken, owner);
-
-
+        // Create pool and get user some USDT [TODO: Add more tokens]
         await createUniswapPool(r)
         await helperSwapETHWithUSDT(owner, bnFromNum(1));
         const usdtBalance = await r.externalUSDT.balanceOf(owner.address)
-        // const crvBalance = await r.external3CRV.balanceOf(owner.address)
         console.log("Balance of USDT for owner is " + usdtBalance)
-        // console.log("Balance of 3crv for owner is " + crvBalance)
 
-        await r.externalUSDT.approve(addressCurveOUSDPool, usdtBalance);
-        await r.externalUSDT.approve(zapper.address, usdtBalance);
-
-        // await r.external3CRV.approve(addressCurveOUSDPool, crvBalance);
-        // await r.external3CRV.approve(zapper.address, crvBalance);
+        // Approve USDT to zapper (users would do it via UI in real app)
+        // await r.externalUSDT.approve(zapper.address, usdtBalance);
 
         /// Get user some arch 
 
         console.log("END Setting up")
 
-        return zapper;
+        return { r, zapper };
     }
 
+    async function zapIntoPosition(r: ContractTestContext, zapper: ContractTestContext, useUserArch = false) {
+        await r.externalUSDT.approve(zapper.address, exchangeAmount)
+        await zapper.zapIn(exchangeAmount, cycles, 990, addressUSDT, useUserArch);
+    }
+    const exchangeAmount = 10000000;  // this is 10 in 6Decimal
+    const cycles = 5;
+    const positionId = 0;
+
     describe("Basic Zapper test", function () {
-        /// write a test to check that the zapper is able to exchange some arch from USDT
-        it("Should be able to exchange some arch from USDT", async function () {
-            const zapper = await loadFixture(setupFixture);
-            const exchangeAmount = 10000000;  // this is 10 in 6Decimal
-            await r.externalUSDT.transfer(zapper.address, exchangeAmount)
-            // clear out Arch token amount of Owner
-            // await r.archToken.transfer(r.treasurySigner.address, bnFromNum(100))
+        // it("Should be able to zap in and create position", async function () {
+        //     const { r, zapper } = await loadFixture(setupFixture);
+        //     await zapIntoPosition(r, zapper);
+        //     expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+        // });
 
-            const usdtBalance = await r.externalUSDT.balanceOf(zapper.address)
-            const archTokenBalancBefore = await r.archToken.balanceOf(zapper.address)
-            console.log("archTokenBalancBefore is " + numFromBn(archTokenBalancBefore))
-            console.log("usdtBalanceBefore is " + ethers.utils.formatUnits(usdtBalance, 6));
-            await zapper.zapIn(exchangeAmount, 5, addressUSDT);
+        it("Should add CDP values to zapped in position", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            await zapIntoPosition(r, zapper);
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(positionId));
 
-            // console out both usdtBalance after and archTokenBalance after
-            const archTokenBalancAfter = await r.archToken.balanceOf(zapper.address)
-            console.log("archTokenBalancAfter is " + numFromBn(archTokenBalancAfter))
-            const usdtBalanceAfter = await r.externalUSDT.balanceOf(zapper.address)
-            console.log("usdtBalanceAfter is " + ethers.utils.formatUnits(usdtBalanceAfter, 6))
+            console.log(positionId + " position has " + collateral + " OUSD");
+            console.log(positionId + " position has " + leverage + " lvUSD");
 
-            // expect(tokenId).to.equal(1);
+            expect(collateral).to.be.closeTo(8, 1);
+            expect(leverage).to.be.closeTo(34, 2);
         });
 
-        // it("user should have some USDT", async function () { 
-        //     const zapper = await loadFixture(setupFixture);
-        //     const usdtBalance = await tokenUSDT.balanceOf(owner.address)
-        //     /// Notice that USDT is 6 decimal
-        //     expect(usdtBalance).to.gt(ethers.utils.parseUnits("100", 6));
-        // });
+        it("Should be able to create positions using user owned Arch token", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.archToken.connect(r.treasurySigner).transfer(owner.address, bnFromNum(5))
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(5))
+            await zapIntoPosition(r, zapper, true);
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+        });
 
-        // it("Should be able to previewZap", async function () {
-        //     const zapper = await loadFixture(setupFixture);
-        //     const usdtBalance = await r.external3CRV.balanceOf(owner.address)
-        //     console.log("in preview usdtBalance is " + usdtBalance)
-        //     await zapper.previewZapIn(3000000, 3000000, 0);
-        //     // expect(tokenId).to.equal(1);
-        // });
+        it("Should be able to open multiple positions", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.archToken.connect(r.treasurySigner).transfer(owner.address, bnFromNum(10))
 
-        // it("Should be able to Zap", async function () {
-        //     const zapper = await loadFixture(setupFixture);
-        //     const exchangeAmount = 10000000;  // this is 10 in 6Decimal
+            await zapIntoPosition(r, zapper);
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(5))
+            await zapIntoPosition(r, zapper, true);
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(0))
 
-        //     // console.log("OUSD balance before "  + numFromBn(userOUSDBalanceBefore));
-        //     // const usdtBalance = await r.externalUSDT.balanceOf(owner.address)
-
-        //     // const allownaceOfPool = await r.externalUSDT.allowance(owner.address,addressCurveOUSDPool);
-        //     // console.log("inTest:usdtBalance sent is " + usdtBalance + " allownce is " + allownaceOfPool);
-        //     // const exchangeAmount = 10000000;
-
-        //     /// transfer funds to Zapper. Curve API require funds be on who ever calls it.
-        //     await r.externalUSDT.transfer(zapper.address, exchangeAmount)
-        //     await zapper.zapIn(exchangeAmount, bnFromNum(1), 5, 3, addressUSDT);
+            await zapIntoPosition(r, zapper);
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(5))
+            await zapIntoPosition(r, zapper, true);
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(0))
 
 
-        //     const newPositionExists = await r.positionToken.balanceOf(zapper.address)
-        //     expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+            expect(await r.positionToken.ownerOf(1)).to.equal(owner.address);
+            expect(await r.positionToken.ownerOf(2)).to.equal(owner.address);
+            expect(await r.positionToken.ownerOf(3)).to.equal(owner.address);
 
-        //     /// TODO: Add checks to make sure USDT balance is down on ower
-        // });
+            const collateral0 = numFromBn(await r.cdp.getOUSDPrinciple(0));
+            const collateral1 = numFromBn(await r.cdp.getOUSDPrinciple(1));
+            const collateral2 = numFromBn(await r.cdp.getOUSDPrinciple(2));
+            const collateral3 = numFromBn(await r.cdp.getOUSDPrinciple(3));
+
+            expect(collateral0).to.be.closeTo(8, 1);
+            expect(collateral1).to.be.closeTo(10, 1);
+            expect(collateral2).to.be.closeTo(8, 1);
+            expect(collateral3).to.be.closeTo(10, 1);
+
+            // expect(await r.positionToken.getTokenIDsArray(owner.address)).to.equal(Array([0, 1, 2]));
+        });
+    })
+
+    // it("user should have some USDT", async function () { 
+    //     const zapper = await loadFixture(setupFixture);
+    //     const usdtBalance = await tokenUSDT.balanceOf(owner.address)
+    //     /// Notice that USDT is 6 decimal
+    //     expect(usdtBalance).to.gt(ethers.utils.parseUnits("100", 6));
+    // });
+
+    // it("Should be able to previewZap", async function () {
+    //     const zapper = await loadFixture(setupFixture);
+    //     const usdtBalance = await r.external3CRV.balanceOf(owner.address)
+    //     console.log("in preview usdtBalance is " + usdtBalance)
+    //     await zapper.previewZapIn(3000000, 3000000, 0);
+    //     // expect(tokenId).to.equal(1);
+    // });
+
+    // it("Should be able to Zap", async function () {
+    //     const zapper = await loadFixture(setupFixture);
+    //     const exchangeAmount = 10000000;  // this is 10 in 6Decimal
+
+    //     // console.log("OUSD balance before "  + numFromBn(userOUSDBalanceBefore));
+    //     // const usdtBalance = await r.externalUSDT.balanceOf(owner.address)
+
+    //     // const allownaceOfPool = await r.externalUSDT.allowance(owner.address,addressCurveOUSDPool);
+    //     // console.log("inTest:usdtBalance sent is " + usdtBalance + " allownce is " + allownaceOfPool);
+    //     // const exchangeAmount = 10000000;
+
+    //     /// transfer funds to Zapper. Curve API require funds be on who ever calls it.
+    //     await r.externalUSDT.transfer(zapper.address, exchangeAmount)
+    //     await zapper.zapIn(exchangeAmount, bnFromNum(1), 5, 3, addressUSDT);
 
 
+    //     const newPositionExists = await r.positionToken.balanceOf(zapper.address)
+    //     expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 
-    });
+    //     /// TODO: Add checks to make sure USDT balance is down on ower
+    // });
+
+
 
 });
 

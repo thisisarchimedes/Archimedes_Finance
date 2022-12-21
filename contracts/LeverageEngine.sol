@@ -97,7 +97,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         uint256 maxArchAmount,
         address userAddress
     ) internal returns (uint256) {
-        console.log("in createLeveragedPositionFromZapper: msg.sender is %s", msg.sender);
+        // console.log("in createLeveragedPositionFromZapper: msg.sender is %s", msg.sender);
         // add some minor buffer to the arch we will use for the position
         if (cycles == 0 || cycles > _parameterStore.getMaxNumberOfCycles()) {
             revert("Invalid number of cycles");

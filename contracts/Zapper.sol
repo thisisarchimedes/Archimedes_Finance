@@ -40,9 +40,16 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         return path;
     }
 
-    function _getTokenIndex(address addressBaseStable) internal view returns (int128 tokenIndex) {
+    function _getTokenIndex(address addressBaseStable) internal pure returns (int128 tokenIndex) {
         if (addressBaseStable == _addressUSDT) {
             return tokenIndex = 3;
+        }
+        revert("Zapper: Unsupported stablecoin");
+    }
+
+    function _getTokenDecimal(address addressBaseStable) internal pure returns (uint8) {
+        if (addressBaseStable == _addressUSDT) {
+            return 6;
         }
         revert("Zapper: Unsupported stablecoin");
     }
@@ -50,49 +57,60 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     function _calcCollateralBasedOnArchPrice(
         uint256 stableCoinAmount,
         uint256 archPriceInUSDT,
-        uint256 multiplierOfLeverageFromOneCollateral
+        uint256 multiplierOfLeverageFromOneCollateral,
+        uint8 decimal
     ) internal view returns (uint256 collateralAmountReturned) {
+        /// TODO: Add comments and explain the formula
         uint256 archToLevRatio = _paramStore.getArchToLevRatio();
         uint256 tempCalc = (multiplierOfLeverageFromOneCollateral * archPriceInUSDT) / 1 ether;
-        uint256 ratioOfColl = (archToLevRatio * 10**6) / (archToLevRatio + tempCalc * 10**12);
-        // console.log("1st: loweDemitor %s", ratioOfColl);
-        uint256 collateralAmount = (stableCoinAmount * ratioOfColl) / 10**6;
+        uint256 ratioOfColl = (archToLevRatio * 10**decimal) / (archToLevRatio + tempCalc * 10**(18 - decimal));
+        uint256 collateralAmount = (stableCoinAmount * ratioOfColl) / 10**decimal;
         return collateralAmount;
     }
 
     function _getCollateralAmount(
         uint256 stableCoinAmount,
         uint256 cycles,
-        address[] memory path
+        address[] memory path,
+        uint8 decimal
     ) internal view returns (uint256) {
         // Calculate how much leverage is needed per 1 OUSD. Used throughout the calculation as a constant multiplier
         uint256 multiplierOfLeverageFromOneCollateral = _paramStore.getAllowedLeverageForPosition(1 ether, cycles);
         // Get the price of 1 Arch in stableCoin.
-        uint256 archPriceInUSDT = _uniswapRouter.getAmountsIn(1 ether, path)[0];
+        uint256 archPriceInStable = _uniswapRouter.getAmountsIn(1 ether, path)[0];
         // calculate first estimation of collateral amount, based on price of a single arch token.
-        uint256 collateralAmount = _calcCollateralBasedOnArchPrice(stableCoinAmount, archPriceInUSDT, multiplierOfLeverageFromOneCollateral);
+        uint256 collateralAmount = _calcCollateralBasedOnArchPrice(
+            stableCoinAmount,
+            archPriceInStable,
+            multiplierOfLeverageFromOneCollateral,
+            decimal
+        );
 
         // Now we have an estimate of how much collateral have, so we can calc how much Arch we need
         // Do a second round of calc where everything is the same, just with the Arch price being more accurate
+        /// TODO: create method that tranform 6 decimal to 18 decimal
+        uint256 collateralAmountIn18Decimal = collateralAmount * 10**(18 - decimal);
         uint256 archAmountEstimated = _paramStore.calculateArchNeededForLeverage(
-            ((collateralAmount * 10**12) * multiplierOfLeverageFromOneCollateral) / 1 ether
+            ((collateralAmountIn18Decimal) * multiplierOfLeverageFromOneCollateral) / 1 ether
         );
         // Now  that we know how much arch we are going to need to get, we can use Uniswap amountIn method to estimate
         // the actual (much better estimated then before) price in stable coin of 1 Arch token
-        archPriceInUSDT = ((_uniswapRouter.getAmountsIn(archAmountEstimated, path)[0] * 1 ether) / archAmountEstimated);
-        collateralAmount = _calcCollateralBasedOnArchPrice(stableCoinAmount, archPriceInUSDT, multiplierOfLeverageFromOneCollateral);
+        archPriceInStable = ((_uniswapRouter.getAmountsIn(archAmountEstimated, path)[0] * 1 ether) / archAmountEstimated);
+        collateralAmount = _calcCollateralBasedOnArchPrice(stableCoinAmount, archPriceInStable, multiplierOfLeverageFromOneCollateral, decimal);
         return collateralAmount;
     }
 
     function _splitStableCoinAmount(
         uint256 stableCoinAmount,
         uint256 cycles,
-        address[] memory path
+        address[] memory path,
+        address addressStable
     ) internal view returns (uint256 stableForCollateral, uint256 stableForArch) {
+        uint8 decimal = _getTokenDecimal(addressStable);
         // Figure out how much of stable goes to OUSD and how much to pay as arch tokens
-        uint256 collateralInBaseStableAmount = _getCollateralAmount(stableCoinAmount, cycles, path);
+        uint256 collateralInBaseStableAmount = _getCollateralAmount(stableCoinAmount, cycles, path, decimal);
         // Set aside a bit less for collateral, to reduce risk of revert.
-        collateralInBaseStableAmount = (collateralInBaseStableAmount * 99) / 100;
+        collateralInBaseStableAmount = (collateralInBaseStableAmount * 990) / 1000;
         uint256 coinsToPayForArchAmount = stableCoinAmount - collateralInBaseStableAmount;
         return (collateralInBaseStableAmount, coinsToPayForArchAmount);
     }
@@ -109,9 +127,12 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     function zapIn(
         uint256 stableCoinAmount,
         uint256 cycles,
-        address addressBaseStable
+        uint16 maxSlippageAllowed,
+        address addressBaseStable,
+        bool useUserArch
     ) external returns (uint256) {
         // Whats needs to happen?
+        // 0) transfer funds from user to this address
         // 1) figure out how much of stable goes to lvUSD and how much to pay as arch tokens
         // 2) exchange stable for Arch
         // 3) exchange stable for OUSD
@@ -119,30 +140,38 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         // 4) open position
         // 5) return NFT
 
+        /// validate input
+        require(stableCoinAmount > 0, "err:stableCoinAmount==0");
+        require(maxSlippageAllowed > 800 && maxSlippageAllowed < 1000, "err:800<slippage>1000");
+
+        /// Tracollateraln to this address
+        _transferFromSender(addressBaseStable, stableCoinAmount);
+
         /// Setup
         address[] memory path = _getPath(addressBaseStable);
         int128 stableTokenIndex = _getTokenIndex(addressBaseStable);
-        (uint256 collateralInBaseStableAmount, uint256 coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path);
 
-        /// Exchange Token for Arch
-        _uniswapRouter.swapExactTokensForTokens(coinsToPayForArchAmount, 0, path, address(this), block.timestamp + 2 minutes);
+        // Check if we need are using existing arch tokens owned by user or buying new ones
+        uint256 collateralInBaseStableAmount;
+        if (useUserArch == true) {
+            // We are using owners arch tokens, transfer from msg.sender to address(this)
+            collateralInBaseStableAmount = stableCoinAmount;
+            _transferUserArchForPosition(stableCoinAmount, cycles, maxSlippageAllowed, addressBaseStable);
+        } else {
+            // Need to buy Arch tokens. We need to split the stable amount between what we'll as collateral what we'll use to buy Arch
+            uint256 coinsToPayForArchAmount;
+            (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
+            // By arch tokens. Dont enforce min as we dont quite know what the minimum is. If we dont have enough this will fail when we try to use arch
+            // to open position.
+            _uniswapRouter.swapExactTokensForTokens(coinsToPayForArchAmount, 0, path, address(this), block.timestamp + 2 minutes);
+        }
+
         /// Exchange OUSD from any of the 3CRV
-        _exchangeToOUSD(collateralInBaseStableAmount, (collateralInBaseStableAmount * 99) / 100, stableTokenIndex);
+        _exchangeToOUSD(collateralInBaseStableAmount, (collateralInBaseStableAmount * maxSlippageAllowed) / 1000, stableTokenIndex);
+        
         /// get Arch and OUSD balances
         uint256 archBalance = _archToken.balanceOf(address(this));
         uint256 ousdBalance = _ousd.balanceOf(address(this));
-
-        /// Test info
-        uint256 usdtBalance = _usdt.balanceOf(address(this));
-        uint256 calculatedLeveragePerGivenArch = _paramStore.calculateLeverageAllowedForArch(archBalance);
-        uint256 calcLeverageNeededForCollateral = _paramStore.getAllowedLeverageForPosition(ousdBalance, cycles);
-        console.log(
-            "calculatedLeveragePerGivenArch %s, calcLeverageNeededForCollateral %s",
-            calculatedLeveragePerGivenArch / 1 ether,
-            calcLeverageNeededForCollateral / 1 ether
-        );
-        console.log("archBalance %s, ousdBalance %s, usdtBalance %s", archBalance, ousdBalance, usdtBalance);
-        /// END test INFO
 
         /// create position
         uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(ousdBalance, cycles, archBalance, msg.sender);
@@ -153,8 +182,25 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         // _ousd.transfer(msg.sender, _ousd.balanceOf(address(this)));
         // _usdt.transfer(msg.sender, _usdt.balanceOf(address(this)));
         // return tokenId;
+        // TODO: return dust(s) to user
         /// One way to do it:
         /// No change to lev Engine.
+    }
+
+    function _transferUserArchForPosition(
+        uint256 stableCoinAmount,
+        uint256 cycles,
+        uint16 maxSlippageAllowed,
+        address addressBaseStable
+    ) internal {
+        uint256 archAmountToPay = _paramStore.calculateArchNeededForLeverage(
+            _paramStore.getAllowedLeverageForPosition(stableCoinAmount * 10**(18 - _getTokenDecimal(addressBaseStable)), cycles)
+        );
+        _transferFromSender(address(_archToken), (archAmountToPay * 1000) / maxSlippageAllowed);
+    }
+
+    function _transferFromSender(address token, uint256 amount) internal {
+        IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
     }
 
     function _exchangeToOUSD(
