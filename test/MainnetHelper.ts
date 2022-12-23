@@ -134,7 +134,7 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     const contractCurve3Pool = new ethers.Contract(addressCurve3Pool, abiCurve3Pool, destUser);
 
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
-    
+
     const balanceUSDT = await helperSwapETHWithUSDT(destUser, ethAmountToSwap);
     await ethers.provider.send("evm_mine");
 

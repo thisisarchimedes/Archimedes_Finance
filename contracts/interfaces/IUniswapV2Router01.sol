@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-
+// solhint-disable-next-line
 pragma solidity >=0.6.2;
 
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
 
+    // solhint-disable-next-line
     function WETH() external pure returns (address);
 
     function addLiquidity(

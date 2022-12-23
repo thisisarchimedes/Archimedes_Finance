@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable-next-line
+
 pragma solidity >=0.6.2;
 
 import "../interfaces/IUniswapV2Router01.sol";

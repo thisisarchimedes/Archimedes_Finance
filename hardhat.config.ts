@@ -134,7 +134,7 @@ export default {
     },
 
     tenderly: {
-		username: "YotamDaniel",
-		project: "ZapperV"
-	}
+        username: "YotamDaniel",
+        project: "ZapperV",
+    },
 };
