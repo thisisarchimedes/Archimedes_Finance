@@ -320,19 +320,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         revert("Zapper: Unsupported stablecoin");
     }
 
-    // function _getBaseTokenImpl(address addressBaseStable) internal pure returns (IERC20Upgradeable) {
-    //     if (addressBaseStable == _ADDRESS_USDT) {
-    //         return IERC20Upgradeable(_ADDRESS_USDT);
-    //     }
-    //     if (addressBaseStable == _ADDRESS_USDC) {
-    //         return IERC20Upgradeable(_ADDRESS_USDC);
-    //     }
-    //     if (addressBaseStable == _ADDRESS_DAI) {
-    //         return IERC20Upgradeable(_ADDRESS_DAI);
-    //     }
-    //     revert("Zapper: Unsupported stablecoin");
-    // }
-
     /***************************************************************
     Admin methods
     ***************************************************************/
