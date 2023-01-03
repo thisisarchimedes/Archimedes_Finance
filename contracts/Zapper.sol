@@ -22,11 +22,22 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     IUniswapV2Router02 internal _uniswapRouter;
     IERC20Upgradeable internal _ousd;
     IERC20Upgradeable internal _usdt;
+    IERC20Upgradeable internal _usdc;
+    IERC20Upgradeable internal _dai;
     IERC20Upgradeable internal _crv3;
     LeverageEngine internal _levEngine;
     IERC20Upgradeable internal _archToken;
     ParameterStore internal _paramStore;
 
+    /*
+        @dev Exchange base stable to OUSD and Arch and create position 
+
+        @param stableCoinAmount Amount of stable coin to zap(exchange) into Arch and OUSD
+        @param cycles Number of cycles for open position call (determine how much lvUSD will borrowed)
+        @param maxSlippageAllowed Max slippage allowed for all token exchanges. For more accuracy uses 1000 for 100%
+        @param addressBaseStable Address of base stable coin to use for zap
+        @param useUserArch If true, will use user arch tokens to open position. If false, will buy arch tokens
+    */
     function zapIn(
         uint256 stableCoinAmount,
         uint256 cycles,
@@ -43,7 +54,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         // 5) return NFT to user
 
         /// validate input
-        // TODO: Maybe check min open position size, cycles etc etc
         require(stableCoinAmount > 0, "err:stableCoinAmount==0");
         require(maxSlippageAllowed > 800 && maxSlippageAllowed < 1000, "err:800<slippage>1000");
 
@@ -52,8 +62,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
 
         /// Setup
         address[] memory path = _getPath(addressBaseStable);
-        int128 stableTokenIndex = _getTokenIndex(addressBaseStable);
-
         uint256 collateralInBaseStableAmount;
         uint256 archAmount;
 
@@ -68,8 +76,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
             // By arch tokens. Dont enforce min as we dont quite know what the minimum is. If we dont have enough this will fail when we try to use arch
             // to open position.
-            /// TODO: Min should not be zero. Maybe use a preview to estimate min?
-            /// TODO: How do I get the amount of Arch exchanged
             _uniswapRouter.swapExactTokensForTokens(coinsToPayForArchAmount, 0, path, address(this), block.timestamp + 2 minutes);
         }
 
@@ -77,21 +83,27 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         uint256 ousdAmount = _exchangeToOUSD(
             collateralInBaseStableAmount,
             (collateralInBaseStableAmount * maxSlippageAllowed) / 1000,
-            stableTokenIndex
+            addressBaseStable
         );
 
         /// create position
-        /// TODO: For Halborn, is there a way to
         uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(ousdAmount, cycles, _archToken.balanceOf(address(this)), msg.sender);
 
         /// Return all remaining dust/tokens to user
         _archToken.transfer(msg.sender, _archToken.balanceOf(address(this)));
-        // _ousd.transfer(msg.sender, _ousd.balanceOf(address(this)));
-        // _usdt.transfer(msg.sender, _usdt.balanceOf(address(this)));
 
         return tokenId;
     }
 
+    /*
+        @dev simulate OUSD and Arch tokens that will be returned from zapIn call
+
+        @param stableCoinAmount Amount of stable coin to zap(exchange) into Arch and OUSD
+        @param cycles Number of cycles for open position call (determine how much lvUSD will borrowed)
+        @param maxSlippageAllowed Max slippage allowed for all token exchanges. For more accuracy uses 1000 for 100%
+        @param addressBaseStable Address of base stable coin to use for zap
+        @param useUserArch If true, will use user arch tokens to open position. If false, will buy arch tokens
+    */
     function previewZapInAmount(
         uint256 stableCoinAmount,
         uint256 cycles,
@@ -129,6 +141,12 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         return (ousdCollateralAmount, archTokenAmount);
     }
 
+    /*
+        @dev estimate how much of base stable will be used to get Arch and how much will be used to get OUSD 
+        @param stableCoinAmount Amount of stable coin to zap(exchange) into Arch and OUSD
+        @param cycles Number of cycles for open position call (determine how much lvUSD will borrowed)
+        @param addressBaseStable Address of base stable coin to use for zap
+    */
     function previewTokenSplit(
         uint256 stableCoinAmount,
         uint256 cycles,
@@ -237,11 +255,12 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     function _exchangeToOUSD(
         uint256 amount,
         uint256 minAmountToReceive,
-        int128 fromTokenIndex
+        address addressBaseStable
     ) internal returns (uint256 amountOUSDReceived) {
-        _usdt.safeApprove(address(_poolOUSD3CRV), amount);
+        IERC20Upgradeable(addressBaseStable).safeApprove(address(_poolOUSD3CRV), amount);
+        int128 fromTokenIndex = _getTokenIndex(addressBaseStable);
         uint256 amountReceived = _poolOUSD3CRV.exchange_underlying(fromTokenIndex, _OUSD_TOKEN_INDEX, amount, minAmountToReceive);
-        _usdt.safeApprove(address(_poolOUSD3CRV), 0);
+        IERC20Upgradeable(addressBaseStable).safeApprove(address(_poolOUSD3CRV), 0);
         return amountReceived;
     }
 
@@ -250,6 +269,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     ***************************************************************/
 
     address internal constant _ADDRESS_USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+    address internal constant _ADDRESS_USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address internal constant _ADDRESS_DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address internal constant _ADDRESS_WETH9 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address internal constant _ADDRESS_UNISWAP_FACTORY = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
     int128 internal constant _OUSD_TOKEN_INDEX = 0;
@@ -277,6 +298,12 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         if (addressBaseStable == _ADDRESS_USDT) {
             return tokenIndex = 3;
         }
+        if (addressBaseStable == _ADDRESS_USDC) {
+            return tokenIndex = 2;
+        }
+        if (addressBaseStable == _ADDRESS_DAI) {
+            return tokenIndex = 1;
+        }
         revert("Zapper: Unsupported stablecoin");
     }
 
@@ -284,8 +311,27 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         if (addressBaseStable == _ADDRESS_USDT) {
             return 6;
         }
+        if (addressBaseStable == _ADDRESS_USDC) {
+            return 6;
+        }
+        if (addressBaseStable == _ADDRESS_DAI) {
+            return 18;
+        }
         revert("Zapper: Unsupported stablecoin");
     }
+
+    // function _getBaseTokenImpl(address addressBaseStable) internal pure returns (IERC20Upgradeable) {
+    //     if (addressBaseStable == _ADDRESS_USDT) {
+    //         return IERC20Upgradeable(_ADDRESS_USDT);
+    //     }
+    //     if (addressBaseStable == _ADDRESS_USDC) {
+    //         return IERC20Upgradeable(_ADDRESS_USDC);
+    //     }
+    //     if (addressBaseStable == _ADDRESS_DAI) {
+    //         return IERC20Upgradeable(_ADDRESS_DAI);
+    //     }
+    //     revert("Zapper: Unsupported stablecoin");
+    // }
 
     /***************************************************************
     Admin methods
@@ -322,8 +368,11 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         require(addressPoolOUSD3CRV != address(0), "cant set to 0 A");
 
         // Load contracts
+        /// TODO: Change whatever static address to the const address we have on this contract
         _ousd = IERC20Upgradeable(addressOUSD);
         _usdt = IERC20Upgradeable(addressUSDT);
+        _usdc = IERC20Upgradeable(_ADDRESS_USDC);
+        _dai = IERC20Upgradeable(_ADDRESS_DAI);
         _crv3 = IERC20Upgradeable(address3CRV);
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
         _uniswapRouter = IUniswapV2Router02(addressUniswapRouter);
@@ -341,5 +390,11 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
 
         _usdt.safeApprove(address(_uniswapRouter), 0);
         _usdt.safeApprove(address(_uniswapRouter), type(uint256).max);
+
+        _usdc.safeApprove(address(_uniswapRouter), 0);
+        _usdc.safeApprove(address(_uniswapRouter), type(uint256).max);
+
+        _dai.safeApprove(address(_uniswapRouter), 0);
+        _dai.safeApprove(address(_uniswapRouter), type(uint256).max);
     }
 }
