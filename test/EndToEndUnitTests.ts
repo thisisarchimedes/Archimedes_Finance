@@ -31,7 +31,7 @@ let positionId: number;
 let adminInitial3CRVBalance: number;
 let ownerLvUSDBalanceBeforeFunding: number;
 
-async function approveAndGetLeverageAsUser(
+async function approveAndGetLeverageAsUser (
     _principleOUSD: BigNumber,
     _numberOfCycles: number,
     _archTokenAmount: BigNumber,
@@ -50,15 +50,15 @@ async function approveAndGetLeverageAsUser(
     await _r.leverageEngine.connect(_user).createLeveragedPosition(_principleOUSD, _numberOfCycles, _archTokenAmount);
 }
 
-function parseUnitsNum(num): BigNumber {
+function parseUnitsNum (num): BigNumber {
     return parseUnits(num.toString());
 }
 
-function getFloatFromBigNum(bigNumValue) {
+function getFloatFromBigNum (bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
 }
 
-async function printPoolState(poolInstance) {
+async function printPoolState (poolInstance) {
     logger(
         "Pool has %s coin0/lvUSD and %s coin1/3CRV",
         getFloatFromBigNum(await poolInstance.balances(0)),
@@ -66,7 +66,7 @@ async function printPoolState(poolInstance) {
     );
 }
 
-async function printPositionState(_r, _positionId, overviewMessage = "Printing Position State") {
+async function printPositionState (_r, _positionId, overviewMessage = "Printing Position State") {
     logger(overviewMessage);
     const principle = getFloatFromBigNum(await _r.cdp.getOUSDPrinciple(_positionId));
     const ousdEarned = getFloatFromBigNum(await _r.cdp.getOUSDInterestEarned(_positionId));
@@ -84,7 +84,7 @@ async function printPositionState(_r, _positionId, overviewMessage = "Printing P
     // );
 }
 
-async function printMiscInfo(_r, _user) {
+async function printMiscInfo (_r, _user) {
     const treasuryBalance = getFloatFromBigNum(await _r.externalOUSD.balanceOf(_r.treasurySigner.address));
     const userOUSDBalance = getFloatFromBigNum(await _r.externalOUSD.balanceOf(_user.address));
     const vaultOUSDBalance = getFloatFromBigNum(await _r.vault.totalAssets());
@@ -93,7 +93,7 @@ async function printMiscInfo(_r, _user) {
 
 const spec2 = 0;
 describe("Building basic environment", function () {
-    async function setupEnvForIntegrationTestsFixture() {
+    async function setupEnvForIntegrationTestsFixture () {
         // Setup & deploy contracts
         r = await buildContractTestContext();
         owner = r.owner;
@@ -279,7 +279,7 @@ describe("Building basic environment", function () {
         let leverageUserIsTakingIn18Dec;
         let archCostOfLeverageIn18Dec;
 
-        async function setUpEnvForTestSuiteFixture() {
+        async function setUpEnvForTestSuiteFixture () {
             // await loadFixture(setupEnvForIntegrationTestsFixture);
             // fund userOther
             await r.archToken.connect(r.treasurySigner).transfer(userOther.address, parseUnits("1000.0"));
@@ -332,7 +332,7 @@ describe("Building basic environment", function () {
     const spec4 = 0;
 
     describe("Test suit for moving positions around", function () {
-        async function setUpEnvForTestSuiteFixture() {
+        async function setUpEnvForTestSuiteFixture () {
             await r.archToken.connect(r.treasurySigner).transfer(userOther.address, parseUnits("1000.0"));
             await helperSwapETHWithOUSD(userOther, parseUnits("1.0"));
 
@@ -410,7 +410,7 @@ describe("Building basic environment", function () {
         let expectedTreasuryFundsFromPosition: number;
         let userArchTokenAmountBeforePosition: number;
 
-        async function setUpEnvForTestSuiteFixture() {
+        async function setUpEnvForTestSuiteFixture () {
             userArchTokenAmountBeforePosition = getFloatFromBigNum(await r.archToken.balanceOf(user.address));
             coordinatorlvUSDBalanceBeforePosition = getFloatFromBigNum(await r.lvUSD.balanceOf(r.coordinator.address));
             // console.log("1: userOUSDPrincipleInEighteenDecimal =" + userOUSDPrincipleIn18Decimal + " userOUSDPrinciple =" + userOUSDPrinciple);
@@ -626,14 +626,14 @@ describe("Building basic environment", function () {
         let archCostOfLeverageIn18Dec;
         const newCoordinatorLvUSDBalance = 1000;
         let secondPoisitionLvUSDBorrowed;
-        async function setUpEnvForTestSuiteFixture() {
+        async function setUpEnvForTestSuiteFixture () {
             const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
             archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
             await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
             positionId = 0;
         }
 
-        async function verifyPositionCreationFails(
+        async function verifyPositionCreationFails (
             message,
             ousdPrinciple = userOUSDPrincipleIn18Decimal,
             cycles = numberOfCycles,
@@ -668,7 +668,7 @@ describe("Building basic environment", function () {
             const promise = r.coordinator.acceptLeverageAmount(parseUnitsNum(initialCoordinatorLvUSDBalance * 2));
             await expect(promise).to.be.revertedWith("lvUSD !< levAmt");
 
-            /// Wait for auction to end 
+            /// Wait for auction to end
             for (let i = 0; i < 5 + 1; i++) {
                 await ethers.provider.send("evm_mine");
             }

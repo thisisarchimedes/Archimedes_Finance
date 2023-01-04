@@ -15,7 +15,7 @@ describe("LeverageEngine test suit", async function () {
     let positionTokenId: BigNumber;
     let userInitialOUSD;
 
-    async function prepForPositionCreation(lvUSDAmountToMint: BigNumber = ethers.utils.parseUnits("5000")) {
+    async function prepForPositionCreation (lvUSDAmountToMint: BigNumber = ethers.utils.parseUnits("5000")) {
         r = await buildContractTestContext();
         maxCycles = await r.parameterStore.getMaxNumberOfCycles();
         const totalOUSD = await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("5"));
