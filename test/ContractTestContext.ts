@@ -1,4 +1,4 @@
-import { Contract } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import hre, { ethers } from "hardhat";
 import {
     addressOUSD,
@@ -32,6 +32,7 @@ export type ContractTestContext = {
     archToken: Contract;
     lvUSD: Contract;
     poolManager: Contract;
+    auction: Contract;
     // External contracts
     externalOUSD: Contract;
     externalUSDT: Contract;
@@ -39,7 +40,7 @@ export type ContractTestContext = {
     curveLvUSDPool: Contract;
 };
 
-export async function setRolesForEndToEnd (r: ContractTestContext) {
+export async function setRolesForEndToEnd(r: ContractTestContext) {
     await r.coordinator.setExecutive(r.leverageEngine.address);
     await r.positionToken.setExecutive(r.leverageEngine.address);
 
@@ -47,9 +48,24 @@ export async function setRolesForEndToEnd (r: ContractTestContext) {
     await r.vault.setExecutive(r.coordinator.address);
     await r.cdp.setExecutive(r.coordinator.address);
 }
+
+export async function startAuctionAcceptLeverageAndEndAuction(
+    r: ContractTestContext,
+    leverage: BigNumber,
+    length: number = 5,
+    startPrice: BigNumber = ethers.utils.parseUnits("300.0"),
+    endPrice: BigNumber = ethers.utils.parseUnits("301.0")) {
+    /// start Auction and end it to get a static endPrice
+    const startBlock = await ethers.provider.blockNumber;
+    await r.auction.startAuctionWithLength(length, startPrice, endPrice);
+    await r.coordinator.acceptLeverageAmount(leverage);
+    for (let i = 0; i < length + 1; i++) {
+        await ethers.provider.send("evm_mine");
+    }
+}
 export const signers = ethers.getSigners();
 export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("10000000.0");
-export async function buildContractTestContext (skipPoolBalances = false): Promise<ContractTestContext> {
+export async function buildContractTestContext(skipPoolBalances = false): Promise<ContractTestContext> {
     await helperResetNetwork(defaultBlockNumber);
 
     const context = {} as ContractTestContext;
@@ -92,6 +108,9 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
     const lvUSDfactory = await ethers.getContractFactory("LvUSDToken");
     context.lvUSD = await lvUSDfactory.deploy(context.owner.address);
 
+    const auctionfactory = await ethers.getContractFactory("Auction");
+    context.auction = await hre.upgrades.deployProxy(auctionfactory, [], { kind: "uups" });
+
     // Give context.owner some funds:
     // expecting minter to be owner
     await context.lvUSD.setMintDestination(context.owner.address);
@@ -124,6 +143,7 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
         context.exchanger.address,
         context.parameterStore.address,
         context.poolManager.address,
+        context.auction.address,
     );
 
     await context.exchanger.setDependencies(
@@ -148,12 +168,12 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
         context.curveLvUSDPool.address,
     );
 
-    await context.parameterStore.setDependencies(context.coordinator.address, context.exchanger.address);
+    await context.parameterStore.setDependencies(
+        context.coordinator.address,
+        context.exchanger.address,
+        context.auction.address);
 
     await context.cdp.setDependencies(context.vault.address, context.parameterStore.address);
-
-    // After all is set and done, accept Lev amount on Coordinator. Not used now as each test set its own coordinator lvUSD balance.
-    // await context.coordinator.acceptLeverageAmount(ownerStartingLvUSDAmount);
 
     return context;
 }
