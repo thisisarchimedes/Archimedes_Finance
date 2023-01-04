@@ -100,6 +100,15 @@ abstract contract AccessController is AccessControlUpgradeable {
         _addressGuardian = newGuardian;
     }
 
+    function _setAndRevokeAnyRole(
+        bytes32 role,
+        address newRoleAddress,
+        address oldRoleAddress
+    ) internal {
+        _grantRole(role, newRoleAddress);
+        _revokeRole(role, oldRoleAddress);
+    }
+
     function getAddressExecutive() public view returns (address) {
         return _addressExecutive;
     }
