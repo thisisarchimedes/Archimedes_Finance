@@ -17,7 +17,7 @@ import {
     addressWETH9,
     helperSwapETHWithOUSD,
 } from "./MainnetHelper";
-import { buildContractTestContext, ContractTestContext, setRolesForEndToEnd } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext, setRolesForEndToEnd, startAuctionAcceptLeverageAndEndAuction } from "./ContractTestContext";
 import { formatUnits, zeroPad } from "ethers/lib/utils";
 import { logger } from "../logger";
 import { BigNumber, Contract } from "ethers";
@@ -101,25 +101,7 @@ async function createUniswapPool(r: ContractTestContext) {
     await getUserSomeWETH(r);
     const pairToken = await createPair(r);
 
-    // await helperSwapETHWith3CRV(r.owner, bnFromNum(1));
-
     await addLiquidityToPairViaRouter(r, pairToken);
-
-    // await ethers.provider.send("evm_mine");
-
-    // const router = await getRouter(r);
-
-    // await ethers.provider.send("evm_mine");
-
-    // const tokenUSDT = new ethers.Contract(addressUSDT, abiUSDTToken, owner);
-    // await helperSwapETHWithUSDT(owner, bnFromNum(1));
-    // const usdtBalance = await tokenUSDT.balanceOf(owner.address);
-    // await tokenUSDT.approve(routeAddress, usdtBalance);
-
-    /// THIS ONE works!
-    // await router.swapExactTokensForTokens(ethers.utils.parseUnits("50", 6), 0,
-    // [tokenUSDT.address, addressWETH9, r.archToken.address], owner.address, 1670978314);
-    /// ^^
 
     await ethers.provider.send("evm_mine");
 }
@@ -159,7 +141,8 @@ async function setupFixture() {
     await r.lvUSD.setMintDestination(r.coordinator.address);
     await r.lvUSD.mint(bnFromNum(10000));
 
-    await r.coordinator.acceptLeverageAmount(bnFromNum(10000));
+    // await r.coordinator.acceptLeverageAmount(bnFromNum(10000));
+    await startAuctionAcceptLeverageAndEndAuction(r, bnFromNum(10000));
     await setRolesForEndToEnd(r);
 
     // Create pool and get user some USDT [TODO: Add more tokens]
@@ -252,7 +235,7 @@ describe("Zapper test suite", function () {
             exchangeAmount = bnFromNum(10, 6);
         });
     });
-    
+
     // describe("Basic Zapper test", function () {
     //     it("Should add CDP values to zapped in position", async function () {
     //         const { r, zapper } = await loadFixture(setupFixture);
