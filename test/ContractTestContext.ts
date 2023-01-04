@@ -111,6 +111,8 @@ export async function buildContractTestContext(skipPoolBalances = false): Promis
     const auctionfactory = await ethers.getContractFactory("Auction");
     context.auction = await hre.upgrades.deployProxy(auctionfactory, [], { kind: "uups" });
 
+    await ethers.provider.send("evm_mine");
+
     // Give context.owner some funds:
     // expecting minter to be owner
     await context.lvUSD.setMintDestination(context.owner.address);
@@ -119,6 +121,8 @@ export async function buildContractTestContext(skipPoolBalances = false): Promis
 
     // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token
     context.curveLvUSDPool = await createAndFundMetapool(context.owner, context, skipPoolBalances);
+    await ethers.provider.send("evm_mine");
+
     // Setup pool with approval
 
     await context.lvUSD.approve(context.curveLvUSDPool.address, ownerStartingLvUSDAmount);
@@ -134,6 +138,8 @@ export async function buildContractTestContext(skipPoolBalances = false): Promis
         context.archToken.address,
         context.externalOUSD.address,
     );
+
+    await ethers.provider.send("evm_mine");
 
     await context.coordinator.setDependencies(
         context.lvUSD.address,
@@ -174,6 +180,8 @@ export async function buildContractTestContext(skipPoolBalances = false): Promis
         context.auction.address);
 
     await context.cdp.setDependencies(context.vault.address, context.parameterStore.address);
+
+    await ethers.provider.send("evm_mine");
 
     return context;
 }
