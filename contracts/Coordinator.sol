@@ -5,6 +5,7 @@ import {ICoordinator} from "../contracts/interfaces/ICoordinator.sol";
 import {VaultOUSD} from "../contracts/VaultOUSD.sol";
 import {CDPosition} from "../contracts/CDPosition.sol";
 import {ParameterStore} from "./ParameterStore.sol";
+import {Auction} from "./Auction.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {Exchanger} from "../contracts/Exchanger.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
@@ -28,6 +29,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     address internal _addressOUSD;
     address internal _addressExchanger;
     address internal _addressPoolManager;
+    address internal _addressAuction;
 
     VaultOUSD internal _vault;
     CDPosition internal _cdp;
@@ -43,7 +45,8 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         address addressOUSD,
         address addressExchanger,
         address addressParamStore,
-        address addressPoolManager
+        address addressPoolManager,
+        address addressAuction
     ) external nonReentrant onlyAdmin {
         require(addressLvUSD != address(0), "cant set to 0 A");
         require(addressVaultOUSD != address(0), "cant set to 0 A");
@@ -52,6 +55,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         require(addressExchanger != address(0), "cant set to 0 A");
         require(addressParamStore != address(0), "cant set to 0 A");
         require(addressPoolManager != address(0), "cant set to 0 A");
+        require(addressAuction != address(0), "cant set to 0 A");
 
         _addressLvUSD = addressLvUSD;
         _addressVaultOUSD = addressVaultOUSD;
@@ -59,6 +63,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         _addressOUSD = addressOUSD;
         _addressExchanger = addressExchanger;
         _addressPoolManager = addressPoolManager;
+        _addressAuction = addressAuction;
 
         _vault = VaultOUSD(_addressVaultOUSD);
         _cdp = CDPosition(_addressCDP);
@@ -87,14 +92,15 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     }
 
     function acceptLeverageAmount(uint256 leverageAmountToAccept) external onlyAdmin nonReentrant {
-        uint256 currentlvUSDBalance = _lvUSD.balanceOf(address(this));
-        require(currentlvUSDBalance >= leverageAmountToAccept, "lvUSD !< levAmt");
+        require(Auction(_addressAuction).isAuctionClosed() == false, "Auction must be open");
+        uint256 currentLvUSDBalance = _lvUSD.balanceOf(address(this));
+        require(currentLvUSDBalance >= leverageAmountToAccept, "lvUSD !< levAmt");
         _paramStore.changeCoordinatorLeverageBalance(leverageAmountToAccept);
     }
 
     function resetAndBurnLeverage() external onlyAdmin nonReentrant {
-        uint256 corrdinatorCurrentLvUSDBalance = _lvUSD.balanceOf(address(this));
-        ERC20Burnable(_addressLvUSD).burn(corrdinatorCurrentLvUSDBalance);
+        uint256 coordinatorCurrentLvUSDBalance = _lvUSD.balanceOf(address(this));
+        ERC20Burnable(_addressLvUSD).burn(coordinatorCurrentLvUSDBalance);
         _paramStore.changeCoordinatorLeverageBalance(0);
     }
 

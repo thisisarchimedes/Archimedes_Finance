@@ -1,16 +1,16 @@
 import { assert, expect } from "chai";
 import { ethers } from "hardhat";
 import { helperSwapETHWithOUSD } from "./MainnetHelper";
-import { buildContractTestContext, ContractTestContext } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext, startAuctionAcceptLeverageAndEndAuction } from "./ContractTestContext";
 import { formatUnits } from "ethers/lib/utils";
 import { logger } from "../logger";
 import { Contract } from "ethers";
 
-function getFloatFromBigNum (bigNumValue) {
+function getFloatFromBigNum(bigNumValue) {
     return parseFloat(formatUnits(bigNumValue));
 }
 
-async function setCoordinatorAsExcecutive (r) {
+async function setCoordinatorAsExcecutive(r) {
     await r.vault.setExecutive(r.coordinator.address);
     await r.exchanger.setExecutive(r.coordinator.address);
     await r.cdp.setExecutive(r.coordinator.address);
@@ -132,8 +132,7 @@ describe("Coordinator Test suit", function () {
                 // mint lvUSD to be borrowed, assign all minted lvUSD to coordinator as it will spend it
                 await r.lvUSD.setMintDestination(r.coordinator.address);
                 await r.lvUSD.mint(ethers.utils.parseUnits("100"));
-                await r.coordinator.acceptLeverageAmount(ethers.utils.parseUnits("100"));
-
+                await startAuctionAcceptLeverageAndEndAuction(r, ethers.utils.parseUnits("100"))
                 // method under test
                 await coordinator.borrowUnderNFT(nftIdFirstPosition, lvUSDAmountToBorrow);
             });
@@ -189,7 +188,8 @@ describe("Coordinator Test suit", function () {
                     // we need more lvusd for exchanger
                     await r.lvUSD.setMintDestination(coordinator.address);
                     await r.lvUSD.mint(ethers.utils.parseUnits("100"));
-                    await r.coordinator.acceptLeverageAmount(ethers.utils.parseUnits("100"));
+                    await startAuctionAcceptLeverageAndEndAuction(r, ethers.utils.parseUnits("100"))
+
                     await coordinator.getLeveragedOUSD(nftIdFirstPosition, leverageAmount);
                 });
                 it("Should have increase borrowed amount on CDP for NFT", async function () {
@@ -256,7 +256,7 @@ describe("Coordinator Test suit", function () {
                         try {
                             await r.cdp.getOUSDPrinciple(nftIdFirstPosition);
                             assert.fail("Error - Getting CDP OUSD Principle on a deleted position must throw exception");
-                        } catch (e) {}
+                        } catch (e) { }
                     });
 
                     // TODO : Once exchanger is up, need to check that lvUSD was returned to coordinator address
@@ -292,7 +292,8 @@ describe("Coordinator Test suit", function () {
             await r.externalOUSD.connect(endUserSigner).transfer(r.coordinator.address, collateralAmount);
             await r.lvUSD.setMintDestination(r.coordinator.address);
             await r.lvUSD.mint(mintedLvUSDAmount);
-            await r.coordinator.acceptLeverageAmount(mintedLvUSDAmount);
+            await startAuctionAcceptLeverageAndEndAuction(r, mintedLvUSDAmount)
+
             /// Complete create position cycle from coordinator perspective
             await r.externalOUSD.approve(r.coordinator.address, collateralAmount);
             await r.coordinator.depositCollateralUnderNFT(endToEndTestNFTId, collateralAmount);
