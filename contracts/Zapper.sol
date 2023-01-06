@@ -46,6 +46,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         bool useUserArch
     ) external returns (uint256) {
         // Whats needs to happen?
+        // -1) validate input
         // 0) transfer funds from user to this address
         // 1) figure out how much of stable goes to collateral and how much to pay as arch tokens
         // 2) exchange stable for Arch/ Take from user wallet
@@ -286,6 +287,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     //  [1] DAI 0x6B175474E89094C44Da98b954EedeAC495271d0F - 18
     //  [2] USDC 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 - 6
     //  [3] USDT 0xdAC17F958D2ee523a2206206994597C13D831ec7 - 6
+
     function _getPath(address addressBaseStable) internal view returns (address[] memory) {
         address[] memory path = new address[](3);
         path[0] = addressBaseStable;

@@ -240,6 +240,7 @@ describe("Zapper test suite", function () {
         it("Should add CDP values to zapped in position", async function () {
             const { r, zapper } = await loadFixture(setupFixture);
             await zapIntoPosition(r, zapper);
+
             const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
             const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(positionId));
 
