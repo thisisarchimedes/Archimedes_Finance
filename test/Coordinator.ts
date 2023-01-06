@@ -31,9 +31,11 @@ describe("Coordinator Test suit", function () {
         // Object under test
         coordinator = r.coordinator;
         sharesOwnerAddress = coordinator.address;
+        await ethers.provider.send("evm_mine");
 
         await helperSwapETHWithOUSD(endUserSigner, ethers.utils.parseUnits("5.0"));
         await helperSwapETHWithOUSD(r.addr2, ethers.utils.parseUnits("5.0"));
+        await ethers.provider.send("evm_mine");
     });
 
     describe("Deposit collateral into new NFT position", function () {
@@ -227,7 +229,12 @@ describe("Coordinator Test suit", function () {
                     let positionInterestEarned;
 
                     let userExistingOUSDValueBeforeUnwind;
+
+                    let coordinatorLvUSDBalanceBefore;
+                    let exchangerLvUSDBalanceBefore;
+
                     before(async function () {
+                        await ethers.provider.send("evm_mine");
                         vaultOUSDAmountBeforeUnwind = await r.vault.totalAssets();
                         positionTotalOUSD = await r.cdp.getOUSDTotalWithoutInterest(nftIdFirstPosition);
                         positionShares = await r.cdp.getShares(nftIdFirstPosition);
@@ -235,13 +242,31 @@ describe("Coordinator Test suit", function () {
                         positionInterestEarned = positionExpectedOUSDTotalPlusInterest.sub(positionTotalOUSD);
                         userExistingOUSDValueBeforeUnwind = await r.externalOUSD.balanceOf(endUserSigner.address);
 
+                        coordinatorLvUSDBalanceBefore = await r.lvUSD.balanceOf(r.coordinator.address);
+                        exchangerLvUSDBalanceBefore = await r.lvUSD.balanceOf(r.exchanger.address);
+
+                        console.log("coordinatorLvUSDBalanceBefore", getFloatFromBigNum(coordinatorLvUSDBalanceBefore));
+                        console.log("exchangerLvUSDBalanceBefore", getFloatFromBigNum(exchangerLvUSDBalanceBefore));
                         await coordinator.unwindLeveragedOUSD(nftIdFirstPosition, endUserSigner.address);
+                    });
+
+                    it("Should burn lvUSD and not transfer to coordinator on unwind", async function () {
+                        const coordinatorLvUSDBalanceAfter = await r.lvUSD.balanceOf(r.coordinator.address);
+                        await ethers.provider.send("evm_mine");
+                        await expect(coordinatorLvUSDBalanceAfter).to.be.eq(coordinatorLvUSDBalanceBefore);
+                    });
+
+                    it("Should burn lvUSD and not hold on exchanger on unwind", async function () {
+                        const exchangerLvUSDBalanceAfter = await r.lvUSD.balanceOf(r.exchanger.address);
+                        await ethers.provider.send("evm_mine");
+                        await expect(exchangerLvUSDBalanceAfter).to.be.eq(exchangerLvUSDBalanceBefore);
                     });
 
                     it(`Should reduce assets in Vault by the entire OUSD amount of
                         position (principle, leveraged and interest)`, async function () {
                         expect(await r.vault.totalAssets()).to.be.closeTo(vaultOUSDAmountBeforeUnwind.sub(positionExpectedOUSDTotalPlusInterest), 1);
                     });
+
                     it("Should transfer principle plus interest to user", async function () {
                         const userExpectedOUSDBalance = parseFloat(
                             ethers.utils.formatEther(
