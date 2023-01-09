@@ -14,10 +14,6 @@ import {
 } from "./MainnetHelper";
 import { createAndFundMetapool } from "./CurveHelper";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import {
-    createEthPairPool,
-    getReserves,
-} from "./uniswap/UniswapTools";
 
 export type ContractTestContext = {
     owner: SignerWithAddress;
@@ -190,10 +186,4 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
     await ethers.provider.send("evm_mine");
 
     return context;
-}
-export async function deployArchEthPool (r: ContractTestContext, archLiq: number, ethLiq: number) {
-    [ r.uniswapArchEthPool, r.uniswapArchEthLPToken ] = await createEthPairPool(r.archToken, archLiq, ethLiq, r.addr1);
-}
-export async function getArchEthPoolReserves (r: ContractTestContext): Promise<[ number, number ]> {
-    return await getReserves(r.uniswapArchEthPool);
 }
