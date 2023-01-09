@@ -296,7 +296,7 @@ describe("Zapper test suite", function () {
 
             /// baseAmount = collateral + dollarsToPayForArch
             /// dollarsToPayForArch = (leverageAmount(collateral) * archPrice(unknown)) / archToLevRatio
-
+            
 
             ///  archPrice -> we estimate from pool. First getting price for 1 arch token, then for the correct amount we need
             ///  leverageAmount = f(collateral) = getAllowedLeverageForPosition(collateral, cycles)
@@ -304,6 +304,7 @@ describe("Zapper test suite", function () {
             /// then we can use this ratio to calculate dollarsToPayForArch + collateral for any baseAmount
 
             const { r, zapper } = await loadFixture(setupFixture);
+            // await r.parameterStore.changeArchToLevRatio(bnFromNum(10));
             const archPrice = await getArchPriceInDollars(r, zapper, amountInBase);
             const split = await zapper.previewTokenSplit(bnFromNum(amountInBase, 6), cycles, addressUSDT);
 
