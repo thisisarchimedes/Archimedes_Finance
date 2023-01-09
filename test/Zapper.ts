@@ -40,19 +40,19 @@ let externalUSDT: Contract;
 let external3CRV: Contract;
 let externalWETH: Contract;
 
-function bnFromNum(num: number, decimal = 18): BigNumber {
+function bnFromNum (num: number, decimal = 18): BigNumber {
     return ethers.utils.parseUnits(num.toString(), decimal);
 }
 
-function bnFromStr(num: string, decimal = 18): BigNumber {
+function bnFromStr (num: string, decimal = 18): BigNumber {
     return ethers.utils.parseUnits(num.toString(), decimal);
 }
 
-function numFromBn(num: BigNumber, decimals = 18): number {
+function numFromBn (num: BigNumber, decimals = 18): number {
     return Number(ethers.utils.formatUnits(num, decimals));
 }
 
-async function getUserSomeWETH(r: ContractTestContext) {
+async function getUserSomeWETH (r: ContractTestContext) {
     externalWETH = new ethers.Contract(addressWETH9, abiWETH9Token, owner);
     await ethers.provider.send("evm_mine");
     let weth9Balance = await externalWETH.balanceOf(owner.address);
@@ -60,7 +60,7 @@ async function getUserSomeWETH(r: ContractTestContext) {
     weth9Balance = await externalWETH.balanceOf(owner.address);
     // console.log("weth9Balance: %s", numFromBn(weth9Balance));
 }
-async function createPair(r: ContractTestContext): Contract {
+async function createPair (r: ContractTestContext): Contract {
     const factoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
     const uniswapFactory = new ethers.Contract(factoryAddress, factoryABI, owner);
     const tx = await uniswapFactory.createPair(r.archToken.address, addressWETH9);
@@ -70,11 +70,11 @@ async function createPair(r: ContractTestContext): Contract {
     const pairToken = new ethers.Contract(pairAddress, pairABI, owner);
     return pairToken;
 }
-async function getRouter(r: ContractTestContext): Contract {
+async function getRouter (r: ContractTestContext): Contract {
     const routeToken = new ethers.Contract(routeAddress, routerABI, owner);
     return routeToken;
 }
-async function addLiquidityToPairViaRouter(r: ContractTestContext, pairToken: Contract) {
+async function addLiquidityToPairViaRouter (r: ContractTestContext, pairToken: Contract) {
     await r.archToken.connect(r.treasurySigner).transfer(owner.address, minLiq);
 
     const routeInstance = await getRouter(r);
@@ -96,7 +96,7 @@ async function addLiquidityToPairViaRouter(r: ContractTestContext, pairToken: Co
     // console.log("reserves0, r1 : %s %s ", numFromBn(reserves._reserve0), numFromBn(reserves._reserve1))
 }
 
-async function createUniswapPool(r: ContractTestContext) {
+async function createUniswapPool (r: ContractTestContext) {
     await getUserSomeWETH(r);
     const pairToken = await createPair(r);
 
@@ -105,21 +105,21 @@ async function createUniswapPool(r: ContractTestContext) {
     await ethers.provider.send("evm_mine");
 }
 
-async function getUSDCToUser(r: ContractTestContext) {
+async function getUSDCToUser (r: ContractTestContext) {
     const router = await getRouter(r);
     /// Using USDT abi for USDC as its the same (erc20)
     const tokenUSDC = new ethers.Contract(usdcAddress, abiUSDTToken, owner);
     await router.swapExactETHForTokens(bnFromNum(500, 6), [addressWETH9, usdcAddress], owner.address, 1670978314, { value: bnFromNum(1) });
 }
 
-async function getDAIToUser(r: ContractTestContext) {
+async function getDAIToUser (r: ContractTestContext) {
     // Notice dai is 18 decimal
     const router = await getRouter(r);
     /// Using USDT abi for USDC as its the same (erc20)
     const tokenDAI = new ethers.Contract(daiAddress, abiUSDTToken, owner);
     await router.swapExactETHForTokens(bnFromNum(500, 18), [addressWETH9, daiAddress], owner.address, 1670978314, { value: bnFromNum(1) });
 }
-async function setupFixture() {
+async function setupFixture () {
     // build mainnet fork and deploy archimedes
     r = await buildContractTestContext();
     owner = r.owner;
@@ -160,7 +160,7 @@ async function setupFixture() {
     return { r, zapper };
 }
 
-async function zapIntoPosition(
+async function zapIntoPosition (
     r: ContractTestContext,
     zapper: ContractTestContext, useUserArch = false) {
     const baseAddress = addressUSDT;
@@ -168,7 +168,7 @@ async function zapIntoPosition(
     await zapper.zapIn(exchangeAmount, cycles, 990, baseAddress, useUserArch);
 }
 
-async function zapOutPositionWithAnyBase(
+async function zapOutPositionWithAnyBase (
     r: ContractTestContext,
     zapper: ContractTestContext, baseToken: Contract, useUserArch = false) {
     console.log("Zapping out with base token address " + baseToken.address);
@@ -176,7 +176,7 @@ async function zapOutPositionWithAnyBase(
     await zapper.zapIn(exchangeAmount, cycles, 990, baseToken.address, useUserArch);
 }
 
-async function printPositionInfo(r: ContractTestContext, positionId = 0) {
+async function printPositionInfo (r: ContractTestContext, positionId = 0) {
     const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
     const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(positionId));
 
@@ -184,7 +184,7 @@ async function printPositionInfo(r: ContractTestContext, positionId = 0) {
     console.log(positionId + " position has " + leverage + " lvUSD");
 }
 
-async function getArchPriceInDollars(
+async function getArchPriceInDollars (
     r: ContractTestContext,
     zapper: ContractTestContext,
     dollarAmountForEstimate = 100): number {
@@ -293,10 +293,8 @@ describe("Zapper test suite", function () {
     describe("Zapper Preview methods", function () {
         const amountInBase = 10;
         it("should preview split tokens correctly", async function () {
-
             /// baseAmount = collateral + dollarsToPayForArch
             /// dollarsToPayForArch = (leverageAmount(collateral) * archPrice(unknown)) / archToLevRatio
-
 
             ///  archPrice -> we estimate from pool. First getting price for 1 arch token, then for the correct amount we need
             ///  leverageAmount = f(collateral) = getAllowedLeverageForPosition(collateral, cycles)
