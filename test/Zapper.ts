@@ -96,7 +96,7 @@ async function addLiquidityToPairViaRouter(r: ContractTestContext, pairToken: Co
     // console.log("reserves0, r1 : %s %s ", numFromBn(reserves._reserve0), numFromBn(reserves._reserve1))
 }
 
-async function createUniswapPool(r: ContractTestContext) {
+export async function createUniswapPool(r: ContractTestContext) {
     await getUserSomeWETH(r);
     const pairToken = await createPair(r);
 
@@ -293,7 +293,6 @@ describe("Zapper test suite", function () {
     describe("Zapper Preview methods", function () {
         const amountInBase = 10;
         it("should preview split tokens correctly", async function () {
-
             /// baseAmount = collateral + dollarsToPayForArch
             /// dollarsToPayForArch = (leverageAmount(collateral) * archPrice(unknown)) / archToLevRatio
             
