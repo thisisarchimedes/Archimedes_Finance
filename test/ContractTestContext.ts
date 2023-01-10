@@ -40,7 +40,7 @@ export type ContractTestContext = {
     curveLvUSDPool: Contract;
 };
 
-export async function setRolesForEndToEnd (r: ContractTestContext) {
+export async function setRolesForEndToEnd(r: ContractTestContext) {
     await r.coordinator.setExecutive(r.leverageEngine.address);
     await r.positionToken.setExecutive(r.leverageEngine.address);
 
@@ -49,7 +49,7 @@ export async function setRolesForEndToEnd (r: ContractTestContext) {
     await r.cdp.setExecutive(r.coordinator.address);
 }
 
-export async function startAuctionAcceptLeverageAndEndAuction (
+export async function startAuctionAcceptLeverageAndEndAuction(
     r: ContractTestContext,
     leverage: BigNumber,
     length = 5,
@@ -65,8 +65,9 @@ export async function startAuctionAcceptLeverageAndEndAuction (
 }
 export const signers = ethers.getSigners();
 export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("10000000.0");
-export async function buildContractTestContext (skipPoolBalances = false): Promise<ContractTestContext> {
+export async function buildContractTestContext(skipPoolBalances = false): Promise<ContractTestContext> {
     await helperResetNetwork(defaultBlockNumber);
+    await ethers.provider.send("evm_mine");
 
     const context = {} as ContractTestContext;
 
@@ -89,6 +90,7 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
 
     const exchangerFactory = await ethers.getContractFactory("Exchanger");
     context.exchanger = await hre.upgrades.deployProxy(exchangerFactory, [], { kind: "uups" });
+    await ethers.provider.send("evm_mine");
 
     const leverageEngineFactory = await ethers.getContractFactory("LeverageEngine");
     context.leverageEngine = await hre.upgrades.deployProxy(leverageEngineFactory, [], { kind: "uups" });
@@ -118,6 +120,7 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
     await context.lvUSD.setMintDestination(context.owner.address);
     await context.lvUSD.mint(ownerStartingLvUSDAmount);
     await helperSwapETHWith3CRV(context.owner, ethers.utils.parseUnits("7000.0"));
+    await ethers.provider.send("evm_mine");
 
     // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token
     context.curveLvUSDPool = await createAndFundMetapool(context.owner, context, skipPoolBalances);
@@ -129,6 +132,7 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
 
     await context.lvUSD.approve(context.exchanger.address, ethers.constants.MaxUint256);
     await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
+    await ethers.provider.send("evm_mine");
 
     // Post init contracts
     await context.leverageEngine.setDependencies(

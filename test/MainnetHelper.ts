@@ -10,6 +10,9 @@ import {
     abi3CRVToken,
     abiCurve3Pool,
     abi3PoolImplementation,
+    factoryABI,
+    routerABI,
+    pairABI,
 } from "./ABIs";
 import dotenv from "dotenv";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -31,6 +34,7 @@ const addressUSDC = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 const addressZap = "0xa79828df1850e8a3a3064576f380d90aecdd3359";
 const address3CRVlvUSDPool = "0x67C7f0a63BA70a2dAc69477B716551FC921aed00";
 const addressCurveRegistry = "0x81C46fECa27B31F3ADC2b91eE4be9717d1cd3DD7";
+const routeAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
 
 const indexTripoolUSDT = 0;
 const indexTripoolWETH9 = 2;
@@ -38,7 +42,7 @@ const indexCurveOUSDOUSD = 0;
 const indexCurveOUSD3CRV = 1;
 const defaultBlockNumber = 15104872;
 
-async function helperResetNetwork (lockBlock) {
+async function helperResetNetwork(lockBlock) {
     const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
 
     // Reset hardhat mainnet fork
@@ -60,7 +64,7 @@ async function helperResetNetwork (lockBlock) {
     1. Convert ETH to WETH (because this is what Curve is working with)
     2. WETH->USDT on TriCrypto2@Curve
 */
-async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
+async function helperSwapETHWithUSDT(destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // loading WETH9 contract
@@ -121,7 +125,7 @@ async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     2. WETH->USDT on TriCrypto2@Curve
     3. Deposit USDT with 3Pool to get some 3CRV
 */
-async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
+async function helperSwapETHWith3CRV(destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // loading USDT contract
@@ -161,7 +165,7 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     2. WETH->USDT on TriCrypto2@Curve
     3. USDT->OUSD with OUSD contract
 */
-async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSwap: BigNumber) {
+async function helperSwapETHWithOUSD(destUser: SignerWithAddress, ethAmountToSwap: BigNumber) {
     /// ///////// Loading some contracts //////////////
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -197,6 +201,72 @@ async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSw
     return balanceOUSD;
 }
 
+
+const minLiq = bnFromNum(100);
+let externalWETH: Contract;
+export function bnFromNum(num: number, decimal = 18): BigNumber {
+    return ethers.utils.parseUnits(num.toString(), decimal);
+}
+export function bnFromStr(num: string, decimal = 18): BigNumber {
+    return ethers.utils.parseUnits(num.toString(), decimal);
+}
+export function numFromBn(num: BigNumber, decimals = 18): number {
+    return Number(ethers.utils.formatUnits(num, decimals));
+}
+async function getUserSomeWETH(r: ContractTestContext) {
+    externalWETH = new ethers.Contract(addressWETH9, abiWETH9Token, r.owner);
+    await ethers.provider.send("evm_mine");
+    let weth9Balance = await externalWETH.balanceOf(r.owner.address);
+    await externalWETH.deposit({ value: bnFromNum(1) });
+    weth9Balance = await externalWETH.balanceOf(r.owner.address);
+    // console.log("weth9Balance: %s", numFromBn(weth9Balance));
+}
+async function createPair(r: ContractTestContext): Contract {
+    const factoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+    const uniswapFactory = new ethers.Contract(factoryAddress, factoryABI, r.owner);
+    const tx = await uniswapFactory.createPair(r.archToken.address, addressWETH9);
+    const receipt = await tx.wait();
+    const pairCreatedEvent = receipt.events?.filter((x) => { return x.event === "PairCreated"; });
+    const pairAddress = pairCreatedEvent[0].args.pair;
+    const pairToken = new ethers.Contract(pairAddress, pairABI, r.owner);
+    return pairToken;
+}
+async function getRouter(r: ContractTestContext): Contract {
+    const routeToken = new ethers.Contract(routeAddress, routerABI, r.owner);
+    return routeToken;
+}
+async function addLiquidityToPairViaRouter(r: ContractTestContext, pairToken: Contract) {
+    await r.archToken.connect(r.treasurySigner).transfer(r.owner.address, minLiq);
+
+    const routeInstance = await getRouter(r);
+
+    await r.archToken.approve(routeAddress, minLiq);
+
+    await routeInstance.addLiquidityETH(
+        r.archToken.address,
+        minLiq,
+        bnFromNum(100),
+        bnFromNum(0.001),
+        r.owner.address,
+        1670978314,
+        { value: bnFromNum(0.04) }, // The amount in Eth to send to pair, long calc but it is worth 100
+    );
+    await ethers.provider.send("evm_mine");
+
+    const reserves = await pairToken.getReserves();
+    // console.log("reserves0, r1 : %s %s ", numFromBn(reserves._reserve0), numFromBn(reserves._reserve1))
+}
+
+export async function createUniswapPool(r: ContractTestContext) {
+    await getUserSomeWETH(r);
+    const pairToken = await createPair(r);
+
+    await addLiquidityToPairViaRouter(r, pairToken);
+
+    await ethers.provider.send("evm_mine");
+}
+
+
 export {
     defaultBlockNumber,
 
@@ -205,6 +275,7 @@ export {
     helperSwapETHWithUSDT,
     helperSwapETHWith3CRV,
     helperSwapETHWithOUSD,
+    createUniswapPool,
 
     /* addresses */
     addressCurveTripool2,
@@ -219,6 +290,7 @@ export {
     addressZap,
     address3CRVlvUSDPool,
     addressCurveRegistry,
+    routeAddress,
 
     /* ABIs */
     abiOUSDToken,
@@ -236,4 +308,5 @@ export {
     indexTripoolWETH9,
     indexCurveOUSDOUSD,
     indexCurveOUSD3CRV,
+
 };
