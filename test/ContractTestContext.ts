@@ -168,7 +168,7 @@ export async function buildContractTestContext(skipPoolBalances = false): Promis
 
     await context.vault.setDependencies(context.parameterStore.address, context.externalOUSD.address);
 
-    await context.parameterStore.changeTreasuryAddress(context.treasurySigner.address);
+    // await context.parameterStore.changeTreasuryAddress(context.treasurySigner.address);
 
     await context.poolManager.setDependencies(
         context.parameterStore.address,

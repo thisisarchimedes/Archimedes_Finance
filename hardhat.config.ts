@@ -1,10 +1,11 @@
-import "@tenderly/hardhat-tenderly";
+// import "@tenderly/hardhat-tenderly";
 
 // typechain imports:
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 
+// import 'hardhat-ethernal';
 import "@openzeppelin/hardhat-upgrades";
 
 import "hardhat-watcher";
@@ -126,13 +127,17 @@ export default {
         test: {
             tasks: [{ command: "test:watch", params: { path: "{path}" } }],
             files: ["./test/**/*", "./contracts/**/*"],
-            verbose: true,
+            verbose: false,
         },
     },
     mocha: {
         timeout: 100000000,
     },
-
+    // ethernal: {
+    //     email: "yotam@archimedesfi.com",
+    //     password: "URJk1Biee1&9",
+    //     verbose: false,
+    // },
     tenderly: {
         username: "YotamDaniel",
         project: "ZapperV",

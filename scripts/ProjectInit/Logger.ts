@@ -1,8 +1,8 @@
 class LoggerClass {
     verbose: bool = false;
-    log(message: String): void {
+    log(message?: any, ...optionalParams: any[]): void {
         if (this.verbose) {
-            console.log(message);
+            console.log(message, ...optionalParams);
         }
     }
     setVerbose(verbose: bool): void {

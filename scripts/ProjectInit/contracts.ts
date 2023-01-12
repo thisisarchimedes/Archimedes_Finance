@@ -6,26 +6,32 @@ import { Coordinator } from "../../types/contracts/Coordinator";
 import { Exchanger } from "../../types/contracts/Exchanger";
 import { LeverageEngine } from "../../types/contracts/LeverageEngine";
 import { PositionToken } from "../../types/contracts/PositionToken";
-import { Vault } from "../../types/contracts/Vault";
+import { VaultOUSD } from "../../types/contracts/VaultOUSD";
 import { ArchToken } from "../../types/contracts/ArchToken";
 import { LvUSDToken } from "../../types/contracts/LvUSDToken";
 import { PoolManager } from "../../types/contracts/PoolManager";
 import { Auction } from "../../types/contracts/Auction";
+import { ParameterStore } from "../../types/contracts/ParameterStore";
+import { CDPosition } from "../../types/contracts/CDPosition";
 import { Zapper } from "../../types/contracts/Zapper";
 import { IERC20 } from "../../types/@openzeppelin/contracts/token/ERC20/IERC20";
 import { ICurveFiCurveInterface } from "../../types/contracts/interfaces/ICurveFi/ICurveFiCurve";
 import { ValueStore } from "./ValueStore";
 import { Logger } from "./Logger";
+import { Pools } from "./Pools";
 
 export class Contracts {
     // Signer that owns contract
     signers: Signers;
     /// Contracts 
+    parameterStore: ParameterStore;
+    cdp: CDPosition;
     coordinator: Coordinator;
     exchanger: Exchanger;
     leverageEngine: LeverageEngine;
     positionToken: PositionToken;
-    vault: Vault;
+
+    vault: VaultOUSD;
     archToken: ArchToken;
     lvUSD: LvUSDToken;
     poolManager: PoolManager;
@@ -37,8 +43,6 @@ export class Contracts {
     externalUSDT: IERC20;
     externalDAI: IERC20;
     external3CRV: IERC20;
-    // curveLvUSDPool: ICurveFiCurveInterface;
-
 
     async init(signers: Signers): Contracts {
         this.signers = signers;
@@ -48,11 +52,13 @@ export class Contracts {
         this.externalUSDT = new ethers.Contract(ValueStore.addressUSDT, ValueStore.abiUSDTToken, contractsOwner);
         this.externalDAI = new ethers.Contract(ValueStore.addressDAI, ValueStore.abiUSDTToken, contractsOwner);
         this.external3CRV = new ethers.Contract(ValueStore.address3CRV, ValueStore.abi3CRVToken, contractsOwner);
-        console.log("external3CRV: ", this.external3CRV.address);
         // None upgradable contracts
         this.lvUSD = await this.deployContract("LvUSDToken", contractsOwner.address);
-        this.archToken = await this.deployContract("ArchToken", contractsOwner.address);
+        // Notice the argument passed to constructor is the treasury address (where all arch tokens are minted)
+        this.archToken = await this.deployContract("ArchToken", this.signers.treasury.address);
         // Upgradable contracts
+        this.parameterStore = await this.deployContractProxy("ParameterStore");
+        this.cdp = await this.deployContractProxy("CDPosition");
         this.coordinator = await this.deployContractProxy("Coordinator");
         this.exchanger = await this.deployContractProxy("Exchanger");
         this.leverageEngine = await this.deployContractProxy("LeverageEngine");
@@ -62,6 +68,7 @@ export class Contracts {
         this.zapper = await this.deployContractProxy("Zapper");
         // Upgradable contracts with constructor arguments
         this.vault = await this.deployContractProxy("VaultOUSD", [ValueStore.addressOUSD, "VaultOUSD", "VOUSD"]);
+        Logger.log("Finished deploying contracts\n");
         return this;
     }
 
@@ -79,3 +86,5 @@ export class Contracts {
         return contract;
     }
 }
+
+

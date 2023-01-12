@@ -273,6 +273,10 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     address internal constant _ADDRESS_USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address internal constant _ADDRESS_DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address internal constant _ADDRESS_WETH9 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address internal constant _ADDRESS_OUSD = 0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86;
+    address internal constant _ADDRESS_3CRV = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490;
+    address internal constant _ADDRESS_OUSD3CRV_POOL = 0x87650D7bbfC3A9F10587d7778206671719d9910D;
+    address internal constant _ADDRESS_UNISWAP_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     address internal constant _ADDRESS_UNISWAP_FACTORY = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
     int128 internal constant _OUSD_TOKEN_INDEX = 0;
 
@@ -343,28 +347,26 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     }
 
     function setDependencies(
-        address addressOUSD,
-        address address3CRV,
-        address addressUSDT,
-        address addressPoolOUSD3CRV,
-        address addressUniswapRouter,
+        // address addressOUSD,
+        // address address3CRV,
+        // address addressPoolOUSD3CRV,
+        // address addressUniswapRouter,
         address addressLevEngine,
         address addressArchToken,
         address addressParamStore
     ) external nonReentrant onlyAdmin {
-        require(addressOUSD != address(0), "cant set to 0 A");
-        require(address3CRV != address(0), "cant set to 0 A");
-        require(addressPoolOUSD3CRV != address(0), "cant set to 0 A");
+        // require(addressOUSD != address(0), "cant set to 0 A");
+        // require(address3CRV != address(0), "cant set to 0 A");
+        // require(addressPoolOUSD3CRV != address(0), "cant set to 0 A");
 
         // Load contracts
-        /// TODO: Change whatever static address to the const address we have on this contract
-        _ousd = IERC20Upgradeable(addressOUSD);
-        _usdt = IERC20Upgradeable(addressUSDT);
+        _ousd = IERC20Upgradeable(_ADDRESS_OUSD);
+        _usdt = IERC20Upgradeable(_ADDRESS_USDT);
         _usdc = IERC20Upgradeable(_ADDRESS_USDC);
         _dai = IERC20Upgradeable(_ADDRESS_DAI);
-        _crv3 = IERC20Upgradeable(address3CRV);
-        _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
-        _uniswapRouter = IUniswapV2Router02(addressUniswapRouter);
+        _crv3 = IERC20Upgradeable(_ADDRESS_3CRV);
+        _poolOUSD3CRV = ICurveFiCurve(_ADDRESS_OUSD3CRV_POOL);
+        _uniswapRouter = IUniswapV2Router02(_ADDRESS_UNISWAP_ROUTER);
         _levEngine = LeverageEngine(addressLevEngine);
         _archToken = IERC20Upgradeable(addressArchToken);
         _paramStore = ParameterStore(addressParamStore);

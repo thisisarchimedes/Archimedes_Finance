@@ -1,4 +1,4 @@
-import { abi3CRVToken, abiOUSDToken, abiUSDTToken, abiCurveFactory, abiCurveFactory, routerABI,abi3PoolImplementation, abiCurve3Pool } from '../../test/ABIs';
+import { abi3CRVToken, abiOUSDToken, abiUSDTToken, abiCurveFactory, abiCurveFactory, routerABI, abi3PoolImplementation, abiCurve3Pool } from '../../test/ABIs';
 
 export class ValueStore {
     static addressUSDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
@@ -9,6 +9,7 @@ export class ValueStore {
     static addressDAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
     static addressCurveFactory = "0xB9fC157394Af804a3578134A6585C0dc9cc990d4";
     static addressCurve3Pool = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
+    static addressCurveOUSDPool = "0x87650D7bbfC3A9F10587d7778206671719d9910D";
     static addressUniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
     static abiOUSDToken = abiOUSDToken;
     static abiUSDTToken = abiUSDTToken;
@@ -17,5 +18,7 @@ export class ValueStore {
     static abiCurve3Pool = abiCurve3Pool;
     static abi3PoolImplementation = abi3PoolImplementation;
     static abiUniswapRouter = routerABI;
+
+    static ONE_ETH = ethers.utils.parseUnits("1.0", 18);
 
 }

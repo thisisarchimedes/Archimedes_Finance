@@ -128,8 +128,9 @@ async function setupFixture() {
     // Add zapper. Need to be move into buildContractTestContext once done.
     const zapperFactory = await ethers.getContractFactory("Zapper");
     const zapper = await hre.upgrades.deployProxy(zapperFactory, [], { kind: "uups" });
-    await zapper.setDependencies(addressOUSD, address3CRV,
-        addressUSDT, addressCurveOUSDPool, routeAddress,
+    await zapper.setDependencies(
+        // addressOUSD, address3CRV,
+        // addressUSDT, addressCurveOUSDPool, routeAddress,
         r.leverageEngine.address, r.archToken.address, r.parameterStore.address);
 
     /// transfer some Arch to Zapper for testing
@@ -295,7 +296,7 @@ describe("Zapper test suite", function () {
         it("should preview split tokens correctly", async function () {
             /// baseAmount = collateral + dollarsToPayForArch
             /// dollarsToPayForArch = (leverageAmount(collateral) * archPrice(unknown)) / archToLevRatio
-            
+
 
             ///  archPrice -> we estimate from pool. First getting price for 1 arch token, then for the correct amount we need
             ///  leverageAmount = f(collateral) = getAllowedLeverageForPosition(collateral, cycles)
