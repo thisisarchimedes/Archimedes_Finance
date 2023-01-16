@@ -55,7 +55,7 @@
         "dotenv": "^16.0.3",
         "eslint": "^8.25.0",
         "eslint-config-standard": "^17.0.0",
-        "eslint-plugin-import": "^2.26.0",
+        "eslint-plugin-import": "^2.27.5",
         "eslint-plugin-mocha": "^10.1.0",
         "ethereum-waffle": "^3.4.4",
         "ethers": "^5.7.1",
