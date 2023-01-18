@@ -1,7 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { Contracts } from "./contracts";
+import { Contracts } from "./Contracts";
 import { Logger } from "./Logger";
-import { NumberBundle } from "./NumberBundle";
 import { Pools } from "./Pools";
 import { ValueStore } from "./ValueStore";
 
@@ -14,7 +13,7 @@ class DeploymentUtils {
 
     async setupParamStoreValues(contracts: Contracts): void {
         await contracts.parameterStore.changeTreasuryAddress(contracts.signers.treasury.address);
-        Logger.log("Finished setting up ParamStore values\n");
+        Logger.log("Finished setting up ParamStore values");
     }
 
     async setUpInitialRoles(contracts: Contracts): void {
@@ -24,7 +23,7 @@ class DeploymentUtils {
         await contracts.exchanger.setExecutive(contracts.coordinator.address);
         await contracts.vault.setExecutive(contracts.coordinator.address);
         await contracts.cdp.setExecutive(contracts.coordinator.address);
-        Logger.log("Finished setting up initial roles\n");
+        Logger.log("Finished setting up initial roles");
     }
 
     async setDependenciesOnContracts(contracts: Contracts, pools: Pools): void {
@@ -85,7 +84,7 @@ class DeploymentUtils {
             contracts.archToken.address,
             contracts.parameterStore.address
         );
-        Logger.log("Finished setting dependencies on contracts\n");
+        Logger.log("Finished setting dependencies on contracts");
     }
 }
 

@@ -1,7 +1,7 @@
 import { ContractAddressOrInstance } from "@openzeppelin/hardhat-upgrades/dist/utils";
 import { BigNumber, Contract } from "ethers";
 import { ethers } from "hardhat";
-import { Contracts } from "./contracts";
+import { Contracts } from "./Contracts";
 import { IUniswapV2Router02 } from "../../types/contracts/interfaces/IUniswapV2Router02";
 import { ValueStore } from "./ValueStore";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -37,6 +37,7 @@ export class Pools {
 
         if (createPool) {
             this.curveLvUSDPool = await this._createCurvePool("lvUSD3CRV", this.contracts.lvUSD.address);
+            Logger.log("Created lvUSD curve pools at : " + this.curveLvUSDPool.address);
         } else {
             this.curveLvUSDPool = await this.findPool(ValueStore.address3CRV, this.contracts.lvUSD.address);
             Logger.log("Found lvUSD/3CRV pool at address: " + this.curveLvUSDPool.address);
@@ -88,7 +89,11 @@ export class Pools {
         /// approve amount (would revert if not enough available on ERC20 balance)
         await this.contracts.lvUSD.approve(this.curveLvUSDPool.address, amountLvUSD.getBn());
         await this.contracts.external3CRV.approve(this.curveLvUSDPool.address, amount3CRV.getBn());
+        console.log("Before add liq")
+
         await this.curveLvUSDPool.add_liquidity([amountLvUSD.getBn(), amount3CRV.getBn()], 1, this.owner.address);
+        console.log("Before add liq")
+
         await EtherUtils.mineBlock();
         Logger.log("lvUSD/3crv pool now has %s lvUSD, %s 3CRV", (await this.getLvUSDInPool()).getNum(), (await this.get3CRVInPool()).getNum());
     }
@@ -101,7 +106,7 @@ export class Pools {
         return NumberBundle.withBn(await this.curveLvUSDPool.balances(1));
     }
 
-    async _createCurvePool(poolName: String, tokenAddress: String): ICurveFiCurveInterface {
+    async _createCurvePool(poolName: String, tokenAddress: String): Contract {
         const poolSymbol = poolName;
         const poolA = 40000;
         const poolFee = 4000000;
@@ -110,15 +115,33 @@ export class Pools {
         await EtherUtils.mineBlock();
         // Find pool's address and return it
         const pool = await this.findPool(ValueStore.address3CRV, tokenAddress);
-        Logger.log("Created Curve pool at address " + pool.address);
-        // return await ethers.getContractAt(ValueStore.abi3PoolImplementation, poolAddress, this.owner);
         return pool;
     }
 
     async findPool(coin1Address: String, coin2Address: String): Contract {
         const poolAddress = await this.factoryCurveMetapool.find_pool_for_coins(coin1Address, coin2Address);
         return await ethers.getContractAt(ValueStore.abi3PoolImplementation, poolAddress, this.owner);
+    }
 
+    /// For lvUSD/3CRV pool, coin 0 is lvUSD, coin 1 is 3crv
+
+    async estimatelvUSDtoCrvExchange(lvUSDAmountIn: NumberBundle): NumberBundle {
+        return await this.estimateCurveExchange(lvUSDAmountIn, 0, 1);
+        // const lvUSDAmountBn = lvUSDAmount.getBn();
+        // const ousdAmount = await this.curveLvUSDPool.get_dy(0, 1, lvUSDAmountBn);
+        // console.log("Got % OUSD from % lvUSD", NumberBundle.withBn(ousdAmount).getNum(), lvUSDAmount.getNum())
+        // return NumberBundle.withBn(ousdAmount);
+    }
+
+    async estimateCrvToOusdExchange(crvAmountIn: NumberBundle): NumberBundle {
+        return await this.estimateCurveExchange(crvAmountIn, 1, 0);
+    }
+
+    async estimateCurveExchange(amountIn: NumberBundle, fromCoin: number, toCoin: number): NumberBundle {
+        const amountInBn = amountIn.getBn();
+        const amountOut = await this.curveLvUSDPool.get_dy(fromCoin, toCoin, amountInBn);
+
+        return NumberBundle.withBn(amountOut);
     }
 
 

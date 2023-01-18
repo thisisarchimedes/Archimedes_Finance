@@ -10,7 +10,7 @@ export class NumberBundle {
         const bundle = new NumberBundle();
         bundle.bigNum = bigNum;
         bundle.decimal = decimal;
-        bundle.num = ethers.utils.formatUnits(bigNum, decimal);
+        bundle.num = parseFloat(ethers.utils.formatUnits(bigNum, decimal));
         return bundle;
     }
 
@@ -22,24 +22,11 @@ export class NumberBundle {
         return bundle;
     }
 
-
-
-
     getNum(): number {
         return this.num;
     }
 
     getBn(): BigNumber {
         return this.bigNum;
-    }
-
-    setNumber(number: Number) {
-        this.num = number;
-        this.bigNum = ethers.utils.parseUnits(number.toString(), this.decimal);
-    }
-
-    setNumber(bigNum: BigNumber) {
-        this.bigNum = bigNum;
-        this.num = ethers.utils.formatUnits(bigNum, this.decimal);
     }
 }

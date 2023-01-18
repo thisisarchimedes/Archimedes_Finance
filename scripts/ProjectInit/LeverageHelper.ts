@@ -1,5 +1,5 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { Contracts } from "./contracts";
+import { Contracts } from "./Contracts";
 import { Logger } from "./Logger";
 import { NumberBundle } from "./NumberBundle";
 import { TestConstants } from "./TestConstants";
@@ -12,11 +12,11 @@ export class LeverageHelper {
     }
 
     async startAuctionAndMintAndAcceptLeverage(auction: AuctionInfo) {
-        await this.mintLvUSD(auction.leverageAccepted, this.contracts.coordinator.address);
+        await this.mintLvUSD(auction.leverageAmount, this.contracts.coordinator.address);
         await this._startAuction(auction);
-        await this._acceptLeverage(auction.leverageAccepted);
+        await this._acceptLeverage(auction.leverageAmount);
         Logger.log("Auction started with endPrice of %s and leverage of %s lvUSD accepted\n",
-            auction.endPrice.getNum(), auction.leverageAccepted.getNum());
+            auction.endPrice.getNum(), auction.leverageAmount.getNum());
     }
 
     async mintLvUSD(amount: NumberBundle, to: String) {
@@ -53,16 +53,16 @@ export class AuctionInfo {
     length: number;
     startPrice: NumberBundle;
     endPrice: NumberBundle;
-    leverageAccepted: NumberBundle;
+    leverageAmount: NumberBundle;
 
     constructor(
         length: number = TestConstants.AUCTION_LENGTH_DEFAULT,
         startPrice: NumberBundle = TestConstants.AUCTION_START_PRICE_DEFAULT,
         endPrice: NumberBundle = TestConstants.AUCTION_END_PRICE_DEFAULT,
-        leverageAccepted: NumberBundle = TestConstants.AUCTION_LEVERAGE_ACCEPTED_DEFAULT) {
+        leverageAmount: NumberBundle = TestConstants.AUCTION_LEVERAGE_AMOUNT_DEFAULT) {
         this.startPrice = startPrice;
         this.endPrice = endPrice;
         this.length = length;
-        this.leverageAccepted = leverageAccepted;
+        this.leverageAmount = leverageAmount;
     }
 }

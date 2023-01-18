@@ -48,9 +48,9 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _originationFeeRate = 5 ether / 1000; // meaning 0.5%
         _globalCollateralRate = 95;
         _rebaseFeeRate = 30 ether / 100; // meaning 30%
-        _curveGuardPercentage = 95;
+        _curveGuardPercentage = 96;
         _slippage = 1; // 1%;
-        _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
+        _curveMaxExchangeGuard = 2; // meaning we allow exchange with get 50% more then we expected
         _minPositionCollateral = 2 ether;
         _positionTimeToLiveInDays = 369;
         _coordinatorLeverageBalance = 0;
@@ -108,7 +108,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     function changeOriginationFeeRate(uint256 newFeeRate) external onlyGovernor {
-        require(newFeeRate > (1 ether / 1000) && newFeeRate < (50 ether / 1000), "newFeeRate out of range");
+        // require(newFeeRate > (1 ether / 1000) && newFeeRate < (50 ether / 1000), "newFeeRate out of range");
         emit ParameterChange("originationFeeRate", newFeeRate, _originationFeeRate);
         _originationFeeRate = newFeeRate;
     }

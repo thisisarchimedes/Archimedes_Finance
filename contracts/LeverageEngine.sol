@@ -89,6 +89,13 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, userAddress);
     }
 
+    // function previewCreateLeveragedPosition(
+    //     uint256 ousdPrinciple,
+    //     uint256 cycles,
+    //     uint256 maxArchAmount
+    // ) external view returns (uint256 ousdPosition) {
+    //     return _parameterStore.getAllowedLeverageForPositionWithArch(ousdPrinciple, cycles, maxArchAmount);
+    // }
     /* Non-privileged functions */
 
     function _createLeveragedPosition(
@@ -125,6 +132,8 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         if (_ousd.allowance(msg.sender, address(this)) >= ousdPrinciple) {
             _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
         } else {
+            uint256 balanceBefore = _ousd.balanceOf(address(this));
+            console.log("in createLeveragedPosition a- %s -- prince - %s",balanceBefore, ousdPrinciple );
             revert("insuff OUSD allowance");
         }
 
