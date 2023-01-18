@@ -79,7 +79,10 @@ async function verifyTokens(contracts: Contracts) {
 async function verifyParameterStore(contracts: Contracts) {
     const maxCycles = await contracts.parameterStore.getMaxNumberOfCycles();
     verifyValues(
-        NumberBundle.withBn(maxCycles, 0), "Max cycles", NumberBundle.withNum(10, 0));
+        NumberBundle.withBn(maxCycles, 0),
+        "Max cycles",
+        NumberBundle.withNum(10, 0),
+    );
     Logger.log("ParameterStore Verified");
 }
 
