@@ -160,4 +160,59 @@ describe("LeverageEngine test suit", async function () {
             });
         });
     });
+    describe("Pauseable State", async function () {
+        before(async function () {
+            await prepForPositionCreation();
+        });
+
+        it("Should emit paused and unpaused events respectively", async function () {
+            const promise1 = r.leverageEngine.pauseContract();
+            await expect(promise1).to
+                .emit(r.leverageEngine, "Paused").withArgs(r.owner.address);
+            const promise2 = r.leverageEngine.unPauseContract();
+            await expect(promise2).to
+                .emit(r.leverageEngine, "Unpaused").withArgs(r.owner.address);
+            const promise3 = r.leverageEngine.pauseContract();
+            await expect(promise3).to
+                .emit(r.leverageEngine, "Paused").withArgs(r.owner.address);
+            const promise4 = r.leverageEngine.unPauseContract();
+            await expect(promise4).to
+                .emit(r.leverageEngine, "Unpaused").withArgs(r.owner.address);
+        });
+
+        it("Should revert if attempting to upause when not paused", async function () {
+            const promise = r.leverageEngine.unPauseContract();
+            await expect(promise).to.be.revertedWith("Pausable: not paused");
+        });
+
+        it("Should revert if attempting to pause when paused", async function () {
+            const promise1 = r.leverageEngine.pauseContract();
+            await expect(promise1).to
+                .emit(r.leverageEngine, "Paused").withArgs(r.owner.address);
+            const promise2 = r.leverageEngine.pauseContract();
+            await expect(promise2).to.be.revertedWith("Pausable: paused");
+            const promise3 = r.leverageEngine.unPauseContract();
+            await expect(promise3).to
+                .emit(r.leverageEngine, "Unpaused").withArgs(r.owner.address);
+        });
+    });
+    describe("Guardian Suite", async function () {
+        before(async function () {
+            await prepForPositionCreation();
+        });
+
+        it("Should revert if attempting pause as a non guardian", async function () {
+            const promise1 = r.leverageEngine.connect(r.addr1).pauseContract();
+            await expect(promise1).to.be.revertedWith("Caller is not Guardian");
+        });
+
+        it("Should allow admin to assign a new guardian", async function () {
+            await r.leverageEngine.setGuardian(r.addr1.address);
+            const promise1 = r.leverageEngine.connect(r.addr1).pauseContract();
+            await expect(promise1).to
+                .emit(r.leverageEngine, "Paused").withArgs(r.addr1.address);
+            const promise2 = r.leverageEngine.unPauseContract();
+            await expect(promise2).to.be.revertedWith("Caller is not Guardian");
+        });
+    });
 });
