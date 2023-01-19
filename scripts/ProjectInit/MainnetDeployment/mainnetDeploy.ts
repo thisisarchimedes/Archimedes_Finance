@@ -18,15 +18,15 @@ import { DeployedStore } from "./DeployedStore";
 
 
 /// We would probably change this to command line arguments later but for now
-const deployJustTokens = false;
-const deployArchimedesEngine = false;
-const deployVault = false;
-const shouldVerifyTokens = true;
-const shouldVerifyArchimedesEngine = true;
+const deployJustTokens = true;
+const deployArchimedesEngine = true;
+const deployVault = true;
+const shouldVerifyTokens = false;
+const shouldVerifyArchimedesEngine = false;
 
-const shouldCreatePool = false;
+const shouldCreatePool = true;
 
-const shouldDoBasicSetup = false;
+const shouldDoBasicSetup = true;
 
 async function main() {
     Logger.setVerbose(true);
@@ -66,6 +66,13 @@ function verifyValues(actualValue: NumberBundle, name: string, expectedValue: Nu
     Logger.log("Verified that %s is equal to expected value of %s", name, expectedValue.getNum());
 }
 
+function verifyStrings(actualString: string, name: string, expectedString: string) {
+    if (actualString !== expectedString) {
+        throw new Error(`Expected "${name}" to be ${expectedString} but got ${actualString}`);
+    }
+    Logger.log("Verified that %s is equal to expected string of %s", name, expectedString);
+}
+
 async function verifyTokens(contracts: Contracts) {
     const treasuryArchTokenBalance = await ERC20Utils.balance(contracts.signers.treasury.address, contracts.archToken);
     verifyValues(treasuryArchTokenBalance, "Treasury Arch token balance", NumberBundle.withNum(100000000));
@@ -88,28 +95,55 @@ async function verifyParameterStore(contracts: Contracts) {
 
 async function verifyVaultOUSD(contracts: Contracts) {
     const totalAssets = await contracts.vault.totalAssets();
-    totalAssets
+    verifyValues(
+        NumberBundle.withBn(totalAssets),
+        "Total assets",
+        NumberBundle.withNum(0),
+    );
+    Logger.log("VaultOUSD Verified");
 }
 
-async function verifyCDPosition(contracts: Contracts) {
+// async function verifyCDPosition(contracts: Contracts) {
+//     const addressExecutive = await contracts.cdp.getAddressExecutive();
+//     verifyStrings(
+//         addressExecutive,
+//         "Executive address",
+//         DeployedStore. // Insert address of executive
+//     );
+//     Logger.log("");
+// }
 
-}
+// async function verifyCoordinator(contracts: Contracts) {
 
-async function verifyCoordinator(contracts: Contracts) {
+//     verifyValues(
 
-}
+//     );
+//     Logger.log("");
+// }
 
-async function verifyExchanger(contracts: Contracts) {
+// async function verifyExchanger(contracts: Contracts) {
 
-}
+//     verifyValues(
 
-async function verifyLeverageEngine(contracts: Contracts) {
+//     );
+//     Logger.log("");
+// }
 
-}
+// async function verifyLeverageEngine(contracts: Contracts) {
 
-async function verifyPositionToken(contracts: Contracts) {
+//     verifyValues(
 
-}
+//     );
+//     Logger.log("");
+// }
+
+// async function verifyPositionToken(contracts: Contracts) {
+
+//     verifyValues(
+
+//     );
+//     Logger.log("");
+//  }
 
 async function deployOrGetAllContracts(contracts: Contracts, deployJustTokens: boolean, deployArchimedesEngine: boolean, deployVault: boolean) {
     if (deployJustTokens) {
