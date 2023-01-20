@@ -13,9 +13,7 @@ import { Pools } from "../Pools";
 import { Signers } from "../Signers";
 import { DeployedStore } from "./DeployedStore";
 
-
 // console.log("Should we deploy tokens? ", options.deploytokens);
-
 
 /// We would probably change this to command line arguments later but for now
 const deployJustTokens = true;
@@ -28,14 +26,14 @@ const shouldCreatePool = true;
 
 const shouldDoBasicSetup = true;
 
-async function main() {
+async function main () {
     Logger.setVerbose(true);
-    const signers = await new Signers().init()
-    const contracts = new Contracts(signers)
+    const signers = await new Signers().init();
+    const contracts = new Contracts(signers);
 
     await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
 
-    const pools = await new Pools().init(contracts, shouldCreatePool)
+    const pools = await new Pools().init(contracts, shouldCreatePool);
     // console.log("curve lvUSD pool ", pools.curveLvUSDPool)
     console.log("\nDone with deploying/get instances the whole of archimedes. Now verifying them:");
 
@@ -51,7 +49,6 @@ async function main() {
         await DeploymentUtils.basicSetup(contracts, pools);
     }
     console.log("\nDone with set up tokens\n");
-
 }
 
 main().catch((error) => {
@@ -59,21 +56,28 @@ main().catch((error) => {
     process.exitCode = 1;
 });
 
-function verifyValues(actualValue: NumberBundle, name: string, expectedValue: NumberBundle) {
-    if (actualValue.getBn().eq(expectedValue.getBn()) == false) {
+function verifyValues (actualValue: NumberBundle, name: string, expectedValue: NumberBundle) {
+    if (actualValue.getBn().eq(expectedValue.getBn()) === false) {
         throw new Error(`Expected "${name}" to be ${expectedValue.getNum()} but got ${actualValue.getNum}`);
     }
     Logger.log("Verified that %s is equal to expected value of %s", name, expectedValue.getNum());
 }
 
-function verifyStrings(actualString: string, name: string, expectedString: string) {
+function verifyStrings (actualString: string, name: string, expectedString: string) {
     if (actualString !== expectedString) {
         throw new Error(`Expected "${name}" to be ${expectedString} but got ${actualString}`);
     }
-    Logger.log("Verified that %s is equal to expected string of %s", name, expectedString);
+    Logger.log("Verified that %s is equal to expected value of %s", name, expectedString);
 }
 
-async function verifyTokens(contracts: Contracts) {
+function verifyBooleans (actual: boolean, name: string, expected: boolean) {
+    if (actual !== expected) {
+        throw new Error(`Expected "${name}" to be ${expected} but got ${actual}`);
+    }
+    Logger.log("Verified that %s is equal to expected value of %s", name, expected);
+}
+
+async function verifyTokens (contracts: Contracts) {
     const treasuryArchTokenBalance = await ERC20Utils.balance(contracts.signers.treasury.address, contracts.archToken);
     verifyValues(treasuryArchTokenBalance, "Treasury Arch token balance", NumberBundle.withNum(100000000));
     Logger.log("ArchToken Verified");
@@ -83,7 +87,7 @@ async function verifyTokens(contracts: Contracts) {
     Logger.log("LvUSDToken Verified");
 }
 
-async function verifyParameterStore(contracts: Contracts) {
+async function verifyParameterStore (contracts: Contracts) {
     const maxCycles = await contracts.parameterStore.getMaxNumberOfCycles();
     verifyValues(
         NumberBundle.withBn(maxCycles, 0),
@@ -93,68 +97,75 @@ async function verifyParameterStore(contracts: Contracts) {
     Logger.log("ParameterStore Verified");
 }
 
-async function verifyVaultOUSD(contracts: Contracts) {
+async function verifyVaultOUSD (contracts: Contracts) {
     const totalAssets = await contracts.vault.totalAssets();
     verifyValues(
-        NumberBundle.withBn(totalAssets),
+        NumberBundle.withBn(totalAssets, 0),
         "Total assets",
-        NumberBundle.withNum(0),
+        NumberBundle.withNum(0, 0),
     );
-    Logger.log("VaultOUSD Verified");
+    Logger.log("ParameterStore Verified");
 }
 
-// async function verifyCDPosition(contracts: Contracts) {
-//     const addressExecutive = await contracts.cdp.getAddressExecutive();
-//     verifyStrings(
-//         addressExecutive,
-//         "Executive address",
-//         DeployedStore. // Insert address of executive
-//     );
-//     Logger.log("");
-// }
+async function verifyCDPosition (contracts: Contracts) {
+    const executive = await contracts.cdp.getAddressExecutive();
+    verifyStrings(
+        executive,
+        "Max cycles",
+        contracts.signers.owner.address,
+    );
+    Logger.log("CDPosition Verified");
+}
 
-// async function verifyCoordinator(contracts: Contracts) {
+async function verifyCoordinator (contracts: Contracts) {
+    const lvUSDTokenAddress = await contracts.coordinator.addressOfLvUSDToken();
+    verifyStrings(
+        lvUSDTokenAddress,
+        "LvUSD Token Address",
+        contracts.lvUSD.address,
+    );
+    Logger.log("Coordinator Verified");
+}
 
-//     verifyValues(
+async function verifyExchanger (contracts: Contracts) {
+    const executive = await contracts.exchanger.getAddressExecutive();
+    verifyStrings(
+        executive,
+        "Executive",
+        contracts.signers.owner.address,
+    );
+    Logger.log("Exchanger Verified");
+}
 
-//     );
-//     Logger.log("");
-// }
+async function verifyLeverageEngine (contracts: Contracts) {
+    const executive = await contracts.leverageEngine.getAddressExecutive();
+    verifyStrings(
+        executive,
+        "Executive",
+        contracts.signers.owner.address,
+    );
+    Logger.log("LeverageEngine Verified");
+}
 
-// async function verifyExchanger(contracts: Contracts) {
+async function verifyPositionToken (contracts: Contracts) {
+    const exists = await contracts.positionToken.exists(0);
+    verifyBooleans(
+        exists,
+        "Max cycles",
+        false,
+    );
+    Logger.log("PositionToken Verified");
+}
 
-//     verifyValues(
-
-//     );
-//     Logger.log("");
-// }
-
-// async function verifyLeverageEngine(contracts: Contracts) {
-
-//     verifyValues(
-
-//     );
-//     Logger.log("");
-// }
-
-// async function verifyPositionToken(contracts: Contracts) {
-
-//     verifyValues(
-
-//     );
-//     Logger.log("");
-//  }
-
-async function deployOrGetAllContracts(contracts: Contracts, deployJustTokens: boolean, deployArchimedesEngine: boolean, deployVault: boolean) {
+async function deployOrGetAllContracts (contracts: Contracts, deployJustTokens: boolean, deployArchimedesEngine: boolean, deployVault: boolean) {
     if (deployJustTokens) {
         console.log("Deploying tokens");
-        await contracts.setExternalTokensInstances()
+        await contracts.setExternalTokensInstances();
         await contracts.initTokens();
-
     } else {
         console.log("Getting already deployed tokens instances from address");
         await contracts.setTokensInstances(DeployedStore.lvUSDAddress, DeployedStore.archTokenAddress);
-        await contracts.setExternalTokensInstances()
+        await contracts.setExternalTokensInstances();
     }
 
     if (deployArchimedesEngine) {
@@ -171,7 +182,7 @@ async function deployOrGetAllContracts(contracts: Contracts, deployJustTokens: b
             DeployedStore.positionTokenAddress,
             DeployedStore.poolManagerAddress,
             DeployedStore.auctionAddress,
-            DeployedStore.zapperAddress
+            DeployedStore.zapperAddress,
         );
     }
 
@@ -180,13 +191,18 @@ async function deployOrGetAllContracts(contracts: Contracts, deployJustTokens: b
         await contracts.initArchimedesUpgradableContractsWithConstructorArguments();
     } else {
         console.log("Getting Vault deployed token instances from address");
-        await contracts.setArchimedesUpgradableContractsInstancesWithConstructorArguments(DeployedStore.vaultAddress)
+        await contracts.setArchimedesUpgradableContractsInstancesWithConstructorArguments(DeployedStore.vaultAddress);
     }
 }
 
-async function verifyArcimedesEngine(contracts: Contracts) {
+async function verifyArcimedesEngine (contracts: Contracts) {
     // Arch and LvUSD
     await verifyTokens(contracts);
     await verifyParameterStore(contracts);
+    await verifyVaultOUSD(contracts);
+    await verifyCDPosition(contracts);
+    await verifyCoordinator(contracts);
+    await verifyExchanger(contracts);
+    await verifyLeverageEngine(contracts);
+    await verifyPositionToken(contracts);
 }
-
