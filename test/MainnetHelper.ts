@@ -162,7 +162,7 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     3. USDT->OUSD with OUSD contract
 */
 async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSwap: BigNumber) {
-    /// /////////// Loading some contracts //////////////
+    /// ///////// Loading some contracts //////////////
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore loading USDT contract

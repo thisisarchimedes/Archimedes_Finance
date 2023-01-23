@@ -349,10 +349,17 @@ describe("Zapper test suite", function () {
     describe("Zapper Preview methods", function () {
         const amountInBase = 10;
         it("should preview split tokens correctly", async function () {
+            /// baseAmount = collateral + dollarsToPayForArch
+            /// dollarsToPayForArch = (leverageAmount(collateral) * archPrice(unknown)) / archToLevRatio
+
+            ///  archPrice -> we estimate from pool. First getting price for 1 arch token, then for the correct amount we need
+            ///  leverageAmount = f(collateral) = getAllowedLeverageForPosition(collateral, cycles)
+            /// after first run with baseAmount = 1, we get some reasonable ratio between collateral and dollarsToPayForArch
+            /// then we can use this ratio to calculate dollarsToPayForArch + collateral for any baseAmount
+
             const { r, zapper } = await loadFixture(setupFixture);
-            // await r.parameterStore.changeArchToLevRatio(bnFromNum(10));
-            const archPrice = await getArchPriceInDollars(r, amountInBase);
-            const split = await zapper.previewTokenSplit(bnFromNum(amountInBase, 6), defaultCycles, addressUSDT);
+            const archPrice = await getArchPriceInDollars(r, zapper, amountInBase);
+            const split = await zapper.previewTokenSplit(bnFromNum(amountInBase, 6), cycles, addressUSDT);
 
             const collateral = numFromBn(split[0], 6);
             const dollarsToPayForArch = numFromBn(split[1], 6);

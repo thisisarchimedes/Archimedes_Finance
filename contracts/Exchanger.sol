@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IExchanger} from "./interfaces/IExchanger.sol";
 import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
@@ -106,14 +107,11 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _index3CRV = 1;
     }
 
-    function _exhangerLvUSDTransferToCoordinator(uint256 amount) internal {
+    function _exchangerLvUSDBurnOnUnwind(uint256 amount) internal {
         /// Is it possible to exploit via transferring lvUSD to exchanger which then go back to coordinator?
         uint256 currentExchangerLvUSDBalance = _lvUSD.balanceOf(address(this));
-        uint256 currentCoordinatorLeverageBalance = _paramStore.getCoordinatorLeverageBalance();
         require(currentExchangerLvUSDBalance >= amount, "insuf lvUSD to trnsf to Exhanger");
-
-        _paramStore.changeCoordinatorLeverageBalance(currentCoordinatorLeverageBalance + amount);
-        _lvUSD.safeTransfer(_addressCoordinator, amount);
+        ERC20Burnable(address(_lvUSD)).burn(amount);
     }
 
     /**
@@ -201,7 +199,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _ousd.safeTransfer(_addressCoordinator, remainingOUSD);
 
         // send all swapped lvUSD to coordinator
-        _exhangerLvUSDTransferToCoordinator(_returnedLvUSD);
+        _exchangerLvUSDBurnOnUnwind(_returnedLvUSD);
 
         return (_returnedLvUSD, remainingOUSD);
     }

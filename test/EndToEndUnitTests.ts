@@ -96,6 +96,7 @@ describe("Building basic environment", function () {
     async function setupEnvForIntegrationTestsFixture () {
         // Setup & deploy contracts
         r = await buildContractTestContext();
+        await ethers.provider.send("evm_mine");
         owner = r.owner;
         user = r.addr1;
         userOther = r.addr2;
@@ -146,6 +147,8 @@ describe("Building basic environment", function () {
             [parseUnits(fundInPoolAddOnForTestString), parseUnits(fundInPoolAddOnForTestString)], owner, r);
 
         await setRolesForEndToEnd(r);
+
+        await ethers.provider.send("evm_mine");
 
         return { r };
     }
@@ -284,6 +287,7 @@ describe("Building basic environment", function () {
             // fund userOther
             await r.archToken.connect(r.treasurySigner).transfer(userOther.address, parseUnits("1000.0"));
             await helperSwapETHWithOUSD(userOther, parseUnits("1.0"));
+            await ethers.provider.send("evm_mine");
 
             const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(
                 tempUserOUSDPrincipleIn18Decimal,
@@ -425,6 +429,7 @@ describe("Building basic environment", function () {
             archApprovedForLeverageIn18Dec = archCostOfLeverageIn18Dec;
             /// Notice that it might be needed approve a tiny bit more arch then needed. Currently its exact approval.
             await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+            await ethers.provider.send("evm_mine");
             console.log("5");
 
             positionId = 0;
@@ -630,6 +635,7 @@ describe("Building basic environment", function () {
             const leverageUserIsTakingIn18Dec = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrincipleIn18Decimal, numberOfCycles);
             archCostOfLeverageIn18Dec = await r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
             await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
+            await ethers.provider.send("evm_mine");
             positionId = 0;
         }
 
