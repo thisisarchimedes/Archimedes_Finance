@@ -13,8 +13,6 @@ import {ParameterStore} from "./ParameterStore.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -24,7 +22,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     IERC20Upgradeable internal _usdt;
     IERC20Upgradeable internal _usdc;
     IERC20Upgradeable internal _dai;
-    IERC20Upgradeable internal _crv3;
     LeverageEngine internal _levEngine;
     IERC20Upgradeable internal _archToken;
     ParameterStore internal _paramStore;
@@ -56,7 +53,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
 
         /// validate input
         require(stableCoinAmount > 0, "err:stableCoinAmount==0");
-        require(maxSlippageAllowed > 800 && maxSlippageAllowed < 1000, "err:800<slippage>1000");
+        require(maxSlippageAllowed > 800, "err:slippage<801");
+        require(maxSlippageAllowed < 1000, "err:slippage>999");
 
         /// transfer base stable coin from user to this address
         _transferFromSender(addressBaseStable, stableCoinAmount);
@@ -162,13 +160,13 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     ***************************************************************/
     function _calcCollateralBasedOnArchPrice(
         uint256 stableCoinAmount,
-        uint256 archPriceInUSDT,
+        uint256 archPriceInStable,
         uint256 multiplierOfLeverageFromOneCollateral,
         uint8 decimal
     ) internal view returns (uint256 collateralAmountReturned) {
         /// TODO: Add comments and explain the formula
         uint256 archToLevRatio = _paramStore.getArchToLevRatio();
-        uint256 tempCalc = (multiplierOfLeverageFromOneCollateral * archPriceInUSDT) / 1 ether;
+        uint256 tempCalc = (multiplierOfLeverageFromOneCollateral * archPriceInStable) / 1 ether;
         uint256 ratioOfColl = (archToLevRatio * 10**decimal) / (archToLevRatio + tempCalc * 10**(18 - decimal));
         uint256 collateralAmount = (stableCoinAmount * ratioOfColl) / 10**decimal;
         return collateralAmount;
@@ -363,7 +361,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         _usdt = IERC20Upgradeable(addressUSDT);
         _usdc = IERC20Upgradeable(_ADDRESS_USDC);
         _dai = IERC20Upgradeable(_ADDRESS_DAI);
-        _crv3 = IERC20Upgradeable(address3CRV);
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
         _uniswapRouter = IUniswapV2Router02(addressUniswapRouter);
         _levEngine = LeverageEngine(addressLevEngine);
