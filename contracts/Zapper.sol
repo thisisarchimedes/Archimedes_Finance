@@ -13,8 +13,6 @@ import {ParameterStore} from "./ParameterStore.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -24,7 +22,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     IERC20Upgradeable internal _usdt;
     IERC20Upgradeable internal _usdc;
     IERC20Upgradeable internal _dai;
-    IERC20Upgradeable internal _crv3;
     LeverageEngine internal _levEngine;
     IERC20Upgradeable internal _archToken;
     ParameterStore internal _paramStore;
@@ -56,7 +53,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
 
         /// validate input
         require(stableCoinAmount > 0, "err:stableCoinAmount==0");
-        require(maxSlippageAllowed > 800 && maxSlippageAllowed < 1000, "err:800<slippage>1000");
+        require(maxSlippageAllowed > 800, "err:slippage<801");
+        require(maxSlippageAllowed < 1000, "err:slippage>999");
 
         /// transfer base stable coin from user to this address
         _transferFromSender(addressBaseStable, stableCoinAmount);
@@ -66,16 +64,16 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         uint256 collateralInBaseStableAmount;
         uint256 archAmount;
 
-        // Check if we need are using existing arch tokens owned by user or buying new ones
+        // Check if we are using existing arch tokens owned by user or buying new ones
         if (useUserArch == true) {
             // We are using owners arch tokens, transfer from msg.sender to address(this)
             collateralInBaseStableAmount = stableCoinAmount;
             archAmount = _transferUserArchForPosition(stableCoinAmount, cycles, maxSlippageAllowed, addressBaseStable);
         } else {
-            // Need to buy Arch tokens. We need to split the stable amount between what we'll as collateral what we'll use to buy Arch
+            // Need to buy Arch tokens. We need to split the stable amount between what we'll use as collateral and what we'll use to buy Arch
             uint256 coinsToPayForArchAmount;
             (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
-            // By arch tokens. Dont enforce min as we dont quite know what the minimum is. If we dont have enough this will fail when we try to use arch
+            // Buy arch tokens. Dont enforce min as we dont quite know what the minimum is. If we dont have enough this will fail when we try to use arch
             // to open position.
             _uniswapRouter.swapExactTokensForTokens(coinsToPayForArchAmount, 0, path, address(this), block.timestamp + 2 minutes);
         }
@@ -162,13 +160,13 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     ***************************************************************/
     function _calcCollateralBasedOnArchPrice(
         uint256 stableCoinAmount,
-        uint256 archPriceInUSDT,
+        uint256 archPriceInStable,
         uint256 multiplierOfLeverageFromOneCollateral,
         uint8 decimal
     ) internal view returns (uint256 collateralAmountReturned) {
         /// TODO: Add comments and explain the formula
         uint256 archToLevRatio = _paramStore.getArchToLevRatio();
-        uint256 tempCalc = (multiplierOfLeverageFromOneCollateral * archPriceInUSDT) / 1 ether;
+        uint256 tempCalc = (multiplierOfLeverageFromOneCollateral * archPriceInStable) / 1 ether;
         uint256 ratioOfColl = (archToLevRatio * 10**decimal) / (archToLevRatio + tempCalc * 10**(18 - decimal));
         uint256 collateralAmount = (stableCoinAmount * ratioOfColl) / 10**decimal;
         return collateralAmount;
@@ -194,7 +192,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
 
         // Now we have an estimate of how much collateral have, so we can calc how much Arch we need
         // Do a second round of calc where everything is the same, just with the Arch price being more accurate
-        /// TODO: create method that tranform 6 decimal to 18 decimal
         uint256 collateralAmountIn18Decimal = collateralAmount * 10**(18 - decimal);
         uint256 archAmountEstimated = _paramStore.calculateArchNeededForLeverage(
             ((collateralAmountIn18Decimal) * multiplierOfLeverageFromOneCollateral) / 1 ether
@@ -234,6 +231,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     ) internal returns (uint256) {
         uint256 archAmountToPay = _getArchAmountToTransferFromUser(stableCoinAmount, cycles, addressBaseStable);
         archAmountToPay = (archAmountToPay * 1000) / maxSlippageAllowed;
+        // Ensure owner has enough arch tokens
+        require(_archToken.balanceOf(msg.sender) >= archAmountToPay, "err:insuf user arch");
         _transferFromSender(address(_archToken), archAmountToPay);
         return archAmountToPay;
     }
@@ -362,7 +361,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         _usdt = IERC20Upgradeable(addressUSDT);
         _usdc = IERC20Upgradeable(_ADDRESS_USDC);
         _dai = IERC20Upgradeable(_ADDRESS_DAI);
-        _crv3 = IERC20Upgradeable(address3CRV);
         _poolOUSD3CRV = ICurveFiCurve(addressPoolOUSD3CRV);
         _uniswapRouter = IUniswapV2Router02(addressUniswapRouter);
         _levEngine = LeverageEngine(addressLevEngine);
