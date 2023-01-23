@@ -2,24 +2,13 @@ import { assert, expect } from "chai";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import hre, { ethers } from "hardhat";
 import {
-    addressOUSD,
-    abiOUSDToken,
     addressUSDT,
     abiUSDTToken,
-    address3CRV,
-    abi3CRVToken,
     abiWETH9Token,
-    addressCurveOUSDPool,
-    helperSwapETHWith3CRV,
-    helperSwapETHWithOUSD,
     helperSwapETHWithUSDT,
-    helperResetNetwork,
-    defaultBlockNumber,
     addressWETH9,
 } from "./MainnetHelper";
 import { buildContractTestContext, ContractTestContext, setRolesForEndToEnd, startAuctionAcceptLeverageAndEndAuction } from "./ContractTestContext";
-import { formatUnits, zeroPad } from "ethers/lib/utils";
-import { logger } from "../logger";
 import { BigNumber, Contract } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
@@ -46,7 +35,7 @@ function bnFromNum(num: number, decimal = 18): BigNumber {
     return ethers.utils.parseUnits(num.toString(), decimal);
 }
 
-function numFromBn (num: BigNumber, decimals = 18): number {
+function numFromBn(num: BigNumber, decimals = 18): number {
     return Number(ethers.utils.formatUnits(num, decimals));
 }
 
@@ -57,7 +46,7 @@ async function getUserSomeWETH(r: ContractTestContext) {
     await externalWETH.deposit({ value: bnFromNum(1) });
     weth9Balance = await externalWETH.balanceOf(owner.address);
 }
-async function createPair (r: ContractTestContext): Promise<Contract> {
+async function createPair(r: ContractTestContext): Promise<Contract> {
     const factoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
     const uniswapFactory = new ethers.Contract(factoryAddress, factoryABI, owner);
     const tx = await uniswapFactory.createPair(r.archToken.address, addressWETH9);
@@ -67,11 +56,11 @@ async function createPair (r: ContractTestContext): Promise<Contract> {
     const pairToken = new ethers.Contract(pairAddress, pairABI, owner);
     return pairToken;
 }
-async function getRouter (r: ContractTestContext): Promise<Contract> {
+async function getRouter(r: ContractTestContext): Promise<Contract> {
     const routeToken = new ethers.Contract(routeAddress, routerABI, owner);
     return routeToken;
 }
-async function addLiquidityToPairViaRouter (r: ContractTestContext, pairToken: Contract) {
+async function addLiquidityToPairViaRouter(r: ContractTestContext, pairToken: Contract) {
     await r.archToken.connect(r.treasurySigner).transfer(owner.address, archTotalLiq);
 
     const routeInstance = await getRouter(r);
@@ -116,7 +105,7 @@ async function getDAIToUser(r: ContractTestContext) {
     await router.swapExactETHForTokens(bnFromNum(500, 18), [addressWETH9, daiAddress], owner.address, 1670978314, { value: bnFromNum(1) });
 }
 
-async function setupFixture () {
+async function setupFixture() {
     // build mainnet fork and deploy archimedes
     r = await buildContractTestContext();
     owner = r.owner;
@@ -125,9 +114,7 @@ async function setupFixture () {
     // Add zapper. Need to be move into buildContractTestContext once done.
     const zapperFactory = await ethers.getContractFactory("Zapper");
     const zapper = await hre.upgrades.deployProxy(zapperFactory, [], { kind: "uups" });
-    await zapper.setDependencies(addressOUSD, address3CRV,
-        addressUSDT, addressCurveOUSDPool, routeAddress,
-        r.leverageEngine.address, r.archToken.address, r.parameterStore.address);
+    await zapper.setDependencies(r.leverageEngine.address, r.archToken.address, r.parameterStore.address);
 
     // fund some LvUSD + setup for being able to create positions
     await r.lvUSD.setMintDestination(r.coordinator.address);
@@ -159,7 +146,7 @@ async function zapOutPositionWithAnyBase(
     await zapper.zapIn(amount, defaultCycles, 990, baseToken.address, useUserArch);
 }
 
-async function getUSDTFromEth (
+async function getUSDTFromEth(
     r: ContractTestContext,
     ethAmountForEstimate = bnFromNum(1),
 ): Promise<BigNumber> {
@@ -170,7 +157,7 @@ async function getUSDTFromEth (
     return amountsReturned[1];
 }
 
-async function getEthFromUSDT (
+async function getEthFromUSDT(
     r: ContractTestContext,
     usdtAmountForEstimate: BigNumber,
 ): Promise<BigNumber> {
@@ -181,7 +168,7 @@ async function getEthFromUSDT (
     return amountsReturned[1];
 }
 
-async function getArchFromUSDT (
+async function getArchFromUSDT(
     r: ContractTestContext,
     usdtAmountForEstimate: BigNumber): Promise<BigNumber> {
     const uniswapRouter = await getRouter(r);
@@ -203,7 +190,7 @@ async function getArchPriceInDollars(
     return archPrice;
 }
 
-function computeMultiplier (cycles: number, rate = 0.95): number {
+function computeMultiplier(cycles: number, rate = 0.95): number {
     let multiplier = rate;
     let rateMultiple = rate;
     for (let i = 1; i < cycles; i++) {
@@ -213,7 +200,7 @@ function computeMultiplier (cycles: number, rate = 0.95): number {
     return multiplier;
 }
 
-function allowedMargin (num: number) {
+function allowedMargin(num: number) {
     return num * 0.05;
 }
 
@@ -225,7 +212,7 @@ function allowedMargin (num: number) {
     Y - Asset 2 Pool Size
     A - Auction Price
 */
-function computeCollateral (
+function computeCollateral(
     D: number, F: number, M: number, X: number, Y: number, A: number,
 ): number {
     const a = F * M;
@@ -236,7 +223,7 @@ function computeCollateral (
 }
 
 // Computes collateral in dollar amount and interest in arch amount
-async function computeSplit (
+async function computeSplit(
     r: ContractTestContext, usdtDeposit: BigNumber, cycles = defaultCycles, feeRate = 0.993,
 ): Promise<[usdt: number, arch: number, lvusd: number]> {
     const ethDeposit = await getEthFromUSDT(r, usdtDeposit);
@@ -256,7 +243,7 @@ async function computeSplit (
     const usdtCollateral = usdtDeposit.mul(ethCollateral).div(ethDeposit);
     const usdtInterest = usdtDeposit.sub(usdtCollateral);
     const archInterest = await getArchFromUSDT(r, usdtInterest);
-    return [ numFromBn(usdtCollateral, 6), numFromBn(archInterest), numFromBn(usdtCollateral, 6) * m ];
+    return [numFromBn(usdtCollateral, 6), numFromBn(archInterest), numFromBn(usdtCollateral, 6) * m];
 }
 
 describe("Zapper test suite", function () {
@@ -395,7 +382,7 @@ describe("Zapper test suite", function () {
             collateralAmount = numFromBn(collateralAmount);
             archAmount = numFromBn(archAmount);
 
-            const [ expectedCollateral, expectedInterest ] = await computeSplit(r, exchangeAmount);
+            const [expectedCollateral, expectedInterest] = await computeSplit(r, exchangeAmount);
             const expectedMargin = allowedMargin(expectedCollateral);
 
             expect(collateralAmount).to.be.closeTo(expectedCollateral, expectedMargin);
@@ -410,7 +397,7 @@ describe("Zapper test suite", function () {
             collateralAmount = numFromBn(collateralAmount);
             archAmount = numFromBn(archAmount);
 
-            const [ expectedCollateral, expectedInterest ] = await computeSplit(r, exchangeAmount);
+            const [expectedCollateral, expectedInterest] = await computeSplit(r, exchangeAmount);
             const expectedMargin = allowedMargin(expectedCollateral);
 
             expect(collateralAmount).to.be.closeTo(expectedCollateral, expectedMargin);
@@ -425,7 +412,7 @@ describe("Zapper test suite", function () {
             collateralAmount = numFromBn(collateralAmount);
             archAmount = numFromBn(archAmount);
 
-            const [ expectedCollateral, expectedInterest ] = await computeSplit(r, exchangeAmount);
+            const [expectedCollateral, expectedInterest] = await computeSplit(r, exchangeAmount);
             const expectedMargin = allowedMargin(expectedCollateral);
 
             expect(collateralAmount).to.be.closeTo(expectedCollateral, expectedMargin);
@@ -440,7 +427,7 @@ describe("Zapper test suite", function () {
             collateralAmount = numFromBn(collateralAmount);
             archAmount = numFromBn(archAmount);
 
-            const [ expectedCollateral, expectedInterest ] = await computeSplit(r, exchangeAmount);
+            const [expectedCollateral, expectedInterest] = await computeSplit(r, exchangeAmount);
             const expectedMargin = allowedMargin(expectedCollateral);
 
             expect(collateralAmount).to.be.closeTo(expectedCollateral, expectedMargin);
@@ -472,7 +459,7 @@ describe("Zapper test suite", function () {
             // await printPositionInfo(r, 0);
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 
-            const [ expectedCollateral, _, expectedLeverage ] = await computeSplit(r, bigExchangeAmountInBase);
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, bigExchangeAmountInBase);
             const expectedMargin = allowedMargin(expectedCollateral);
             const expectedLeverageMargin = allowedMargin(expectedLeverage);
 
@@ -492,7 +479,7 @@ describe("Zapper test suite", function () {
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 
-            const [ expectedCollateral, _, expectedLeverage ] = await computeSplit(r, usdtAmount);
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
             const expectedMargin = allowedMargin(expectedCollateral);
             const expectedLeverageMargin = allowedMargin(expectedLeverage);
 
@@ -512,7 +499,7 @@ describe("Zapper test suite", function () {
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 
-            const [ expectedCollateral, _, expectedLeverage ] = await computeSplit(r, usdtAmount);
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
             const expectedMargin = allowedMargin(expectedCollateral);
             const expectedLeverageMargin = allowedMargin(expectedLeverage);
 
@@ -536,7 +523,7 @@ describe("Zapper test suite", function () {
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 
-            const [ expectedCollateral, _, expectedLeverage ] = await computeSplit(r, usdtAmount);
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
             const expectedMargin = allowedMargin(expectedCollateral);
             const expectedLeverageMargin = allowedMargin(expectedLeverage);
 
@@ -558,7 +545,7 @@ describe("Zapper test suite", function () {
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 
-            const [ expectedCollateral, _, expectedLeverage ] = await computeSplit(r, usdtAmount, 1);
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount, 1);
             const expectedMargin = allowedMargin(expectedCollateral);
             const expectedLeverageMargin = allowedMargin(expectedLeverage);
             // Check for correct leverage in position
@@ -577,7 +564,7 @@ describe("Zapper test suite", function () {
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 
-            const [ expectedCollateral, _, expectedLeverage ] = await computeSplit(r, usdtAmount, 3);
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount, 3);
             const expectedMargin = allowedMargin(expectedCollateral);
             const expectedLeverageMargin = allowedMargin(expectedLeverage);
             // Check for correct leverage in position
@@ -596,7 +583,7 @@ describe("Zapper test suite", function () {
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 
-            const [ expectedCollateral, _, expectedLeverage ] = await computeSplit(r, usdtAmount, 10);
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount, 10);
             const expectedMargin = allowedMargin(expectedCollateral);
             const expectedLeverageMargin = allowedMargin(expectedLeverage);
             // Check for correct leverage in position
@@ -617,7 +604,7 @@ describe("Zapper test suite", function () {
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 
-            const [ expectedCollateral, _, expectedLeverage ] = await computeSplit(r, usdtAmount);
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
             const expectedMargin = allowedMargin(expectedCollateral);
             const expectedLeverageMargin = allowedMargin(expectedLeverage);
             // Check for correct leverage in position
@@ -636,7 +623,7 @@ describe("Zapper test suite", function () {
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 
-            const [ expectedCollateral, _, expectedLeverage ] = await computeSplit(r, usdtAmount);
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
             const expectedMargin = allowedMargin(expectedCollateral);
             const expectedLeverageMargin = allowedMargin(expectedLeverage);
             // Check for correct leverage in position
