@@ -358,8 +358,9 @@ describe("Zapper test suite", function () {
             /// then we can use this ratio to calculate dollarsToPayForArch + collateral for any baseAmount
 
             const { r, zapper } = await loadFixture(setupFixture);
-            const archPrice = await getArchPriceInDollars(r, zapper, amountInBase);
-            const split = await zapper.previewTokenSplit(bnFromNum(amountInBase, 6), cycles, addressUSDT);
+            // await r.parameterStore.changeArchToLevRatio(bnFromNum(10));
+            const archPrice = await getArchPriceInDollars(r, amountInBase);
+            const split = await zapper.previewTokenSplit(bnFromNum(amountInBase, 6), defaultCycles, addressUSDT);
 
             const collateral = numFromBn(split[0], 6);
             const dollarsToPayForArch = numFromBn(split[1], 6);
@@ -652,7 +653,7 @@ describe("Zapper test suite", function () {
             await r.externalUSDT.approve(zapper.address, usdtAmount);
             await expect(
                 zapper.zapIn(usdtAmount, defaultCycles, 800, addressUSDT, false),
-            ).to.be.revertedWith("err:800<slippage>1000");
+            ).to.be.revertedWith("err:slippage<801");
         });
 
         it("Should revert when attempting to open a position with 100.0% slippage tolerance", async function () {
@@ -660,8 +661,8 @@ describe("Zapper test suite", function () {
             const { r, zapper } = await loadFixture(setupFixture);
             await r.externalUSDT.approve(zapper.address, usdtAmount);
             await expect(
-                zapper.zapIn(usdtAmount, defaultCycles, 100, addressUSDT, false),
-            ).to.be.revertedWith("err:800<slippage>1000");
+                zapper.zapIn(usdtAmount, defaultCycles, 1000, addressUSDT, false),
+            ).to.be.revertedWith("err:slippage>999");
         });
     });
 

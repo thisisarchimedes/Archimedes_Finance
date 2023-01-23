@@ -38,8 +38,6 @@ export type ContractTestContext = {
     externalUSDT: Contract;
     external3CRV: Contract;
     curveLvUSDPool: Contract;
-    uniswapArchEthPool: Contract;
-    uniswapArchEthLPToken: Contract;
 };
 
 export async function setRolesForEndToEnd (r: ContractTestContext) {
