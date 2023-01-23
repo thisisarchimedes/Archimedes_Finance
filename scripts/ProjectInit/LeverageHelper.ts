@@ -7,25 +7,29 @@ import { TestConstants } from "./TestConstants";
 export class LeverageHelper {
     contracts: Contracts;
 
-    constructor(contracts: Contracts) {
+    constructor (contracts: Contracts) {
         this.contracts = contracts;
     }
 
-    async startAuctionAndMintAndAcceptLeverage(auction: AuctionInfo) {
-        await this.mintLvUSD(auction.leverageAmount, this.contracts.coordinator.address);
+    async startAuctionAndAcceptLeverage(auction: AuctionInfo) {
         await this._startAuction(auction);
         await this._acceptLeverage(auction.leverageAmount);
         Logger.log("Auction started with endPrice of %s and leverage of %s lvUSD accepted\n",
             auction.endPrice.getNum(), auction.leverageAmount.getNum());
     }
 
-    async mintLvUSD(amount: NumberBundle, to: String) {
+    async startAuctionAndMintAndAcceptLeverage(auction: AuctionInfo) {
+        await this.mintLvUSD(auction.leverageAmount, this.contracts.coordinator.address);
+        await this.startAuctionAndAcceptLeverage(auction);
+    }
+
+    async mintLvUSD(amount: NumberBundle, to: string) {
         // Todo : need to make sure minter is calling those two functions
         await this.contracts.lvUSD.setMintDestination(to);
         await this.contracts.lvUSD.mint(amount.getBn());
     }
 
-    async getLvUSDBalance(address: String): NumberBundle {
+    async getLvUSDBalance(address: string): NumberBundle {
         const balance = await this.contracts.lvUSD.balanceOf(address);
         const balanceBundle = NumberBundle.withBn(balance);
         return balanceBundle;
@@ -55,7 +59,7 @@ export class AuctionInfo {
     endPrice: NumberBundle;
     leverageAmount: NumberBundle;
 
-    constructor(
+    constructor (
         length: number = TestConstants.AUCTION_LENGTH_DEFAULT,
         startPrice: NumberBundle = TestConstants.AUCTION_START_PRICE_DEFAULT,
         endPrice: NumberBundle = TestConstants.AUCTION_END_PRICE_DEFAULT,

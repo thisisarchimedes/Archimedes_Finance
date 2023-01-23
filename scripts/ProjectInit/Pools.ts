@@ -92,10 +92,9 @@ export class Pools {
         console.log("Before add liq")
 
         await this.curveLvUSDPool.add_liquidity([amountLvUSD.getBn(), amount3CRV.getBn()], 1, this.owner.address);
-        console.log("Before add liq")
+        console.log("Before add liq 2")
 
-        await EtherUtils.mineBlock();
-        Logger.log("lvUSD/3crv pool now has %s lvUSD, %s 3CRV", (await this.getLvUSDInPool()).getNum(), (await this.get3CRVInPool()).getNum());
+        // await EtherUtils.mineBlock();
     }
 
     async getLvUSDInPool(): NumberBundle {

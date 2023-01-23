@@ -7,202 +7,92 @@
 import { Contracts } from "../Contracts";
 import { DeploymentUtils } from "../DeploymentUtils";
 import { ERC20Utils } from "../ERC20Utils";
+import { AuctionInfo, LeverageHelper } from "../LeverageHelper";
 import { Logger } from "../Logger";
 import { NumberBundle } from "../NumberBundle";
 import { Pools } from "../Pools";
 import { Signers } from "../Signers";
+import { fundCurvePool } from "./CommonActions";
 import { DeployedStore } from "./DeployedStore";
+import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
 
 // console.log("Should we deploy tokens? ", options.deploytokens);
 
 /// We would probably change this to command line arguments later but for now
-const deployJustTokens = true;
-const deployArchimedesEngine = true;
-const deployVault = true;
-const shouldVerifyTokens = false;
+/// Should deploy block
+// const deployJustTokens = true;
+// const deployArchimedesEngine = true;
+// const deployVault = true;
+// const shouldCreatePool = true;
+// const shouldDoBasicSetup = true;
+
+const deployJustTokens = false;
+const deployArchimedesEngine = false;
+const deployVault = false;
+
+const shouldCreatePool = false;
+const shouldAddLiqToPool = false;
+const shouldDoBasicSetup = false;
+
+const shouldCreateAuction = true
 const shouldVerifyArchimedesEngine = false;
 
-const shouldCreatePool = true;
 
-const shouldDoBasicSetup = true;
 
-async function main () {
+async function main() {
     Logger.setVerbose(true);
     const signers = await new Signers().init();
     const contracts = new Contracts(signers);
-
     await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
-
     const pools = await new Pools().init(contracts, shouldCreatePool);
-    // console.log("curve lvUSD pool ", pools.curveLvUSDPool)
-    console.log("\nDone with deploying/get instances the whole of archimedes. Now verifying them:");
 
-    if (shouldVerifyTokens) {
-        await verifyTokens(contracts);
-    }
-    if (shouldVerifyArchimedesEngine) {
-        await verifyArcimedesEngine(contracts);
-    }
-    console.log("\nDone with verifying tokens\n");
+    console.log("\nDone with deploying/get instances the whole of archimedes. Now setting up basic stuff if needed:");
+
+    // console.log("LvUSD balance of coooedinator is", (await ERC20Utils.balance(contracts.coordinator.address, contracts.lvUSD)).getNum())
+    // const availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
+    // console.log("accepted leverage is ", availableLeverage.getNum())
+
     if (shouldDoBasicSetup) {
         console.log("Setting up basic stuff: Dependencies, roles, param store values");
         await DeploymentUtils.basicSetup(contracts, pools);
+        console.log("\nDone with set up tokens\n");
     }
-    console.log("\nDone with set up tokens\n");
+
+    if (shouldAddLiqToPool) {
+        await fundCurvePool(contracts, pools);
+        console.log("\nDone with adding liquidity to pool\n");
+    }
+
+    if (shouldCreateAuction) {
+        console.log("Creating auction");
+        const leverageHelper = new LeverageHelper(contracts);
+        const auction = new AuctionInfo(
+            100,
+            NumberBundle.withNum(30),
+            NumberBundle.withNum(60),
+            NumberBundle.withNum(1000),
+        )
+        await contracts.auction.stopAuction();
+        /// Minting LvUSD, you might want to disable this if post deployment
+        await leverageHelper.mintLvUSD(auction.leverageAmount, contracts.coordinator.address);
+        await leverageHelper.startAuctionAndAcceptLeverage(auction);
+
+        //verify leverage on coordinator
+        const availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
+        const coordinatorAvailableLvUSD = await leverageHelper.getLvUSDBalance(contracts.coordinator.address);
+        console.log("accepted leverage is ", availableLeverage.getNum())
+        console.log("LvUSD balance of coooedinator is", coordinatorAvailableLvUSD.getNum())
+    }
+
+    if (shouldVerifyArchimedesEngine) {
+        await verifyArcimedesEngine(contracts);
+    }
+
+    console.log("\nDone with verifying tokens\n");
+
 }
 
 main().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });
-
-function verifyValues (actualValue: NumberBundle, name: string, expectedValue: NumberBundle) {
-    if (actualValue.getBn().eq(expectedValue.getBn()) === false) {
-        throw new Error(`Expected "${name}" to be ${expectedValue.getNum()} but got ${actualValue.getNum}`);
-    }
-    Logger.log("Verified that %s is equal to expected value of %s", name, expectedValue.getNum());
-}
-
-function verifyStrings (actualString: string, name: string, expectedString: string) {
-    if (actualString !== expectedString) {
-        throw new Error(`Expected "${name}" to be ${expectedString} but got ${actualString}`);
-    }
-    Logger.log("Verified that %s is equal to expected value of %s", name, expectedString);
-}
-
-function verifyBooleans (actual: boolean, name: string, expected: boolean) {
-    if (actual !== expected) {
-        throw new Error(`Expected "${name}" to be ${expected} but got ${actual}`);
-    }
-    Logger.log("Verified that %s is equal to expected value of %s", name, expected);
-}
-
-async function verifyTokens (contracts: Contracts) {
-    const treasuryArchTokenBalance = await ERC20Utils.balance(contracts.signers.treasury.address, contracts.archToken);
-    verifyValues(treasuryArchTokenBalance, "Treasury Arch token balance", NumberBundle.withNum(100000000));
-    Logger.log("ArchToken Verified");
-
-    const lvUSDDecimal = await ERC20Utils.decimals(contracts.lvUSD);
-    verifyValues(lvUSDDecimal, "lvUSD decimals", NumberBundle.withNum(18, 0));
-    Logger.log("LvUSDToken Verified");
-}
-
-async function verifyParameterStore (contracts: Contracts) {
-    const maxCycles = await contracts.parameterStore.getMaxNumberOfCycles();
-    verifyValues(
-        NumberBundle.withBn(maxCycles, 0),
-        "Max cycles",
-        NumberBundle.withNum(10, 0),
-    );
-    Logger.log("ParameterStore Verified");
-}
-
-async function verifyVaultOUSD (contracts: Contracts) {
-    const totalAssets = await contracts.vault.totalAssets();
-    verifyValues(
-        NumberBundle.withBn(totalAssets, 0),
-        "Total assets",
-        NumberBundle.withNum(0, 0),
-    );
-    Logger.log("ParameterStore Verified");
-}
-
-async function verifyCDPosition (contracts: Contracts) {
-    const executive = await contracts.cdp.getAddressExecutive();
-    verifyStrings(
-        executive,
-        "Max cycles",
-        contracts.signers.owner.address,
-    );
-    Logger.log("CDPosition Verified");
-}
-
-async function verifyCoordinator (contracts: Contracts) {
-    const lvUSDTokenAddress = await contracts.coordinator.addressOfLvUSDToken();
-    verifyStrings(
-        lvUSDTokenAddress,
-        "LvUSD Token Address",
-        contracts.lvUSD.address,
-    );
-    Logger.log("Coordinator Verified");
-}
-
-async function verifyExchanger (contracts: Contracts) {
-    const executive = await contracts.exchanger.getAddressExecutive();
-    verifyStrings(
-        executive,
-        "Executive",
-        contracts.signers.owner.address,
-    );
-    Logger.log("Exchanger Verified");
-}
-
-async function verifyLeverageEngine (contracts: Contracts) {
-    const executive = await contracts.leverageEngine.getAddressExecutive();
-    verifyStrings(
-        executive,
-        "Executive",
-        contracts.signers.owner.address,
-    );
-    Logger.log("LeverageEngine Verified");
-}
-
-async function verifyPositionToken (contracts: Contracts) {
-    const exists = await contracts.positionToken.exists(0);
-    verifyBooleans(
-        exists,
-        "Max cycles",
-        false,
-    );
-    Logger.log("PositionToken Verified");
-}
-
-async function deployOrGetAllContracts (contracts: Contracts, deployJustTokens: boolean, deployArchimedesEngine: boolean, deployVault: boolean) {
-    if (deployJustTokens) {
-        console.log("Deploying tokens");
-        await contracts.setExternalTokensInstances();
-        await contracts.initTokens();
-    } else {
-        console.log("Getting already deployed tokens instances from address");
-        await contracts.setTokensInstances(DeployedStore.lvUSDAddress, DeployedStore.archTokenAddress);
-        await contracts.setExternalTokensInstances();
-    }
-
-    if (deployArchimedesEngine) {
-        console.log("Deploying most of Archimedes Engine(vault not included)");
-        await contracts.initArchimedesUpgradableContracts();
-    } else {
-        console.log("Getting ArchimedesEngine deployed tokens instances from address(vault not included)");
-        await contracts.setArchimedesUpgradableContractsInstances(
-            DeployedStore.parameterStoreAddress,
-            DeployedStore.cdpAddress,
-            DeployedStore.coordinatorAddress,
-            DeployedStore.exchangerAddress,
-            DeployedStore.leverageEngineAddress,
-            DeployedStore.positionTokenAddress,
-            DeployedStore.poolManagerAddress,
-            DeployedStore.auctionAddress,
-            DeployedStore.zapperAddress,
-        );
-    }
-
-    if (deployVault) {
-        console.log("Deploying Vault");
-        await contracts.initArchimedesUpgradableContractsWithConstructorArguments();
-    } else {
-        console.log("Getting Vault deployed token instances from address");
-        await contracts.setArchimedesUpgradableContractsInstancesWithConstructorArguments(DeployedStore.vaultAddress);
-    }
-}
-
-async function verifyArcimedesEngine (contracts: Contracts) {
-    // Arch and LvUSD
-    await verifyTokens(contracts);
-    await verifyParameterStore(contracts);
-    await verifyVaultOUSD(contracts);
-    await verifyCDPosition(contracts);
-    await verifyCoordinator(contracts);
-    await verifyExchanger(contracts);
-    await verifyLeverageEngine(contracts);
-    await verifyPositionToken(contracts);
-}

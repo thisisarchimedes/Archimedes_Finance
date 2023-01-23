@@ -1,4 +1,5 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { signers } from "../../test/ContractTestContext";
 import { Contracts } from "./Contracts";
 import { Logger } from "./Logger";
 import { Pools } from "./Pools";
@@ -58,7 +59,7 @@ class DeploymentUtils {
 
         await contracts.vault.setDependencies(contracts.parameterStore.address, contracts.externalOUSD.address);
 
-        // await contracts.parameterStore.changeTreasuryAddress(contracts.treasurySigner.address);
+        // await contracts.parameterStore.changeTreasuryAddress(contracts.signers.treasury.address);
 
         await contracts.poolManager.setDependencies(
             contracts.parameterStore.address,

@@ -64,8 +64,7 @@ const deployScript = async () => {
 
     const zapperFactory = await ethers.getContractFactory("Zapper");
     const zapper = await hre.upgrades.deployProxy(zapperFactory, [], { kind: "uups" });
-    await zapper.setDependencies(addressOUSD, address3CRV,
-        addressUSDT, addressCurveOUSDPool, routeAddress,
+    await zapper.setDependencies(
         context.leverageEngine.address, context.archToken.address, context.parameterStore.address);
 
     console.log("Zapper address is", await zapper.address);
@@ -88,10 +87,13 @@ const deployScript = async () => {
     await setRolesForEndToEnd(context);
     await startAuctionAcceptLeverageAndEndAuction(context, ethers.utils.parseUnits(lvUSDAmount, 18));
 
+    const coodinatorLvUSDBalace = await context.lvUSD.balanceOf(context.coordinator.address);
+    console.log("coordinator lvUSD balance is", numFromBn(coodinatorLvUSDBalace));
+    const coordinatorAvailableLvUSD = await context.coordinator.getAvailableLeverage();
+    console.log("coordinator available lvUSD is ", numFromBn(coordinatorAvailableLvUSD));
     const split = await zapper.previewTokenSplit(bnFromNum("10.0", 6), 5, "0xdAC17F958D2ee523a2206206994597C13D831ec7");
     console.log("!!split!!", split);
 
-    // await startAndEndAuction(context, 5);
 
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
     await fundARCH();
@@ -119,7 +121,7 @@ const fundDemoAccount = async () => {
 
     const archToken = new ethers.Contract("0x0a17FabeA4633ce714F1Fa4a2dcA62C3bAc4758d", abiOUSDToken);
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 5; i++) {
         // was 17
         // console.log("i: " + i + " - Funded address ");
 
