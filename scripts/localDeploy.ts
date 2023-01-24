@@ -85,6 +85,8 @@ const deployScript = async () => {
     // await context.auction.startAuction(startBlock + 1,ethers.utils.parseUnits("301.0"), ethers.utils.parseUnits("300.0"))
     await fundLVUSDToCoordinator();
     await setRolesForEndToEnd(context);
+    await context.parameterStore.changeTreasuryAddress(context.treasurySigner.address);
+
     await startAuctionAcceptLeverageAndEndAuction(context, ethers.utils.parseUnits(lvUSDAmount, 18));
 
     const coodinatorLvUSDBalace = await context.lvUSD.balanceOf(context.coordinator.address);
