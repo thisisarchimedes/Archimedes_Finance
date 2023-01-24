@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
-import { buildContractTestContext, ContractTestContext, setRolesForEndToEnd } from "./ContractTestContext";
+import { buildContractTestContext, ContractTestContext, setRolesForEndToEnd, startAuctionAcceptLeverageAndEndAuction } from "./ContractTestContext";
 import { helperSwapETHWithOUSD } from "./MainnetHelper";
 
 describe("LeverageEngine test suit", async function () {
@@ -22,7 +22,7 @@ describe("LeverageEngine test suit", async function () {
         await r.externalOUSD.approve(r.leverageEngine.address, totalOUSD);
         await r.lvUSD.setMintDestination(r.coordinator.address);
         await r.lvUSD.mint(lvUSDAmountToMint);
-        await r.coordinator.acceptLeverageAmount(lvUSDAmountToMint);
+        await startAuctionAcceptLeverageAndEndAuction(r, lvUSDAmountToMint);
 
         await r.parameterStore.changeMinPositionCollateral(principle);
         // give owner ArchToken from minted tokens

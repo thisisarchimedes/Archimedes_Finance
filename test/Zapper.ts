@@ -1,0 +1,687 @@
+import { assert, expect } from "chai";
+import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import hre, { ethers } from "hardhat";
+import {
+    addressUSDT,
+    abiUSDTToken,
+    abiWETH9Token,
+    helperSwapETHWithUSDT,
+    addressWETH9,
+} from "./MainnetHelper";
+import { buildContractTestContext, ContractTestContext, setRolesForEndToEnd, startAuctionAcceptLeverageAndEndAuction } from "./ContractTestContext";
+import { BigNumber, Contract } from "ethers";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+
+const routeAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+const usdcAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+const daiAddress = "0x6b175474e89094c44da98b954eedeac495271d0f";
+const exchangeAmount = 10000000; // this is 10 in 6Decimal
+const defaultCycles = 5;
+const positionId = 0;
+const archMinLiq = bnFromNum(1);
+const archTotalLiq = bnFromNum(100000);
+const ethMinLiq = bnFromNum(1);
+const ethTotalLiq = bnFromNum(40);
+
+let r: ContractTestContext;
+let owner: SignerWithAddress;
+let user: SignerWithAddress;
+let externalOUSD: Contract;
+let externalUSDT: Contract;
+let external3CRV: Contract;
+let externalWETH: Contract;
+
+function bnFromNum (num: number, decimal = 18): BigNumber {
+    return ethers.utils.parseUnits(num.toString(), decimal);
+}
+
+function numFromBn (num: BigNumber, decimals = 18): number {
+    return Number(ethers.utils.formatUnits(num, decimals));
+}
+
+async function getUserSomeWETH (r: ContractTestContext) {
+    externalWETH = new ethers.Contract(addressWETH9, abiWETH9Token, owner);
+    await ethers.provider.send("evm_mine");
+    let weth9Balance = await externalWETH.balanceOf(owner.address);
+    await externalWETH.deposit({ value: bnFromNum(1) });
+    weth9Balance = await externalWETH.balanceOf(owner.address);
+}
+async function createPair (r: ContractTestContext): Promise<Contract> {
+    const factoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+    const uniswapFactory = new ethers.Contract(factoryAddress, factoryABI, owner);
+    const tx = await uniswapFactory.createPair(r.archToken.address, addressWETH9);
+    const receipt = await tx.wait();
+    const pairCreatedEvent = receipt.events?.filter((x) => { return x.event === "PairCreated"; });
+    const pairAddress = pairCreatedEvent[0].args.pair;
+    const pairToken = new ethers.Contract(pairAddress, pairABI, owner);
+    return pairToken;
+}
+async function getRouter (r: ContractTestContext): Promise<Contract> {
+    const routeToken = new ethers.Contract(routeAddress, routerABI, owner);
+    return routeToken;
+}
+async function addLiquidityToPairViaRouter (r: ContractTestContext, pairToken: Contract) {
+    await r.archToken.connect(r.treasurySigner).transfer(owner.address, archTotalLiq);
+
+    const routeInstance = await getRouter(r);
+
+    await r.archToken.approve(routeAddress, archTotalLiq);
+
+    await routeInstance.addLiquidityETH(
+        r.archToken.address,
+        archTotalLiq,
+        archMinLiq,
+        ethMinLiq,
+        owner.address,
+        1670978314,
+        { value: ethTotalLiq }, // The amount in Eth to send to pair, long calc but it is worth 100
+    );
+    await ethers.provider.send("evm_mine");
+
+    await pairToken.getReserves();
+}
+
+export async function createUniswapPool (r: ContractTestContext) {
+    await getUserSomeWETH(r);
+    const pairToken = await createPair(r);
+
+    await addLiquidityToPairViaRouter(r, pairToken);
+
+    await ethers.provider.send("evm_mine");
+}
+
+async function getUSDCToUser (r: ContractTestContext) {
+    const router = await getRouter(r);
+    /// Using USDT abi for USDC as its the same (erc20)
+    const tokenUSDC = new ethers.Contract(usdcAddress, abiUSDTToken, owner);
+    await router.swapExactETHForTokens(bnFromNum(500, 6), [addressWETH9, usdcAddress], owner.address, 1670978314, { value: bnFromNum(1) });
+}
+
+async function getDAIToUser (r: ContractTestContext) {
+    // Notice dai is 18 decimal
+    const router = await getRouter(r);
+    /// Using USDT abi for USDC as its the same (erc20)
+    const tokenDAI = new ethers.Contract(daiAddress, abiUSDTToken, owner);
+    await router.swapExactETHForTokens(bnFromNum(500, 18), [addressWETH9, daiAddress], owner.address, 1670978314, { value: bnFromNum(1) });
+}
+
+async function setupFixture () {
+    // build mainnet fork and deploy archimedes
+    r = await buildContractTestContext();
+    owner = r.owner;
+    user = r.addr1;
+
+    // Add zapper. Need to be move into buildContractTestContext once done.
+    const zapperFactory = await ethers.getContractFactory("Zapper");
+    const zapper = await hre.upgrades.deployProxy(zapperFactory, [], { kind: "uups" });
+    await zapper.setDependencies(r.leverageEngine.address, r.archToken.address, r.parameterStore.address);
+
+    // fund some LvUSD + setup for being able to create positions
+    await r.lvUSD.setMintDestination(r.coordinator.address);
+    await r.lvUSD.mint(bnFromNum(100000));
+
+    await startAuctionAcceptLeverageAndEndAuction(r, bnFromNum(100000), 5, bnFromNum(9), bnFromNum(10));
+    await setRolesForEndToEnd(r);
+
+    // Create pool and get user some USDT [TODO: Add more tokens]
+    await createUniswapPool(r);
+    await helperSwapETHWithUSDT(owner, bnFromNum(1));
+    const usdtBalance = await r.externalUSDT.balanceOf(owner.address);
+
+    return { r, zapper };
+}
+
+async function zapIntoPosition (
+    r: ContractTestContext,
+    zapper: Contract, useUserArch = false) {
+    const baseAddress = addressUSDT;
+    await r.externalUSDT.approve(zapper.address, exchangeAmount);
+    await zapper.zapIn(exchangeAmount, defaultCycles, 990, baseAddress, useUserArch);
+}
+
+async function zapOutPositionWithAnyBase (
+    r: ContractTestContext,
+    zapper: Contract, baseToken: Contract, amount: BigNumber, useUserArch = false) {
+    await baseToken.approve(zapper.address, amount);
+    await zapper.zapIn(amount, defaultCycles, 990, baseToken.address, useUserArch);
+}
+
+async function getUSDTFromEth (
+    r: ContractTestContext,
+    ethAmountForEstimate = bnFromNum(1),
+): Promise<BigNumber> {
+    const uniswapRouter = await getRouter(r);
+    const amountsReturned = await uniswapRouter.getAmountsOut(
+        ethAmountForEstimate,
+        [addressWETH9, addressUSDT]);
+    return amountsReturned[1];
+}
+
+async function getEthFromUSDT (
+    r: ContractTestContext,
+    usdtAmountForEstimate: BigNumber,
+): Promise<BigNumber> {
+    const uniswapRouter = await getRouter(r);
+    const amountsReturned = await uniswapRouter.getAmountsOut(
+        usdtAmountForEstimate,
+        [addressUSDT, addressWETH9]);
+    return amountsReturned[1];
+}
+
+async function getArchFromUSDT (
+    r: ContractTestContext,
+    usdtAmountForEstimate: BigNumber): Promise<BigNumber> {
+    const uniswapRouter = await getRouter(r);
+    const amountsReturned = await uniswapRouter.getAmountsOut(
+        usdtAmountForEstimate,
+        [addressUSDT, addressWETH9, r.archToken.address]);
+    return amountsReturned[2];
+}
+
+async function getArchPriceInDollars (
+    r: ContractTestContext,
+    dollarAmountForEstimate = 100): Promise<number> {
+    const uniswapRouter = await getRouter(r);
+    const amountsReturned = await uniswapRouter.getAmountsOut(
+        ethers.utils.parseUnits(dollarAmountForEstimate.toString(), 6),
+        [addressUSDT, addressWETH9, r.archToken.address]);
+    const numberOfArchTokensReturned = numFromBn(amountsReturned[2], 18);
+    const archPrice = dollarAmountForEstimate / numberOfArchTokensReturned;
+    return archPrice;
+}
+
+function computeMultiplier (cycles: number, rate = 0.95): number {
+    let multiplier = rate;
+    let rateMultiple = rate;
+    for (let i = 1; i < cycles; i++) {
+        rateMultiple *= rate;
+        multiplier += rateMultiple;
+    }
+    return multiplier;
+}
+
+function allowedMargin (num: number) {
+    return num * 0.05;
+}
+
+/*
+    D - Deposit
+    F - Fee Rate
+    M - Cycle Multiplier
+    X - Asset 1 Pool Size
+    Y - Asset 2 Pool Size
+    A - Auction Price
+*/
+function computeCollateral (
+    D: number, F: number, M: number, X: number, Y: number, A: number,
+): number {
+    const a = F * M;
+    const s = F * Y * A;
+    const b = (D * a + s) + X * M;
+    const c = D * s;
+    return ((-1 * b) + Math.sqrt(b ** 2 + 4 * a * c)) / (2 * a);
+}
+
+// Computes collateral in dollar amount and interest in arch amount
+async function computeSplit (
+    r: ContractTestContext, usdtDeposit: BigNumber, cycles = defaultCycles, feeRate = 0.993,
+): Promise<[usdt: number, arch: number, lvusd: number]> {
+    const ethDeposit = await getEthFromUSDT(r, usdtDeposit);
+    const ethLiqInUSDT = await getUSDTFromEth(r, ethTotalLiq);
+    const m = computeMultiplier(cycles);
+    const auctionPrice = await r.auction.getCurrentBiddingPrice();
+    const ethCollateral = bnFromNum(
+        computeCollateral(
+            numFromBn(ethDeposit),
+            feeRate,
+            m,
+            numFromBn(ethLiqInUSDT, 6),
+            numFromBn(archTotalLiq),
+            numFromBn(auctionPrice),
+        ) * 0.97,
+    );
+    const usdtCollateral = usdtDeposit.mul(ethCollateral).div(ethDeposit);
+    const usdtInterest = usdtDeposit.sub(usdtCollateral);
+    const archInterest = await getArchFromUSDT(r, usdtInterest);
+    return [numFromBn(usdtCollateral, 6), numFromBn(archInterest), numFromBn(usdtCollateral, 6) * m];
+}
+
+describe("Zapper test suite", function () {
+    describe("non USDT Zapper test", function () {
+        it("Should create position with USDC", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            await getUSDCToUser(r);
+            const tokenUSDC = new ethers.Contract(usdcAddress, abiUSDTToken, owner);
+            const usdcBalance = await tokenUSDC.balanceOf(owner.address);
+            const amount = bnFromNum(10, 6);
+            await zapOutPositionWithAnyBase(r, zapper, tokenUSDC, amount);
+            // await printPositionInfo(r);
+
+            const usdcBalanceAfter = await tokenUSDC.balanceOf(owner.address);
+
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+            expect(usdcBalanceAfter).to.be.closeTo(usdcBalance.sub(exchangeAmount), 1);
+        });
+
+        it("Should create position with DAI", async function () {
+            /// Most of the tests assume base stable is 6 decimals but DAI is 18 decimals. So change it just for this test!
+            const exchangeAmount18Decimal = bnFromNum(10);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await getDAIToUser(r);
+
+            const tokenDAI = new ethers.Contract(daiAddress, abiUSDTToken, owner);
+
+            const daiBalance = await tokenDAI.balanceOf(owner.address);
+
+            await zapOutPositionWithAnyBase(r, zapper, tokenDAI, exchangeAmount18Decimal);
+
+            const daiBalanceAfter = await tokenDAI.balanceOf(owner.address);
+
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+            expect(daiBalanceAfter).to.be.closeTo(daiBalance.sub(exchangeAmount18Decimal), 1);
+        });
+    });
+
+    describe("Basic Zapper test", function () {
+        it("Should add CDP values to zapped in position", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            await zapIntoPosition(r, zapper);
+
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(positionId));
+
+            expect(collateral).to.be.closeTo(8, 1);
+            expect(leverage).to.be.closeTo(34, 2);
+        });
+
+        it("Should be able to create positions using user owned Arch token", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.archToken.connect(r.treasurySigner).transfer(owner.address, bnFromNum(5));
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(5));
+            await zapIntoPosition(r, zapper, true);
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+        });
+
+        it("Should be able to open multiple positions", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.archToken.connect(r.treasurySigner).transfer(owner.address, bnFromNum(10));
+
+            await zapIntoPosition(r, zapper);
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(5));
+            await zapIntoPosition(r, zapper, true);
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(0));
+
+            await zapIntoPosition(r, zapper);
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(5));
+            await zapIntoPosition(r, zapper, true);
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(0));
+
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+            expect(await r.positionToken.ownerOf(1)).to.equal(owner.address);
+            expect(await r.positionToken.ownerOf(2)).to.equal(owner.address);
+            expect(await r.positionToken.ownerOf(3)).to.equal(owner.address);
+
+            const collateral0 = numFromBn(await r.cdp.getOUSDPrinciple(0));
+            const collateral1 = numFromBn(await r.cdp.getOUSDPrinciple(1));
+            const collateral2 = numFromBn(await r.cdp.getOUSDPrinciple(2));
+            const collateral3 = numFromBn(await r.cdp.getOUSDPrinciple(3));
+
+            expect(collateral0).to.be.closeTo(8, 1);
+            expect(collateral1).to.be.closeTo(10, 1);
+            expect(collateral2).to.be.closeTo(8, 1);
+            expect(collateral3).to.be.closeTo(10, 1);
+        });
+    });
+
+    describe("Zapper Preview methods", function () {
+        const amountInBase = 10;
+        it("should preview split tokens correctly", async function () {
+            /// baseAmount = collateral + dollarsToPayForArch
+            /// dollarsToPayForArch = (leverageAmount(collateral) * archPrice(unknown)) / archToLevRatio
+
+            ///  archPrice -> we estimate from pool. First getting price for 1 arch token, then for the correct amount we need
+            ///  leverageAmount = f(collateral) = getAllowedLeverageForPosition(collateral, cycles)
+            /// after first run with baseAmount = 1, we get some reasonable ratio between collateral and dollarsToPayForArch
+            /// then we can use this ratio to calculate dollarsToPayForArch + collateral for any baseAmount
+
+            const { r, zapper } = await loadFixture(setupFixture);
+            // await r.parameterStore.changeArchToLevRatio(bnFromNum(10));
+            const archPrice = await getArchPriceInDollars(r, amountInBase);
+            const split = await zapper.previewTokenSplit(bnFromNum(amountInBase, 6), defaultCycles, addressUSDT);
+
+            const collateral = numFromBn(split[0], 6);
+            const dollarsToPayForArch = numFromBn(split[1], 6);
+            const leverageAmount = numFromBn(
+                await r.parameterStore.getAllowedLeverageForPosition(
+                    ethers.utils.parseUnits(collateral.toString()),
+                    defaultCycles),
+            );
+            const archToLevRatio = numFromBn(await r.parameterStore.getArchToLevRatio());
+            const dollarsToPayForCollCalc = amountInBase - (leverageAmount * archPrice) / archToLevRatio;
+            const dollarsToPayForArchCalc = amountInBase - dollarsToPayForCollCalc;
+            expect(dollarsToPayForCollCalc).to.be.closeTo(collateral, 0.5);
+            expect(dollarsToPayForArchCalc).to.be.closeTo(dollarsToPayForArch, 0.5);
+        });
+
+        it("should previewAmounts correctly when zapping both arch and OUSD", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            const exchangeAmount = bnFromNum(amountInBase, 6);
+            let [collateralAmount, archAmount] =
+                await zapper.previewZapInAmount(exchangeAmount, defaultCycles, 990, addressUSDT, false);
+            collateralAmount = numFromBn(collateralAmount);
+            archAmount = numFromBn(archAmount);
+            expect(collateralAmount).to.be.closeTo(8.1, 0.5);
+            expect(archAmount).to.be.closeTo(3.6, 0.5);
+        });
+
+        it("should previewAmounts correctly when zapping a large amount", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            const exchangeAmount = bnFromNum(12780, 6);
+            let [collateralAmount, archAmount] =
+                await zapper.previewZapInAmount(exchangeAmount, defaultCycles, 990, addressUSDT, false);
+            collateralAmount = numFromBn(collateralAmount);
+            archAmount = numFromBn(archAmount);
+
+            const [expectedCollateral, expectedInterest] = await computeSplit(r, exchangeAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+
+            expect(collateralAmount).to.be.closeTo(expectedCollateral, expectedMargin);
+            expect(archAmount).to.be.closeTo(expectedInterest, expectedMargin);
+        });
+
+        it("should previewAmounts correctly when zapping a very large amount", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            const exchangeAmount = bnFromNum(45632.67311, 6);
+            let [collateralAmount, archAmount] =
+                await zapper.previewZapInAmount(exchangeAmount, defaultCycles, 990, addressUSDT, false);
+            collateralAmount = numFromBn(collateralAmount);
+            archAmount = numFromBn(archAmount);
+
+            const [expectedCollateral, expectedInterest] = await computeSplit(r, exchangeAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+
+            expect(collateralAmount).to.be.closeTo(expectedCollateral, expectedMargin);
+            expect(archAmount).to.be.closeTo(expectedInterest, expectedMargin);
+        });
+
+        it("should previewAmounts correctly when zapping a small amount", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            const exchangeAmount = bnFromNum(3, 6);
+            let [collateralAmount, archAmount] =
+                await zapper.previewZapInAmount(exchangeAmount, defaultCycles, 990, addressUSDT, false);
+            collateralAmount = numFromBn(collateralAmount);
+            archAmount = numFromBn(archAmount);
+
+            const [expectedCollateral, expectedInterest] = await computeSplit(r, exchangeAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+
+            expect(collateralAmount).to.be.closeTo(expectedCollateral, expectedMargin);
+            expect(archAmount).to.be.closeTo(expectedInterest, expectedMargin);
+        });
+
+        it("should previewAmounts correctly when zapping a non round amount", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            const exchangeAmount = bnFromNum(10.872163, 6);
+            let [collateralAmount, archAmount] =
+                await zapper.previewZapInAmount(exchangeAmount, defaultCycles, 990, addressUSDT, false);
+            collateralAmount = numFromBn(collateralAmount);
+            archAmount = numFromBn(archAmount);
+
+            const [expectedCollateral, expectedInterest] = await computeSplit(r, exchangeAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+
+            expect(collateralAmount).to.be.closeTo(expectedCollateral, expectedMargin);
+            expect(archAmount).to.be.closeTo(expectedInterest, expectedMargin);
+        });
+
+        it("should previewAmounts correctly when zapping just OUSD and using arch from users wallet",
+            async function () {
+                const { r, zapper } = await loadFixture(setupFixture);
+                const exchangeAmount = bnFromNum(amountInBase, 6);
+                let [collateralAmount, archAmount] = await zapper.previewZapInAmount(exchangeAmount, defaultCycles, 990, addressUSDT, true);
+                collateralAmount = numFromBn(collateralAmount);
+                archAmount = numFromBn(archAmount);
+                expect(collateralAmount).to.be.closeTo(10, 0.5);
+                // Notice we need more Arch tokens in compared to test above because collateral is higher
+                expect(archAmount).to.be.closeTo(4.3, 0.5);
+            });
+    });
+
+    describe("open different size positions", function () {
+        it("Should be able to open a position with high amount (200 USDT)", async function () {
+            const bigExchangeAmount = 200;
+            const bigExchangeAmountInBase = bnFromNum(bigExchangeAmount, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            const usdtBalance = numFromBn(await r.externalUSDT.balanceOf(owner.address), 6);
+            expect(usdtBalance).to.be.greaterThan(bigExchangeAmount);
+            await r.externalUSDT.approve(zapper.address, bigExchangeAmountInBase);
+            await zapper.zapIn(bigExchangeAmountInBase, defaultCycles, 990, addressUSDT, false);
+            // await printPositionInfo(r, 0);
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, bigExchangeAmountInBase);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
+
+        it("Should be able to open a position with precise amount (10.872163 USDT)", async function () {
+            const usdtAmount = bnFromNum(10.872163, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false);
+            // Check for creation of position nft
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
+
+        it("Should be able to open a position with low amount (3 USDT)", async function () {
+            const usdtAmount = bnFromNum(3, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false);
+            // Check for creation of position nft
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
+
+        it("Should be able to open a position with very large amount (2500 USDT)", async function () {
+            const usdtAmount = bnFromNum(2500, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+
+            // Give user a large amount of USDT
+            await helperSwapETHWithUSDT(owner, bnFromNum(99));
+
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false);
+            // Check for creation of position nft
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
+    });
+
+    describe("Open different cycle amount positions", function () {
+        it("Should be able to open a position with 1 cycle", async function () {
+            const usdtAmount = bnFromNum(100, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await zapper.zapIn(usdtAmount, 1, 990, addressUSDT, false);
+            // Check for creation of position nft
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount, 1);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
+
+        it("Should be able to open a position with 3 cycles", async function () {
+            const usdtAmount = bnFromNum(100, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await zapper.zapIn(usdtAmount, 3, 990, addressUSDT, false);
+            // Check for creation of position nft
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount, 3);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
+
+        it("Should be able to open a position with 10 cycles", async function () {
+            const usdtAmount = bnFromNum(100, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await zapper.zapIn(usdtAmount, 10, 990, addressUSDT, false);
+            // Check for creation of position nft
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount, 10);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
+    });
+
+    describe("Slippage Tests", function () {
+        it("Should be able to open a position with 80.1% slippage tolerance", async function () {
+            const usdtAmount = bnFromNum(100, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await zapper.zapIn(usdtAmount, defaultCycles, 801, addressUSDT, false);
+            // Check for creation of position nft
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
+
+        it("Should be able to open a position with 99.9% slippage tolerance", async function () {
+            const usdtAmount = bnFromNum(100, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await zapper.zapIn(usdtAmount, defaultCycles, 999, addressUSDT, false);
+            // Check for creation of position nft
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
+
+        it("Should revert when attempting to open a position with 80.0% slippage tolerance", async function () {
+            const usdtAmount = bnFromNum(100, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await expect(
+                zapper.zapIn(usdtAmount, defaultCycles, 800, addressUSDT, false),
+            ).to.be.revertedWith("err:slippage<801");
+        });
+
+        it("Should revert when attempting to open a position with 100.0% slippage tolerance", async function () {
+            const usdtAmount = bnFromNum(100, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await expect(
+                zapper.zapIn(usdtAmount, defaultCycles, 1000, addressUSDT, false),
+            ).to.be.revertedWith("err:slippage>999");
+        });
+    });
+
+    describe("Revert cases", function () {
+        it("Should revert if no collateral is given", async function () {
+            const { zapper } = await loadFixture(setupFixture);
+            await expect(
+                zapper.zapIn(0, defaultCycles, 990, addressUSDT, false),
+            ).to.be.revertedWith("err:stableCoinAmount==0");
+        });
+
+        it("Should revert if collateral is too low", async function () {
+            const usdtAmount = bnFromNum(0.003, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await expect(
+                zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false),
+            ).to.be.revertedWith("Collateral lower then min");
+        });
+
+        it("Should revert if attempting to use user arch but there isn't enough", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            // 1 Arch is not enough
+            await r.archToken.connect(r.treasurySigner).transfer(owner.address, bnFromNum(1));
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(1));
+            await expect(
+                zapIntoPosition(r, zapper, true),
+            ).to.be.revertedWith("err:insuf user arch");
+        });
+    });
+});
+/* eslint-disable max-len */
+const factoryABI = [{ inputs: [{ internalType: "address", name: "_feeToSetter", type: "address" }], payable: false, stateMutability: "nonpayable", type: "constructor" }, { anonymous: false, inputs: [{ indexed: true, internalType: "address", name: "token0", type: "address" }, { indexed: true, internalType: "address", name: "token1", type: "address" }, { indexed: false, internalType: "address", name: "pair", type: "address" }, { indexed: false, internalType: "uint256", name: "", type: "uint256" }], name: "PairCreated", type: "event" }, { constant: true, inputs: [{ internalType: "uint256", name: "", type: "uint256" }], name: "allPairs", outputs: [{ internalType: "address", name: "", type: "address" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [], name: "allPairsLength", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], payable: false, stateMutability: "view", type: "function" }, { constant: false, inputs: [{ internalType: "address", name: "tokenA", type: "address" }, { internalType: "address", name: "tokenB", type: "address" }], name: "createPair", outputs: [{ internalType: "address", name: "pair", type: "address" }], payable: false, stateMutability: "nonpayable", type: "function" }, { constant: true, inputs: [], name: "feeTo", outputs: [{ internalType: "address", name: "", type: "address" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [], name: "feeToSetter", outputs: [{ internalType: "address", name: "", type: "address" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [{ internalType: "address", name: "", type: "address" }, { internalType: "address", name: "", type: "address" }], name: "getPair", outputs: [{ internalType: "address", name: "", type: "address" }], payable: false, stateMutability: "view", type: "function" }, { constant: false, inputs: [{ internalType: "address", name: "_feeTo", type: "address" }], name: "setFeeTo", outputs: [], payable: false, stateMutability: "nonpayable", type: "function" }, { constant: false, inputs: [{ internalType: "address", name: "_feeToSetter", type: "address" }], name: "setFeeToSetter", outputs: [], payable: false, stateMutability: "nonpayable", type: "function" }];
+const routerABI = [{ inputs: [{ internalType: "address", name: "_factory", type: "address" }, { internalType: "address", name: "_WETH", type: "address" }], stateMutability: "nonpayable", type: "constructor" }, { inputs: [], name: "WETH", outputs: [{ internalType: "address", name: "", type: "address" }], stateMutability: "view", type: "function" }, { inputs: [{ internalType: "address", name: "tokenA", type: "address" }, { internalType: "address", name: "tokenB", type: "address" }, { internalType: "uint256", name: "amountADesired", type: "uint256" }, { internalType: "uint256", name: "amountBDesired", type: "uint256" }, { internalType: "uint256", name: "amountAMin", type: "uint256" }, { internalType: "uint256", name: "amountBMin", type: "uint256" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "addLiquidity", outputs: [{ internalType: "uint256", name: "amountA", type: "uint256" }, { internalType: "uint256", name: "amountB", type: "uint256" }, { internalType: "uint256", name: "liquidity", type: "uint256" }], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "address", name: "token", type: "address" }, { internalType: "uint256", name: "amountTokenDesired", type: "uint256" }, { internalType: "uint256", name: "amountTokenMin", type: "uint256" }, { internalType: "uint256", name: "amountETHMin", type: "uint256" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "addLiquidityETH", outputs: [{ internalType: "uint256", name: "amountToken", type: "uint256" }, { internalType: "uint256", name: "amountETH", type: "uint256" }, { internalType: "uint256", name: "liquidity", type: "uint256" }], stateMutability: "payable", type: "function" }, { inputs: [], name: "factory", outputs: [{ internalType: "address", name: "", type: "address" }], stateMutability: "view", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountOut", type: "uint256" }, { internalType: "uint256", name: "reserveIn", type: "uint256" }, { internalType: "uint256", name: "reserveOut", type: "uint256" }], name: "getAmountIn", outputs: [{ internalType: "uint256", name: "amountIn", type: "uint256" }], stateMutability: "pure", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountIn", type: "uint256" }, { internalType: "uint256", name: "reserveIn", type: "uint256" }, { internalType: "uint256", name: "reserveOut", type: "uint256" }], name: "getAmountOut", outputs: [{ internalType: "uint256", name: "amountOut", type: "uint256" }], stateMutability: "pure", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountOut", type: "uint256" }, { internalType: "address[]", name: "path", type: "address[]" }], name: "getAmountsIn", outputs: [{ internalType: "uint256[]", name: "amounts", type: "uint256[]" }], stateMutability: "view", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountIn", type: "uint256" }, { internalType: "address[]", name: "path", type: "address[]" }], name: "getAmountsOut", outputs: [{ internalType: "uint256[]", name: "amounts", type: "uint256[]" }], stateMutability: "view", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountA", type: "uint256" }, { internalType: "uint256", name: "reserveA", type: "uint256" }, { internalType: "uint256", name: "reserveB", type: "uint256" }], name: "quote", outputs: [{ internalType: "uint256", name: "amountB", type: "uint256" }], stateMutability: "pure", type: "function" }, { inputs: [{ internalType: "address", name: "tokenA", type: "address" }, { internalType: "address", name: "tokenB", type: "address" }, { internalType: "uint256", name: "liquidity", type: "uint256" }, { internalType: "uint256", name: "amountAMin", type: "uint256" }, { internalType: "uint256", name: "amountBMin", type: "uint256" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "removeLiquidity", outputs: [{ internalType: "uint256", name: "amountA", type: "uint256" }, { internalType: "uint256", name: "amountB", type: "uint256" }], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "address", name: "token", type: "address" }, { internalType: "uint256", name: "liquidity", type: "uint256" }, { internalType: "uint256", name: "amountTokenMin", type: "uint256" }, { internalType: "uint256", name: "amountETHMin", type: "uint256" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "removeLiquidityETH", outputs: [{ internalType: "uint256", name: "amountToken", type: "uint256" }, { internalType: "uint256", name: "amountETH", type: "uint256" }], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "address", name: "token", type: "address" }, { internalType: "uint256", name: "liquidity", type: "uint256" }, { internalType: "uint256", name: "amountTokenMin", type: "uint256" }, { internalType: "uint256", name: "amountETHMin", type: "uint256" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "removeLiquidityETHSupportingFeeOnTransferTokens", outputs: [{ internalType: "uint256", name: "amountETH", type: "uint256" }], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "address", name: "token", type: "address" }, { internalType: "uint256", name: "liquidity", type: "uint256" }, { internalType: "uint256", name: "amountTokenMin", type: "uint256" }, { internalType: "uint256", name: "amountETHMin", type: "uint256" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }, { internalType: "bool", name: "approveMax", type: "bool" }, { internalType: "uint8", name: "v", type: "uint8" }, { internalType: "bytes32", name: "r", type: "bytes32" }, { internalType: "bytes32", name: "s", type: "bytes32" }], name: "removeLiquidityETHWithPermit", outputs: [{ internalType: "uint256", name: "amountToken", type: "uint256" }, { internalType: "uint256", name: "amountETH", type: "uint256" }], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "address", name: "token", type: "address" }, { internalType: "uint256", name: "liquidity", type: "uint256" }, { internalType: "uint256", name: "amountTokenMin", type: "uint256" }, { internalType: "uint256", name: "amountETHMin", type: "uint256" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }, { internalType: "bool", name: "approveMax", type: "bool" }, { internalType: "uint8", name: "v", type: "uint8" }, { internalType: "bytes32", name: "r", type: "bytes32" }, { internalType: "bytes32", name: "s", type: "bytes32" }], name: "removeLiquidityETHWithPermitSupportingFeeOnTransferTokens", outputs: [{ internalType: "uint256", name: "amountETH", type: "uint256" }], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "address", name: "tokenA", type: "address" }, { internalType: "address", name: "tokenB", type: "address" }, { internalType: "uint256", name: "liquidity", type: "uint256" }, { internalType: "uint256", name: "amountAMin", type: "uint256" }, { internalType: "uint256", name: "amountBMin", type: "uint256" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }, { internalType: "bool", name: "approveMax", type: "bool" }, { internalType: "uint8", name: "v", type: "uint8" }, { internalType: "bytes32", name: "r", type: "bytes32" }, { internalType: "bytes32", name: "s", type: "bytes32" }], name: "removeLiquidityWithPermit", outputs: [{ internalType: "uint256", name: "amountA", type: "uint256" }, { internalType: "uint256", name: "amountB", type: "uint256" }], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountOut", type: "uint256" }, { internalType: "address[]", name: "path", type: "address[]" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "swapETHForExactTokens", outputs: [{ internalType: "uint256[]", name: "amounts", type: "uint256[]" }], stateMutability: "payable", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountOutMin", type: "uint256" }, { internalType: "address[]", name: "path", type: "address[]" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "swapExactETHForTokens", outputs: [{ internalType: "uint256[]", name: "amounts", type: "uint256[]" }], stateMutability: "payable", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountOutMin", type: "uint256" }, { internalType: "address[]", name: "path", type: "address[]" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "swapExactETHForTokensSupportingFeeOnTransferTokens", outputs: [], stateMutability: "payable", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountIn", type: "uint256" }, { internalType: "uint256", name: "amountOutMin", type: "uint256" }, { internalType: "address[]", name: "path", type: "address[]" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "swapExactTokensForETH", outputs: [{ internalType: "uint256[]", name: "amounts", type: "uint256[]" }], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountIn", type: "uint256" }, { internalType: "uint256", name: "amountOutMin", type: "uint256" }, { internalType: "address[]", name: "path", type: "address[]" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "swapExactTokensForETHSupportingFeeOnTransferTokens", outputs: [], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountIn", type: "uint256" }, { internalType: "uint256", name: "amountOutMin", type: "uint256" }, { internalType: "address[]", name: "path", type: "address[]" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "swapExactTokensForTokens", outputs: [{ internalType: "uint256[]", name: "amounts", type: "uint256[]" }], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountIn", type: "uint256" }, { internalType: "uint256", name: "amountOutMin", type: "uint256" }, { internalType: "address[]", name: "path", type: "address[]" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "swapExactTokensForTokensSupportingFeeOnTransferTokens", outputs: [], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountOut", type: "uint256" }, { internalType: "uint256", name: "amountInMax", type: "uint256" }, { internalType: "address[]", name: "path", type: "address[]" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "swapTokensForExactETH", outputs: [{ internalType: "uint256[]", name: "amounts", type: "uint256[]" }], stateMutability: "nonpayable", type: "function" }, { inputs: [{ internalType: "uint256", name: "amountOut", type: "uint256" }, { internalType: "uint256", name: "amountInMax", type: "uint256" }, { internalType: "address[]", name: "path", type: "address[]" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "deadline", type: "uint256" }], name: "swapTokensForExactTokens", outputs: [{ internalType: "uint256[]", name: "amounts", type: "uint256[]" }], stateMutability: "nonpayable", type: "function" }, { stateMutability: "payable", type: "receive" }];
+const pairABI = [{ inputs: [], payable: false, stateMutability: "nonpayable", type: "constructor" }, { anonymous: false, inputs: [{ indexed: true, internalType: "address", name: "owner", type: "address" }, { indexed: true, internalType: "address", name: "spender", type: "address" }, { indexed: false, internalType: "uint256", name: "value", type: "uint256" }], name: "Approval", type: "event" }, { anonymous: false, inputs: [{ indexed: true, internalType: "address", name: "sender", type: "address" }, { indexed: false, internalType: "uint256", name: "amount0", type: "uint256" }, { indexed: false, internalType: "uint256", name: "amount1", type: "uint256" }, { indexed: true, internalType: "address", name: "to", type: "address" }], name: "Burn", type: "event" }, { anonymous: false, inputs: [{ indexed: true, internalType: "address", name: "sender", type: "address" }, { indexed: false, internalType: "uint256", name: "amount0", type: "uint256" }, { indexed: false, internalType: "uint256", name: "amount1", type: "uint256" }], name: "Mint", type: "event" }, { anonymous: false, inputs: [{ indexed: true, internalType: "address", name: "sender", type: "address" }, { indexed: false, internalType: "uint256", name: "amount0In", type: "uint256" }, { indexed: false, internalType: "uint256", name: "amount1In", type: "uint256" }, { indexed: false, internalType: "uint256", name: "amount0Out", type: "uint256" }, { indexed: false, internalType: "uint256", name: "amount1Out", type: "uint256" }, { indexed: true, internalType: "address", name: "to", type: "address" }], name: "Swap", type: "event" }, { anonymous: false, inputs: [{ indexed: false, internalType: "uint112", name: "reserve0", type: "uint112" }, { indexed: false, internalType: "uint112", name: "reserve1", type: "uint112" }], name: "Sync", type: "event" }, { anonymous: false, inputs: [{ indexed: true, internalType: "address", name: "from", type: "address" }, { indexed: true, internalType: "address", name: "to", type: "address" }, { indexed: false, internalType: "uint256", name: "value", type: "uint256" }], name: "Transfer", type: "event" }, { constant: true, inputs: [], name: "DOMAIN_SEPARATOR", outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [], name: "MINIMUM_LIQUIDITY", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [], name: "PERMIT_TYPEHASH", outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [{ internalType: "address", name: "", type: "address" }, { internalType: "address", name: "", type: "address" }], name: "allowance", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], payable: false, stateMutability: "view", type: "function" }, { constant: false, inputs: [{ internalType: "address", name: "spender", type: "address" }, { internalType: "uint256", name: "value", type: "uint256" }], name: "approve", outputs: [{ internalType: "bool", name: "", type: "bool" }], payable: false, stateMutability: "nonpayable", type: "function" }, { constant: true, inputs: [{ internalType: "address", name: "", type: "address" }], name: "balanceOf", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], payable: false, stateMutability: "view", type: "function" }, { constant: false, inputs: [{ internalType: "address", name: "to", type: "address" }], name: "burn", outputs: [{ internalType: "uint256", name: "amount0", type: "uint256" }, { internalType: "uint256", name: "amount1", type: "uint256" }], payable: false, stateMutability: "nonpayable", type: "function" }, { constant: true, inputs: [], name: "decimals", outputs: [{ internalType: "uint8", name: "", type: "uint8" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [], name: "factory", outputs: [{ internalType: "address", name: "", type: "address" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [], name: "getReserves", outputs: [{ internalType: "uint112", name: "_reserve0", type: "uint112" }, { internalType: "uint112", name: "_reserve1", type: "uint112" }, { internalType: "uint32", name: "_blockTimestampLast", type: "uint32" }], payable: false, stateMutability: "view", type: "function" }, { constant: false, inputs: [{ internalType: "address", name: "_token0", type: "address" }, { internalType: "address", name: "_token1", type: "address" }], name: "initialize", outputs: [], payable: false, stateMutability: "nonpayable", type: "function" }, { constant: true, inputs: [], name: "kLast", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], payable: false, stateMutability: "view", type: "function" }, { constant: false, inputs: [{ internalType: "address", name: "to", type: "address" }], name: "mint", outputs: [{ internalType: "uint256", name: "liquidity", type: "uint256" }], payable: false, stateMutability: "nonpayable", type: "function" }, { constant: true, inputs: [], name: "name", outputs: [{ internalType: "string", name: "", type: "string" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [{ internalType: "address", name: "", type: "address" }], name: "nonces", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], payable: false, stateMutability: "view", type: "function" }, { constant: false, inputs: [{ internalType: "address", name: "owner", type: "address" }, { internalType: "address", name: "spender", type: "address" }, { internalType: "uint256", name: "value", type: "uint256" }, { internalType: "uint256", name: "deadline", type: "uint256" }, { internalType: "uint8", name: "v", type: "uint8" }, { internalType: "bytes32", name: "r", type: "bytes32" }, { internalType: "bytes32", name: "s", type: "bytes32" }], name: "permit", outputs: [], payable: false, stateMutability: "nonpayable", type: "function" }, { constant: true, inputs: [], name: "price0CumulativeLast", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [], name: "price1CumulativeLast", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], payable: false, stateMutability: "view", type: "function" }, { constant: false, inputs: [{ internalType: "address", name: "to", type: "address" }], name: "skim", outputs: [], payable: false, stateMutability: "nonpayable", type: "function" }, { constant: false, inputs: [{ internalType: "uint256", name: "amount0Out", type: "uint256" }, { internalType: "uint256", name: "amount1Out", type: "uint256" }, { internalType: "address", name: "to", type: "address" }, { internalType: "bytes", name: "data", type: "bytes" }], name: "swap", outputs: [], payable: false, stateMutability: "nonpayable", type: "function" }, { constant: true, inputs: [], name: "symbol", outputs: [{ internalType: "string", name: "", type: "string" }], payable: false, stateMutability: "view", type: "function" }, { constant: false, inputs: [], name: "sync", outputs: [], payable: false, stateMutability: "nonpayable", type: "function" }, { constant: true, inputs: [], name: "token0", outputs: [{ internalType: "address", name: "", type: "address" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [], name: "token1", outputs: [{ internalType: "address", name: "", type: "address" }], payable: false, stateMutability: "view", type: "function" }, { constant: true, inputs: [], name: "totalSupply", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], payable: false, stateMutability: "view", type: "function" }, { constant: false, inputs: [{ internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "value", type: "uint256" }], name: "transfer", outputs: [{ internalType: "bool", name: "", type: "bool" }], payable: false, stateMutability: "nonpayable", type: "function" }, { constant: false, inputs: [{ internalType: "address", name: "from", type: "address" }, { internalType: "address", name: "to", type: "address" }, { internalType: "uint256", name: "value", type: "uint256" }], name: "transferFrom", outputs: [{ internalType: "bool", name: "", type: "bool" }], payable: false, stateMutability: "nonpayable", type: "function" }];

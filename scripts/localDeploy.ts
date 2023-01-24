@@ -1,6 +1,13 @@
 import hre, { ethers } from "hardhat";
-import { helperSwapETHWithOUSD, addressOUSD, abiOUSDToken } from "../test/MainnetHelper";
-import { buildContractTestContext, setRolesForEndToEnd, startAndEndAuction } from "../test/ContractTestContext";
+import {
+    helperSwapETHWithOUSD, createUniswapPool, addressOUSD, abiOUSDToken,
+    helperSwapETHWithUSDT, address3CRV, addressUSDT, addressCurveOUSDPool,
+    numFromBn, bnFromStr, bnFromNum,
+} from "../test/MainnetHelper";
+import {
+    buildContractTestContext, setRolesForEndToEnd,
+    startAndEndAuction, startAuctionAcceptLeverageAndEndAuction,
+} from "../test/ContractTestContext";
 import dotenv from "dotenv";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
@@ -9,16 +16,17 @@ dotenv.config({ path: "secrets/alchemy.env" });
 // export const signers = ethers.getSigners();
 
 let context;
+const lvUSDAmount = "5000000";
+const routeAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
 
 async function fundLVUSDToCoordinator () {
     console.log("\nFunding lvUSD to coordinator\n");
-    const amount = "5000000";
 
     await context.lvUSD.setMintDestination(context.coordinator.address);
-    await context.lvUSD.mint(ethers.utils.parseUnits(amount, 18));
-    await context.coordinator.acceptLeverageAmount(ethers.utils.parseUnits(amount, 18));
+    await context.lvUSD.mint(ethers.utils.parseUnits(lvUSDAmount, 18));
+    // await context.coordinator.acceptLeverageAmount(ethers.utils.parseUnits(amount, 18));
 
-    console.log(context.coordinator.address + " funded with " + amount + " LVUSD");
+    console.log(context.coordinator.address + " funded with " + lvUSDAmount + " LVUSD");
 }
 
 const fundARCH = async () => {
@@ -50,17 +58,40 @@ async function verifyDeployment () {
 const deployScript = async () => {
     // hacky way to go around pool balances not working on local instance.. skipPoolBalances = true
     context = await buildContractTestContext(true);
-    // // await context.parameterStore.changeArchToLevRatio(ethers.utils.parseUnits("300.0"));
+
+    /// Setup Zapper + Uniswap
+    await ethers.provider.send("evm_mine");
+
+    const zapperFactory = await ethers.getContractFactory("Zapper");
+    const zapper = await hre.upgrades.deployProxy(zapperFactory, [], { kind: "uups" });
+    await zapper.setDependencies(addressOUSD, address3CRV,
+        addressUSDT, addressCurveOUSDPool, routeAddress,
+        context.leverageEngine.address, context.archToken.address, context.parameterStore.address);
+
+    console.log("Zapper address is", await context.lvUSD.address);
+
+    console.log("finished deploying Zapper");
+
+    await ethers.provider.send("evm_mine");
+
+    await createUniswapPool(context);
+    console.log("Finished deploying Uniswap");
+
+    await helperSwapETHWithUSDT(context.owner, bnFromNum(1));
+
+    await ethers.provider.send("evm_mine");
+
+    /// End Setup Zapper + Uniswap
     // const startBlock = await ethers.provider.blockNumber + 2;
     // await context.auction.startAuction(startBlock + 1,ethers.utils.parseUnits("301.0"), ethers.utils.parseUnits("300.0"))
     await fundLVUSDToCoordinator();
     await setRolesForEndToEnd(context);
-    await startAndEndAuction(context, 5);
+    await startAuctionAcceptLeverageAndEndAuction(context, ethers.utils.parseUnits(lvUSDAmount, 18));
+    // await startAndEndAuction(context, 5);
 
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
-    // await fundLVUSDToCoordinator();
     await fundARCH();
-    // await fundDemoAccount();
+    await fundDemoAccount();
     await verifyDeployment();
 };
 
@@ -84,7 +115,7 @@ const fundDemoAccount = async () => {
 
     const archToken = new ethers.Contract("0x0a17FabeA4633ce714F1Fa4a2dcA62C3bAc4758d", abiOUSDToken);
 
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 6; i++) {
         // was 17
         // console.log("i: " + i + " - Funded address ");
 
@@ -96,6 +127,9 @@ const fundDemoAccount = async () => {
         const archAmountToFund = "200";
         await archToken.connect(treasurySigner).transfer(SignersToFund[i].address, ethers.utils.parseUnits(archAmountToFund));
         await helperSwapETHWithOUSD(SignersToFund[i], ethers.utils.parseUnits("0.4"));
+        await helperSwapETHWithUSDT(SignersToFund[i], ethers.utils.parseUnits("0.4"));
+        await ethers.provider.send("evm_mine");
+
         console.log("i: " + i + " - Funded address " + SignersToFund[i].address);
     }
 };

@@ -10,10 +10,15 @@ import {
     abi3CRVToken,
     abiCurve3Pool,
     abi3PoolImplementation,
+    factoryABI,
+    routerABI,
+    pairABI,
 } from "./ABIs";
+
 import dotenv from "dotenv";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { BigNumber } from "ethers";
+import { BigNumber, Contract } from "ethers";
+import { ContractTestContext } from "./ContractTestContext";
 
 // grab the private api key from the private repo
 dotenv.config({ path: "secrets/alchemy.env" });
@@ -31,6 +36,7 @@ const addressUSDC = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 const addressZap = "0xa79828df1850e8a3a3064576f380d90aecdd3359";
 const address3CRVlvUSDPool = "0x67C7f0a63BA70a2dAc69477B716551FC921aed00";
 const addressCurveRegistry = "0x81C46fECa27B31F3ADC2b91eE4be9717d1cd3DD7";
+const routeAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
 
 const indexTripoolUSDT = 0;
 const indexTripoolWETH9 = 2;
@@ -78,6 +84,7 @@ async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     expect(ret).to.equal(addressWETH9);
 
     /// /////////// 1. ETH->WETH9 //////////////
+    await ethers.provider.send("evm_mine");
 
     // read current signer balance from WETH9 contract (so we can validate increase later)
     let weth9Balance = await weth9.balanceOf(destUser.address);
@@ -105,6 +112,7 @@ async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     // dx: The amount of i being exchanged.
     // min_dy: The minimum amount of j to receive. If the swap would result in less, the transaction will revert.
     await triPool.exchange(indexTripoolWETH9, indexTripoolUSDT, ethAmountToSwap, 1);
+    await ethers.provider.send("evm_mine");
 
     // read balance again and make sure it increased
     expect(await usdtToken.balanceOf(destUser.address)).to.gt(usdtBalance);
@@ -134,6 +142,7 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
 
     const balanceUSDT = await helperSwapETHWithUSDT(destUser, ethAmountToSwap);
+    await ethers.provider.send("evm_mine");
 
     /// /////////// 2. USDT->3CRV on Curve /////////////////////////
 
@@ -144,6 +153,7 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     let balance3CRV = await token3CRV.balanceOf(destUser.address);
     // Exchange USDT->3CRV
     await contractCurve3Pool.add_liquidity([0, 0, balanceUSDT], 1);
+    await ethers.provider.send("evm_mine");
 
     expect(await token3CRV.balanceOf(destUser.address)).to.gt(balance3CRV);
 
@@ -158,7 +168,7 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     3. USDT->OUSD with OUSD contract
 */
 async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSwap: BigNumber) {
-    /// /////////// Loading some contracts //////////////
+    /// ///////// Loading some contracts //////////////
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore loading USDT contract
@@ -172,6 +182,7 @@ async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSw
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
 
     const balance3CRV = await helperSwapETHWith3CRV(destUser, ethAmountToSwap);
+    await ethers.provider.send("evm_mine");
 
     /// /////////// 2. USDT->OUSD with OUSD contract //////////////
 
@@ -180,6 +191,7 @@ async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSw
 
     // get user balance
     let balanceOUSD = await tokenOUSD.balanceOf(destUser.address);
+    await ethers.provider.send("evm_mine");
 
     // Exchange USDT->OUSD
     await contractCurveOUSDPool.exchange(indexCurveOUSD3CRV, indexCurveOUSDOUSD, balance3CRV, 1);
@@ -191,6 +203,69 @@ async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSw
     return balanceOUSD;
 }
 
+const minLiq = bnFromNum(100);
+let externalWETH: Contract;
+export function bnFromNum (num: number, decimal = 18): BigNumber {
+    return ethers.utils.parseUnits(num.toString(), decimal);
+}
+export function bnFromStr (num: string, decimal = 18): BigNumber {
+    return ethers.utils.parseUnits(num.toString(), decimal);
+}
+export function numFromBn (num: BigNumber, decimals = 18): number {
+    return Number(ethers.utils.formatUnits(num, decimals));
+}
+async function getUserSomeWETH (r: ContractTestContext) {
+    externalWETH = new ethers.Contract(addressWETH9, abiWETH9Token, r.owner);
+    await ethers.provider.send("evm_mine");
+    let weth9Balance = await externalWETH.balanceOf(r.owner.address);
+    await externalWETH.deposit({ value: bnFromNum(1) });
+    weth9Balance = await externalWETH.balanceOf(r.owner.address);
+    // console.log("weth9Balance: %s", numFromBn(weth9Balance));
+}
+async function createPair (r: ContractTestContext): Promise<Contract> {
+    const factoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+    const uniswapFactory = new ethers.Contract(factoryAddress, factoryABI, r.owner);
+    const tx = await uniswapFactory.createPair(r.archToken.address, addressWETH9);
+    const receipt = await tx.wait();
+    const pairCreatedEvent = receipt.events?.filter((x) => { return x.event === "PairCreated"; });
+    const pairAddress = pairCreatedEvent[0].args.pair;
+    const pairToken = new ethers.Contract(pairAddress, pairABI, r.owner);
+    return pairToken;
+}
+async function getRouter (r: ContractTestContext): Contract {
+    const routeToken = new ethers.Contract(routeAddress, routerABI, r.owner);
+    return routeToken;
+}
+async function addLiquidityToPairViaRouter (r: ContractTestContext, pairToken: Contract) {
+    await r.archToken.connect(r.treasurySigner).transfer(r.owner.address, minLiq);
+
+    const routeInstance = await getRouter(r);
+
+    await r.archToken.approve(routeAddress, minLiq);
+
+    await routeInstance.addLiquidityETH(
+        r.archToken.address,
+        minLiq,
+        bnFromNum(100),
+        bnFromNum(0.001),
+        r.owner.address,
+        1670978314,
+        { value: bnFromNum(0.04) }, // The amount in Eth to send to pair, long calc but it is worth 100
+    );
+    await ethers.provider.send("evm_mine");
+
+    const reserves = await pairToken.getReserves();
+}
+
+async function createUniswapPool (r: ContractTestContext) {
+    await getUserSomeWETH(r);
+    const pairToken = await createPair(r);
+
+    await addLiquidityToPairViaRouter(r, pairToken);
+
+    await ethers.provider.send("evm_mine");
+}
+
 export {
     defaultBlockNumber,
 
@@ -199,6 +274,7 @@ export {
     helperSwapETHWithUSDT,
     helperSwapETHWith3CRV,
     helperSwapETHWithOUSD,
+    createUniswapPool,
 
     /* addresses */
     addressCurveTripool2,
@@ -213,6 +289,7 @@ export {
     addressZap,
     address3CRVlvUSDPool,
     addressCurveRegistry,
+    routeAddress,
 
     /* ABIs */
     abiOUSDToken,
@@ -230,4 +307,5 @@ export {
     indexTripoolWETH9,
     indexCurveOUSDOUSD,
     indexCurveOUSD3CRV,
+
 };

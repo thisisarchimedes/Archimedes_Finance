@@ -64,8 +64,6 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         _ousd = IERC20Upgradeable(_addressOUSD);
     }
 
-    /* Non-privileged functions */
-
     /// @dev deposit OUSD under NFT ID
     ///
     /// User sends OUSD to the contract.
@@ -79,6 +77,27 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         uint256 cycles,
         uint256 maxArchAmount
     ) external nonReentrant whenNotPaused returns (uint256) {
+        return _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, msg.sender);
+    }
+
+    function createLeveragedPositionFromZapper(
+        uint256 ousdPrinciple,
+        uint256 cycles,
+        uint256 maxArchAmount,
+        address userAddress
+    ) external nonReentrant whenNotPaused returns (uint256) {
+        _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, userAddress);
+    }
+
+    /* Non-privileged functions */
+
+    function _createLeveragedPosition(
+        uint256 ousdPrinciple,
+        uint256 cycles,
+        uint256 maxArchAmount,
+        address userAddress
+    ) internal returns (uint256) {
+        // console.log("in createLeveragedPositionFromZapper: msg.sender is %s", msg.sender);
         // add some minor buffer to the arch we will use for the position
         if (cycles == 0 || cycles > _parameterStore.getMaxNumberOfCycles()) {
             revert("Invalid number of cycles");
@@ -99,7 +118,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         uint256 availableLev = _coordinator.getAvailableLeverage();
         require(availableLev >= lvUSDAmount, "Not enough available leverage");
         _burnArchTokenForPosition(msg.sender, archNeededToBurn);
-        uint256 positionTokenId = _positionToken.safeMint(msg.sender);
+        uint256 positionTokenId = _positionToken.safeMint(userAddress);
 
         // Checking allowance due to a potential bug in OUSD contract that can under some conditions, transfer much more then allowance.
         // This bug is fixed in later versions of solidity but adding the check here as a precaution
@@ -111,9 +130,9 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
 
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple);
         _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
-        uint256 psoitionExpireTime = _coordinator.getPositionExpireTime(positionTokenId);
+        uint256 positionExpireTime = _coordinator.getPositionExpireTime(positionTokenId);
 
-        emit PositionCreated(msg.sender, positionTokenId, ousdPrinciple, lvUSDAmount, archNeededToBurn, psoitionExpireTime);
+        emit PositionCreated(userAddress, positionTokenId, ousdPrinciple, lvUSDAmount, archNeededToBurn, positionExpireTime);
 
         return positionTokenId;
     }

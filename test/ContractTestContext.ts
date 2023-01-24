@@ -49,14 +49,16 @@ export async function setRolesForEndToEnd (r: ContractTestContext) {
     await r.cdp.setExecutive(r.coordinator.address);
 }
 
-export async function startAndEndAuction (
+export async function startAuctionAcceptLeverageAndEndAuction (
     r: ContractTestContext,
-    length: number,
+    leverage: BigNumber,
+    length = 5,
     startPrice: BigNumber = ethers.utils.parseUnits("300.0"),
     endPrice: BigNumber = ethers.utils.parseUnits("301.0")) {
     /// start Auction and end it to get a static endPrice
     const startBlock = await ethers.provider.blockNumber;
     await r.auction.startAuctionWithLength(length, startPrice, endPrice);
+    await r.coordinator.acceptLeverageAmount(leverage);
     for (let i = 0; i < length + 1; i++) {
         await ethers.provider.send("evm_mine");
     }
@@ -65,6 +67,7 @@ export const signers = ethers.getSigners();
 export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("10000000.0");
 export async function buildContractTestContext (skipPoolBalances = false): Promise<ContractTestContext> {
     await helperResetNetwork(defaultBlockNumber);
+    await ethers.provider.send("evm_mine");
 
     const context = {} as ContractTestContext;
 
@@ -87,6 +90,7 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
 
     const exchangerFactory = await ethers.getContractFactory("Exchanger");
     context.exchanger = await hre.upgrades.deployProxy(exchangerFactory, [], { kind: "uups" });
+    await ethers.provider.send("evm_mine");
 
     const leverageEngineFactory = await ethers.getContractFactory("LeverageEngine");
     context.leverageEngine = await hre.upgrades.deployProxy(leverageEngineFactory, [], { kind: "uups" });
@@ -109,20 +113,26 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
     const auctionfactory = await ethers.getContractFactory("Auction");
     context.auction = await hre.upgrades.deployProxy(auctionfactory, [], { kind: "uups" });
 
+    await ethers.provider.send("evm_mine");
+
     // Give context.owner some funds:
     // expecting minter to be owner
     await context.lvUSD.setMintDestination(context.owner.address);
     await context.lvUSD.mint(ownerStartingLvUSDAmount);
     await helperSwapETHWith3CRV(context.owner, ethers.utils.parseUnits("7000.0"));
+    await ethers.provider.send("evm_mine");
 
     // Create a LVUSD3CRV pool and fund with "fundedPoolAmount" of each token
     context.curveLvUSDPool = await createAndFundMetapool(context.owner, context, skipPoolBalances);
+    await ethers.provider.send("evm_mine");
+
     // Setup pool with approval
 
     await context.lvUSD.approve(context.curveLvUSDPool.address, ownerStartingLvUSDAmount);
 
     await context.lvUSD.approve(context.exchanger.address, ethers.constants.MaxUint256);
     await context.lvUSD.approve(context.coordinator.address, ethers.constants.MaxUint256);
+    await ethers.provider.send("evm_mine");
 
     // Post init contracts
     await context.leverageEngine.setDependencies(
@@ -133,6 +143,8 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
         context.externalOUSD.address,
     );
 
+    await ethers.provider.send("evm_mine");
+
     await context.coordinator.setDependencies(
         context.lvUSD.address,
         context.vault.address,
@@ -141,6 +153,7 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
         context.exchanger.address,
         context.parameterStore.address,
         context.poolManager.address,
+        context.auction.address,
     );
 
     await context.exchanger.setDependencies(
@@ -172,9 +185,7 @@ export async function buildContractTestContext (skipPoolBalances = false): Promi
 
     await context.cdp.setDependencies(context.vault.address, context.parameterStore.address);
 
-    await startAndEndAuction(context, 5);
-    // After all is set and done, accept Lev amount on Coordinator. Not used now as each test set its own coordinator lvUSD balance.
-    // await context.coordinator.acceptLeverageAmount(ownerStartingLvUSDAmount);
+    await ethers.provider.send("evm_mine");
 
     return context;
 }
