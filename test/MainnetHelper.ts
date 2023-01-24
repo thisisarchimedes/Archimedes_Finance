@@ -14,9 +14,11 @@ import {
     routerABI,
     pairABI,
 } from "./ABIs";
+
 import dotenv from "dotenv";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { BigNumber } from "ethers";
+import { BigNumber, Contract } from "ethers";
+import { ContractTestContext } from "./ContractTestContext";
 
 // grab the private api key from the private repo
 dotenv.config({ path: "secrets/alchemy.env" });
@@ -42,7 +44,7 @@ const indexCurveOUSDOUSD = 0;
 const indexCurveOUSD3CRV = 1;
 const defaultBlockNumber = 15104872;
 
-async function helperResetNetwork(lockBlock) {
+async function helperResetNetwork (lockBlock) {
     const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
 
     // Reset hardhat mainnet fork
@@ -64,7 +66,7 @@ async function helperResetNetwork(lockBlock) {
     1. Convert ETH to WETH (because this is what Curve is working with)
     2. WETH->USDT on TriCrypto2@Curve
 */
-async function helperSwapETHWithUSDT(destUser, ethAmountToSwap) {
+async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // loading WETH9 contract
@@ -125,7 +127,7 @@ async function helperSwapETHWithUSDT(destUser, ethAmountToSwap) {
     2. WETH->USDT on TriCrypto2@Curve
     3. Deposit USDT with 3Pool to get some 3CRV
 */
-async function helperSwapETHWith3CRV(destUser, ethAmountToSwap) {
+async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // loading USDT contract
@@ -165,7 +167,7 @@ async function helperSwapETHWith3CRV(destUser, ethAmountToSwap) {
     2. WETH->USDT on TriCrypto2@Curve
     3. USDT->OUSD with OUSD contract
 */
-async function helperSwapETHWithOUSD(destUser: SignerWithAddress, ethAmountToSwap: BigNumber) {
+async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSwap: BigNumber) {
     /// ///////// Loading some contracts //////////////
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -201,19 +203,18 @@ async function helperSwapETHWithOUSD(destUser: SignerWithAddress, ethAmountToSwa
     return balanceOUSD;
 }
 
-
 const minLiq = bnFromNum(100);
 let externalWETH: Contract;
-export function bnFromNum(num: number, decimal = 18): BigNumber {
+export function bnFromNum (num: number, decimal = 18): BigNumber {
     return ethers.utils.parseUnits(num.toString(), decimal);
 }
-export function bnFromStr(num: string, decimal = 18): BigNumber {
+export function bnFromStr (num: string, decimal = 18): BigNumber {
     return ethers.utils.parseUnits(num.toString(), decimal);
 }
-export function numFromBn(num: BigNumber, decimals = 18): number {
+export function numFromBn (num: BigNumber, decimals = 18): number {
     return Number(ethers.utils.formatUnits(num, decimals));
 }
-async function getUserSomeWETH(r: ContractTestContext) {
+async function getUserSomeWETH (r: ContractTestContext) {
     externalWETH = new ethers.Contract(addressWETH9, abiWETH9Token, r.owner);
     await ethers.provider.send("evm_mine");
     let weth9Balance = await externalWETH.balanceOf(r.owner.address);
@@ -221,7 +222,7 @@ async function getUserSomeWETH(r: ContractTestContext) {
     weth9Balance = await externalWETH.balanceOf(r.owner.address);
     // console.log("weth9Balance: %s", numFromBn(weth9Balance));
 }
-async function createPair(r: ContractTestContext): Contract {
+async function createPair (r: ContractTestContext): Contract {
     const factoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
     const uniswapFactory = new ethers.Contract(factoryAddress, factoryABI, r.owner);
     const tx = await uniswapFactory.createPair(r.archToken.address, addressWETH9);
@@ -231,11 +232,11 @@ async function createPair(r: ContractTestContext): Contract {
     const pairToken = new ethers.Contract(pairAddress, pairABI, r.owner);
     return pairToken;
 }
-async function getRouter(r: ContractTestContext): Contract {
+async function getRouter (r: ContractTestContext): Contract {
     const routeToken = new ethers.Contract(routeAddress, routerABI, r.owner);
     return routeToken;
 }
-async function addLiquidityToPairViaRouter(r: ContractTestContext, pairToken: Contract) {
+async function addLiquidityToPairViaRouter (r: ContractTestContext, pairToken: Contract) {
     await r.archToken.connect(r.treasurySigner).transfer(r.owner.address, minLiq);
 
     const routeInstance = await getRouter(r);
@@ -254,10 +255,9 @@ async function addLiquidityToPairViaRouter(r: ContractTestContext, pairToken: Co
     await ethers.provider.send("evm_mine");
 
     const reserves = await pairToken.getReserves();
-    // console.log("reserves0, r1 : %s %s ", numFromBn(reserves._reserve0), numFromBn(reserves._reserve1))
 }
 
-export async function createUniswapPool(r: ContractTestContext) {
+async function createUniswapPool (r: ContractTestContext) {
     await getUserSomeWETH(r);
     const pairToken = await createPair(r);
 
@@ -265,7 +265,6 @@ export async function createUniswapPool(r: ContractTestContext) {
 
     await ethers.provider.send("evm_mine");
 }
-
 
 export {
     defaultBlockNumber,
