@@ -1,5 +1,3 @@
-import "@tenderly/hardhat-tenderly";
-
 // typechain imports:
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
@@ -126,15 +124,10 @@ export default {
         test: {
             tasks: [{ command: "test:watch", params: { path: "{path}" } }],
             files: ["./test/**/*", "./contracts/**/*"],
-            verbose: true,
+            verbose: false,
         },
     },
     mocha: {
         timeout: 100000000,
-    },
-
-    tenderly: {
-        username: "YotamDaniel",
-        project: "ZapperV",
     },
 };
