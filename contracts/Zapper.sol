@@ -118,12 +118,12 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         int128 stableTokenIndex = _getTokenIndex(addressBaseStable);
         uint256 collateralInBaseStableAmount;
 
-        // TODO: make more sense to estimate Arch once we know how much OUSD we got
-        // Check if we need are using existing arch tokens owned by user or buying new ones
+        // Check if using existing arch tokens owned by user or buying new ones
         if (useUserArch == true) {
-            // We are using owners arch tokens, transfer from msg.sender to address(this)
+            // We are using owners arch tokens, determine OUSD obtained from stable deposit
             collateralInBaseStableAmount = stableCoinAmount;
-            archTokenAmount = _getArchAmountToTransferFromUser(stableCoinAmount, cycles, addressBaseStable);
+            ousdCollateralAmount = previewOUSDFromStable(stableCoinAmount, addressBaseStable);
+            archTokenAmount = _getArchAmountToTransferFromUser(ousdCollateralAmount, cycles);
             archTokenAmount = (archTokenAmount * 1000) / maxSlippageAllowed;
         } else {
             // Need to buy Arch tokens. We need to split the stable amount between what we'll as collateral what we'll use to buy Arch
@@ -132,10 +132,9 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             // By arch tokens. Dont enforce min as we dont quite know what the minimum is. If we dont have enough this will fail when we try to use arch
             // to open position.
             archTokenAmount = _uniswapRouter.getAmountsOut(coinsToPayForArchAmount, path)[2];
+            /// Exchange OUSD from the stable
+            ousdCollateralAmount = _poolOUSD3CRV.get_dy_underlying(stableTokenIndex, _OUSD_TOKEN_INDEX, collateralInBaseStableAmount);
         }
-
-        /// Exchange OUSD from any of the 3CRV. Will revert if didn't get min amount sent (2nd parameter)
-        ousdCollateralAmount = _poolOUSD3CRV.get_dy_underlying(stableTokenIndex, _OUSD_TOKEN_INDEX, collateralInBaseStableAmount);
         require(ousdCollateralAmount >= ((collateralInBaseStableAmount * maxSlippageAllowed) / 1000), "err:less OUSD the min");
         return (ousdCollateralAmount, archTokenAmount);
     }
@@ -153,6 +152,16 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     ) external view returns (uint256 collateralInBaseStableAmount, uint256 coinsToPayForArchInStableAmount) {
         address[] memory path = _getPath(addressBaseStable);
         return _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
+    }
+
+    /*
+        @dev preview how much OUSD will be obtained from exchanging base stable 
+        @param stableCoinAmount Amount of stable coin
+        @param addressBaseStable Address of base stable coin
+    */
+    function previewOUSDFromStable(uint256 stableCoinAmount, address addressBaseStable) public view returns (uint256 ousdAmount) {
+        int128 stableCoinIndex = _getTokenIndex(addressBaseStable);
+        return _poolOUSD3CRV.get_dy_underlying(stableCoinIndex, _OUSD_TOKEN_INDEX, stableCoinAmount);
     }
 
     /***************************************************************
@@ -229,7 +238,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         uint16 maxSlippageAllowed,
         address addressBaseStable
     ) internal returns (uint256) {
-        uint256 archAmountToPay = _getArchAmountToTransferFromUser(stableCoinAmount, cycles, addressBaseStable);
+        uint256 archAmountToPay = _getArchAmountToTransferFromUser(stableCoinAmount, cycles);
         archAmountToPay = (archAmountToPay * 1000) / maxSlippageAllowed;
         // Ensure owner has enough arch tokens
         require(_archToken.balanceOf(msg.sender) >= archAmountToPay, "err:insuf user arch");
@@ -237,15 +246,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         return archAmountToPay;
     }
 
-    function _getArchAmountToTransferFromUser(
-        uint256 stableCoinAmount,
-        uint256 cycles,
-        address addressBaseStable
-    ) internal view returns (uint256) {
-        return
-            _paramStore.calculateArchNeededForLeverage(
-                _paramStore.getAllowedLeverageForPosition(stableCoinAmount * 10**(18 - _getTokenDecimal(addressBaseStable)), cycles)
-            );
+    function _getArchAmountToTransferFromUser(uint256 ousdAmount, uint256 cycles) internal view returns (uint256) {
+        return _paramStore.calculateArchNeededForLeverage(_paramStore.getAllowedLeverageForPosition(ousdAmount, cycles));
     }
 
     function _transferFromSender(address tokenAddress, uint256 amount) internal {

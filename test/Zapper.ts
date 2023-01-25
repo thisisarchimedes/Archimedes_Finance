@@ -7,6 +7,8 @@ import {
     abiWETH9Token,
     helperSwapETHWithUSDT,
     addressWETH9,
+    bnFromStr,
+    addressUSDC,
 } from "./MainnetHelper";
 import { buildContractTestContext, ContractTestContext, setRolesForEndToEnd, startAuctionAcceptLeverageAndEndAuction } from "./ContractTestContext";
 import { BigNumber, Contract } from "ethers";
@@ -434,7 +436,7 @@ describe("Zapper test suite", function () {
             expect(archAmount).to.be.closeTo(expectedInterest, expectedMargin);
         });
 
-        it("should previewAmounts correctly when zapping just OUSD and using arch from users wallet",
+        it("should previewAmounts correctly when zapping just USDT and using arch from users wallet",
             async function () {
                 const { r, zapper } = await loadFixture(setupFixture);
                 const exchangeAmount = bnFromNum(amountInBase, 6);
@@ -445,6 +447,33 @@ describe("Zapper test suite", function () {
                 // Notice we need more Arch tokens in compared to test above because collateral is higher
                 expect(archAmount).to.be.closeTo(4.3, 0.5);
             });
+
+        it("should previewOUSDFromStable correctly when previewing a USDT exchange", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            const usdtAmount = 1000;
+            const usdtAmountBn = bnFromNum(usdtAmount, 6);
+            const ousdAmountNoDecimals = await zapper.previewOUSDFromStable(usdtAmountBn, addressUSDT);
+            const ousdAmount = Number(ethers.utils.formatUnits(ousdAmountNoDecimals));
+            expect(ousdAmount).to.be.closeTo(usdtAmount, 1);
+        });
+
+        it("should previewOUSDFromStable correctly when previewing a USDC exchange", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            const usdcAmount = 1000;
+            const usdcAmountBn = bnFromNum(usdcAmount, 6);
+            const ousdAmountNoDecimals = await zapper.previewOUSDFromStable(usdcAmountBn, addressUSDC);
+            const ousdAmount = Number(ethers.utils.formatUnits(ousdAmountNoDecimals));
+            expect(ousdAmount).to.be.closeTo(usdcAmount, 2);
+        });
+
+        it("should previewOUSDFromStable correctly when previewing a DAI exchange", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            const daiAmount = 1000;
+            const daiAmountBn = bnFromNum(daiAmount);
+            const ousdAmountNoDecimals = await zapper.previewOUSDFromStable(daiAmountBn, daiAddress);
+            const ousdAmount = Number(ethers.utils.formatUnits(ousdAmountNoDecimals));
+            expect(ousdAmount).to.be.closeTo(daiAmount, 2);
+        });
     });
 
     describe("open different size positions", function () {
