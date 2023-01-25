@@ -131,6 +131,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
             // preview buy arch tokens from uniswap. results from this will be used as mimimum for Arch to get
             archTokenAmount = _uniswapRouter.getAmountsOut(coinsToPayForArchAmount, path)[2];
+            /// Exchange OUSD from the stable
+            ousdCollateralAmount = _poolOUSD3CRV.get_dy_underlying(stableTokenIndex, _OUSD_TOKEN_INDEX, collateralInBaseStableAmount);
         }
 
         /// estimate echange with curve pool
@@ -140,6 +142,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         if (useUserArch == true) {
             // We are using owners arch tokens, transfer from msg.sender to address(this)
             archTokenAmount = _getArchAmountToTransferFromUser(ousdCollateralAmount, cycles);
+            archTokenAmount = (archTokenAmount * 1000) / maxSlippageAllowed;
+
         }
         require(ousdCollateralAmount >= ((collateralInBaseStableAmount * maxSlippageAllowed) / 1000), "err:less OUSD then min");
         return (ousdCollateralAmount, archTokenAmount);
@@ -158,6 +162,16 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     ) external view returns (uint256 collateralInBaseStableAmount, uint256 coinsToPayForArchInStableAmount) {
         address[] memory path = _getPath(addressBaseStable);
         return _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
+    }
+
+    /*
+        @dev preview how much OUSD will be obtained from exchanging base stable 
+        @param stableCoinAmount Amount of stable coin
+        @param addressBaseStable Address of base stable coin
+    */
+    function previewOUSDFromStable(uint256 stableCoinAmount, address addressBaseStable) public view returns (uint256 ousdAmount) {
+        int128 stableCoinIndex = _getTokenIndex(addressBaseStable);
+        return _poolOUSD3CRV.get_dy_underlying(stableCoinIndex, _OUSD_TOKEN_INDEX, stableCoinAmount);
     }
 
     /***************************************************************
