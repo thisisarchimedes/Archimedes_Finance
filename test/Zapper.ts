@@ -133,26 +133,34 @@ async function setupFixture() {
     return { r, zapper };
 }
 
+// class Position {
+//     stableAmountIn: BigNumber;
+//     cycles: number;
+//     slippage: number;
+//     baseAddress: string;
+//     useUserArch: boolean;
+//     user: SignerWithAddress;
+// }
+
+
 async function zapIntoPosition(
     r: ContractTestContext,
-    zapper: Contract, useUserArch = false, positionOpenSigner = r.owner) {
+    zapper: Contract,
+    useUserArch = false,
+    positionOpenSigner = r.owner,
+    stableAmount: BigNumber = bnFromNum(10)) {
+
     const baseAddress = addressUSDT;
-    const previewAmounts = await zapper.previewZapInAmount(exchangeAmount, defaultCycles, 990, baseAddress, useUserArch)
-    // console.log("previewAmounts -- ", previewAmounts)
+    const previewAmounts = await zapper.previewZapInAmount(stableAmount, defaultCycles, 990, baseAddress, useUserArch)
     // we are using preview 
     const previewOUSDAmount = previewAmounts.ousdCollateralAmountReturn;
     const previewArchAmount = previewAmounts.archTokenAmountReturn;
     console.log("previewAmounts previewArchAmount", ethers.utils.parseEther(previewOUSDAmount.toString()), previewArchAmount)
-    // const archBuffered = ethers.utils.parseEther(previewArchAmount.toString(), 0);
-    const archBuffered = ethers.utils.parseUnits(previewArchAmount.toString(), 0).mul(100).div(99);
+    const archAmountBN = ethers.utils.parseUnits(previewArchAmount.toString(), 0);
+    await r.archToken.connect(positionOpenSigner).approve(zapper.address, archAmountBN);
+    await r.externalUSDT.connect(positionOpenSigner).approve(zapper.address, stableAmount);
 
-    console.log("archBuggered", archBuffered);
-    /// Need to change this! 
-    await r.archToken.connect(positionOpenSigner).approve(zapper.address, archBuffered);
-    await r.externalUSDT.connect(positionOpenSigner).approve(zapper.address, exchangeAmount);
-    console.log("finished approving externalUSDT");
-
-    await zapper.connect(positionOpenSigner).zapIn(exchangeAmount, defaultCycles, previewArchAmount, previewOUSDAmount, baseAddress, useUserArch);
+    await zapper.connect(positionOpenSigner).zapIn(stableAmount, defaultCycles, previewArchAmount, previewOUSDAmount, baseAddress, useUserArch);
 }
 
 async function zapOutPositionWithAnyBase(
@@ -331,7 +339,6 @@ describe("Zapper test suite", function () {
             await zapIntoPosition(r, zapper, true);
             console.log("mult 2.2")
 
-            // await r.archToken.connect(owner).approve(zapper.address, bnFromNum(0));
             console.log("mult 3")
 
             await zapIntoPosition(r, zapper);
@@ -463,134 +470,145 @@ describe("Zapper test suite", function () {
     //         expect(archAmount).to.be.closeTo(expectedInterest, expectedMargin);
     //     });
 
-    it("should previewAmounts correctly when zapping just USDT and using arch from users wallet",
-        async function () {
+
+
+    // it("should previewAmounts correctly when zapping just USDT and using arch from users wallet",
+    //     async function () {
+    //         const { r, zapper } = await loadFixture(setupFixture);
+    //         const exchangeAmount = bnFromNum(amountInBase, 6);
+    //         let [collateralAmount, archAmount] = await zapper.previewZapInAmount(exchangeAmount, defaultCycles, 990, addressUSDT, true);
+    //         collateralAmount = numFromBn(collateralAmount);
+    //         archAmount = numFromBn(archAmount);
+    //         expect(collateralAmount).to.be.closeTo(10, 0.5);
+    //         // Notice we need more Arch tokens in compared to test above because collateral is higher
+    //         expect(archAmount).to.be.closeTo(4.3, 0.5);
+    //     });
+
+    // it("should previewOUSDFromStable correctly when previewing a USDT exchange", async function () {
+    //     const { r, zapper } = await loadFixture(setupFixture);
+    //     const usdtAmount = 1000;
+    //     const usdtAmountBn = bnFromNum(usdtAmount, 6);
+    //     const ousdAmountNoDecimals = await zapper.previewOUSDFromStable(usdtAmountBn, addressUSDT);
+    //     const ousdAmount = Number(ethers.utils.formatUnits(ousdAmountNoDecimals));
+    //     expect(ousdAmount).to.be.closeTo(usdtAmount, 1);
+    // });
+
+    // it("should previewOUSDFromStable correctly when previewing a USDC exchange", async function () {
+    //     const { r, zapper } = await loadFixture(setupFixture);
+    //     const usdcAmount = 1000;
+    //     const usdcAmountBn = bnFromNum(usdcAmount, 6);
+    //     const ousdAmountNoDecimals = await zapper.previewOUSDFromStable(usdcAmountBn, addressUSDC);
+    //     const ousdAmount = Number(ethers.utils.formatUnits(ousdAmountNoDecimals));
+    //     expect(ousdAmount).to.be.closeTo(usdcAmount, 2);
+    // });
+
+    // it("should previewOUSDFromStable correctly when previewing a DAI exchange", async function () {
+    //     const { r, zapper } = await loadFixture(setupFixture);
+    //     const daiAmount = 1000;
+    //     const daiAmountBn = bnFromNum(daiAmount);
+    //     const ousdAmountNoDecimals = await zapper.previewOUSDFromStable(daiAmountBn, daiAddress);
+    //     const ousdAmount = Number(ethers.utils.formatUnits(ousdAmountNoDecimals));
+    //     expect(ousdAmount).to.be.closeTo(daiAmount, 2);
+    // });
+
+    // });
+
+    describe("open different size positions", function () {
+        it("Should be able to open a position with high amount (200 USDT)", async function () {
+            const usdtAmount = bnFromNum(200, 6);
             const { r, zapper } = await loadFixture(setupFixture);
-            const exchangeAmount = bnFromNum(amountInBase, 6);
-            let [collateralAmount, archAmount] = await zapper.previewZapInAmount(exchangeAmount, defaultCycles, 990, addressUSDT, true);
-            collateralAmount = numFromBn(collateralAmount);
-            archAmount = numFromBn(archAmount);
-            expect(collateralAmount).to.be.closeTo(10, 0.5);
-            // Notice we need more Arch tokens in compared to test above because collateral is higher
-            expect(archAmount).to.be.closeTo(4.3, 0.5);
+            const usdtBalance = numFromBn(await r.externalUSDT.balanceOf(owner.address), 6);
+            expect(usdtBalance).to.be.greaterThan(200);
+
+            // await r.externalUSDT.approve(zapper.address, bigExchangeAmountInBase);
+            // await zapper.zapIn(bigExchangeAmountInBase, defaultCycles, 990, addressUSDT, false);
+
+            await zapIntoPosition(r, zapper, false, owner, usdtAmount)
+            // await printPositionInfo(r, 0);
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+
+            // TODO log allowned margins 
+
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
         });
 
-    it("should previewOUSDFromStable correctly when previewing a USDT exchange", async function () {
-        const { r, zapper } = await loadFixture(setupFixture);
-        const usdtAmount = 1000;
-        const usdtAmountBn = bnFromNum(usdtAmount, 6);
-        const ousdAmountNoDecimals = await zapper.previewOUSDFromStable(usdtAmountBn, addressUSDT);
-        const ousdAmount = Number(ethers.utils.formatUnits(ousdAmountNoDecimals));
-        expect(ousdAmount).to.be.closeTo(usdtAmount, 1);
+        it("Should be able to open a position with precise amount (10.872163 USDT)", async function () {
+            const usdtAmount = bnFromNum(10.872163, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false);
+
+            await zapIntoPosition(r, zapper, false, owner, usdtAmount)
+
+            // Check for creation of position nft
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
+
+        it("Should be able to open a position with low amount (3 USDT)", async function () {
+            const usdtAmount = bnFromNum(3, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            zapIntoPosition(r, zapper, false, owner,)
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false);
+            // Check for creation of position nft
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
+
+        it("Should be able to open a position with very large amount (2500 USDT)", async function () {
+            const usdtAmount = bnFromNum(2500, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+
+            // Give user a large amount of USDT
+            await helperSwapETHWithUSDT(owner, bnFromNum(99));
+
+            await r.externalUSDT.approve(zapper.address, usdtAmount);
+            await zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false);
+            // Check for creation of position nft
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
+
+            // Check for correct leverage in position
+            const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            // Check for correct collateral amount
+            const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
+        });
     });
-
-    it("should previewOUSDFromStable correctly when previewing a USDC exchange", async function () {
-        const { r, zapper } = await loadFixture(setupFixture);
-        const usdcAmount = 1000;
-        const usdcAmountBn = bnFromNum(usdcAmount, 6);
-        const ousdAmountNoDecimals = await zapper.previewOUSDFromStable(usdcAmountBn, addressUSDC);
-        const ousdAmount = Number(ethers.utils.formatUnits(ousdAmountNoDecimals));
-        expect(ousdAmount).to.be.closeTo(usdcAmount, 2);
-    });
-
-    it("should previewOUSDFromStable correctly when previewing a DAI exchange", async function () {
-        const { r, zapper } = await loadFixture(setupFixture);
-        const daiAmount = 1000;
-        const daiAmountBn = bnFromNum(daiAmount);
-        const ousdAmountNoDecimals = await zapper.previewOUSDFromStable(daiAmountBn, daiAddress);
-        const ousdAmount = Number(ethers.utils.formatUnits(ousdAmountNoDecimals));
-        expect(ousdAmount).to.be.closeTo(daiAmount, 2);
-    });
-});
-
-    // describe("open different size positions", function () {
-    //     it("Should be able to open a position with high amount (200 USDT)", async function () {
-    //         const bigExchangeAmount = 200;
-    //         const bigExchangeAmountInBase = bnFromNum(bigExchangeAmount, 6);
-    //         const { r, zapper } = await loadFixture(setupFixture);
-    //         const usdtBalance = numFromBn(await r.externalUSDT.balanceOf(owner.address), 6);
-    //         expect(usdtBalance).to.be.greaterThan(bigExchangeAmount);
-    //         await r.externalUSDT.approve(zapper.address, bigExchangeAmountInBase);
-    //         await zapper.zapIn(bigExchangeAmountInBase, defaultCycles, 990, addressUSDT, false);
-    //         // await printPositionInfo(r, 0);
-    //         expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
-
-    //         const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, bigExchangeAmountInBase);
-    //         const expectedMargin = allowedMargin(expectedCollateral);
-    //         const expectedLeverageMargin = allowedMargin(expectedLeverage);
-
-    //         // Check for correct leverage in position
-    //         const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
-    //         expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
-    //         // Check for correct collateral amount
-    //         const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
-    //         expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
-    //     });
-
-    //     it("Should be able to open a position with precise amount (10.872163 USDT)", async function () {
-    //         const usdtAmount = bnFromNum(10.872163, 6);
-    //         const { r, zapper } = await loadFixture(setupFixture);
-    //         await r.externalUSDT.approve(zapper.address, usdtAmount);
-    //         await zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false);
-    //         // Check for creation of position nft
-    //         expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
-
-    //         const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
-    //         const expectedMargin = allowedMargin(expectedCollateral);
-    //         const expectedLeverageMargin = allowedMargin(expectedLeverage);
-
-    //         // Check for correct leverage in position
-    //         const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
-    //         expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
-    //         // Check for correct collateral amount
-    //         const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
-    //         expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
-    //     });
-
-    //     it("Should be able to open a position with low amount (3 USDT)", async function () {
-    //         const usdtAmount = bnFromNum(3, 6);
-    //         const { r, zapper } = await loadFixture(setupFixture);
-    //         await r.externalUSDT.approve(zapper.address, usdtAmount);
-    //         await zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false);
-    //         // Check for creation of position nft
-    //         expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
-
-    //         const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
-    //         const expectedMargin = allowedMargin(expectedCollateral);
-    //         const expectedLeverageMargin = allowedMargin(expectedLeverage);
-
-    //         // Check for correct leverage in position
-    //         const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
-    //         expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
-    //         // Check for correct collateral amount
-    //         const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
-    //         expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
-    //     });
-
-    //     it("Should be able to open a position with very large amount (2500 USDT)", async function () {
-    //         const usdtAmount = bnFromNum(2500, 6);
-    //         const { r, zapper } = await loadFixture(setupFixture);
-
-    //         // Give user a large amount of USDT
-    //         await helperSwapETHWithUSDT(owner, bnFromNum(99));
-
-    //         await r.externalUSDT.approve(zapper.address, usdtAmount);
-    //         await zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false);
-    //         // Check for creation of position nft
-    //         expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
-
-    //         const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
-    //         const expectedMargin = allowedMargin(expectedCollateral);
-    //         const expectedLeverageMargin = allowedMargin(expectedLeverage);
-
-    //         // Check for correct leverage in position
-    //         const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
-    //         expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
-    //         // Check for correct collateral amount
-    //         const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
-    //         expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
-    //     });
-    // });
 
     // describe("Open different cycle amount positions", function () {
     //     it("Should be able to open a position with 1 cycle", async function () {
