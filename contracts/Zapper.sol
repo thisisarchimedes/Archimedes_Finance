@@ -32,7 +32,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         @dev Exchange base stable to OUSD and Arch and create position 
 
         @param stableCoinAmount Amount of stable coin to zap(exchange) into Arch and OUSD
-        @param cycles Number of cycles for open position call (determine how much lvUSD will borrowed)
+        @param cycles Number of cycles for open position call (determine how much lvUSD will be borrowed)
         @param archMinAmount Minimum amount of Arch tokens to buy 
         @param ousdMinAmount Minimum amount of OUSD to buy
         @param addressBaseStable Address of base stable coin to use for zap
@@ -69,16 +69,15 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         // Check if we are using existing arch tokens owned by user or buying new ones
         if (useUserArch == true) {
             // We are using owners arch tokens, transfer from msg.sender to address(this)
-            // Take 1% more Arch then min to account for slippage (slippage happens when tranfering stable to OUSD)
+            // Take 1% more Arch than min to account for slippage (slippage happens when tranferring stable to OUSD)
 
             require(_archToken.balanceOf(msg.sender) >= archMinAmount, "err:insuf user arch");
             require(_archToken.allowance(msg.sender, address(this)) >= archMinAmount, "err:insuf approval arch");
 
             _transferFromSender(address(_archToken), archMinAmount);
-
         } else {
-            // Need to buy Arch tokens. We already know how much Arch tokens we want. We still need to know the Max in stable that 
-            // we are willing to pay. For that, we're running the splitEstimate again and adding a small buffer 
+            // Need to buy Arch tokens. We already know how much Arch tokens we want. We still need to know the Max in stable that
+            // we are willing to pay. For that, we're running the splitEstimate again and adding a small buffer
             uint256 coinsToPayForArchAmount;
             (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
             uint256 maxStableToPayForArch = (coinsToPayForArchAmount * 100) / 95;
@@ -127,31 +126,29 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         address[] memory path = _getPath(addressBaseStable);
         int128 stableTokenIndex = _getTokenIndex(addressBaseStable);
         uint256 collateralInBaseStableAmount = stableCoinAmount;
-    
+
         if (useUserArch == false) {
             // Need to buy Arch tokens. We need to split the stable amount between what we'll as collateral what we'll use to buy Arch
             uint256 coinsToPayForArchAmount;
             (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
             // preview buy arch tokens from uniswap. results from this will be used as mimimum for Arch to get
             archTokenAmount = _uniswapRouter.getAmountsOut(coinsToPayForArchAmount, path)[2];
-            /// Exchange OUSD from the stable
         }
 
-        /// estimate exchange with curve pool
+        // estimate exchange with curve pool
         ousdCollateralAmount = _poolOUSD3CRV.get_dy_underlying(stableTokenIndex, _OUSD_TOKEN_INDEX, collateralInBaseStableAmount);
-        
+
         if (useUserArch == true) {
             // We are using owners arch tokens, transfer from msg.sender to address(this)
             archTokenAmount = _getArchAmountToTransferFromUser(ousdCollateralAmount, cycles);
         }
 
         // Now we apply slippage. We increase the min of Arch and reduce the min of OUSD
-        // This is because we need to always have enough Arch to pay so better to have a bit less OUSD and more Arch then 
+        // This is because we need to always have enough Arch to pay so better to have a bit less OUSD and more Arch than
         // the other way around
         archTokenAmount = (archTokenAmount * 1000) / maxSlippageAllowed;
         ousdCollateralAmount = (ousdCollateralAmount * maxSlippageAllowed) / 1000;
 
-        // require(ousdCollateralAmount >= ((collateralInBaseStableAmount * maxSlippageAllowed) / 1000), "err:less OUSD then min");
         return (ousdCollateralAmount, archTokenAmount);
     }
 
@@ -249,14 +246,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
      * transfer methods
      **************************************************************/
 
-    function _getArchAmountToTransferFromUser(
-        uint256 ousdAmount,
-        uint256 cycles
-    ) internal view returns (uint256) {
-        return
-            _paramStore.calculateArchNeededForLeverage(
-                _paramStore.getAllowedLeverageForPosition(ousdAmount, cycles)
-            );
+    function _getArchAmountToTransferFromUser(uint256 ousdAmount, uint256 cycles) internal view returns (uint256) {
+        return _paramStore.calculateArchNeededForLeverage(_paramStore.getAllowedLeverageForPosition(ousdAmount, cycles));
     }
 
     function _transferFromSender(address tokenAddress, uint256 amount) internal {
