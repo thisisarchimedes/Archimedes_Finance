@@ -28,6 +28,13 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     IERC20Upgradeable internal _archToken;
     ParameterStore internal _paramStore;
 
+    event ZapIn(
+        uint256 positionID, // Position ID of the position NFT
+        uint256 totalStableAmount, // Total amount of user stable coin zapped in
+        address baseStableAddress, // Base stable address of the stable coin contract
+        bool usedUserArch // Bool representing if user's Arch was used or not
+    );
+
     /*
         @dev Exchange base stable to OUSD and Arch and create position 
 
@@ -95,6 +102,9 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         /// Return all remaining dust/tokens to user
         _archToken.safeTransfer(msg.sender, _archToken.balanceOf(address(this)));
         IERC20Upgradeable(addressBaseStable).safeApprove(msg.sender, 0);
+
+        emit ZapIn(tokenId, stableCoinAmount, addressBaseStable, useUserArch);
+
         return tokenId;
     }
 
