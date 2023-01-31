@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.13;
 
 import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -80,6 +80,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             // we are willing to pay. For that, we're running the splitEstimate again and adding a small buffer
             uint256 coinsToPayForArchAmount;
             (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
+            /// since we basivally add a buffer for max stable to take, its actually a built in limit on how much slippage is allowed.
+            /// In this case up to 5%
             uint256 maxStableToPayForArch = (coinsToPayForArchAmount * 100) / 95;
             // Now swap exact archMinAmount for a maximum of maxStableToPayForArch in stable coin
             _uniswapRouter.swapTokensForExactTokens(archMinAmount,maxStableToPayForArch, path, address(this), block.timestamp + 2 minutes);
@@ -165,16 +167,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     ) external view returns (uint256 collateralInBaseStableAmount, uint256 coinsToPayForArchInStableAmount) {
         address[] memory path = _getPath(addressBaseStable);
         return _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
-    }
-
-    /*
-        @dev preview how much OUSD will be obtained from exchanging base stable 
-        @param stableCoinAmount Amount of stable coin
-        @param addressBaseStable Address of base stable coin
-    */
-    function previewOUSDFromStable(uint256 stableCoinAmount, address addressBaseStable) public view returns (uint256 ousdAmount) {
-        int128 stableCoinIndex = _getTokenIndex(addressBaseStable);
-        return _poolOUSD3CRV.get_dy_underlying(stableCoinIndex, _OUSD_TOKEN_INDEX, stableCoinAmount);
     }
 
     /***************************************************************
