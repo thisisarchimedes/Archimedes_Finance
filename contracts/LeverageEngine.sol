@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import "hardhat/console.sol";
 
@@ -89,13 +89,6 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, userAddress);
     }
 
-    // function previewCreateLeveragedPosition(
-    //     uint256 ousdPrinciple,
-    //     uint256 cycles,
-    //     uint256 maxArchAmount
-    // ) external view returns (uint256 ousdPosition) {
-    //     return _parameterStore.getAllowedLeverageForPositionWithArch(ousdPrinciple, cycles, maxArchAmount);
-    // }
     /* Non-privileged functions */
 
     function _createLeveragedPosition(

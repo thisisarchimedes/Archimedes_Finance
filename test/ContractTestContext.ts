@@ -40,7 +40,7 @@ export type ContractTestContext = {
     curveLvUSDPool: Contract;
 };
 
-export async function setRolesForEndToEnd(r: ContractTestContext) {
+export async function setRolesForEndToEnd (r: ContractTestContext) {
     await r.coordinator.setExecutive(r.leverageEngine.address);
     await r.positionToken.setExecutive(r.leverageEngine.address);
 
@@ -49,7 +49,7 @@ export async function setRolesForEndToEnd(r: ContractTestContext) {
     await r.cdp.setExecutive(r.coordinator.address);
 }
 
-export async function startAuctionAcceptLeverageAndEndAuction(
+export async function startAuctionAcceptLeverageAndEndAuction (
     r: ContractTestContext,
     leverage: BigNumber,
     length = 5,
@@ -65,7 +65,7 @@ export async function startAuctionAcceptLeverageAndEndAuction(
 }
 export const signers = ethers.getSigners();
 export const ownerStartingLvUSDAmount = ethers.utils.parseUnits("10000000.0");
-export async function buildContractTestContext(skipPoolBalances = false): Promise<ContractTestContext> {
+export async function buildContractTestContext (skipPoolBalances = false): Promise<ContractTestContext> {
     await helperResetNetwork(defaultBlockNumber);
     await ethers.provider.send("evm_mine");
 
@@ -168,7 +168,7 @@ export async function buildContractTestContext(skipPoolBalances = false): Promis
 
     await context.vault.setDependencies(context.parameterStore.address, context.externalOUSD.address);
 
-    // await context.parameterStore.changeTreasuryAddress(context.treasurySigner.address);
+    await context.parameterStore.changeTreasuryAddress(context.treasurySigner.address);
 
     await context.poolManager.setDependencies(
         context.parameterStore.address,

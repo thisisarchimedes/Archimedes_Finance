@@ -20,7 +20,10 @@
     "integrationTests"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "./dist",
+    "artifacts",
+    "types"
   ],
   "files": [
     "./hardhat.config.ts"

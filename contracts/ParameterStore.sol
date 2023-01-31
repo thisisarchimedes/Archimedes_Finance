@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import "hardhat/console.sol";
 import {AccessController} from "./AccessController.sol";
@@ -50,7 +50,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _rebaseFeeRate = 30 ether / 100; // meaning 30%
         _curveGuardPercentage = 96;
         _slippage = 1; // 1%;
-        _curveMaxExchangeGuard = 2; // meaning we allow exchange with get 50% more then we expected
+        _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
         _minPositionCollateral = 2 ether;
         _positionTimeToLiveInDays = 369;
         _coordinatorLeverageBalance = 0;

@@ -1,5 +1,3 @@
-// import "@tenderly/hardhat-tenderly";
-
 // typechain imports:
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
@@ -61,7 +59,7 @@ task("test:log", "Run tests with all logger logs", async (taskArgs: { file }, hr
  */
 export default {
     solidity: {
-        version: "0.8.13",
+        version: "0.8.17",
         settings: {
             optimizer: {
                 enabled: true,

@@ -6,7 +6,7 @@ import {
 } from "../test/MainnetHelper";
 import {
     buildContractTestContext, setRolesForEndToEnd,
-    startAndEndAuction, startAuctionAcceptLeverageAndEndAuction
+    startAndEndAuction, startAuctionAcceptLeverageAndEndAuction,
 } from "../test/ContractTestContext";
 import dotenv from "dotenv";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -17,9 +17,9 @@ dotenv.config({ path: "secrets/alchemy.env" });
 
 let context;
 const lvUSDAmount = "5000000";
-const routeAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
+const routeAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
 
-async function fundLVUSDToCoordinator() {
+async function fundLVUSDToCoordinator () {
     console.log("\nFunding lvUSD to coordinator\n");
 
     await context.lvUSD.setMintDestination(context.coordinator.address);
@@ -36,7 +36,7 @@ const fundARCH = async () => {
     console.log(context.owner.address + " funded with " + archAmountToFund + " ARCH");
 };
 
-async function verifyDeployment() {
+async function verifyDeployment () {
     console.log("lvUSD address is", await context.lvUSD.address);
     console.log("Arch address is", await context.archToken.address);
     console.log("LevEngine address is", await context.leverageEngine.address);
@@ -69,12 +69,12 @@ const deployScript = async () => {
 
     console.log("Zapper address is", await zapper.address);
 
-    console.log("finished deploying Zapper")
+    console.log("finished deploying Zapper");
 
     await ethers.provider.send("evm_mine");
 
     await createUniswapPool(context);
-    console.log("Finished deploying Uniswap")
+    console.log("Finished deploying Uniswap");
 
     await helperSwapETHWithUSDT(context.owner, bnFromNum(1));
 
@@ -85,17 +85,8 @@ const deployScript = async () => {
     // await context.auction.startAuction(startBlock + 1,ethers.utils.parseUnits("301.0"), ethers.utils.parseUnits("300.0"))
     await fundLVUSDToCoordinator();
     await setRolesForEndToEnd(context);
-    await context.parameterStore.changeTreasuryAddress(context.treasurySigner.address);
-
     await startAuctionAcceptLeverageAndEndAuction(context, ethers.utils.parseUnits(lvUSDAmount, 18));
-
-    const coodinatorLvUSDBalace = await context.lvUSD.balanceOf(context.coordinator.address);
-    console.log("coordinator lvUSD balance is", numFromBn(coodinatorLvUSDBalace));
-    const coordinatorAvailableLvUSD = await context.coordinator.getAvailableLeverage();
-    console.log("coordinator available lvUSD is ", numFromBn(coordinatorAvailableLvUSD));
-    const split = await zapper.previewTokenSplit(bnFromNum("10.0", 6), 5, "0xdAC17F958D2ee523a2206206994597C13D831ec7");
-    console.log("!!split!!", split);
-
+    // await startAndEndAuction(context, 5);
 
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
     await fundARCH();
@@ -123,7 +114,7 @@ const fundDemoAccount = async () => {
 
     const archToken = new ethers.Contract("0x0a17FabeA4633ce714F1Fa4a2dcA62C3bAc4758d", abiOUSDToken);
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
         // was 17
         // console.log("i: " + i + " - Funded address ");
 
