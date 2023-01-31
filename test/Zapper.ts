@@ -41,6 +41,11 @@ function numFromBn (num: BigNumber, decimals = 18): number {
     return Number(ethers.utils.formatUnits(num, decimals));
 }
 
+// Rounds number to the max amount of decimal places allowed for BN (18 decimals)
+function round (num: number): number {
+    return Math.round((num + Number.EPSILON) * 1000000000000000000) / 1000000000000000000;
+}
+
 async function getUserSomeWETH (r: ContractTestContext) {
     externalWETH = new ethers.Contract(addressWETH9, abiWETH9Token, owner);
     await ethers.provider.send("evm_mine");
@@ -261,16 +266,15 @@ async function computeSplit (
     const ethLiqInUSDT = await getUSDTFromEth(r, ethTotalLiq);
     const m = computeMultiplier(cycles);
     const auctionPrice = await r.auction.getCurrentBiddingPrice();
-    const ethCollateral = bnFromNum(
-        computeCollateral(
-            numFromBn(ethDeposit),
-            feeRate,
-            m,
-            numFromBn(ethLiqInUSDT, 6),
-            numFromBn(archTotalLiq),
-            numFromBn(auctionPrice),
-        ) * 0.97,
-    );
+    const ethCollateralScaled = computeCollateral(
+        numFromBn(ethDeposit),
+        feeRate,
+        m,
+        numFromBn(ethLiqInUSDT, 6),
+        numFromBn(archTotalLiq),
+        numFromBn(auctionPrice),
+    ) * 0.97;
+    const ethCollateral = bnFromNum(round(ethCollateralScaled));
     const usdtCollateral = usdtDeposit.mul(ethCollateral).div(ethDeposit);
     const usdtInterest = usdtDeposit.sub(usdtCollateral);
     const archInterest = await getArchFromUSDT(r, usdtInterest);
@@ -509,8 +513,6 @@ describe("Zapper test suite", function () {
             const expectedMargin = allowedMargin(expectedCollateral);
             const expectedLeverageMargin = allowedMargin(expectedLeverage);
 
-            // TODO log allowned margins
-
             // Check for correct leverage in position
             const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
             expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
@@ -529,22 +531,16 @@ describe("Zapper test suite", function () {
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
             console.log("checking that position was created and owned by ownwer");
 
-            // const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
-            console.log("comutted split");
-
-            // const expectedMargin = allowedMargin(expectedCollateral);
-            // const expectedLeverageMargin = allowedMargin(expectedLeverage);
-            // console.log("got margines")
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
 
             // Check for correct leverage in position
             const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
-            console.log("got leverage");
-
-            // expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
             // Check for correct collateral amount
             const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
-            console.log("got OUSD princicple to be ", collateral);
-            expect(collateral).to.be.closeTo(8.80, 1);
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
         });
 
         it("Should be able to open a position with low amount (3 USDT)", async function () {
@@ -559,18 +555,16 @@ describe("Zapper test suite", function () {
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 
-            // const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
-            // const expectedMargin = allowedMargin(expectedCollateral);
-            // const expectedLeverageMargin = allowedMargin(expectedLeverage);
+            const [expectedCollateral, _, expectedLeverage] = await computeSplit(r, usdtAmount);
+            const expectedMargin = allowedMargin(expectedCollateral);
+            const expectedLeverageMargin = allowedMargin(expectedLeverage);
 
             // Check for correct leverage in position
             const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
-            // expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
+            expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
             // Check for correct collateral amount
             const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
-            console.log("got OUSD princicple to be ", collateral);
-
-            expect(collateral).to.be.closeTo(2.4, 0.3);
+            expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
         });
 
         it("Should be able to open a position with very large amount (2500 USDT)", async function () {
