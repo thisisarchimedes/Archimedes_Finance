@@ -103,6 +103,7 @@
                 "skipBlankLines": false
             }
         ],
+        "no-multiple-empty-lines": "error",
         "no-undef": "error",
         "no-use-before-define": "off",
         "no-var": "error",
