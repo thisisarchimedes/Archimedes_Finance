@@ -33,22 +33,22 @@ let externalUSDT: Contract;
 let external3CRV: Contract;
 let externalWETH: Contract;
 
-function bnFromNum(num: number, decimal = 18): BigNumber {
+function bnFromNum (num: number, decimal = 18): BigNumber {
     return ethers.utils.parseUnits(num.toString(), decimal);
 }
 
-function numFromBn(num: BigNumber, decimals = 18): number {
+function numFromBn (num: BigNumber, decimals = 18): number {
     return Number(ethers.utils.formatUnits(num, decimals));
 }
 
-async function getUserSomeWETH(r: ContractTestContext) {
+async function getUserSomeWETH (r: ContractTestContext) {
     externalWETH = new ethers.Contract(addressWETH9, abiWETH9Token, owner);
     await ethers.provider.send("evm_mine");
     let weth9Balance = await externalWETH.balanceOf(owner.address);
     await externalWETH.deposit({ value: bnFromNum(1) });
     weth9Balance = await externalWETH.balanceOf(owner.address);
 }
-async function createPair(r: ContractTestContext): Promise<Contract> {
+async function createPair (r: ContractTestContext): Promise<Contract> {
     const factoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
     const uniswapFactory = new ethers.Contract(factoryAddress, factoryABI, owner);
     const tx = await uniswapFactory.createPair(r.archToken.address, addressWETH9);
@@ -58,11 +58,11 @@ async function createPair(r: ContractTestContext): Promise<Contract> {
     const pairToken = new ethers.Contract(pairAddress, pairABI, owner);
     return pairToken;
 }
-async function getRouter(r: ContractTestContext): Promise<Contract> {
+async function getRouter (r: ContractTestContext): Promise<Contract> {
     const routeToken = new ethers.Contract(routeAddress, routerABI, owner);
     return routeToken;
 }
-async function addLiquidityToPairViaRouter(r: ContractTestContext, pairToken: Contract) {
+async function addLiquidityToPairViaRouter (r: ContractTestContext, pairToken: Contract) {
     await r.archToken.connect(r.treasurySigner).transfer(owner.address, archTotalLiq);
 
     const routeInstance = await getRouter(r);
@@ -83,7 +83,7 @@ async function addLiquidityToPairViaRouter(r: ContractTestContext, pairToken: Co
     await pairToken.getReserves();
 }
 
-export async function createUniswapPool(r: ContractTestContext) {
+export async function createUniswapPool (r: ContractTestContext) {
     await getUserSomeWETH(r);
     const pairToken = await createPair(r);
 
@@ -92,14 +92,14 @@ export async function createUniswapPool(r: ContractTestContext) {
     await ethers.provider.send("evm_mine");
 }
 
-async function getUSDCToUser(r: ContractTestContext) {
+async function getUSDCToUser (r: ContractTestContext) {
     const router = await getRouter(r);
     /// Using USDT abi for USDC as its the same (erc20)
     const tokenUSDC = new ethers.Contract(usdcAddress, abiUSDTToken, owner);
     await router.swapExactETHForTokens(bnFromNum(500, 6), [addressWETH9, usdcAddress], owner.address, 1670978314, { value: bnFromNum(1) });
 }
 
-async function getDAIToUser(r: ContractTestContext) {
+async function getDAIToUser (r: ContractTestContext) {
     // Notice dai is 18 decimal
     const router = await getRouter(r);
     /// Using USDT abi for USDC as its the same (erc20)
@@ -107,7 +107,7 @@ async function getDAIToUser(r: ContractTestContext) {
     await router.swapExactETHForTokens(bnFromNum(500, 18), [addressWETH9, daiAddress], owner.address, 1670978314, { value: bnFromNum(1) });
 }
 
-async function setupFixture() {
+async function setupFixture () {
     // build mainnet fork and deploy archimedes
     r = await buildContractTestContext();
     owner = r.owner;
@@ -142,8 +142,7 @@ async function setupFixture() {
 //     user: SignerWithAddress;
 // }
 
-
-async function zapIntoPosition(
+async function zapIntoPosition (
     r: ContractTestContext,
     zapper: Contract,
     useUserArch = false,
@@ -170,7 +169,7 @@ async function zapIntoPosition(
     await zapper.connect(positionOpenSigner).zapIn(stableAmount, cycles, previewArchAmount, previewOUSDAmount, baseAddress, useUserArch);
 }
 
-async function zapOutPositionWithAnyBase(
+async function zapOutPositionWithAnyBase (
     r: ContractTestContext,
     zapper: Contract, baseToken: Contract, stableAmount: BigNumber, useUserArch = false) {
     const previewAmounts = await zapper.previewZapInAmount(stableAmount, defaultCycles, 990, baseToken.address, useUserArch)
@@ -181,7 +180,7 @@ async function zapOutPositionWithAnyBase(
     await zapper.zapIn(stableAmount, defaultCycles, previewArchAmount, previewOUSDAmount, baseToken.address, useUserArch);
 }
 
-async function getUSDTFromEth(
+async function getUSDTFromEth (
     r: ContractTestContext,
     ethAmountForEstimate = bnFromNum(1),
 ): Promise<BigNumber> {
@@ -192,7 +191,7 @@ async function getUSDTFromEth(
     return amountsReturned[1];
 }
 
-async function getEthFromUSDT(
+async function getEthFromUSDT (
     r: ContractTestContext,
     usdtAmountForEstimate: BigNumber,
 ): Promise<BigNumber> {
@@ -203,7 +202,7 @@ async function getEthFromUSDT(
     return amountsReturned[1];
 }
 
-async function getArchFromUSDT(
+async function getArchFromUSDT (
     r: ContractTestContext,
     usdtAmountForEstimate: BigNumber): Promise<BigNumber> {
     const uniswapRouter = await getRouter(r);
@@ -213,7 +212,7 @@ async function getArchFromUSDT(
     return amountsReturned[2];
 }
 
-async function getArchPriceInDollars(
+async function getArchPriceInDollars (
     r: ContractTestContext,
     dollarAmountForEstimate = 100): Promise<number> {
     const uniswapRouter = await getRouter(r);
@@ -225,7 +224,7 @@ async function getArchPriceInDollars(
     return archPrice;
 }
 
-function computeMultiplier(cycles: number, rate = 0.95): number {
+function computeMultiplier (cycles: number, rate = 0.95): number {
     let multiplier = rate;
     let rateMultiple = rate;
     for (let i = 1; i < cycles; i++) {
@@ -235,7 +234,7 @@ function computeMultiplier(cycles: number, rate = 0.95): number {
     return multiplier;
 }
 
-function allowedMargin(num: number) {
+function allowedMargin (num: number) {
     return num * 0.05;
 }
 
@@ -247,7 +246,7 @@ function allowedMargin(num: number) {
     Y - Asset 2 Pool Size
     A - Auction Price
 */
-function computeCollateral(
+function computeCollateral (
     D: number, F: number, M: number, X: number, Y: number, A: number,
 ): number {
     const a = F * M;
@@ -258,7 +257,7 @@ function computeCollateral(
 }
 
 // Computes collateral in dollar amount and interest in arch amount
-async function computeSplit(
+async function computeSplit (
     r: ContractTestContext, usdtDeposit: BigNumber, cycles = defaultCycles, feeRate = 0.993,
 ): Promise<[usdt: number, arch: number, lvusd: number]> {
     const ethDeposit = await getEthFromUSDT(r, usdtDeposit);
@@ -283,7 +282,6 @@ async function computeSplit(
 
 describe("Zapper test suite", function () {
     describe("Basic Zapper test", function () {
-
         it("Should add CDP values to zapped in position", async function () {
             const { r, zapper } = await loadFixture(setupFixture);
             await zapIntoPosition(r, zapper);
@@ -303,34 +301,32 @@ describe("Zapper test suite", function () {
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
         });
 
-
         it("Should be able to open multiple positions", async function () {
             const { r, zapper } = await loadFixture(setupFixture);
             await r.archToken.connect(r.treasurySigner).transfer(owner.address, bnFromNum(10));
-            console.log("mult 1")
+            console.log("mult 1");
             await zapIntoPosition(r, zapper);
             // await r.archToken.connect(owner).approve(zapper.address, bnFromNum(5));
-            console.log("mult 2")
+            console.log("mult 2");
 
             await zapIntoPosition(r, zapper, true);
-            console.log("mult 2.2")
+            console.log("mult 2.2");
 
-            console.log("mult 3")
+            console.log("mult 3");
 
             await zapIntoPosition(r, zapper);
             // await r.archToken.connect(owner).approve(zapper.address, bnFromNum(5));
-            console.log("mult 4")
+            console.log("mult 4");
 
             await zapIntoPosition(r, zapper, true);
             // await r.archToken.connect(owner).approve(zapper.address, bnFromNum(0));
-            console.log("mult 5")
-
+            console.log("mult 5");
 
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
             expect(await r.positionToken.ownerOf(1)).to.equal(owner.address);
             expect(await r.positionToken.ownerOf(2)).to.equal(owner.address);
             expect(await r.positionToken.ownerOf(3)).to.equal(owner.address);
-            console.log("mult 6")
+            console.log("mult 6");
 
             const collateral0 = numFromBn(await r.cdp.getOUSDPrinciple(0));
             const collateral1 = numFromBn(await r.cdp.getOUSDPrinciple(1));
@@ -343,6 +339,24 @@ describe("Zapper test suite", function () {
             expect(collateral3).to.be.closeTo(10, 1);
         });
 
+        it("Should emit ZapIn event", async function () {
+            const usdtAmount = bnFromNum(105, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            const promise = zapIntoPosition(r, zapper, false, owner, usdtAmount);
+
+            const expectedPositionID = 0;
+            const expectedTotalStableAmount = usdtAmount.toString();
+            const expectedBaseStableAddress = addressUSDT;
+            const expectedUsedUserArch = false;
+
+            await expect(promise).to
+                .emit(zapper, "ZapIn").withArgs(
+                    expectedPositionID,
+                    expectedTotalStableAmount,
+                    expectedBaseStableAddress,
+                    expectedUsedUserArch,
+                );
+        });
     });
 
     describe("non USDT Zapper test", function () {
@@ -511,7 +525,7 @@ describe("Zapper test suite", function () {
             const expectedMargin = allowedMargin(expectedCollateral);
             const expectedLeverageMargin = allowedMargin(expectedLeverage);
 
-            // TODO log allowned margins 
+            // TODO log allowned margins
 
             // Check for correct leverage in position
             const leverage = numFromBn(await r.cdp.getLvUSDBorrowed(0));
@@ -556,7 +570,7 @@ describe("Zapper test suite", function () {
             // await r.externalUSDT.approve(zapper.address, usdtAmount);
             // await zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false);
 
-            await zapIntoPosition(r, zapper, false, owner, usdtAmount)
+            await zapIntoPosition(r, zapper, false, owner, usdtAmount);
 
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);

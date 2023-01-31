@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import {ICurveFiCurve} from "./interfaces/ICurveFi.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -27,6 +27,13 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     LeverageEngine internal _levEngine;
     IERC20Upgradeable internal _archToken;
     ParameterStore internal _paramStore;
+
+    event ZapIn(
+        uint256 positionID, // Position ID of the position NFT
+        uint256 totalStableAmount, // Total amount of user stable coin zapped in
+        address baseStableAddress, // Base stable address of the stable coin contract
+        bool usedUserArch // Bool representing if user's Arch was used or not
+    );
 
     /*
         @dev Exchange base stable to OUSD and Arch and create position 
@@ -102,6 +109,9 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         /// Return all remaining dust/tokens to user
         _archToken.safeTransfer(msg.sender, _archToken.balanceOf(address(this)));
         IERC20Upgradeable(addressBaseStable).safeApprove(msg.sender, 0);
+
+        emit ZapIn(tokenId, stableCoinAmount, addressBaseStable, useUserArch);
+
         return tokenId;
     }
 
