@@ -163,7 +163,7 @@ async function zapIntoPosition (
     // console.log("Approved archAmountBN as positionOpenSigner");
     await r.externalUSDT.connect(positionOpenSigner).approve(zapper.address, stableAmount);
     // console.log("Approved % USDT stableAmount as positionOpenSigner", ethers.utils.formatUnits(stableAmount, 6));
-    await zapper.connect(positionOpenSigner).zapIn(stableAmount, cycles, previewArchAmount, previewOUSDAmount, baseAddress, useUserArch);
+    return zapper.connect(positionOpenSigner).zapIn(stableAmount, cycles, previewArchAmount, previewOUSDAmount, baseAddress, useUserArch);
 }
 
 async function zapOutPositionWithAnyBase (
@@ -325,22 +325,24 @@ describe("Zapper test suite", function () {
             expect(collateral3).to.be.closeTo(10, 1);
         });
 
-        // it("Should emit ZapIn event", async function () {
-        //     const usdtAmount = bnFromNum(105, 6);
-        //     const { r, zapper } = await loadFixture(setupFixture);
-        //     const expectedPositionID = 0;
-        //     const expectedTotalStableAmount = usdtAmount.toString();
-        //     const expectedBaseStableAddress = addressUSDT;
-        //     const expectedUsedUserArch = false;
+        it("Should emit ZapIn event", async function () {
+            const usdtAmount = bnFromNum(105, 6);
+            const { r, zapper } = await loadFixture(setupFixture);
+            const expectedPositionID = 0;
+            const expectedTotalStableAmount = usdtAmount.toString();
+            const expectedBaseStableAddress = addressUSDT;
+            const expectedUsedUserArch = false;
 
-        //     const promise = zapIntoPosition(r, zapper, false, owner, usdtAmount);
-        //     console.log("After creating zap promise", expectedPositionID)
+            const promise = zapIntoPosition(r, zapper, false, owner, usdtAmount);
 
-        //     await expect(promise).to
-        //         .emit(zapper, "ZapIn").withArgs(
-        //             0
-        //         );
-        // });
+            await expect(promise).to
+                .emit(zapper, "ZapIn").withArgs(
+                    expectedPositionID,
+                    expectedTotalStableAmount,
+                    expectedBaseStableAddress,
+                    expectedUsedUserArch,
+                );
+        });
     });
 
     describe("non USDT Zapper test", function () {
