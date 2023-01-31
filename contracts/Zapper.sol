@@ -27,19 +27,13 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     LeverageEngine internal _levEngine;
     IERC20Upgradeable internal _archToken;
     ParameterStore internal _paramStore;
-    
-    
+
     // positionID, // Position ID of the position NFT
     // totalStableAmount, // Total amount of user stable coin zapped in
     // address baseStableAddress, // Base stable address of the stable coin contract
     // bool usedUserArch // Bool representing if user's Arch was used or not
 
-    event ZapIn(
-        uint256 positionID, 
-        uint256 totalStableAmount, 
-        address baseStableAddress, 
-        bool usedUserArch
-    );
+    event ZapIn(uint256 positionID, uint256 totalStableAmount, address baseStableAddress, bool usedUserArch);
 
     /*
         @dev Exchange base stable to OUSD and Arch and create position 
@@ -97,17 +91,13 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             /// In this case up to 5%
             uint256 maxStableToPayForArch = (coinsToPayForArchAmount * 100) / 95;
             // Now swap exact archMinAmount for a maximum of maxStableToPayForArch in stable coin
-            _uniswapRouter.swapTokensForExactTokens(archMinAmount,maxStableToPayForArch, path, address(this), block.timestamp + 2 minutes);
+            _uniswapRouter.swapTokensForExactTokens(archMinAmount, maxStableToPayForArch, path, address(this), block.timestamp + 2 minutes);
         }
 
         /// Exchange OUSD from any of the 3CRV. Will revert if didn't get min amount sent (2nd parameter)
-        // Now spend all the remainign stable to buy OUSD 
+        // Now spend all the remainign stable to buy OUSD
         uint256 remainingStable = IERC20Upgradeable(addressBaseStable).balanceOf(address(this));
-        uint256 ousdAmount = _exchangeToOUSD(
-            remainingStable,
-            ousdMinAmount,
-            addressBaseStable
-        );
+        uint256 ousdAmount = _exchangeToOUSD(remainingStable, ousdMinAmount, addressBaseStable);
 
         /// create position
         uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(ousdAmount, cycles, _archToken.balanceOf(address(this)), msg.sender);
