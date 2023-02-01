@@ -1,12 +1,12 @@
 class LoggerClass {
-    verbose: bool = false;
+    verbose = false;
     log (message?: any, ...optionalParams: any[]): void {
         if (this.verbose) {
             console.log(message, ...optionalParams);
         }
     }
 
-    setVerbose (verbose: bool): void {
+    setVerbose (verbose: boolean): void {
         this.verbose = verbose;
     }
 }

@@ -22,7 +22,7 @@ class ERC20Utils {
     async approveAndVerify (spenderAddress: string, approveAmount: NumberBundle, token: ERC20, ownerOfFunds: SignerWithAddress) {
         await token.connect(ownerOfFunds).approve(spenderAddress, approveAmount.getBn());
         const currentAllowance = await token.allowance(ownerOfFunds.address, spenderAddress);
-        if (currentAllowance.eq(approveAmount.getBn()) == false) {
+        if (currentAllowance.eq(approveAmount.getBn()) === false) {
             throw new Error("Allowance not set correctly. Expected approval: " + approveAmount.getBn() + " Actual: " + currentAllowance);
         }
     }

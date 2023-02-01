@@ -91,8 +91,9 @@
             "error",
             "smart-tabs"
         ],
+        "no-multi-str": "off",
         "no-redeclare": [
-            "error",
+            "off",
             {
                 "builtinGlobals": true
             }
@@ -136,7 +137,7 @@
                 "test/*.ts"
             ],
             "rules": {
-                "no-unused-expressions": "off"
+                "no-unused-expressions": "off",
             }
         }
     ]

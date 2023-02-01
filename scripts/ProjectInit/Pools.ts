@@ -26,7 +26,7 @@ export class Pools {
 
     static deadlineBlock = 1670978314;
 
-    async init (contracts: Contracts, createPool: bool = false): Pools {
+    async init (contracts: Contracts, createPool = false): Pools {
         this.contracts = contracts;
         this.owner = contracts.signers.owner;
         this.uniRouter = new ethers.Contract(ValueStore.addressUniswapRouter, ValueStore.abiUniswapRouter, this.owner);

@@ -26,19 +26,19 @@ export class PositionManager {
         await position.fillPositionExchangeEstimates(this.pools);
 
         EtherUtils.mineBlock();
-        if (printCreation == true) {
+        if (printCreation === true) {
             await position.printPositionInfo();
         }
     }
 
     async unwindPositionAndVerify (position: PositionInfo) {
-        if (await position.isPositionExists() == false) {
+        if (await position.isPositionExists() === false) {
             throw new Error("Position does not exist");
         }
 
         await this.unwindPosition(position);
 
-        if (await position.isPositionExists() == true) {
+        if (await position.isPositionExists() === true) {
             throw new Error("Position was unwound but still exists");
         }
     }

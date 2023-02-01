@@ -1,6 +1,5 @@
-import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-// import type { Contract } from "@nomiclabs/hardhat-ethers/signers";
 import hre, { ethers } from "hardhat";
+import { Contract } from "ethers";
 import { Signers } from "./Signers";
 import { Coordinator } from "../../types/contracts/Coordinator";
 import { Exchanger } from "../../types/contracts/Exchanger";

@@ -57,8 +57,10 @@ async function main () {
 
     Logger.setVerbose(true);
     paramStoreHelper.setOriginationFee(NumberBundle.withNum(0.00005));
-    console.log("Curve exchange rate:  exchanging 1 lvUSD gets us %s 3crv" + (await pools.estimatelvUSDtoCrvExchange(TestConstants.ONE_ETH)).getNum());
-    console.log("Curve exchange rate:  exchanging 1 CRV gets us %s OUSD" + (await pools.estimateCrvToOusdExchange(TestConstants.ONE_ETH)).getNum());
+    console.log("Curve exchange rate:  exchanging 1 lvUSD gets us %s 3crv" +
+        (await pools.estimatelvUSDtoCrvExchange(TestConstants.ONE_ETH)).getNum());
+    console.log("Curve exchange rate:  exchanging 1 CRV gets us %s OUSD" +
+        (await pools.estimateCrvToOusdExchange(TestConstants.ONE_ETH)).getNum());
 
     const position = await PositionInfo.build(contracts, signers.c1, NumberBundle.withNum(100), 5);
 

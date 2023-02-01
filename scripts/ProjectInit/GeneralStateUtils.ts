@@ -30,7 +30,7 @@ class GeneralStateUtils {
     async printUserBalances (contracts: Contracts, user: SignerWithAddress, prefix = "") {
         console.log("--------------------");
 
-        if (prefix != "") {
+        if (prefix !== "") {
             console.log(prefix);
         }
         console.log("UserBalances: lvUSD: %s OUSD: %s ARCH: %s",
@@ -44,7 +44,7 @@ class GeneralStateUtils {
     async printArchimedesBalances (contracts: Contracts, prefix = "") {
         await this.syncState(contracts);
         console.log("--------------------");
-        if (prefix != "") {
+        if (prefix !== "") {
             console.log(prefix);
         }
 

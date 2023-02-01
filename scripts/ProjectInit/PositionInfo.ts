@@ -64,7 +64,7 @@ export class PositionInfo {
     }
 
     async fillPositionExchangeEstimates (pool: Pools) {
-        if (this.fillPostCreationCalled == false) {
+        if (this.fillPostCreationCalled === false) {
             throw new Error("fillPositionExchangeEstimates called before fillPositionPostCreation");
         }
         const crvExchangeEstimateOnCreate = await pool.estimatelvUSDtoCrvExchange(this.cdpBorrowedLvUSD);
@@ -90,7 +90,7 @@ export class PositionInfo {
     }
 
     async isPositionExists (): boolean {
-        if (this.fillPostCreationCalled = true) {
+        if (this.fillPostCreationCalled === true) {
             return await this.contracts.positionToken.exists(this.positionTokenNum);
         } else {
             throw new Error("PositionInfo.fillPositionPostCreation() must be called before isPositionExists()");
@@ -109,11 +109,12 @@ export class PositionInfo {
             Logger.log("Position token ID: %s", this.positionTokenNum);
             // Logger.log("CDP Shares: %s", this.cdpShares.getNum());
             // Logger.log("CDP Borrowed LvUSD: %s", this.cdpBorrowedLvUSD.getNum());
-            Logger.log("For %s borrowed lvUSD + %s OUSD collataeral, %s OUSD was Deposited in Vault. Which means around %s OUSD was taken as fees + slippage(if exchange 1:1)",
-                this.cdpBorrowedLvUSD.getNum(),
-                this.collateral.getNum(),
-                this.ousdDepositedInVault.getNum(),
-                this.ousdFeesAtCreationRoughEstimate.getNum());
+            Logger.log("For %s borrowed lvUSD + %s OUSD collataeral, %s OUSD was Deposited in Vault. \
+             Which means around %s OUSD was taken as fees + slippage(if exchange 1:1)",
+            this.cdpBorrowedLvUSD.getNum(),
+            this.collateral.getNum(),
+            this.ousdDepositedInVault.getNum(),
+            this.ousdFeesAtCreationRoughEstimate.getNum());
         }
         if (this.fillPostUnwindCalled) {
             Logger.log("When unwinded, %s OUSD Redeemed, which means user got %s OUSD earning", this.ousdRedeemed.getNum(), this.ousdFinalEarning);
