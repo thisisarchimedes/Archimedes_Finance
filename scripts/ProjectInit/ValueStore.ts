@@ -1,4 +1,4 @@
-import { abi3CRVToken, abiOUSDToken, abiUSDTToken, abiCurveFactory, routerABI, abi3PoolImplementation, abiCurve3Pool } from '../../test/ABIs';
+import { abi3CRVToken, abiOUSDToken, abiUSDTToken, abiCurveFactory, routerABI, abi3PoolImplementation, abiCurve3Pool } from "../../test/ABIs";
 import { ethers } from "hardhat";
 export class ValueStore {
     static addressUSDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
@@ -20,5 +20,4 @@ export class ValueStore {
     static abiUniswapRouter = routerABI;
 
     static ONE_ETH = ethers.utils.parseUnits("1.0", 18);
-
 }

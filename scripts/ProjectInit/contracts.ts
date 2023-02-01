@@ -23,7 +23,7 @@ import { ERC20 } from "../../types/@openzeppelin/contracts/token/ERC20/ERC20";
 export class Contracts {
     // Signer that owns contract
     signers!: Signers;
-    /// Contracts 
+    /// Contracts
     parameterStore!: ParameterStore;
     cdp!: CDPosition;
     coordinator!: Coordinator;
@@ -34,7 +34,7 @@ export class Contracts {
     vault!: VaultOUSD;
     archToken!: ArchToken;
     lvUSD!: LvUSDToken;
-    poolManager!: PoolManager
+    poolManager!: PoolManager;
     auction!: Auction;
     zapper!: Zapper;
 
@@ -48,11 +48,11 @@ export class Contracts {
         this.signers = signers;
     }
 
-    async init(signers: Signers): Contracts {
+    async init (signers: Signers): Contracts {
         this.signers = signers;
         const contractsOwner = this.signers.owner;
         // get instances of external contracts
-        this.setExternalTokensInstances()
+        this.setExternalTokensInstances();
 
         // None upgradable contracts
         this.initTokens();
@@ -67,19 +67,19 @@ export class Contracts {
         return this;
     }
 
-    async initTokens(treasuryAddress = this.signers.treasury.address) {
+    async initTokens (treasuryAddress = this.signers.treasury.address) {
         // None upgradable contracts
         this.lvUSD = await this.deployContract("LvUSDToken");
         // Notice the argument passed to constructor is the treasury address (where all arch tokens are minted)
         this.archToken = await this.deployContract("ArchToken", treasuryAddress);
     }
 
-    async setTokensInstances(lvUSDAddress: string, archTokenAddress: string) {
+    async setTokensInstances (lvUSDAddress: string, archTokenAddress: string) {
         this.lvUSD = await this.getInstanceOfExistingContract("LvUSDToken", lvUSDAddress);
         this.archToken = await this.getInstanceOfExistingContract("ArchToken", archTokenAddress);
     }
 
-    async initArchimedesUpgradableContracts() {
+    async initArchimedesUpgradableContracts () {
         this.parameterStore = await this.deployContractProxy("ParameterStore");
         this.cdp = await this.deployContractProxy("CDPosition");
         this.coordinator = await this.deployContractProxy("Coordinator");
@@ -91,7 +91,7 @@ export class Contracts {
         this.zapper = await this.deployContractProxy("Zapper");
     }
 
-    async setArchimedesUpgradableContractsInstances(
+    async setArchimedesUpgradableContractsInstances (
         parameterStoreAddress: string,
         cdpAddress: string,
         coordinatorAddress: string,
@@ -101,7 +101,6 @@ export class Contracts {
         poolManagerAddress: string,
         auctionAddress: string,
         zapperAddress: string) {
-
         this.parameterStore = await this.getInstanceOfExistingContract("ParameterStore", parameterStoreAddress);
         this.cdp = await this.getInstanceOfExistingContract("CDPosition", cdpAddress);
         this.coordinator = await this.getInstanceOfExistingContract("Coordinator", coordinatorAddress);
@@ -113,17 +112,17 @@ export class Contracts {
         this.zapper = await this.getInstanceOfExistingContract("Zapper", zapperAddress);
     }
 
-    async initArchimedesUpgradableContractsWithConstructorArguments() {
+    async initArchimedesUpgradableContractsWithConstructorArguments () {
         this.vault = await this.deployContractProxy("VaultOUSD", [ValueStore.addressOUSD, "VaultOUSD", "VOUSD"]);
     }
 
-    async setArchimedesUpgradableContractsInstancesWithConstructorArguments(
-        vaultAddress: string
+    async setArchimedesUpgradableContractsInstancesWithConstructorArguments (
+        vaultAddress: string,
     ) {
         this.vault = await this.getInstanceOfExistingContract("VaultOUSD", vaultAddress);
     }
 
-    async setExternalTokensInstances() {
+    async setExternalTokensInstances () {
         const contractsOwner = this.signers.owner;
         this.externalOUSD = new ethers.Contract(ValueStore.addressOUSD, ValueStore.abiOUSDToken, contractsOwner);
         this.externalUSDT = new ethers.Contract(ValueStore.addressUSDT, ValueStore.abiUSDTToken, contractsOwner);
@@ -131,26 +130,24 @@ export class Contracts {
         this.external3CRV = new ethers.Contract(ValueStore.address3CRV, ValueStore.abi3CRVToken, contractsOwner);
     }
 
-    async deployContractProxy(name: string, ...args: Array<any>): Promise<Contract> {
-        const factory = await ethers.getContractFactory(name)
+    async deployContractProxy (name: string, ...args: Array<any>): Promise<Contract> {
+        const factory = await ethers.getContractFactory(name);
         const contract = await hre.upgrades.deployProxy(factory, ...args, { kind: "uups" });
         Logger.log("Deployed " + name + " contract at address " + contract.address);
         return contract;
-    };
+    }
 
-    async deployContract(name: string, ...args: Array<any>): Contract {
+    async deployContract (name: string, ...args: Array<any>): Contract {
         const factory = await ethers.getContractFactory(name);
         const contract = await factory.deploy(...args);
         Logger.log("Deployed " + name + " contract at address " + contract.address);
         return contract;
     }
 
-    async getInstanceOfExistingContract(name: string, address: string): Contract {
+    async getInstanceOfExistingContract (name: string, address: string): Contract {
         const factory = await ethers.getContractFactory(name);
         const contract = factory.attach(address);
         Logger.log("Retrieved " + name + " contract at address " + contract.address);
         return contract;
     }
 }
-
-

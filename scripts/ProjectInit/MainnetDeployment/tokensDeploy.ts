@@ -10,16 +10,16 @@ import { fundCurvePool } from "./CommonActions";
 import { DeployedStore } from "./DeployedStore";
 import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
 
-const deployTokens: boolean = true;
+const deployTokens = true;
 
 const treasuryAddress = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 
-async function main() {
+async function main () {
     Logger.setVerbose(true);
     const signers = await new Signers().initOwnerOnly();
     console.log("Expeting signer address to be 0x2546BcD3c84621e976D8185a91A922aE77ECEc30");
     console.log("Signers initialized with owner being ", signers.owner.address);
-    
+
     const contracts = new Contracts(signers);
     if (deployTokens) {
         console.log("Deploying tokens");
@@ -27,7 +27,7 @@ async function main() {
     } else {
         console.log("Getting already deployed tokens instances from address");
         await contracts.setTokensInstances(DeployedStore.lvUSDAddress, DeployedStore.archTokenAddress);
-    };
+    }
 
     console.log("Done with deploying. Verifying tokens");
     const lvUSDDecimals = await ERC20Utils.decimals(contracts.lvUSD);

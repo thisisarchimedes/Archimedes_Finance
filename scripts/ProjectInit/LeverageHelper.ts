@@ -11,40 +11,40 @@ export class LeverageHelper {
         this.contracts = contracts;
     }
 
-    async startAuctionAndAcceptLeverage(auction: AuctionInfo) {
+    async startAuctionAndAcceptLeverage (auction: AuctionInfo) {
         await this._startAuction(auction);
         await this._acceptLeverage(auction.leverageAmount);
         Logger.log("Auction started with endPrice of %s and leverage of %s lvUSD accepted\n",
             auction.endPrice.getNum(), auction.leverageAmount.getNum());
     }
 
-    async startAuctionAndMintAndAcceptLeverage(auction: AuctionInfo) {
+    async startAuctionAndMintAndAcceptLeverage (auction: AuctionInfo) {
         await this.mintLvUSD(auction.leverageAmount, this.contracts.coordinator.address);
         await this.startAuctionAndAcceptLeverage(auction);
     }
 
-    async mintLvUSD(amount: NumberBundle, to: string) {
+    async mintLvUSD (amount: NumberBundle, to: string) {
         // Todo : need to make sure minter is calling those two functions
         await this.contracts.lvUSD.setMintDestination(to);
         await this.contracts.lvUSD.mint(amount.getBn());
     }
 
-    async getLvUSDBalance(address: string): NumberBundle {
+    async getLvUSDBalance (address: string): NumberBundle {
         const balance = await this.contracts.lvUSD.balanceOf(address);
         const balanceBundle = NumberBundle.withBn(balance);
         return balanceBundle;
     }
 
-    async coordinatorAvailableLvUSD(): NumberBundle {
+    async coordinatorAvailableLvUSD (): NumberBundle {
         const availableLeverage = await this.contracts.lvUSD.balanceOf(this.contracts.coordinator.address);
         const availableLeverageBundle = NumberBundle.withBn(availableLeverage);
     }
 
-    async _startAuction(auction: AuctionInfo) {
+    async _startAuction (auction: AuctionInfo) {
         await this.contracts.auction.startAuctionWithLength(auction.length, auction.startPrice.getBn(), auction.endPrice.getBn());
     }
 
-    async _acceptLeverage(amount: NumberBundle) {
+    async _acceptLeverage (amount: NumberBundle) {
         if (await this.contracts.auction.isAuctionClosed()) {
             throw new Error("Must be in an active auction to accept leverage");
         } else {

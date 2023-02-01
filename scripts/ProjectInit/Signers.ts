@@ -9,12 +9,12 @@ export class Signers {
     c3: SignerWithAddress;
     dump: SignerWithAddress;
 
-    async init(): Signers {
+    async init (): Signers {
         [this.owner, this.treasury, this.c1, this.c2, this.c3, this.dump] = await ethers.getSigners();
         return this;
     }
 
-    async initOwnerOnly(): Signers {
+    async initOwnerOnly (): Signers {
         [this.owner] = await ethers.getSigners();
         return this;
     }

@@ -19,10 +19,8 @@ export class ParamStoreHelper {
         this.paramStore = contracts.parameterStore;
     }
 
-    async setOriginationFee(fee: NumberBundle) {
+    async setOriginationFee (fee: NumberBundle) {
         Logger.log("Setting OrinationFee to " + fee.getNum() + "%");
         await this.paramStore.changeOriginationFeeRate(fee.getBn());
     }
-
-
 }

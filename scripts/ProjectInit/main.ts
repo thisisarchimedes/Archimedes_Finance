@@ -20,8 +20,8 @@ const lvUSDMinted = NumberBundle.withNum(1000);
 const crvInPool = NumberBundle.withNum(1000);
 const fundPool = true;
 const CREATE_POOL = true;
-/// test class 
-async function main() {
+/// test class
+async function main () {
     Logger.setVerbose(true);
 
     // TODO: Might want to add reset to default block
@@ -52,7 +52,6 @@ async function main() {
     const auctionInfo = new AuctionInfo();
     await leverageHelper.startAuctionAndMintAndAcceptLeverage(auctionInfo);
 
-
     // fund user and create position
     await positionManager.fundSignerForPosition(signers.c1, leverageHelper);
 
@@ -61,12 +60,11 @@ async function main() {
     console.log("Curve exchange rate:  exchanging 1 lvUSD gets us %s 3crv" + (await pools.estimatelvUSDtoCrvExchange(TestConstants.ONE_ETH)).getNum());
     console.log("Curve exchange rate:  exchanging 1 CRV gets us %s OUSD" + (await pools.estimateCrvToOusdExchange(TestConstants.ONE_ETH)).getNum());
 
-    const position = await PositionInfo.build(contracts, signers.c1, NumberBundle.withNum(100), 5)
-
+    const position = await PositionInfo.build(contracts, signers.c1, NumberBundle.withNum(100), 5);
 
     await GeneralStateUtils.printUserBalances(contracts, signers.c1, "Before creating position");
 
-    await positionManager.createPositionEndToEnd(position, true)
+    await positionManager.createPositionEndToEnd(position, true);
 
     // print state after creating position
     await GeneralStateUtils.printArchimedesBalances(contracts, "After creating position");
@@ -80,7 +78,7 @@ async function main() {
     await position.printPositionInfo();
 
     // print state after unwinding position
-    //mine block once setup is done
+    // mine block once setup is done
     await EtherUtils.mineBlock();
 }
 main().catch((error) => {

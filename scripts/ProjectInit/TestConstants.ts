@@ -17,4 +17,4 @@ export class TestConstants {
     static readonly AUCTION_LENGTH_DEFAULT = 5;
 
     static readonly AUCTION_LEVERAGE_AMOUNT_DEFAULT = NumberBundle.withNum(1000, 18);
-} 
+}

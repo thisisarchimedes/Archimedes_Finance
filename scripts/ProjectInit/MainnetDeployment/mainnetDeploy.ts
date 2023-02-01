@@ -28,12 +28,10 @@ const shouldCreatePool = false;
 const shouldAddLiqToPool = false;
 const shouldDoBasicSetup = false;
 
-const shouldCreateAuction = true
+const shouldCreateAuction = true;
 const shouldVerifyArchimedesEngine = false;
 
-
-
-async function main() {
+async function main () {
     Logger.setVerbose(true);
     const signers = await new Signers().init();
     const contracts = new Contracts(signers);
@@ -65,17 +63,17 @@ async function main() {
             NumberBundle.withNum(30),
             NumberBundle.withNum(60),
             NumberBundle.withNum(1000),
-        )
+        );
         await contracts.auction.stopAuction();
         /// Minting LvUSD, you might want to disable this if post deployment
         await leverageHelper.mintLvUSD(auction.leverageAmount, contracts.coordinator.address);
         await leverageHelper.startAuctionAndAcceptLeverage(auction);
 
-        //verify leverage on coordinator
+        // verify leverage on coordinator
         const availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
         const coordinatorAvailableLvUSD = await leverageHelper.getLvUSDBalance(contracts.coordinator.address);
-        console.log("accepted leverage is ", availableLeverage.getNum())
-        console.log("LvUSD balance of coooedinator is", coordinatorAvailableLvUSD.getNum())
+        console.log("accepted leverage is ", availableLeverage.getNum());
+        console.log("LvUSD balance of coooedinator is", coordinatorAvailableLvUSD.getNum());
     }
 
     if (shouldVerifyArchimedesEngine) {
@@ -83,7 +81,6 @@ async function main() {
     }
 
     console.log("\nDone with verifying tokens\n");
-
 }
 
 main().catch((error) => {

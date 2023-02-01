@@ -4,9 +4,9 @@ import { ethers } from "hardhat";
 export class NumberBundle {
     num: number;
     bigNum: BigNumber;
-    decimal: Number;
+    decimal: number;
 
-    static withBn(bigNum: BigNumber, decimal = 18): NumberBundle {
+    static withBn (bigNum: BigNumber, decimal = 18): NumberBundle {
         const bundle = new NumberBundle();
         bundle.bigNum = bigNum;
         bundle.decimal = decimal;
@@ -14,7 +14,7 @@ export class NumberBundle {
         return bundle;
     }
 
-    static withNum(number: number, decimal = 18): NumberBundle {
+    static withNum (number: number, decimal = 18): NumberBundle {
         const bundle = new NumberBundle();
         bundle.num = number;
         bundle.decimal = decimal;
@@ -22,11 +22,11 @@ export class NumberBundle {
         return bundle;
     }
 
-    getNum(): number {
+    getNum (): number {
         return this.num;
     }
 
-    getBn(): BigNumber {
+    getBn (): BigNumber {
         return this.bigNum;
     }
 }

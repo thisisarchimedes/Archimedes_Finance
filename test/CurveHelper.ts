@@ -10,7 +10,7 @@ const fundedPoolAmount = ethers.utils.parseUnits("20000.0");
  * @param owner: Signer used to deploy / own the pool
  * returns address of the new pool
  */
-async function createMetapool(token, owner) {
+async function createMetapool (token, owner) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore CurvePool Factory
     const factoryCurveMetapool = new ethers.Contract(addressCurveFactory, abiCurveFactory, owner);
@@ -47,7 +47,7 @@ async function createMetapool(token, owner) {
  * @param signer: signer used to interact with pool
  * Returns a 3CRVMetapool instance (Curve StableSwap Contract)
  */
-async function getMetapool(address, signer) {
+async function getMetapool (address, signer) {
     // We assume its a 3CRV metapool, so we use the 3pool implementation abi
     return await ethers.getContractAt(abi3PoolImplementation, address, signer);
 }
@@ -59,7 +59,7 @@ async function getMetapool(address, signer) {
  * @param owner: signer
  * @param r: instance: ContractContextTest
  */
-async function fundMetapool(addressPool, [amountLvUSD, amount3CRV], owner, r, skipPoolBalances = false) {
+async function fundMetapool (addressPool, [amountLvUSD, amount3CRV], owner, r, skipPoolBalances = false) {
     const token3CRV = r.external3CRV;
     const lvUSD = r.lvUSD;
     await token3CRV.approve(addressPool, amount3CRV);
@@ -97,7 +97,7 @@ async function fundMetapool(addressPool, [amountLvUSD, amount3CRV], owner, r, sk
  * @param owner: signer
  * @param r: instance: ContractContextTest
  */
-async function createAndFundMetapool(owner, r, skipPoolBalances = false) {
+async function createAndFundMetapool (owner, r, skipPoolBalances = false) {
     const lvUSD = r.lvUSD;
     const addressPool = await createMetapool(lvUSD, owner);
     const pool = await getMetapool(addressPool, owner);
@@ -119,13 +119,13 @@ async function createAndFundMetapool(owner, r, skipPoolBalances = false) {
 
 // Swap LvUSD for 3CRV using the Metapool
 // TODO
-function exchangeLvUSDfor3CRV(amountLvUSD, owner) {
+function exchangeLvUSDfor3CRV (amountLvUSD, owner) {
     return true;
 }
 
 // Swap 3CRV for LvUSD using the Metapool
 // TODO
-function exchange3CRVfor3LvUSD(amountLvUSD, owner) {
+function exchange3CRVfor3LvUSD (amountLvUSD, owner) {
     return true;
 }
 

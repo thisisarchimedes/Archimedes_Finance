@@ -11,27 +11,27 @@ import { TestConstants } from "./TestConstants";
 
 export class PositionManager {
     contracts: Contracts;
-    pools: Pools
+    pools: Pools;
 
     constructor (contracts: Contracts, pools: Pools) {
         this.contracts = contracts;
         this.pools = pools;
     }
 
-    async createPositionEndToEnd(position: PositionInfo, printCreation: boolean = false) {
+    async createPositionEndToEnd (position: PositionInfo, printCreation = false) {
         await this.approveForPositionCreation(position);
         await this.createPosition(position);
         // Now fill all the info needed on position
         await position.fillPositionPostCreation();
-        await position.fillPositionExchangeEstimates(this.pools)
+        await position.fillPositionExchangeEstimates(this.pools);
 
         EtherUtils.mineBlock();
         if (printCreation == true) {
-            await position.printPositionInfo()
+            await position.printPositionInfo();
         }
     }
 
-    async unwindPositionAndVerify(position: PositionInfo) {
+    async unwindPositionAndVerify (position: PositionInfo) {
         if (await position.isPositionExists() == false) {
             throw new Error("Position does not exist");
         }
@@ -43,7 +43,7 @@ export class PositionManager {
         }
     }
 
-    async unwindPosition(position: PositionInfo) {
+    async unwindPosition (position: PositionInfo) {
         const userOusdBalanceBefore = await ERC20Utils.balance(position.positionOwner.address, this.contracts.externalOUSD);
         await this.contracts.leverageEngine.connect(position.positionOwner).unwindLeveragedPosition(position.positionTokenNum);
         EtherUtils.mineBlock();
@@ -53,7 +53,7 @@ export class PositionManager {
         position.fillPositionPostUnwind(ousdReturned);
     }
 
-    async createPosition(position: PositionInfo) {
+    async createPosition (position: PositionInfo) {
         // basically do a preview to get the return value of this method
         const previewPositionId = await this.contracts.leverageEngine
             .connect(position.positionOwner)
@@ -69,7 +69,7 @@ export class PositionManager {
             position.cycles,
             position.archFee.getBn(),
         );
-        position.positionTokenNum = previewPositionId.toNumber()
+        position.positionTokenNum = previewPositionId.toNumber();
     }
 
     // async checkCorrectPositionOwner(position: PositionInfo): True {
@@ -77,25 +77,25 @@ export class PositionManager {
     //     return owner;
     // }
 
-    async approveForPositionCreation(position: PositionInfo) {
+    async approveForPositionCreation (position: PositionInfo) {
         const spenderOfFundsAddress = this.contracts.leverageEngine.address;
         await ERC20Utils.approveAndVerify(
             spenderOfFundsAddress,
             position.collateral,
             this.contracts.externalOUSD,
-            position.positionOwner
+            position.positionOwner,
         );
         await ERC20Utils.approveAndVerify(
             spenderOfFundsAddress,
             position.archFee,
             this.contracts.archToken,
-            position.positionOwner
+            position.positionOwner,
         );
     }
 
-    /// Fund the user with any tokens they might need to create positions 
+    /// Fund the user with any tokens they might need to create positions
     /// Funds USDT, ARCH, and OUSD
-    async fundSignerForPosition(signer: SignerWithAddress, leverageHelper: LeverageHelper) {
+    async fundSignerForPosition (signer: SignerWithAddress, leverageHelper: LeverageHelper) {
         await this.pools.exchangeEthForExactStable(TestConstants.ONE_THOUSAND_USDT.getBn(), signer.address, this.contracts.externalUSDT.address);
         await this.pools.exchangeExactEthForOUSD(TestConstants.ONE_ETH.getBn(), signer.address);
         await ERC20Utils.getArchFromTreasury(TestConstants.ONE_HUNDRED_ETH, signer.address, this.contracts);
@@ -106,7 +106,7 @@ export class PositionManager {
             signer.address,
             usdtBalance.getNum(),
             archBalance.getNum(),
-            ousdBalance.getNum()
+            ousdBalance.getNum(),
         );
     }
 }

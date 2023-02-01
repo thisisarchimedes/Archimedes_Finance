@@ -126,7 +126,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
             _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
         } else {
             uint256 balanceBefore = _ousd.balanceOf(address(this));
-            console.log("in createLeveragedPosition a- %s -- prince - %s",balanceBefore, ousdPrinciple );
+            console.log("in createLeveragedPosition a- %s -- prince - %s", balanceBefore, ousdPrinciple);
             revert("insuff OUSD allowance");
         }
 

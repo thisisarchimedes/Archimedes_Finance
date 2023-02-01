@@ -4,18 +4,17 @@ import { NumberBundle } from "./NumberBundle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Pools } from "./Pools";
 
-
 export class PositionInfo {
     contracts: Contracts;
     positionOwner: SignerWithAddress;
     cycles: number;
     collateral: NumberBundle;
-    positionId: number
+    positionId: number;
     leverageTaken: NumberBundle;
     archFee: NumberBundle;
     archToLevRatio: NumberBundle;
 
-    positionTokenNum: Number = -1;
+    positionTokenNum = -1;
     cdpBorrowedLvUSD: NumberBundle;
     cdpShares: NumberBundle;
     ousdDepositedInVault: NumberBundle;
@@ -29,35 +28,34 @@ export class PositionInfo {
 
     private constructor (contracts: Contracts, owner: SignerWithAddress, collateral: NumberBundle, cycles: number) {
         this.contracts = contracts;
-        this.positionOwner = owner
+        this.positionOwner = owner;
         this.collateral = collateral;
         this.cycles = cycles;
     }
 
-    static async build(contracts: Contracts, owner: SignerWithAddress, collateral: NumberBundle, cycles: number): PositionInfo {
+    static async build (contracts: Contracts, owner: SignerWithAddress, collateral: NumberBundle, cycles: number): PositionInfo {
         const positionInfo: PositionInfo = new PositionInfo(contracts, owner, collateral, cycles);
         await positionInfo._fillPositionInfo();
         return positionInfo;
-
     }
 
-    async _fillPositionInfo() {
+    async _fillPositionInfo () {
         this.leverageTaken = await this.getPositionLeverageTaken();
         this.archFee = await this.getArchFee();
         this.archToLevRatio = NumberBundle.withBn(
-            await this.contracts.parameterStore.getArchToLevRatio()
+            await this.contracts.parameterStore.getArchToLevRatio(),
         );
     }
 
-    async fillPositionPostCreation() {
+    async fillPositionPostCreation () {
         this.fillPostCreationCalled = true;
 
         const cdpBorrowedLvUSD = NumberBundle.withBn(await this.contracts.cdp.getLvUSDBorrowed(this.positionTokenNum));
         const cdpShares = NumberBundle.withBn(await this.contracts.cdp.getShares(this.positionTokenNum));
         const oUSDDepositedInVault = NumberBundle.withBn(
-            await this.contracts.vault.previewRedeem(cdpShares.getBn())
+            await this.contracts.vault.previewRedeem(cdpShares.getBn()),
         );
-        const ousdFeesCalcEstimate: number = this.collateral.getNum() + this.leverageTaken.getNum() - oUSDDepositedInVault.getNum()
+        const ousdFeesCalcEstimate: number = this.collateral.getNum() + this.leverageTaken.getNum() - oUSDDepositedInVault.getNum();
 
         this.cdpBorrowedLvUSD = cdpBorrowedLvUSD;
         this.cdpShares = cdpShares;
@@ -65,34 +63,33 @@ export class PositionInfo {
         this.ousdFeesAtCreationRoughEstimate = NumberBundle.withNum(ousdFeesCalcEstimate);
     }
 
-    async fillPositionExchangeEstimates(pool: Pools) {
+    async fillPositionExchangeEstimates (pool: Pools) {
         if (this.fillPostCreationCalled == false) {
             throw new Error("fillPositionExchangeEstimates called before fillPositionPostCreation");
         }
-        const crvExchangeEstimateOnCreate = await pool.estimatelvUSDtoCrvExchange(this.cdpBorrowedLvUSD)
+        const crvExchangeEstimateOnCreate = await pool.estimatelvUSDtoCrvExchange(this.cdpBorrowedLvUSD);
         const ousdExchangeEstimateOnCreate = await pool.estimateCrvToOusdExchange(crvExchangeEstimateOnCreate);
     }
 
-    async fillPositionPostUnwind(ousdRedeemed: NumberBundle) {
+    async fillPositionPostUnwind (ousdRedeemed: NumberBundle) {
         this.fillPostUnwindCalled = true;
         this.ousdRedeemed = ousdRedeemed;
         this.ousdFinalEarning = ousdRedeemed.getNum() - this.collateral.getNum();
     }
 
-
-    async getPositionLeverageTaken(): NumberBundle {
-        const leverage = await this.contracts.parameterStore.getAllowedLeverageForPosition(this.collateral.getBn(), this.cycles)
+    async getPositionLeverageTaken (): NumberBundle {
+        const leverage = await this.contracts.parameterStore.getAllowedLeverageForPosition(this.collateral.getBn(), this.cycles);
         return NumberBundle.withBn(leverage);
     }
 
-    async getArchFee(): NumberBundle {
+    async getArchFee (): NumberBundle {
         const leverage = await this.getPositionLeverageTaken();
         const archFee = await this.contracts.parameterStore.calculateArchNeededForLeverage(leverage.getBn());
         const archFeeBundle = NumberBundle.withBn(archFee);
         return archFeeBundle;
     }
 
-    async isPositionExists(): boolean {
+    async isPositionExists (): boolean {
         if (this.fillPostCreationCalled = true) {
             return await this.contracts.positionToken.exists(this.positionTokenNum);
         } else {
@@ -100,12 +97,12 @@ export class PositionInfo {
         }
     }
 
-    async printPositionInfo() {
+    async printPositionInfo () {
         // Logger.log("Position Owner: %s", this.positionOwner.address);
         Logger.log("Position Info: Collateral: %s, Cycles: %s, Leverage Taken: %s",
             this.collateral.getNum(),
             this.cycles,
-            (await this.getPositionLeverageTaken()).getNum()
+            (await this.getPositionLeverageTaken()).getNum(),
         );
         Logger.log("Arch Fee: %s at arch/Lev ratio of %s", (await this.getArchFee()).getNum(), this.archToLevRatio.getNum());
         if (this.fillPostCreationCalled) {
