@@ -50,18 +50,18 @@ abstract contract BasicAccessController is AccessControl {
         }
     }
 
-    function renounceRole(bytes32 role, address account) public virtual override {
-        if (hasRole(ADMIN_ROLE, msg.sender)) {
-            revert("Admin cant use renounceRole");
-        }
-        require(account == _msgSender(), "can only renounce roles for self");
+    // function renounceRole(bytes32 role, address account) public virtual override {
+    //     if (hasRole(ADMIN_ROLE, msg.sender)) {
+    //         revert("Admin cant use renounceRole");
+    //     }
+    //     require(account == _msgSender(), "can only renounce roles for self");
 
-        _revokeRole(role, account);
-    }
+    //     _revokeRole(role, account);
+    // }
 
     function setMinter(address newMinter) public onlyAdmin {
         address oldMinter = _addressMinter;
-        require(oldMinter != newMinter, "New minster must be different");
+        require(oldMinter != newMinter, "New minter must be different");
         _grantRole(MINTER_ROLE, newMinter);
         _revokeRole(MINTER_ROLE, oldMinter);
         _addressMinter = newMinter;

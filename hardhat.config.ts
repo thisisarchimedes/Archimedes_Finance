@@ -3,6 +3,7 @@ import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 
+// import 'hardhat-ethernal';
 import "@openzeppelin/hardhat-upgrades";
 
 import "hardhat-watcher";
@@ -91,7 +92,14 @@ export default {
                 "0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0", // OG 8
                 "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e",
             ],
-            allowUnlimitedContractSize: true,
+            allowUnlimitedContractSize: false,
+        },
+        deploymenttest: {
+            url: "http://ec2-18-210-14-7.compute-1.amazonaws.com:8545",
+            accounts: [
+                "0xea6c44ac03bff858b476bba40716402b03e41b8e97e276d1baec7c37d42484a0", // private key of owner
+            ],
+            allowUnlimitedContractSize: false,
         },
         goerli: {
             url: `${goerliURL}`,
@@ -130,7 +138,11 @@ export default {
     mocha: {
         timeout: 100000000,
     },
-
+    // ethernal: {
+    //     email: "yotam@archimedesfi.com",
+    //     password: "URJk1Biee1&9",
+    //     verbose: false,
+    // },
     tenderly: {
         username: "YotamDaniel",
         project: "ZapperV",

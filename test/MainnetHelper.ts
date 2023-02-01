@@ -44,7 +44,7 @@ const indexCurveOUSDOUSD = 0;
 const indexCurveOUSD3CRV = 1;
 const defaultBlockNumber = 15104872;
 
-async function helperResetNetwork (lockBlock) {
+async function helperResetNetwork(lockBlock) {
     const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
 
     // Reset hardhat mainnet fork
@@ -66,7 +66,7 @@ async function helperResetNetwork (lockBlock) {
     1. Convert ETH to WETH (because this is what Curve is working with)
     2. WETH->USDT on TriCrypto2@Curve
 */
-async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
+async function helperSwapETHWithUSDT(destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // loading WETH9 contract
@@ -84,7 +84,6 @@ async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     expect(ret).to.equal(addressWETH9);
 
     /// /////////// 1. ETH->WETH9 //////////////
-    await ethers.provider.send("evm_mine");
 
     // read current signer balance from WETH9 contract (so we can validate increase later)
     let weth9Balance = await weth9.balanceOf(destUser.address);
@@ -127,7 +126,7 @@ async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     2. WETH->USDT on TriCrypto2@Curve
     3. Deposit USDT with 3Pool to get some 3CRV
 */
-async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
+async function helperSwapETHWith3CRV(destUser, ethAmountToSwap) {
     /// /////////// Loading some contracts //////////////
 
     // loading USDT contract
@@ -167,7 +166,7 @@ async function helperSwapETHWith3CRV (destUser, ethAmountToSwap) {
     2. WETH->USDT on TriCrypto2@Curve
     3. USDT->OUSD with OUSD contract
 */
-async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSwap: BigNumber) {
+async function helperSwapETHWithOUSD(destUser: SignerWithAddress, ethAmountToSwap: BigNumber) {
     /// ///////// Loading some contracts //////////////
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -182,7 +181,6 @@ async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSw
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
 
     const balance3CRV = await helperSwapETHWith3CRV(destUser, ethAmountToSwap);
-    await ethers.provider.send("evm_mine");
 
     /// /////////// 2. USDT->OUSD with OUSD contract //////////////
 
@@ -205,16 +203,16 @@ async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSw
 
 const minLiq = bnFromNum(100);
 let externalWETH: Contract;
-export function bnFromNum (num: number, decimal = 18): BigNumber {
+export function bnFromNum(num: number, decimal = 18): BigNumber {
     return ethers.utils.parseUnits(num.toString(), decimal);
 }
-export function bnFromStr (num: string, decimal = 18): BigNumber {
+export function bnFromStr(num: string, decimal = 18): BigNumber {
     return ethers.utils.parseUnits(num.toString(), decimal);
 }
-export function numFromBn (num: BigNumber, decimals = 18): number {
+export function numFromBn(num: BigNumber, decimals = 18): number {
     return Number(ethers.utils.formatUnits(num, decimals));
 }
-async function getUserSomeWETH (r: ContractTestContext) {
+async function getUserSomeWETH(r: ContractTestContext) {
     externalWETH = new ethers.Contract(addressWETH9, abiWETH9Token, r.owner);
     await ethers.provider.send("evm_mine");
     let weth9Balance = await externalWETH.balanceOf(r.owner.address);
@@ -222,7 +220,7 @@ async function getUserSomeWETH (r: ContractTestContext) {
     weth9Balance = await externalWETH.balanceOf(r.owner.address);
     // console.log("weth9Balance: %s", numFromBn(weth9Balance));
 }
-async function createPair (r: ContractTestContext): Promise<Contract> {
+async function createPair(r: ContractTestContext): Promise<Contract> {
     const factoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
     const uniswapFactory = new ethers.Contract(factoryAddress, factoryABI, r.owner);
     const tx = await uniswapFactory.createPair(r.archToken.address, addressWETH9);
@@ -232,11 +230,11 @@ async function createPair (r: ContractTestContext): Promise<Contract> {
     const pairToken = new ethers.Contract(pairAddress, pairABI, r.owner);
     return pairToken;
 }
-async function getRouter (r: ContractTestContext): Contract {
+async function getRouter(r: ContractTestContext): Contract {
     const routeToken = new ethers.Contract(routeAddress, routerABI, r.owner);
     return routeToken;
 }
-async function addLiquidityToPairViaRouter (r: ContractTestContext, pairToken: Contract) {
+async function addLiquidityToPairViaRouter(r: ContractTestContext, pairToken: Contract) {
     await r.archToken.connect(r.treasurySigner).transfer(r.owner.address, minLiq);
 
     const routeInstance = await getRouter(r);
@@ -257,13 +255,31 @@ async function addLiquidityToPairViaRouter (r: ContractTestContext, pairToken: C
     const reserves = await pairToken.getReserves();
 }
 
-async function createUniswapPool (r: ContractTestContext) {
+async function createUniswapPool(r: ContractTestContext) {
     await getUserSomeWETH(r);
     const pairToken = await createPair(r);
 
     await addLiquidityToPairViaRouter(r, pairToken);
 
     await ethers.provider.send("evm_mine");
+}
+
+async function getUSDCToUser(r: ContractTestContext, user) {
+    const router = await getRouter(r);
+    const usdcAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+
+    /// Using USDT abi for USDC as its the same (erc20)
+    const tokenUSDC = new ethers.Contract(usdcAddress, abiUSDTToken, user);
+    await router.swapExactETHForTokens(bnFromNum(500, 6), [addressWETH9, usdcAddress], user.address, 1670978314, { value: bnFromNum(1) });
+}
+
+async function getDAIToUser(r: ContractTestContext, user) {
+    // Notice dai is 18 decimal
+    const daiAddress = "0x6b175474e89094c44da98b954eedeac495271d0f";
+    const router = await getRouter(r);
+    /// Using USDT abi for USDC as its the same (erc20)
+    const tokenDAI = new ethers.Contract(daiAddress, abiUSDTToken, user);
+    await router.swapExactETHForTokens(bnFromNum(500, 18), [addressWETH9, daiAddress], user.address, 1670978314, { value: bnFromNum(1) });
 }
 
 export {
@@ -275,6 +291,8 @@ export {
     helperSwapETHWith3CRV,
     helperSwapETHWithOUSD,
     createUniswapPool,
+    getUSDCToUser,
+    getDAIToUser,
 
     /* addresses */
     addressCurveTripool2,

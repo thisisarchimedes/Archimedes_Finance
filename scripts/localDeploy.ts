@@ -2,11 +2,11 @@ import hre, { ethers } from "hardhat";
 import {
     helperSwapETHWithOUSD, createUniswapPool, addressOUSD, abiOUSDToken,
     helperSwapETHWithUSDT, address3CRV, addressUSDT, addressCurveOUSDPool,
-    numFromBn, bnFromStr, bnFromNum,
+    numFromBn, bnFromStr, bnFromNum, getUSDCToUser, getDAIToUser
 } from "../test/MainnetHelper";
 import {
-    buildContractTestContext, setRolesForEndToEnd,
-    startAndEndAuction, startAuctionAcceptLeverageAndEndAuction,
+    buildContractTestContext, ContractTestContext, setRolesForEndToEnd,
+    startAuctionAcceptLeverageAndEndAuction,
 } from "../test/ContractTestContext";
 import dotenv from "dotenv";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -19,7 +19,7 @@ let context;
 const lvUSDAmount = "5000000";
 const routeAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
 
-async function fundLVUSDToCoordinator () {
+async function fundLVUSDToCoordinator() {
     console.log("\nFunding lvUSD to coordinator\n");
 
     await context.lvUSD.setMintDestination(context.coordinator.address);
@@ -36,7 +36,7 @@ const fundARCH = async () => {
     console.log(context.owner.address + " funded with " + archAmountToFund + " ARCH");
 };
 
-async function verifyDeployment () {
+async function verifyDeployment() {
     console.log("lvUSD address is", await context.lvUSD.address);
     console.log("Arch address is", await context.archToken.address);
     console.log("LevEngine address is", await context.leverageEngine.address);
@@ -90,7 +90,7 @@ const deployScript = async () => {
 
     await helperSwapETHWithOUSD(context.owner, ethers.utils.parseUnits("1.0"));
     await fundARCH();
-    await fundDemoAccount();
+    await fundDemoAccount(context);
     await verifyDeployment();
 };
 
@@ -102,7 +102,7 @@ const simulateRebase = async () => {
     await externalOUSD.transfer(vaultAddress, ethers.utils.parseUnits("20.0"));
 };
 
-const fundDemoAccount = async () => {
+const fundDemoAccount = async (r: ContractTestContext) => {
     const SignersToFund: SignerWithAddress[] = await ethers.getSigners();
     // remove owner and addr1 by shifting twice
     console.log("Starting to fund accounts");
@@ -127,8 +127,8 @@ const fundDemoAccount = async () => {
         await archToken.connect(treasurySigner).transfer(SignersToFund[i].address, ethers.utils.parseUnits(archAmountToFund));
         await helperSwapETHWithOUSD(SignersToFund[i], ethers.utils.parseUnits("0.4"));
         await helperSwapETHWithUSDT(SignersToFund[i], ethers.utils.parseUnits("0.4"));
-        await ethers.provider.send("evm_mine");
-
+        await getDAIToUser(r, SignersToFund[i]);
+        await getUSDCToUser(r, SignersToFund[i]);
         console.log("i: " + i + " - Funded address " + SignersToFund[i].address);
     }
 };
