@@ -130,4 +130,9 @@ export default {
     mocha: {
         timeout: 100000000,
     },
+
+    tenderly: {
+        username: "YotamDaniel",
+        project: "ZapperV",
+    },
 };
