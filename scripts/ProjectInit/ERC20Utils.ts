@@ -30,6 +30,14 @@ class ERC20Utils {
     async decimals(token: ERC20): NumberBundle {
         return NumberBundle.withNum(await token.decimals(), 0);
     }
+
+    async name(token: ERC20): string {
+        return await token.name();
+    }
+
+    async symbol(token: ERC20): string {
+        return await token.symbol();
+    }
 }
 
 export const ERC20Utils = new ERC20Utils();

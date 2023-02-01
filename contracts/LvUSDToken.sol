@@ -8,10 +8,10 @@ import {BasicAccessController} from "../contracts/BasicAccessController.sol";
 
 /// @title lvUSD token
 /// @dev This is the contract for the Archimedes lvUSD USD pegged stablecoin
-contract LvUSDToken is ERC20("Archimedes lvUSD", "lvUSD"), BasicAccessController, ERC20Burnable {
+contract LvUSDToken is ERC20("lvUSD", "lvUSD"), BasicAccessController, ERC20Burnable {
     address internal _mintingDestination = address(0);
 
-    constructor(address admin) {
+    constructor() {
         _grantRole(ADMIN_ROLE, _msgSender());
         setMinter(_msgSender());
     }

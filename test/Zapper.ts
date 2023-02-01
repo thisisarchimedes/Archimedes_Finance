@@ -92,19 +92,19 @@ export async function createUniswapPool (r: ContractTestContext) {
     await ethers.provider.send("evm_mine");
 }
 
-async function getUSDCToUser (r: ContractTestContext) {
+export async function getUSDCToUser (r: ContractTestContext, user = owner) {
     const router = await getRouter(r);
     /// Using USDT abi for USDC as its the same (erc20)
-    const tokenUSDC = new ethers.Contract(usdcAddress, abiUSDTToken, owner);
-    await router.swapExactETHForTokens(bnFromNum(500, 6), [addressWETH9, usdcAddress], owner.address, 1670978314, { value: bnFromNum(1) });
+    const tokenUSDC = new ethers.Contract(usdcAddress, abiUSDTToken, user);
+    await router.swapExactETHForTokens(bnFromNum(500, 6), [addressWETH9, usdcAddress], user.address, 1670978314, { value: bnFromNum(1) });
 }
 
-async function getDAIToUser (r: ContractTestContext) {
+export async function getDAIToUser (r: ContractTestContext,  user = owner) {
     // Notice dai is 18 decimal
     const router = await getRouter(r);
     /// Using USDT abi for USDC as its the same (erc20)
     const tokenDAI = new ethers.Contract(daiAddress, abiUSDTToken, owner);
-    await router.swapExactETHForTokens(bnFromNum(500, 18), [addressWETH9, daiAddress], owner.address, 1670978314, { value: bnFromNum(1) });
+    await router.swapExactETHForTokens(bnFromNum(500, 18), [addressWETH9, daiAddress], user.address, 1670978314, { value: bnFromNum(1) });
 }
 
 async function setupFixture () {

@@ -43,7 +43,7 @@ export class Contracts {
     externalUSDT!: ERC20;
     externalDAI!: ERC20;
     external3CRV!: ERC20;
-    
+
     constructor (signers: Signers) {
         this.signers = signers;
     }
@@ -67,11 +67,11 @@ export class Contracts {
         return this;
     }
 
-    async initTokens() {
+    async initTokens(treasuryAddress = this.signers.treasury.address) {
         // None upgradable contracts
-        this.lvUSD = await this.deployContract("LvUSDToken", this.signers.owner.address);
+        this.lvUSD = await this.deployContract("LvUSDToken");
         // Notice the argument passed to constructor is the treasury address (where all arch tokens are minted)
-        this.archToken = await this.deployContract("ArchToken", this.signers.treasury.address);
+        this.archToken = await this.deployContract("ArchToken", treasuryAddress);
     }
 
     async setTokensInstances(lvUSDAddress: string, archTokenAddress: string) {
@@ -116,7 +116,7 @@ export class Contracts {
     async initArchimedesUpgradableContractsWithConstructorArguments() {
         this.vault = await this.deployContractProxy("VaultOUSD", [ValueStore.addressOUSD, "VaultOUSD", "VOUSD"]);
     }
-    
+
     async setArchimedesUpgradableContractsInstancesWithConstructorArguments(
         vaultAddress: string
     ) {

@@ -12,7 +12,7 @@ class DeploymentUtils {
         await this.setupParamStoreValues(contracts);
     }
 
-    async setupParamStoreValues(contracts: Contracts): void {
+    async setupParamStoreValues(contracts: Contracts, treasuryAddress = contracts.signers.treasury.address): void {
         await contracts.parameterStore.changeTreasuryAddress(contracts.signers.treasury.address);
         Logger.log("Finished setting up ParamStore values");
     }

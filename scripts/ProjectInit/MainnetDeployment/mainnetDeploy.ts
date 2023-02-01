@@ -1,9 +1,3 @@
-// const { program } = require('commander');
-// program
-//     .option('--tokens --deploytokens <boolean>', 'Should we deploy tokens?', true)
-// program.parse();
-// const options = program.opts();
-
 import { Contracts } from "../Contracts";
 import { DeploymentUtils } from "../DeploymentUtils";
 import { ERC20Utils } from "../ERC20Utils";
