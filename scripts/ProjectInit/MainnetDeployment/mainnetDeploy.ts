@@ -21,19 +21,21 @@ import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
 // const shouldDoBasicSetup = true;
 
 const deployJustTokens = false;
-const deployArchimedesEngine = false;
-const deployVault = false;
+const deployArchimedesEngine = true;
+const deployVault = true;
 
 const shouldCreatePool = false;
 const shouldAddLiqToPool = false;
 const shouldDoBasicSetup = false;
 
-const shouldCreateAuction = true;
+const shouldCreateAuction = false;
 const shouldVerifyArchimedesEngine = false;
 
-async function main () {
+const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6"
+
+async function main() {
     Logger.setVerbose(true);
-    const signers = await new Signers().init();
+    const signers = await new Signers().initOwnerOnly();
     const contracts = new Contracts(signers);
     await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
     const pools = await new Pools().init(contracts, shouldCreatePool);
@@ -46,7 +48,7 @@ async function main () {
 
     if (shouldDoBasicSetup) {
         console.log("Setting up basic stuff: Dependencies, roles, param store values");
-        await DeploymentUtils.basicSetup(contracts, pools);
+        await DeploymentUtils.basicSetup(contracts, pools, treasuryAddress);
         console.log("\nDone with set up tokens\n");
     }
 

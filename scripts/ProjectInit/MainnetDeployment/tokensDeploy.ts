@@ -12,12 +12,12 @@ import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
 
 const deployTokens = true;
 
-const treasuryAddress = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
 
-async function main () {
+async function main() {
     Logger.setVerbose(true);
     const signers = await new Signers().initOwnerOnly();
-    console.log("Expeting signer address to be 0x2546BcD3c84621e976D8185a91A922aE77ECEc30");
+    console.log("Expeting signer address to be 0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7");
     console.log("Signers initialized with owner being ", signers.owner.address);
 
     const contracts = new Contracts(signers);

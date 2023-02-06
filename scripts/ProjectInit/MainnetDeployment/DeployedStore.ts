@@ -1,6 +1,6 @@
 export class DeployedStore {
-    static lvUSDAddress = "0x6A59CC73e334b018C9922793d96Df84B538E6fD5";
-    static archTokenAddress = "0xC1e0A9DB9eA830c52603798481045688c8AE99C2";
+    static lvUSDAddress = "0x94A18d9FE00bab617fAD8B49b11e9F1f64Db6b36";
+    static archTokenAddress = "0x73C69d24ad28e2d43D03CBf35F79fE26EBDE1011";
     static parameterStoreAddress = "0x1c9fD50dF7a4f066884b58A05D91e4b55005876A";
     static cdpAddress = "0x71a0b8A2245A9770A4D887cE1E4eCc6C1d4FF28c";
     static coordinatorAddress = "0xAe120F0df055428E45b264E7794A18c54a2a3fAF";

@@ -52,7 +52,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _slippage = 1; // 1%;
         _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
         _minPositionCollateral = 2 ether;
-        _positionTimeToLiveInDays = 369;
+        _positionTimeToLiveInDays = 370;
         _coordinatorLeverageBalance = 0;
 
         _treasuryAddress = address(0);

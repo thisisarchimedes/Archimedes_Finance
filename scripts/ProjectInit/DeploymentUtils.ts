@@ -6,18 +6,18 @@ import { Pools } from "./Pools";
 import { ValueStore } from "./ValueStore";
 
 class DeploymentUtils {
-    async basicSetup (contracts: Contracts, pools: Pools): void {
+    async basicSetup(contracts: Contracts, pools: Pools, treasuryAddress = contracts.signers.treasury.address): void {
         await this.setDependenciesOnContracts(contracts, pools);
         await this.setUpInitialRoles(contracts);
-        await this.setupParamStoreValues(contracts);
+        await this.setupParamStoreValues(contracts, treasuryAddress);
     }
 
-    async setupParamStoreValues (contracts: Contracts, treasuryAddress = contracts.signers.treasury.address): void {
-        await contracts.parameterStore.changeTreasuryAddress(contracts.signers.treasury.address);
+    async setupParamStoreValues(contracts: Contracts, treasuryAddress = contracts.signers.treasury.address): void {
+        await contracts.parameterStore.changeTreasuryAddress(treasuryAddress);
         Logger.log("Finished setting up ParamStore values");
     }
 
-    async setUpInitialRoles (contracts: Contracts): void {
+    async setUpInitialRoles(contracts: Contracts): void {
         // Here we are setting up initial important roles to allow the system to function
         await contracts.coordinator.setExecutive(contracts.leverageEngine.address);
         await contracts.positionToken.setExecutive(contracts.leverageEngine.address);
@@ -27,7 +27,7 @@ class DeploymentUtils {
         Logger.log("Finished setting up initial roles");
     }
 
-    async setDependenciesOnContracts (contracts: Contracts, pools: Pools): void {
+    async setDependenciesOnContracts(contracts: Contracts, pools: Pools): void {
         await contracts.leverageEngine.setDependencies(
             contracts.coordinator.address,
             contracts.positionToken.address,
@@ -46,7 +46,7 @@ class DeploymentUtils {
             contracts.poolManager.address,
             contracts.auction.address,
         );
-
+        console.log("before setDependencies on exchanger, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
         await contracts.exchanger.setDependencies(
             contracts.parameterStore.address,
             contracts.coordinator.address,
