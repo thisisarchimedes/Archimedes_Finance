@@ -31,9 +31,9 @@ const shouldDoBasicSetup = false;
 const shouldCreateAuction = false;
 const shouldVerifyArchimedesEngine = false;
 
-const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6"
+const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
 
-async function main() {
+async function main () {
     Logger.setVerbose(true);
     const signers = await new Signers().initOwnerOnly();
     const contracts = new Contracts(signers);

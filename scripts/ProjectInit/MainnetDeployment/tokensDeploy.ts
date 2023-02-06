@@ -14,7 +14,7 @@ const deployTokens = true;
 
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
 
-async function main() {
+async function main () {
     Logger.setVerbose(true);
     const signers = await new Signers().initOwnerOnly();
     console.log("Expeting signer address to be 0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7");

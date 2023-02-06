@@ -122,7 +122,7 @@
             "always"
         ],
         "space-before-function-paren": [
-            "error",
+            "off",
             "always"
         ],
         "mocha/no-exclusive-tests": [
