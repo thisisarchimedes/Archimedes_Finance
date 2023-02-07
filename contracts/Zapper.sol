@@ -50,6 +50,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         uint256 cycles,
         uint256 archMinAmount,
         uint256 ousdMinAmount,
+        uint16 maxSlippageAllowed,
         address addressBaseStable,
         bool useUserArch
     ) external returns (uint256) {
@@ -64,6 +65,14 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
 
         /// validate input
         require(stableCoinAmount > 0, "err:stableCoinAmount==0");
+        require(maxSlippageAllowed < 1000, "err:slippage>1000");
+        require(maxSlippageAllowed > 959, "err:slippage<980");
+
+        // Now we apply slippage. We increase the min of Arch and reduce the min of OUSD
+        // This is because we need to always have enough Arch to pay so better to have a bit less OUSD and more Arch than
+        // the other way around
+        // archMinAmount = (archMinAmount * 1000) / maxSlippageAllowed;
+        ousdMinAmount = (ousdMinAmount * maxSlippageAllowed) / 1000;
 
         /// transfer base stable coin from user to this address
         _transferFromSender(addressBaseStable, stableCoinAmount);
@@ -71,25 +80,15 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         /// Setup
         address[] memory path = _getPath(addressBaseStable);
         uint256 collateralInBaseStableAmount = stableCoinAmount;
-        // uint256 archAmount;
 
-        // Check if we are using existing arch tokens owned by user or buying new ones
-        if (useUserArch == true) {
-            // We are using owners arch tokens, transfer from msg.sender to address(this)
-            // Take 1% more Arch than min to account for slippage (slippage happens when tranferring stable to OUSD)
-
-            require(_archToken.balanceOf(msg.sender) >= archMinAmount, "err:insuf user arch");
-            require(_archToken.allowance(msg.sender, address(this)) >= archMinAmount, "err:insuf approval arch");
-
-            _transferFromSender(address(_archToken), archMinAmount);
-        } else {
+        if (useUserArch == false) {
             // Need to buy Arch tokens. We already know how much Arch tokens we want. We still need to know the Max in stable that
             // we are willing to pay. For that, we're running the splitEstimate again and adding a small buffer
             uint256 coinsToPayForArchAmount;
             (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
             /// since we basivally add a buffer for max stable to take, its actually a built in limit on how much slippage is allowed.
             /// In this case up to 5%
-            uint256 maxStableToPayForArch = (coinsToPayForArchAmount * 100) / 95;
+            uint256 maxStableToPayForArch = (coinsToPayForArchAmount * 1000) / maxSlippageAllowed;
             // Now swap exact archMinAmount for a maximum of maxStableToPayForArch in stable coin
             _uniswapRouter.swapTokensForExactTokens(archMinAmount, maxStableToPayForArch, path, address(this), block.timestamp + 2 minutes);
         }
@@ -98,6 +97,17 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         // Now spend all the remainign stable to buy OUSD
         uint256 remainingStable = IERC20Upgradeable(addressBaseStable).balanceOf(address(this));
         uint256 ousdAmount = _exchangeToOUSD(remainingStable, ousdMinAmount, addressBaseStable);
+
+         // Check if we are using existing arch tokens owned by user or buying new ones
+        if (useUserArch == true) {
+            // We are using owners arch tokens, transfer from msg.sender to address(this)
+            uint256 archToTransfer = _getArchAmountToTransferFromUser(ousdAmount, cycles);
+            // uint256 archApproval = _archToken.allowance(msg.sender, address(this));
+            // console.log("archToTransfer: %s , archMin %s, archApproved %s", archToTransfer, archMinAmount,archApproval);
+            require(_archToken.balanceOf(msg.sender) >= archToTransfer, "err:insuf user arch");
+            require(_archToken.allowance(msg.sender, address(this)) >= archToTransfer, "err:insuf approval arch");
+            _transferFromSender(address(_archToken), archToTransfer);
+        } 
 
         /// create position
         uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(ousdAmount, cycles, _archToken.balanceOf(address(this)), msg.sender);
@@ -123,7 +133,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     function previewZapInAmount(
         uint256 stableCoinAmount,
         uint256 cycles,
-        uint16 maxSlippageAllowed,
         address addressBaseStable,
         bool useUserArch
     ) external view returns (uint256 ousdCollateralAmountReturn, uint256 archTokenAmountReturn) {
@@ -150,12 +159,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             // We are using owners arch tokens, transfer from msg.sender to address(this)
             archTokenAmount = _getArchAmountToTransferFromUser(ousdCollateralAmount, cycles);
         }
-
-        // Now we apply slippage. We increase the min of Arch and reduce the min of OUSD
-        // This is because we need to always have enough Arch to pay so better to have a bit less OUSD and more Arch than
-        // the other way around
-        archTokenAmount = (archTokenAmount * 1000) / maxSlippageAllowed;
-        ousdCollateralAmount = (ousdCollateralAmount * maxSlippageAllowed) / 1000;
 
         return (ousdCollateralAmount, archTokenAmount);
     }
