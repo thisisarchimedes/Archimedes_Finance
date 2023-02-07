@@ -17,7 +17,6 @@ import {ParameterStore} from "./ParameterStore.sol";
 contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgradeable {
     struct CDP {
         uint256 oUSDPrinciple; // Amount of OUSD originally deposited by user
-        // uint256 oUSDInterestEarned; // Total interest earned (and rebased) so far  -< /// TODO remove this item
         uint256 oUSDTotalWithoutInterest; // Principle + OUSD acquired from selling borrowed lvUSD
         uint256 lvUSDBorrowed; // Total lvUSD borrowed under this position
         uint256 shares; // Total vault shares allocated to this position
@@ -33,6 +32,14 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
     address internal _addressParameterStore;
     VaultOUSD internal _vault;
     ParameterStore internal _parameterStore;
+
+     /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    uint256[44] private __gap;
 
     // Maps return default value when entry is not present. OUSD principle will always be gt 0 if _nftCDP has
     // a valid value in nftID

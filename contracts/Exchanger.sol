@@ -36,6 +36,14 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
     int128 internal _indexOUSD;
     int128 internal _index3CRV;
 
+     /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    uint256[44] private __gap;
+
     // /** @dev curve stable metapools provide 1:1 swaps
     //  * if the pools are very bent, this is a protection for users
     //  * TODO: user should be able to override and force a trade

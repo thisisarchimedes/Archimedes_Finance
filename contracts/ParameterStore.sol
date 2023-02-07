@@ -27,6 +27,14 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     uint256 internal _positionTimeToLiveInDays;
     uint256 internal _coordinatorLeverageBalance;
 
+     /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    uint256[44] private __gap;
+
     event ParameterChange(string indexed _name, uint256 _newValue, uint256 _oldValue);
     event TreasuryChange(address indexed _newValue, address indexed _oldValue);
 
@@ -227,7 +235,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
             // In this case, user approved more(or exactly) arch tokens needed for leverage
             return allowedLeverageNoArchLimit;
         } else {
-            /// TODO : Should this return a revert? Most likely but other changes are needed as well. This can be misleading
             revert("Not enough Arch for Pos");
         }
     }

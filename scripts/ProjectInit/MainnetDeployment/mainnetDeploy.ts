@@ -40,11 +40,7 @@ async function main() {
     await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
     const pools = await new Pools().init(contracts, shouldCreatePool);
 
-    console.log("\nDone with deploying/get instances the whole of archimedes. Now setting up basic stuff if needed:");
-
-    // console.log("LvUSD balance of coooedinator is", (await ERC20Utils.balance(contracts.coordinator.address, contracts.lvUSD)).getNum())
-    // const availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
-    // console.log("accepted leverage is ", availableLeverage.getNum())
+    console.log("\nDone with deploying/get instances the whole of archimedes. Now setting up basic stuff if needed");
 
     if (shouldDoBasicSetup) {
         console.log("Setting up basic stuff: Dependencies, roles, param store values");
