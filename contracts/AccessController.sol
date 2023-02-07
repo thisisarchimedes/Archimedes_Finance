@@ -10,7 +10,9 @@ abstract contract AccessController is AccessControlUpgradeable {
     bytes32 public constant EXECUTIVE_ROLE = keccak256("EXECUTIVE_ROLE");
     bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
     bytes32 public constant GUARDIAN_ROLE = keccak256("GUARDIAN_ROLE");
+    bytes32 public constant AUCTIONEER = keccak256("AUCTIONEER");
 
+    address internal _addressAuctioneer;
     address private _addressExecutive;
     address private _addressGovernor;
     address private _addressGuardian;
@@ -43,6 +45,11 @@ abstract contract AccessController is AccessControlUpgradeable {
 
     modifier onlyGuardian() {
         require(hasRole(GUARDIAN_ROLE, msg.sender), "Caller is not Guardian");
+        _;
+    }
+
+    modifier onlyAuctioneer() {
+        require(hasRole(AUCTIONEER, msg.sender), "Caller is not Auctioneer");
         _;
     }
 
@@ -123,5 +130,13 @@ abstract contract AccessController is AccessControlUpgradeable {
 
     function _requireAdmin() internal view {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
+    }
+
+    function setAuctioneer(address newAuctioneer) public onlyAdmin {
+        address oldAuctioneer = _addressAuctioneer;
+        require(oldAuctioneer != newAuctioneer, "New Auctioneer must be diff");
+        _grantRole(AUCTIONEER, newAuctioneer);
+        _revokeRole(AUCTIONEER, oldAuctioneer);
+        _addressAuctioneer = newAuctioneer;
     }
 }

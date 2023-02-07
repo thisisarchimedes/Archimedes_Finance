@@ -99,7 +99,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         _lvUSD.safeTransfer(_addressExchanger, amount);
     }
 
-    function acceptLeverageAmount(uint256 leverageAmountToAccept) external onlyAdmin nonReentrant {
+    function acceptLeverageAmount(uint256 leverageAmountToAccept) external onlyAuctioneer nonReentrant {
         require(Auction(_addressAuction).isAuctionClosed() == false, "Auction must be open");
         uint256 currentLvUSDBalance = _lvUSD.balanceOf(address(this));
         require(currentLvUSDBalance >= leverageAmountToAccept, "lvUSD !< levAmt");
@@ -235,6 +235,8 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         setGovernor(_msgSender());
         setExecutive(_msgSender());
         setGuardian(_msgSender());
+        setAuctioneer(_msgSender());
+
     }
 
     function _withdrawCollateralUnderNFT(

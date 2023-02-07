@@ -8,11 +8,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "hardhat/console.sol";
 
 contract Auction is IAuction, AccessController, UUPSUpgradeable {
-    /// access control variables. In V2 move to dedicated lib/class
-    bytes32 public constant AUCTIONEER = keccak256("AUCTIONEER");
-    address internal _addressAuctioneer;
-    // ^^end access control variables
-
     uint256 internal _currentAuctionId;
     uint256 internal _startBlock;
     uint256 internal _endBlock;
@@ -166,18 +161,5 @@ contract Auction is IAuction, AccessController, UUPSUpgradeable {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
-    }
-
-    function setAuctioneer(address newAuctioneer) public onlyAdmin {
-        address oldAuctioneer = _addressAuctioneer;
-        require(oldAuctioneer != newAuctioneer, "New Auctioneer must be diff");
-        _grantRole(AUCTIONEER, newAuctioneer);
-        _revokeRole(AUCTIONEER, oldAuctioneer);
-        _addressAuctioneer = newAuctioneer;
-    }
-
-    modifier onlyAuctioneer() {
-        require(hasRole(AUCTIONEER, msg.sender), "Caller is not Auctioneer");
-        _;
     }
 }

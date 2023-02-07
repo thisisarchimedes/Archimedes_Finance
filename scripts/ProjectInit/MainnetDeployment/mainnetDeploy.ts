@@ -22,14 +22,14 @@ import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
 
 const deployJustTokens = false;
 const deployArchimedesEngine = true;
-const deployVault = true;
+const deployVault = false;
 
 const shouldCreatePool = false;
 const shouldAddLiqToPool = false;
 const shouldDoBasicSetup = false;
 
 const shouldCreateAuction = false;
-const shouldVerifyArchimedesEngine = false;
+const shouldVerifyArchimedesEngine = true;
 
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6"
 

@@ -207,7 +207,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         return _positionTimeToLiveInDays;
     }
 
-    /// Method returns the allowed leverage for principle and number of cycles
+    /// Method returns the allowed pge for principle and number of cycles
     /// Return value does not include principle!
     /// must be public as we need to access it in contract
     function getAllowedLeverageForPosition(uint256 principle, uint256 numberOfCycles) public view returns (uint256) {

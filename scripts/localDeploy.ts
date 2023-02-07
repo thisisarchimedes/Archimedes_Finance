@@ -24,7 +24,6 @@ async function fundLVUSDToCoordinator () {
 
     await context.lvUSD.setMintDestination(context.coordinator.address);
     await context.lvUSD.mint(ethers.utils.parseUnits(lvUSDAmount, 18));
-    // await context.coordinator.acceptLeverageAmount(ethers.utils.parseUnits(amount, 18));
 
     console.log(context.coordinator.address + " funded with " + lvUSDAmount + " LVUSD");
 }
