@@ -57,9 +57,13 @@ class DeploymentUtils {
             ValueStore.addressCurveOUSDPool,
         );
 
+        console.log("before setDependencies on vault, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
+
         await contracts.vault.setDependencies(contracts.parameterStore.address, contracts.externalOUSD.address);
 
         // await contracts.parameterStore.changeTreasuryAddress(contracts.signers.treasury.address);
+
+        console.log("before setDependencies on pool, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
 
         await contracts.poolManager.setDependencies(
             contracts.parameterStore.address,
@@ -68,6 +72,7 @@ class DeploymentUtils {
             contracts.external3CRV.address,
             pools.curveLvUSDPool.address,
         );
+        console.log("before setDependencies on param, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
 
         await contracts.parameterStore.setDependencies(
             contracts.coordinator.address,
@@ -75,10 +80,13 @@ class DeploymentUtils {
             contracts.auction.address,
         );
 
+        console.log("before setDependencies on cdp, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
+
         await contracts.cdp.setDependencies(
             contracts.vault.address,
             contracts.parameterStore.address,
         );
+        console.log("before setDependencies on zapper, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
 
         await contracts.zapper.setDependencies(
             contracts.leverageEngine.address,

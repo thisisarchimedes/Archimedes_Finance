@@ -1,15 +1,15 @@
 export class DeployedStore {
     static lvUSDAddress = "0x94A18d9FE00bab617fAD8B49b11e9F1f64Db6b36";
     static archTokenAddress = "0x73C69d24ad28e2d43D03CBf35F79fE26EBDE1011";
-    static parameterStoreAddress = "0x1c9fD50dF7a4f066884b58A05D91e4b55005876A";
-    static cdpAddress = "0x71a0b8A2245A9770A4D887cE1E4eCc6C1d4FF28c";
-    static coordinatorAddress = "0xAe120F0df055428E45b264E7794A18c54a2a3fAF";
-    static exchangerAddress = "0x9Fcca440F19c62CDF7f973eB6DDF218B15d4C71D";
-    static leverageEngineAddress = "0x3C1Cb427D20F15563aDa8C249E71db76d7183B6c";
-    static positionTokenAddress = "0x22a9B82A6c3D2BFB68F324B2e8367f346Dd6f32a";
-    static poolManagerAddress = "0x7C8BaafA542c57fF9B2B90612bf8aB9E86e22C09";
-    static auctionAddress = "0x5e6CB7E728E1C320855587E1D9C6F7972ebdD6D5";
-    static zapperAddress = "0x0Dd99d9f56A14E9D53b2DdC62D9f0bAbe806647A";
-    static vaultAddress = "0x95775fD3Afb1F4072794CA4ddA27F2444BCf8Ac3";
-    static curvelvUSDAddress = "0xf6D7087D4Ae4dCf85956d743406E63cDA74D99AD";
+    static parameterStoreAddress = "0xcc6Ea29928A1F6bc4796464F41b29b6d2E0ee42C";
+    static cdpAddress = "0x229a9733063eAD8A1f769fd920eb60133fCCa3Ef";
+    static coordinatorAddress = "0x58c968fADa478adb995b59Ba9e46e3Db4d6B579d";
+    static exchangerAddress = "0x823cf8A11C1eb28b0C00011515E1d2a28B362f09";
+    static leverageEngineAddress = "0x03dc7Fa99B986B7E6bFA195f39085425d8172E29";
+    static positionTokenAddress = "0x14c6A3C8DBa317B87ab71E90E264D0eA7877139D";
+    static poolManagerAddress = "0x20BE62DbE3d1877D6f6f42f942F11d870cD7379B";
+    static auctionAddress = "0x9699331484C6a663597535399b6C5F288b83c5A9";
+    static zapperAddress = "0x624f570C24d61Ba5BF8FBFF17AA39BFc0a7b05d8";
+    static vaultAddress = "0x4c12c57C37Ff008450A2597e810B51B2BbA0383A";
+    static curvelvUSDAddress = "0xe9123CBC5d1EA65301D417193c40A72Ac8D53501";
 }

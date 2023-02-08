@@ -141,17 +141,17 @@ export async function deployOrGetAllContracts(contracts: Contracts, deployJustTo
         await contracts.initArchimedesUpgradableContractsWithConstructorArguments();
     } else {
         console.log("Getting Vault deployed token instances from address");
-        // await contracts.setArchimedesUpgradableContractsInstancesWithConstructorArguments(DeployedStore.vaultAddress);
+        await contracts.setArchimedesUpgradableContractsInstancesWithConstructorArguments(DeployedStore.vaultAddress);
     }
 }
 
 export async function verifyArcimedesEngine(contracts: Contracts) {
     // not veriftying tokens as we already verified them in verifyTokens
     await verifyParameterStore(contracts);
-    //     await verifyVaultOUSD(contracts);
-    //     await verifyCDPosition(contracts);
-    //     await verifyCoordinator(contracts);
-    //     await verifyExchanger(contracts);
-    //     await verifyLeverageEngine(contracts);
-    //     await verifyPositionToken(contracts);
+    await verifyVaultOUSD(contracts);
+    await verifyCDPosition(contracts);
+    await verifyCoordinator(contracts);
+    await verifyExchanger(contracts);
+    await verifyLeverageEngine(contracts);
+    await verifyPositionToken(contracts);
 }

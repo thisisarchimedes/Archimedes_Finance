@@ -21,7 +21,7 @@ import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
 // const shouldDoBasicSetup = true;
 
 const deployJustTokens = false;
-const deployArchimedesEngine = true;
+const deployArchimedesEngine = false;
 const deployVault = false;
 
 const shouldCreatePool = false;
@@ -29,7 +29,7 @@ const shouldAddLiqToPool = false;
 const shouldDoBasicSetup = false;
 
 const shouldCreateAuction = false;
-const shouldVerifyArchimedesEngine = true;
+const shouldVerifyArchimedesEngine = false;
 
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6"
 

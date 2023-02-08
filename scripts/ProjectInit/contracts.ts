@@ -80,14 +80,14 @@ export class Contracts {
 
     async initArchimedesUpgradableContracts() {
         this.parameterStore = await this.deployContractProxy("ParameterStore");
-        // this.cdp = await this.deployContractProxy("CDPosition");
-        // this.coordinator = await this.deployContractProxy("Coordinator");
-        // this.exchanger = await this.deployContractProxy("Exchanger");
-        // this.leverageEngine = await this.deployContractProxy("LeverageEngine");
-        // this.positionToken = await this.deployContractProxy("PositionToken");
-        // this.poolManager = await this.deployContractProxy("PoolManager");
-        // this.auction = await this.deployContractProxy("Auction");
-        // this.zapper = await this.deployContractProxy("Zapper");
+        this.cdp = await this.deployContractProxy("CDPosition");
+        this.coordinator = await this.deployContractProxy("Coordinator");
+        this.exchanger = await this.deployContractProxy("Exchanger");
+        this.leverageEngine = await this.deployContractProxy("LeverageEngine");
+        this.positionToken = await this.deployContractProxy("PositionToken");
+        this.poolManager = await this.deployContractProxy("PoolManager");
+        this.auction = await this.deployContractProxy("Auction");
+        this.zapper = await this.deployContractProxy("Zapper");
     }
 
     async setArchimedesUpgradableContractsInstances(

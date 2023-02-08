@@ -114,13 +114,14 @@ export default {
             chainId: 1337,
             forking: {
                 url: alchemyUrl,
+                accounts: [`0x${mainnetKey}`],
                 allowUnlimitedContractSize: false,
-                blockNumber: 16572153,
+                blockNumber: 16579272,
             },
 
             localhost: {
                 url: "http://127.0.0.1:8545",
-                blockNumber: 16572153,
+                blockNumber: 16579272,
                 allowUnlimitedContractSize: false,
             },
         },
