@@ -35,6 +35,11 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
 
     event ZapIn(uint256 positionID, uint256 totalStableAmount, address baseStableAddress, bool usedUserArch);
 
+    struct StableBalances {
+        uint256 stableBalanceBeforeExchanges;
+        uint256 stableBalanceAfterArchExchange;
+        uint256 remainingStable;
+    }
     /*
         @dev Exchange base stable to OUSD and Arch and create position 
 
@@ -42,6 +47,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         @param cycles Number of cycles for open position call (determine how much lvUSD will be borrowed)
         @param archMinAmount Minimum amount of Arch tokens to buy 
         @param ousdMinAmount Minimum amount of OUSD to buy
+        @param maxSlippageAllowed Max slippage allowed in basis points (1/1000). 1000 = 100%
         @param addressBaseStable Address of base stable coin to use for zap
         @param useUserArch If true, will use user arch tokens to open position. If false, will buy arch tokens
     */
@@ -63,10 +69,11 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         // 4) open position
         // 5) return NFT to user
 
+        // get a base line of how much stable is under management on conract - should be zero but creating a new base line 
         /// validate input
         require(stableCoinAmount > 0, "err:stableCoinAmount==0");
         require(maxSlippageAllowed < 1000, "err:slippage>1000");
-        require(maxSlippageAllowed > 959, "err:slippage<980");
+        require(maxSlippageAllowed > 959, "err:slippage<959");
 
         // Now we apply slippage. We increase the min of Arch and reduce the min of OUSD
         // This is because we need to always have enough Arch to pay so better to have a bit less OUSD and more Arch than
@@ -77,9 +84,16 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         /// transfer base stable coin from user to this address
         _transferFromSender(addressBaseStable, stableCoinAmount);
 
+        StableBalances memory stableBalances;
+        stableBalances.stableBalanceBeforeExchanges = IERC20Upgradeable(addressBaseStable).balanceOf(address(this));
+        /// Will get changed if we exchange stable for ARCH
+        stableBalances.stableBalanceAfterArchExchange= stableBalances.stableBalanceBeforeExchanges;
+        stableBalances.remainingStable = stableCoinAmount;
+
         /// Setup
         address[] memory path = _getPath(addressBaseStable);
         uint256 collateralInBaseStableAmount = stableCoinAmount;
+
 
         if (useUserArch == false) {
             // Need to buy Arch tokens. We already know how much Arch tokens we want. We still need to know the Max in stable that
@@ -91,12 +105,15 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             uint256 maxStableToPayForArch = (coinsToPayForArchAmount * 1000) / maxSlippageAllowed;
             // Now swap exact archMinAmount for a maximum of maxStableToPayForArch in stable coin
             _uniswapRouter.swapTokensForExactTokens(archMinAmount, maxStableToPayForArch, path, address(this), block.timestamp + 2 minutes);
+            stableBalances.stableBalanceAfterArchExchange = IERC20Upgradeable(addressBaseStable).balanceOf(address(this));
         }
+        
 
         /// Exchange OUSD from any of the 3CRV. Will revert if didn't get min amount sent (2nd parameter)
         // Now spend all the remainign stable to buy OUSD
-        uint256 remainingStable = IERC20Upgradeable(addressBaseStable).balanceOf(address(this));
-        uint256 ousdAmount = _exchangeToOUSD(remainingStable, ousdMinAmount, addressBaseStable);
+        stableBalances.remainingStable = stableCoinAmount - 
+            (stableBalances.stableBalanceBeforeExchanges - stableBalances.stableBalanceAfterArchExchange);
+        uint256 ousdAmount = _exchangeToOUSD(stableBalances.remainingStable, ousdMinAmount, addressBaseStable);
 
          // Check if we are using existing arch tokens owned by user or buying new ones
         if (useUserArch == true) {
