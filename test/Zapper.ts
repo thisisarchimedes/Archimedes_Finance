@@ -155,21 +155,39 @@ async function zapIntoPosition(
     stableAmount: BigNumber = bnFromNum(10, 6),
     cycles = defaultCycles,
     slippage = 990) {
+    console.log("---- start zap into position with user arch %s and stable %s ----", useUserArch, stableAmount);
     /// Important notice, make sure stable amount is in correct decimal
     const baseAddress = addressUSDT;
     const previewAmounts = await zapper.previewZapInAmount(stableAmount, cycles, baseAddress, useUserArch);
     // we are using preview
     const previewOUSDAmount = previewAmounts.ousdCollateralAmountReturn;
     const previewArchAmount = previewAmounts.archTokenAmountReturn;
+
+    /// debug numbers 
+    // const numPreviewArchAmount = ethers.utils.formatUnits(previewArchAmount, 18);
+    // const numPreviewOUSDAmount = ethers.utils.formatUnits(previewOUSDAmount, 18);
+    // console.log("arch amount estimated %s", numPreviewArchAmount);
+    // console.log("ousd amount estimated %s", numPreviewOUSDAmount);
+    // const levFromPrincipalEst = await r.parameterStore.getAllowedLeverageForPosition(previewOUSDAmount, cycles);
+    // const archToPayForPrincpleEst = await r.parameterStore.calculateArchNeededForLeverage(levFromPrincipalEst);
+    // const numLevFromPrincipalEst = ethers.utils.formatUnits(levFromPrincipalEst, 18);
+    // const numArchToPayForPrincpleEst = ethers.utils.formatUnits(archToPayForPrincpleEst, 18);
+    // console.log("estimated arch token fee in arch %s while lev estimated is %s", numArchToPayForPrincpleEst, numLevFromPrincipalEst)
+    // console.log("end debug numbers")
+    // End debug numbers
+
     const archAmountBN = ethers.utils.parseUnits(previewArchAmount.toString(), 0);
     if (useUserArch) {
         /// caluclate the amount of arch to approve based on slippage 
         const archAmountWithSlippage = archAmountBN.mul(1000).div(slippage);
+        console.log("approving min amount of arch buffered: %s", ethers.utils.formatUnits(archAmountWithSlippage, 18));
+        console.log("auction bidding price is of arch is %s", ethers.utils.formatUnits(
+            await r.auction.getCurrentBiddingPrice(), 18));
         await r.archToken.connect(positionOpenSigner).approve(zapper.address, archAmountWithSlippage);
     }
     // console.log("Approved archAmountBN as positionOpenSigner");
     await r.externalUSDT.connect(positionOpenSigner).approve(zapper.address, stableAmount);
-    // console.log("Approved % USDT stableAmount as positionOpenSigner", ethers.utils.formatUnits(stableAmount, 6));
+    console.log("Approved % USDT stableAmount as positionOpenSigner", ethers.utils.formatUnits(stableAmount, 6));
     return zapper.connect(positionOpenSigner).zapIn(stableAmount, cycles, previewArchAmount, previewOUSDAmount, slippage, baseAddress, useUserArch);
 }
 
@@ -285,6 +303,7 @@ async function computeSplit(
 
 describe("Zapper test suite", function () {
     describe("Basic Zapper test", function () {
+
         it("Should add CDP values to zapped in position", async function () {
             const { r, zapper } = await loadFixture(setupFixture);
             await zapIntoPosition(r, zapper);
@@ -294,6 +313,29 @@ describe("Zapper test suite", function () {
 
             expect(collateral).to.be.closeTo(8, 1);
             expect(leverage).to.be.closeTo(34, 2);
+        });
+
+        it("Should be able to create several bigger and bigger positions using user owned Arch token", async function () {
+            const { r, zapper } = await loadFixture(setupFixture);
+            await r.archToken.connect(r.treasurySigner).transfer(owner.address, bnFromNum(10));
+            await r.archToken.connect(owner).approve(zapper.address, bnFromNum(10));
+            await zapIntoPosition(r, zapper, true);
+            await zapIntoPosition(r, zapper, false, r.owner, bnFromNum(11, 6));
+
+            const collateral0 = numFromBn(await r.cdp.getOUSDPrinciple(0));
+            const collateral1 = numFromBn(await r.cdp.getOUSDPrinciple(1));
+            console.log("Collateral 0: %s", collateral0);
+            console.log("Collateral 1: %s", collateral1);
+
+            expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
+            expect(await r.positionToken.ownerOf(1)).to.equal(owner.address);
+
+            // const collateral0 = numFromBn(await r.cdp.getOUSDPrinciple(0));
+            // const collateral1 = numFromBn(await r.cdp.getOUSDPrinciple(1));
+
+            // console.log("Collateral 0: %s", collateral0);
+            // console.log("Collateral 1: %s", collateral1);
+
         });
 
         it("Should be able to create positions using user owned Arch token", async function () {

@@ -75,24 +75,18 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         require(maxSlippageAllowed < 1000, "err:slippage>1000");
         require(maxSlippageAllowed > 959, "err:slippage<959");
 
-        // Now we apply slippage. We increase the min of Arch and reduce the min of OUSD
+        // Now we apply slippage. We reduce the min of OUSD
         // This is because we need to always have enough Arch to pay so better to have a bit less OUSD and more Arch than
         // the other way around
-        // archMinAmount = (archMinAmount * 1000) / maxSlippageAllowed;
         ousdMinAmount = (ousdMinAmount * maxSlippageAllowed) / 1000;
 
         /// transfer base stable coin from user to this address
         _transferFromSender(addressBaseStable, stableCoinAmount);
 
-        StableBalances memory stableBalances;
-        stableBalances.stableBalanceBeforeExchanges = IERC20Upgradeable(addressBaseStable).balanceOf(address(this));
-        /// Will get changed if we exchange stable for ARCH
-        stableBalances.stableBalanceAfterArchExchange= stableBalances.stableBalanceBeforeExchanges;
-        stableBalances.remainingStable = stableCoinAmount;
-
         /// Setup
         address[] memory path = _getPath(addressBaseStable);
         uint256 collateralInBaseStableAmount = stableCoinAmount;
+        uint256 ousdAmount;
 
 
         if (useUserArch == false) {
@@ -104,23 +98,20 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             /// In this case up to 5%
             uint256 maxStableToPayForArch = (coinsToPayForArchAmount * 1000) / maxSlippageAllowed;
             // Now swap exact archMinAmount for a maximum of maxStableToPayForArch in stable coin
-            _uniswapRouter.swapTokensForExactTokens(archMinAmount, maxStableToPayForArch, path, address(this), block.timestamp + 2 minutes);
-            stableBalances.stableBalanceAfterArchExchange = IERC20Upgradeable(addressBaseStable).balanceOf(address(this));
+            uint256 stableUsedForArch = _uniswapRouter.swapTokensForExactTokens(archMinAmount, 
+                maxStableToPayForArch, path, address(this), block.timestamp + 1 minutes)[0];
+
+            /// Exchange OUSD from any of the 3CRV. Will revert if didn't get min amount sent (2nd parameter)
+            // Now spend all the remainign stable to buy OUSD
+            ousdAmount = _exchangeToOUSD(stableCoinAmount - stableUsedForArch, ousdMinAmount, addressBaseStable);
         }
         
-
-        /// Exchange OUSD from any of the 3CRV. Will revert if didn't get min amount sent (2nd parameter)
-        // Now spend all the remainign stable to buy OUSD
-        stableBalances.remainingStable = stableCoinAmount - 
-            (stableBalances.stableBalanceBeforeExchanges - stableBalances.stableBalanceAfterArchExchange);
-        uint256 ousdAmount = _exchangeToOUSD(stableBalances.remainingStable, ousdMinAmount, addressBaseStable);
-
          // Check if we are using existing arch tokens owned by user or buying new ones
         if (useUserArch == true) {
+            // First, exchange ALL stable coin to OUSD 
+            ousdAmount = _exchangeToOUSD(stableCoinAmount, ousdMinAmount, addressBaseStable);
             // We are using owners arch tokens, transfer from msg.sender to address(this)
             uint256 archToTransfer = _getArchAmountToTransferFromUser(ousdAmount, cycles);
-            // uint256 archApproval = _archToken.allowance(msg.sender, address(this));
-            // console.log("archToTransfer: %s , archMin %s, archApproved %s", archToTransfer, archMinAmount,archApproval);
             require(_archToken.balanceOf(msg.sender) >= archToTransfer, "err:insuf user arch");
             require(_archToken.allowance(msg.sender, address(this)) >= archToTransfer, "err:insuf approval arch");
             _transferFromSender(address(_archToken), archToTransfer);
@@ -131,6 +122,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
 
         /// Return all remaining dust/tokens to user
         _archToken.safeTransfer(msg.sender, _archToken.balanceOf(address(this)));
+        // @fran is this needed? 
         IERC20Upgradeable(addressBaseStable).safeApprove(msg.sender, 0);
 
         emit ZapIn(tokenId, stableCoinAmount, addressBaseStable, useUserArch);
@@ -143,7 +135,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
 
         @param stableCoinAmount Amount of stable coin to zap(exchange) into Arch and OUSD
         @param cycles Number of cycles for open position call (determine how much lvUSD will borrowed)
-        @param maxSlippageAllowed Max slippage allowed for all token exchanges. For more accuracy uses 1000 for 100%
         @param addressBaseStable Address of base stable coin to use for zap
         @param useUserArch If true, will use user arch tokens to open position. If false, will buy arch tokens
     */
