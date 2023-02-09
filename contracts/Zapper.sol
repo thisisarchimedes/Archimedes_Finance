@@ -122,8 +122,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
 
         /// Return all remaining dust/tokens to user
         _archToken.safeTransfer(msg.sender, _archToken.balanceOf(address(this)));
-        // @fran is this needed? 
-        IERC20Upgradeable(addressBaseStable).safeApprove(msg.sender, 0);
 
         emit ZapIn(tokenId, stableCoinAmount, addressBaseStable, useUserArch);
 
