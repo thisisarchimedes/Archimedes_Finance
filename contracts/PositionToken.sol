@@ -10,7 +10,6 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/se
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-
 contract PositionToken is
     AccessController,
     ReentrancyGuardUpgradeable,
@@ -137,6 +136,10 @@ contract PositionToken is
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
+    }
+
+    function _baseURI() internal pure override returns (string memory) {
+        return "https://s3.us-west-2.amazonaws.com/archimedesfi-nft-json-v1.0/";
     }
 
     fallback() external {

@@ -1,6 +1,8 @@
+import { formatEther } from "ethers/lib/utils";
 import { Contracts } from "../Contracts";
 import { DeploymentUtils } from "../DeploymentUtils";
 import { ERC20Utils } from "../ERC20Utils";
+import { EtherUtils } from "../EtherUtils";
 import { AuctionInfo, LeverageHelper } from "../LeverageHelper";
 import { Logger } from "../Logger";
 import { NumberBundle } from "../NumberBundle";
@@ -39,8 +41,11 @@ async function main() {
     // const signers = await new Signers().impersonateOwner("0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7");
 
     const contracts = new Contracts(signers);
-    await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
-    const pools = await new Pools().init(contracts, shouldCreatePool);
+    console.log("avaliable lev is %s", formatEther("    console.log("")
+    "
+    ))
+    // await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
+    // const pools = await new Pools().init(contracts, shouldCreatePool);
 
 
     // console.log("expecting signer address to be 0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7")

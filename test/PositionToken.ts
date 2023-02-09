@@ -70,6 +70,11 @@ describe("PositionToken test suit", function () {
         expect(await r.positionToken.ownerOf(thirdTokenId)).to.equal(thirdTokenOwnerAddress);
     });
 
+    it("Should show correct baseURI", async function () {
+        expect(await r.positionToken.ownerOf(thirdTokenId)).to.equal(thirdTokenOwnerAddress);
+        expect(await r.positionToken.tokenURI(thirdTokenId)).to.equal("https://s3.us-west-2.amazonaws.com/archimedesfi-nft-json-v1.0/2.json");
+    });
+
     it("Should allow positionToken owner to transfer ownership", async function () {
         const safeTransferAsThirdOwner = r.positionToken.connect(thirdTokenOwner)["safeTransferFrom(address,address,uint256)"];
         await safeTransferAsThirdOwner(
