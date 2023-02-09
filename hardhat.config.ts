@@ -116,12 +116,13 @@ export default {
                 url: alchemyUrl,
                 accounts: [`0x${mainnetKey}`],
                 allowUnlimitedContractSize: false,
-                blockNumber: 16579272,
+                blockNumber: 16587249,
             },
 
             localhost: {
                 url: "http://127.0.0.1:8545",
-                blockNumber: 16579272,
+                accounts: [`0x${mainnetKey}`],
+                blockNumber: 16587249,
                 allowUnlimitedContractSize: false,
             },
         },
