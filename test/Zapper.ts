@@ -163,17 +163,17 @@ async function zapIntoPosition(
     const previewOUSDAmount = previewAmounts.ousdCollateralAmountReturn;
     const previewArchAmount = previewAmounts.archTokenAmountReturn;
 
-    /// debug numbers 
-    // const numPreviewArchAmount = ethers.utils.formatUnits(previewArchAmount, 18);
-    // const numPreviewOUSDAmount = ethers.utils.formatUnits(previewOUSDAmount, 18);
-    // console.log("arch amount estimated %s", numPreviewArchAmount);
-    // console.log("ousd amount estimated %s", numPreviewOUSDAmount);
-    // const levFromPrincipalEst = await r.parameterStore.getAllowedLeverageForPosition(previewOUSDAmount, cycles);
-    // const archToPayForPrincpleEst = await r.parameterStore.calculateArchNeededForLeverage(levFromPrincipalEst);
-    // const numLevFromPrincipalEst = ethers.utils.formatUnits(levFromPrincipalEst, 18);
-    // const numArchToPayForPrincpleEst = ethers.utils.formatUnits(archToPayForPrincpleEst, 18);
-    // console.log("estimated arch token fee in arch %s while lev estimated is %s", numArchToPayForPrincpleEst, numLevFromPrincipalEst)
-    // console.log("end debug numbers")
+    // / debug numbers 
+    const numPreviewArchAmount = ethers.utils.formatUnits(previewArchAmount, 18);
+    const numPreviewOUSDAmount = ethers.utils.formatUnits(previewOUSDAmount, 18);
+    console.log("arch amount estimated %s", numPreviewArchAmount);
+    console.log("ousd amount estimated %s", numPreviewOUSDAmount);
+    const levFromPrincipalEst = await r.parameterStore.getAllowedLeverageForPosition(previewOUSDAmount, cycles);
+    const archToPayForPrincpleEst = await r.parameterStore.calculateArchNeededForLeverage(levFromPrincipalEst);
+    const numLevFromPrincipalEst = ethers.utils.formatUnits(levFromPrincipalEst, 18);
+    const numArchToPayForPrincpleEst = ethers.utils.formatUnits(archToPayForPrincpleEst, 18);
+    console.log("estimated arch token fee in arch %s while lev estimated is %s", numArchToPayForPrincpleEst, numLevFromPrincipalEst)
+    console.log("end debug numbers")
     // End debug numbers
 
     const archAmountBN = ethers.utils.parseUnits(previewArchAmount.toString(), 0);
