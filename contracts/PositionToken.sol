@@ -10,8 +10,6 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/se
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 contract PositionToken is
     AccessController,
     ReentrancyGuardUpgradeable,
@@ -24,11 +22,20 @@ contract PositionToken is
 
     CountersUpgradeable.Counter private _positionTokenIdCounter;
 
+    /// mapping of address to which TokenID it owns (only used for viewing methods)
+    mapping(address => uint256[]) internal _addressToTokensOwnedMapping;
+
+
     event NFTCreated(uint256 indexed _positionId, address indexed _minter);
     event NFTBurned(uint256 indexed _positionId, address indexed _redeemer);
-    /// mapping of address to which TokenID it owns (only used for viewing methods)
 
-    mapping(address => uint256[]) internal _addressToTokensOwnedMapping;
+     /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    uint256[44] private __gap;
 
     /* Privileged functions: Executive */
     function safeMint(address to) external onlyExecutive returns (uint256 positionTokenId) {
@@ -129,6 +136,10 @@ contract PositionToken is
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
+    }
+
+    function _baseURI() internal pure override returns (string memory) {
+        return "https://s3.us-west-2.amazonaws.com/archimedesfi-nft-json-v1.0/";
     }
 
     fallback() external {
