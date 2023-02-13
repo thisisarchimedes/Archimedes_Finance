@@ -163,7 +163,7 @@ async function zapIntoPosition(
     const previewOUSDAmount = previewAmounts.ousdCollateralAmountReturn;
     const previewArchAmount = previewAmounts.archTokenAmountReturn;
 
-    // / debug numbers 
+    // / debug numbers
     const numPreviewArchAmount = ethers.utils.formatUnits(previewArchAmount, 18);
     const numPreviewOUSDAmount = ethers.utils.formatUnits(previewOUSDAmount, 18);
     console.log("arch amount estimated %s", numPreviewArchAmount);
@@ -172,13 +172,13 @@ async function zapIntoPosition(
     const archToPayForPrincpleEst = await r.parameterStore.calculateArchNeededForLeverage(levFromPrincipalEst);
     const numLevFromPrincipalEst = ethers.utils.formatUnits(levFromPrincipalEst, 18);
     const numArchToPayForPrincpleEst = ethers.utils.formatUnits(archToPayForPrincpleEst, 18);
-    console.log("estimated arch token fee in arch %s while lev estimated is %s", numArchToPayForPrincpleEst, numLevFromPrincipalEst)
-    console.log("end debug numbers")
+    console.log("estimated arch token fee in arch %s while lev estimated is %s", numArchToPayForPrincpleEst, numLevFromPrincipalEst);
+    console.log("end debug numbers");
     // End debug numbers
 
     const archAmountBN = ethers.utils.parseUnits(previewArchAmount.toString(), 0);
     if (useUserArch) {
-        /// caluclate the amount of arch to approve based on slippage 
+        /// caluclate the amount of arch to approve based on slippage
         const archAmountWithSlippage = archAmountBN.mul(1000).div(slippage);
         console.log("approving min amount of arch buffered: %s", ethers.utils.formatUnits(archAmountWithSlippage, 18));
         console.log("auction bidding price is of arch is %s", ethers.utils.formatUnits(
@@ -303,7 +303,6 @@ async function computeSplit(
 
 describe("Zapper test suite", function () {
     describe("Basic Zapper test", function () {
-
         it("Should add CDP values to zapped in position", async function () {
             const { r, zapper } = await loadFixture(setupFixture);
             await zapIntoPosition(r, zapper);
@@ -335,7 +334,6 @@ describe("Zapper test suite", function () {
 
             // console.log("Collateral 0: %s", collateral0);
             // console.log("Collateral 1: %s", collateral1);
-
         });
 
         // it("Should be able to create positions using user owned Arch token", async function () {
