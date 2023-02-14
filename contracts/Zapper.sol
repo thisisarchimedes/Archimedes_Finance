@@ -73,8 +73,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         // get a base line of how much stable is under management on conract - should be zero but creating a new base line
         /// validate input
         require(stableCoinAmount > 0, "err:stableCoinAmount==0");
-        require(maxSlippageAllowed < 1000, "err:slippage>1000");
-        require(maxSlippageAllowed > 959, "err:slippage<959");
+        require(maxSlippageAllowed < 1000, "err:slippage>999");
+        require(maxSlippageAllowed > 959, "err:slippage<960");
 
         // Now we apply slippage. We reduce the min of OUSD
         // This is because we need to always have enough Arch to pay so better to have a bit less OUSD and more Arch than
