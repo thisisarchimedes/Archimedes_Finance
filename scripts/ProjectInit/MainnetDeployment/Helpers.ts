@@ -4,9 +4,10 @@ import { Logger } from "../Logger";
 import { NumberBundle } from "../NumberBundle";
 import { DeployedStore } from "./DeployedStore";
 
+
 function verifyValues(actualValue: NumberBundle, name: string, expectedValue: NumberBundle) {
     if (actualValue.getBn().eq(expectedValue.getBn()) === false) {
-        throw new Error(`Expected "${name}" to be ${expectedValue.getNum()} but got ${actualValue.getNum}`);
+        throw new Error(`Expected "${name}" to be ${expectedValue.getNum()} but got ${actualValue.getNum()}`);
     }
     Logger.log("Verified that %s is equal to expected value of %s", name, expectedValue.getNum());
 }
@@ -46,9 +47,9 @@ async function verifyParameterStore(contracts: Contracts) {
 }
 
 async function verifyVaultOUSD(contracts: Contracts) {
-    const totalAssets = await contracts.vault.totalAssets();
+    const redeem = await contracts.vault.previewRedeem(0);
     verifyValues(
-        NumberBundle.withBn(totalAssets, 0),
+        NumberBundle.withBn(redeem, 0),
         "Total assets",
         NumberBundle.withNum(0, 0),
     );
@@ -86,19 +87,19 @@ async function verifyExchanger(contracts: Contracts) {
 }
 
 async function verifyLeverageEngine(contracts: Contracts) {
-    console.log("levEngine address", contracts.leverageEngine.address);
+    Logger.log("levEngine address", contracts.leverageEngine.address);
     const executive = await contracts.leverageEngine.getAddressExecutive();
     verifyStrings(
         executive,
         "Executive",
-        contracts.signers.owner.address,
+        "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7"
     );
     Logger.log("LeverageEngine Verified");
 }
 
 async function verifyPositionToken(contracts: Contracts) {
-    console.log("positionToken address", contracts.positionToken.address);
-    const exists = await contracts.positionToken.exists(0);
+    Logger.log("positionToken address", contracts.positionToken.address);
+    const exists = await contracts.positionToken.exists(12);
     verifyBooleans(
         exists,
         "Position Exists",

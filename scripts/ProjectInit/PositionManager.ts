@@ -8,6 +8,7 @@ import { NumberBundle } from "./NumberBundle";
 import { Pools } from "./Pools";
 import { PositionInfo } from "./PositionInfo";
 import { TestConstants } from "./TestConstants";
+import { ValueStore } from "./ValueStore";
 
 export class PositionManager {
     contracts: Contracts;
@@ -18,8 +19,9 @@ export class PositionManager {
         this.pools = pools;
     }
 
-    async createPositionEndToEnd (position: PositionInfo, printCreation = false) {
+    async createPositionEndToEnd(position: PositionInfo, printCreation = false) {
         await this.approveForPositionCreation(position);
+
         await this.createPosition(position);
         // Now fill all the info needed on position
         await position.fillPositionPostCreation();
@@ -31,7 +33,7 @@ export class PositionManager {
         }
     }
 
-    async unwindPositionAndVerify (position: PositionInfo) {
+    async unwindPositionAndVerify(position: PositionInfo) {
         if (await position.isPositionExists() === false) {
             throw new Error("Position does not exist");
         }
@@ -43,7 +45,7 @@ export class PositionManager {
         }
     }
 
-    async unwindPosition (position: PositionInfo) {
+    async unwindPosition(position: PositionInfo) {
         const userOusdBalanceBefore = await ERC20Utils.balance(position.positionOwner.address, this.contracts.externalOUSD);
         await this.contracts.leverageEngine.connect(position.positionOwner).unwindLeveragedPosition(position.positionTokenNum);
         EtherUtils.mineBlock();
@@ -53,7 +55,7 @@ export class PositionManager {
         position.fillPositionPostUnwind(ousdReturned);
     }
 
-    async createPosition (position: PositionInfo) {
+    async createPosition(position: PositionInfo) {
         // basically do a preview to get the return value of this method
         const previewPositionId = await this.contracts.leverageEngine
             .connect(position.positionOwner)
@@ -63,7 +65,6 @@ export class PositionManager {
                 position.cycles,
                 position.archFee.getBn(),
             );
-
         await this.contracts.leverageEngine.connect(position.positionOwner).createLeveragedPosition(
             position.collateral.getBn(),
             position.cycles,
@@ -77,7 +78,7 @@ export class PositionManager {
     //     return owner;
     // }
 
-    async approveForPositionCreation (position: PositionInfo) {
+    async approveForPositionCreation(position: PositionInfo) {
         const spenderOfFundsAddress = this.contracts.leverageEngine.address;
         await ERC20Utils.approveAndVerify(
             spenderOfFundsAddress,
@@ -95,7 +96,7 @@ export class PositionManager {
 
     /// Fund the user with any tokens they might need to create positions
     /// Funds USDT, ARCH, and OUSD
-    async fundSignerForPosition (signer: SignerWithAddress, leverageHelper: LeverageHelper) {
+    async fundSignerForPosition(signer: SignerWithAddress, leverageHelper: LeverageHelper) {
         await this.pools.exchangeEthForExactStable(TestConstants.ONE_THOUSAND_USDT.getBn(), signer.address, this.contracts.externalUSDT.address);
         await this.pools.exchangeExactEthForOUSD(TestConstants.ONE_ETH.getBn(), signer.address);
         await ERC20Utils.getArchFromTreasury(TestConstants.ONE_HUNDRED_ETH, signer.address, this.contracts);

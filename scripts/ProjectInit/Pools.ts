@@ -19,14 +19,14 @@ export class Pools {
     owner: SignerWithAddress;
 
     uniRouter: IUniswapV2Router02;
-    curveLvUSDPool: Contract;
-    curveCRVPool: Contract;
-    curveOUSDPool: Contract;
-    factoryCurveMetapool: Contract;
+    curveLvUSDPool: any;
+    curveCRVPool: any;
+    curveOUSDPool: any;
+    factoryCurveMetapool: any;
 
-    static deadlineBlock = 1670978314;
+    static deadlineBlock = 16902252;
 
-    async init (contracts: Contracts, createPool = false): Pools {
+    async init(contracts: Contracts, createPool = false): Pools {
         this.contracts = contracts;
         this.owner = contracts.signers.owner;
         this.uniRouter = new ethers.Contract(ValueStore.addressUniswapRouter, ValueStore.abiUniswapRouter, this.owner);
@@ -39,26 +39,26 @@ export class Pools {
             Logger.log("Created lvUSD curve pools at : " + this.curveLvUSDPool.address);
         } else {
             this.curveLvUSDPool = await this.findPool(ValueStore.address3CRV, this.contracts.lvUSD.address);
-            Logger.log("Found lvUSD/3CRV pool at address: " + this.curveLvUSDPool.address);
+            console.log("Found lvUSD/3CRV pool at address: " + this.curveLvUSDPool.address);
         }
         return this;
     }
 
-    async exchangeEthForExactStable (amountOut: BigNumber, toAddress: string, stableAddress: string): void {
+    async exchangeEthForExactStable(amountOut: BigNumber, toAddress: string, stableAddress: string): void {
         /// value here is max numbers of Eth to use. Putting some very large arbitrary number here is enough
         await this.uniRouter.swapETHForExactTokens(amountOut, [ValueStore.addressWETH9, stableAddress], toAddress, Pools.deadlineBlock, {
             value: ethers.utils.parseUnits("100"),
         });
     }
 
-    async exchangeExactEthForStable (amountIn: BigNumber, toAddress: string, stableAddress: string): void {
+    async exchangeExactEthForStable(amountIn: BigNumber, toAddress: string, stableAddress: string): void {
         await this.uniRouter.swapExactETHForTokens(0, [ValueStore.addressWETH9, stableAddress], toAddress, Pools.deadlineBlock,
             { value: amountIn },
         );
     }
 
     /// Exchange ETH for USDT, then deposit USDT into 3CRV pool(different from lvUSD/3CRV pool!) to get 3CRV
-    async exchangeExactEthFor3CRV (amountIn: BigNumber, toAddress: string): NumberBundle {
+    async exchangeExactEthFor3CRV(amountIn: BigNumber, toAddress: string): NumberBundle {
         await this.exchangeExactEthForStable(amountIn, toAddress, ValueStore.addressUSDT);
         const usdtBalance = await this.contracts.externalUSDT.balanceOf(toAddress);
         await EtherUtils.mineBlock();
@@ -70,7 +70,7 @@ export class Pools {
         return NumberBundle.withBn(extraCRVCreated);
     }
 
-    async exchangeExactEthForOUSD (amountIn: BigNumber, toAddress: string): void {
+    async exchangeExactEthForOUSD(amountIn: BigNumber, toAddress: string): void {
         // Firdt, get some 3crv
         const crvBalance = await this.exchangeExactEthFor3CRV(amountIn, this.owner.address);
         await this.contracts.external3CRV.approve(this.curveOUSDPool.address, crvBalance.getBn());
@@ -84,7 +84,7 @@ export class Pools {
         await this.contracts.externalOUSD.transfer(toAddress, ousdBOwnerBalance.getBn());
     }
 
-    async addLiquidityToCurvePool (amountLvUSD: NumberBundle, amount3CRV: NumberBundle): void {
+    async addLiquidityToCurvePool(amountLvUSD: NumberBundle, amount3CRV: NumberBundle): void {
         /// approve amount (would revert if not enough available on ERC20 balance)
         await this.contracts.lvUSD.approve(this.curveLvUSDPool.address, amountLvUSD.getBn());
         await this.contracts.external3CRV.approve(this.curveLvUSDPool.address, amount3CRV.getBn());
@@ -96,15 +96,15 @@ export class Pools {
         // await EtherUtils.mineBlock();
     }
 
-    async getLvUSDInPool (): NumberBundle {
+    async getLvUSDInPool(): NumberBundle {
         return NumberBundle.withBn(await this.curveLvUSDPool.balances(0));
     }
 
-    async get3CRVInPool (): NumberBundle {
+    async get3CRVInPool(): NumberBundle {
         return NumberBundle.withBn(await this.curveLvUSDPool.balances(1));
     }
 
-    async _createCurvePool (poolName: string, tokenAddress: string): Contract {
+    async _createCurvePool(poolName: string, tokenAddress: string): any {
         const poolSymbol = poolName;
         const poolA = 40000;
         const poolFee = 4000000;
@@ -116,14 +116,14 @@ export class Pools {
         return pool;
     }
 
-    async findPool (coin1Address: string, coin2Address: string): Contract {
+    async findPool(coin1Address: string, coin2Address: string): any {
         const poolAddress = await this.factoryCurveMetapool.find_pool_for_coins(coin1Address, coin2Address);
         return await ethers.getContractAt(ValueStore.abi3PoolImplementation, poolAddress, this.owner);
     }
 
     /// For lvUSD/3CRV pool, coin 0 is lvUSD, coin 1 is 3crv
 
-    async estimatelvUSDtoCrvExchange (lvUSDAmountIn: NumberBundle): NumberBundle {
+    async estimatelvUSDtoCrvExchange(lvUSDAmountIn: NumberBundle): NumberBundle {
         return await this.estimateCurveExchange(lvUSDAmountIn, 0, 1);
         // const lvUSDAmountBn = lvUSDAmount.getBn();
         // const ousdAmount = await this.curveLvUSDPool.get_dy(0, 1, lvUSDAmountBn);
@@ -131,12 +131,13 @@ export class Pools {
         // return NumberBundle.withBn(ousdAmount);
     }
 
-    async estimateCrvToOusdExchange (crvAmountIn: NumberBundle): NumberBundle {
+    async estimateCrvToOusdExchange(crvAmountIn: NumberBundle): NumberBundle {
         return await this.estimateCurveExchange(crvAmountIn, 1, 0);
     }
 
-    async estimateCurveExchange (amountIn: NumberBundle, fromCoin: number, toCoin: number): NumberBundle {
+    async estimateCurveExchange(amountIn: NumberBundle, fromCoin: number, toCoin: number): NumberBundle {
         const amountInBn = amountIn.getBn();
+        console.log("curveLvUSDPool ", this.curveLvUSDPool.address);
         const amountOut = await this.curveLvUSDPool.get_dy(fromCoin, toCoin, amountInBn);
 
         return NumberBundle.withBn(amountOut);

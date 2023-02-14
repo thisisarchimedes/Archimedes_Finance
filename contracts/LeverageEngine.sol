@@ -120,7 +120,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
 
         /// check that user gave enough arch allowance for cycle-principle combo
         require(lvUSDAmountNeedForArguments - 1 <= lvUSDAmount, "cant get enough lvUSD");
-        uint256 archNeededToBurn = (_parameterStore.calculateArchNeededForLeverage(lvUSDAmount) / 10000) * 10000; // minus 1000 wei
+        uint256 archNeededToBurn = (_parameterStore.calculateArchNeededForLeverage(lvUSDAmount) / 10000) * 10000; //  max minus 1000 wei
 
         require(archNeededToBurn <= maxArchAmount, "Not enough Arch given for Pos");
         uint256 availableLev = _coordinator.getAvailableLeverage();

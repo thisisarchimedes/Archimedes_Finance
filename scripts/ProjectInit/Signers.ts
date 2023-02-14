@@ -19,8 +19,5 @@ export class Signers {
         return this;
     }
 
-    async impersonateOwner(address: string): Signers {
-        this.owner = await ethers.getImpersonatedSigner(address);
-        return this;
-    }
+
 }

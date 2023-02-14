@@ -1,4 +1,5 @@
 import { formatEther } from "ethers/lib/utils";
+import { ethers } from "hardhat";
 import { Contracts } from "../Contracts";
 import { DeploymentUtils } from "../DeploymentUtils";
 import { ERC20Utils } from "../ERC20Utils";
@@ -31,20 +32,18 @@ const shouldAddLiqToPool = false;
 const shouldDoBasicSetup = true;
 
 const shouldCreateAuction = true;
-const shouldVerifyArchimedesEngine = false;
+const shouldVerifyArchimedesEngine = true;
 
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6"
-
 async function main() {
     Logger.setVerbose(true);
     const signers = await new Signers().initOwnerOnly();
-    // const signers = await new Signers().impersonateOwner("0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7");
+
+
 
     const contracts = new Contracts(signers);
-    console.log("avaliable lev is %s", formatEther("    console.log("")
-    "
-    ))
-    // await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
+
+    await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
     // const pools = await new Pools().init(contracts, shouldCreatePool);
 
 
@@ -89,9 +88,9 @@ async function main() {
     //     console.log("LvUSD balance of coooedinator is", coordinatorAvailableLvUSD.getNum());
     // }
 
-    // if (shouldVerifyArchimedesEngine) {
-    //     await verifyArcimedesEngine(contracts);
-    // }
+    if (shouldVerifyArchimedesEngine) {
+        await verifyArcimedesEngine(contracts);
+    }
 
     console.log("\nDone with verifying tokens\n");
 }
