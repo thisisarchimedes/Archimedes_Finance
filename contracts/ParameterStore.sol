@@ -116,7 +116,7 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     }
 
     function changeOriginationFeeRate(uint256 newFeeRate) external onlyGovernor {
-        // require(newFeeRate > (1 ether / 1000) && newFeeRate < (50 ether / 1000), "newFeeRate out of range");
+        require(newFeeRate > (1 ether / 1000) && newFeeRate < (50 ether / 1000), "newFeeRate out of range");
         emit ParameterChange("originationFeeRate", newFeeRate, _originationFeeRate);
         _originationFeeRate = newFeeRate;
     }
@@ -207,20 +207,17 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         return _positionTimeToLiveInDays;
     }
 
-    /// Method returns the allowed pge for principle and number of cycles
+    /// Method returns the allowed leverage for principle and number of cycles
     /// Return value does not include principle!
     /// must be public as we need to access it in contract
     function getAllowedLeverageForPosition(uint256 principle, uint256 numberOfCycles) public view returns (uint256) {
         require(numberOfCycles <= _maxNumberOfCycles, "Cycles greater than max allowed");
         uint256 leverageAmount = 0;
         uint256 cyclePrinciple = principle;
-        // console.log("getAllowedLeverageForPosition principle %s, numberOfCycles %s", principle / 1 ether, numberOfCycles);
         for (uint256 i = 0; i < numberOfCycles; ++i) {
-            // console.log("getAllowedLeverageForPosition looping on cycles");
             cyclePrinciple = (cyclePrinciple * _globalCollateralRate) / 100;
             leverageAmount += cyclePrinciple;
         }
-        // console.log("getAllowedLeverageForPosition: leverageAmount %s", leverageAmount / 1 ether);
         return leverageAmount;
     }
 
