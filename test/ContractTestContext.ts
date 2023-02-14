@@ -53,8 +53,8 @@ export async function startAuctionAcceptLeverageAndEndAuction (
     r: ContractTestContext,
     leverage: BigNumber,
     length = 5,
-    startPrice: BigNumber = ethers.utils.parseUnits("300.0"),
-    endPrice: BigNumber = ethers.utils.parseUnits("301.0")) {
+    startPrice: BigNumber = ethers.utils.parseUnits("1.0"),
+    endPrice: BigNumber = ethers.utils.parseUnits("1000.0")) {
     /// start Auction and end it to get a static endPrice
     const startBlock = await ethers.provider.blockNumber;
     await r.auction.startAuctionWithLength(length, startPrice, endPrice);

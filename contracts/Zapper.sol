@@ -94,6 +94,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             // we are willing to pay. For that, we're running the splitEstimate again and adding a small buffer
             uint256 coinsToPayForArchAmount;
             (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
+            console.log("coinsToPayForArchAmount", coinsToPayForArchAmount);
             /// since we basivally add a buffer for max stable to take, its actually a built in limit on how much slippage is allowed.
             /// In this case up to 5%
             uint256 maxStableToPayForArch = (coinsToPayForArchAmount * 1000) / maxSlippageAllowed;
@@ -105,7 +106,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
                 address(this),
                 block.timestamp + 1 minutes
             )[0];
-
             /// Exchange OUSD from any of the 3CRV. Will revert if didn't get min amount sent (2nd parameter)
             // Now spend all the remainign stable to buy OUSD
             ousdAmount = _exchangeToOUSD(stableCoinAmount - stableUsedForArch, ousdMinAmount, addressBaseStable);
@@ -121,11 +121,16 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             require(_archToken.allowance(msg.sender, address(this)) >= archToTransfer, "err:insuf approval arch");
             _transferFromSender(address(_archToken), archToTransfer);
         }
+        uint256 initialArch = _archToken.balanceOf(address(this));
+        console.log("initial Arch", initialArch);
 
         /// create position
         uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(ousdAmount, cycles, _archToken.balanceOf(address(this)), msg.sender);
 
         /// Return all remaining dust/tokens to user
+        uint256 dustArch = _archToken.balanceOf(address(this));
+        console.log("dust amount", dustArch);
+        console.log("actual fee", initialArch - dustArch);
         _archToken.safeTransfer(msg.sender, _archToken.balanceOf(address(this)));
 
         emit ZapIn(tokenId, stableCoinAmount, addressBaseStable, useUserArch);
@@ -156,15 +161,20 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         uint256 collateralInBaseStableAmount = stableCoinAmount;
 
         if (useUserArch == false) {
-            // Need to buy Arch tokens. We need to split the stable amount between what we'll as collateral what we'll use to buy Arch
+            // Need to buy Arch tokens. We need to split the stable amount between what we'll use as collateral and what we'll use to buy Arch
             uint256 coinsToPayForArchAmount;
             (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
             // preview buy arch tokens from uniswap. results from this will be used as mimimum for Arch to get
-            archTokenAmount = _uniswapRouter.getAmountsOut(coinsToPayForArchAmount, path)[2];
+            // archTokenAmount = _uniswapRouter.getAmountsOut(coinsToPayForArchAmount, path)[2];
         }
 
         // estimate exchange with curve pool
         ousdCollateralAmount = _poolOUSD3CRV.get_dy_underlying(stableTokenIndex, _OUSD_TOKEN_INDEX, collateralInBaseStableAmount);
+
+        if (useUserArch == false) {
+            uint256 ousdBorrowedAmount = _paramStore.getAllowedLeverageForPosition(ousdCollateralAmount, cycles);
+            archTokenAmount = _paramStore.calculateArchNeededForLeverage(ousdBorrowedAmount);
+        }
 
         if (useUserArch == true) {
             // We are using owners arch tokens, transfer from msg.sender to address(this)
