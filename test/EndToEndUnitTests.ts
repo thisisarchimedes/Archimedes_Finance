@@ -134,9 +134,9 @@ describe("Building basic environment", function () {
         // mint some lvUSD and pass it to coordinator. That lvUSD will be used by coordinator as needed to take leverage
         await r.lvUSD.setMintDestination(r.coordinator.address);
         await r.lvUSD.mint(parseUnitsNum(initialCoordinatorLvUSDBalance));
-        console.log("Starting Auction!!!")
+        console.log("Starting Auction!!!");
         await startAuctionAcceptLeverageAndEndAuction(r, parseUnitsNum(initialCoordinatorLvUSDBalance));
-        console.log("End starting Auction!!!")
+        console.log("End starting Auction!!!");
 
         /* ====== Setup Pools ===========
         expected state:

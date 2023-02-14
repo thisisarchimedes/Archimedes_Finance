@@ -91,7 +91,7 @@ async function verifyLeverageEngine (contracts: Contracts) {
     verifyStrings(
         executive,
         "Executive",
-        "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7"
+        "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7",
     );
     Logger.log("LeverageEngine Verified");
 }

@@ -18,6 +18,4 @@ export class Signers {
         [this.owner] = await ethers.getSigners();
         return this;
     }
-
-
 }
