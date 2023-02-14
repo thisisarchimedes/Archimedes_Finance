@@ -40,6 +40,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         uint256 stableBalanceAfterArchExchange;
         uint256 remainingStable;
     }
+
     /*
         @dev Exchange base stable to OUSD and Arch and create position 
 
@@ -69,7 +70,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         // 4) open position
         // 5) return NFT to user
 
-        // get a base line of how much stable is under management on conract - should be zero but creating a new base line 
+        // get a base line of how much stable is under management on conract - should be zero but creating a new base line
         /// validate input
         require(stableCoinAmount > 0, "err:stableCoinAmount==0");
         require(maxSlippageAllowed < 1000, "err:slippage>1000");
@@ -88,7 +89,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         uint256 collateralInBaseStableAmount = stableCoinAmount;
         uint256 ousdAmount;
 
-
         if (useUserArch == false) {
             // Need to buy Arch tokens. We already know how much Arch tokens we want. We still need to know the Max in stable that
             // we are willing to pay. For that, we're running the splitEstimate again and adding a small buffer
@@ -98,24 +98,29 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             /// In this case up to 5%
             uint256 maxStableToPayForArch = (coinsToPayForArchAmount * 1000) / maxSlippageAllowed;
             // Now swap exact archMinAmount for a maximum of maxStableToPayForArch in stable coin
-            uint256 stableUsedForArch = _uniswapRouter.swapTokensForExactTokens(archMinAmount, 
-                maxStableToPayForArch, path, address(this), block.timestamp + 1 minutes)[0];
+            uint256 stableUsedForArch = _uniswapRouter.swapTokensForExactTokens(
+                archMinAmount,
+                maxStableToPayForArch,
+                path,
+                address(this),
+                block.timestamp + 1 minutes
+            )[0];
 
             /// Exchange OUSD from any of the 3CRV. Will revert if didn't get min amount sent (2nd parameter)
             // Now spend all the remainign stable to buy OUSD
             ousdAmount = _exchangeToOUSD(stableCoinAmount - stableUsedForArch, ousdMinAmount, addressBaseStable);
         }
-        
-         // Check if we are using existing arch tokens owned by user or buying new ones
+
+        // Check if we are using existing arch tokens owned by user or buying new ones
         if (useUserArch == true) {
-            // First, exchange ALL stable coin to OUSD 
+            // First, exchange ALL stable coin to OUSD
             ousdAmount = _exchangeToOUSD(stableCoinAmount, ousdMinAmount, addressBaseStable);
             // We are using owners arch tokens, transfer from msg.sender to address(this)
             uint256 archToTransfer = _getArchAmountToTransferFromUser(ousdAmount, cycles);
             require(_archToken.balanceOf(msg.sender) >= archToTransfer, "err:insuf user arch");
             require(_archToken.allowance(msg.sender, address(this)) >= archToTransfer, "err:insuf approval arch");
             _transferFromSender(address(_archToken), archToTransfer);
-        } 
+        }
 
         /// create position
         uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(ousdAmount, cycles, _archToken.balanceOf(address(this)), msg.sender);

@@ -38,7 +38,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     IERC20Upgradeable internal _ousd;
     ParameterStore internal _paramStore;
 
-     /**
+    /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
@@ -236,7 +236,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         setExecutive(_msgSender());
         setGuardian(_msgSender());
         setAuctioneer(_msgSender());
-
     }
 
     function _withdrawCollateralUnderNFT(

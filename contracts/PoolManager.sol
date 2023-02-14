@@ -22,7 +22,7 @@ contract PoolManager is AccessController, ReentrancyGuardUpgradeable, UUPSUpgrad
     IERC20Upgradeable internal _crv3;
     ParameterStore internal _paramStore;
     ICurveFiCurve internal _poolLvUSD3CRV;
-    
+
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.

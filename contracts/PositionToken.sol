@@ -25,11 +25,10 @@ contract PositionToken is
     /// mapping of address to which TokenID it owns (only used for viewing methods)
     mapping(address => uint256[]) internal _addressToTokensOwnedMapping;
 
-
     event NFTCreated(uint256 indexed _positionId, address indexed _minter);
     event NFTBurned(uint256 indexed _positionId, address indexed _redeemer);
 
-     /**
+    /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
