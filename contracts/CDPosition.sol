@@ -20,7 +20,7 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
         uint256 oUSDTotalWithoutInterest; // Principle + OUSD acquired from selling borrowed lvUSD
         uint256 lvUSDBorrowed; // Total lvUSD borrowed under this position
         uint256 shares; // Total vault shares allocated to this position
-        // // New values, need to implement changing values
+        // New values, need to implement changing values
         uint256 openTimeStamp; // Open time
         uint256 positionLifetimeInDays; // Position in days
         uint256 positionExpiration;

@@ -4,29 +4,28 @@ import { Logger } from "../Logger";
 import { NumberBundle } from "../NumberBundle";
 import { DeployedStore } from "./DeployedStore";
 
-
-function verifyValues(actualValue: NumberBundle, name: string, expectedValue: NumberBundle) {
+function verifyValues (actualValue: NumberBundle, name: string, expectedValue: NumberBundle) {
     if (actualValue.getBn().eq(expectedValue.getBn()) === false) {
         throw new Error(`Expected "${name}" to be ${expectedValue.getNum()} but got ${actualValue.getNum()}`);
     }
     Logger.log("Verified that %s is equal to expected value of %s", name, expectedValue.getNum());
 }
 
-function verifyStrings(actualString: string, name: string, expectedString: string) {
+function verifyStrings (actualString: string, name: string, expectedString: string) {
     if (actualString !== expectedString) {
         throw new Error(`Expected "${name}" to be ${expectedString} but got ${actualString}`);
     }
     Logger.log("Verified that %s is equal to expected value of %s", name, expectedString);
 }
 
-function verifyBooleans(actual: boolean, name: string, expected: boolean) {
+function verifyBooleans (actual: boolean, name: string, expected: boolean) {
     if (actual !== expected) {
         throw new Error(`Expected "${name}" to be ${expected} but got ${actual}`);
     }
     Logger.log("Verified that %s is equal to expected value of %s", name, expected);
 }
 
-async function verifyTokens(contracts: Contracts) {
+async function verifyTokens (contracts: Contracts) {
     const treasuryArchTokenBalance = await ERC20Utils.balance(contracts.signers.treasury.address, contracts.archToken);
     verifyValues(treasuryArchTokenBalance, "Treasury Arch token balance", NumberBundle.withNum(100000000));
     Logger.log("ArchToken Verified");
@@ -36,7 +35,7 @@ async function verifyTokens(contracts: Contracts) {
     Logger.log("LvUSDToken Verified");
 }
 
-async function verifyParameterStore(contracts: Contracts) {
+async function verifyParameterStore (contracts: Contracts) {
     const maxCycles = await contracts.parameterStore.getMaxNumberOfCycles();
     verifyValues(
         NumberBundle.withBn(maxCycles, 0),
@@ -56,7 +55,7 @@ async function verifyVaultOUSD(contracts: Contracts) {
     Logger.log("ParameterStore Verified");
 }
 
-async function verifyCDPosition(contracts: Contracts) {
+async function verifyCDPosition (contracts: Contracts) {
     const executive = await contracts.cdp.getAddressExecutive();
     verifyStrings(
         executive,
@@ -66,7 +65,7 @@ async function verifyCDPosition(contracts: Contracts) {
     Logger.log("CDPosition Verified");
 }
 
-async function verifyCoordinator(contracts: Contracts) {
+async function verifyCoordinator (contracts: Contracts) {
     const addressOfLvUSDToken = await contracts.coordinator.addressOfLvUSDToken();
     verifyStrings(
         addressOfLvUSDToken,
@@ -76,7 +75,7 @@ async function verifyCoordinator(contracts: Contracts) {
     Logger.log("Coordinator Verified");
 }
 
-async function verifyExchanger(contracts: Contracts) {
+async function verifyExchanger (contracts: Contracts) {
     const executive = await contracts.exchanger.getAddressExecutive();
     verifyStrings(
         executive,
@@ -86,8 +85,8 @@ async function verifyExchanger(contracts: Contracts) {
     Logger.log("Exchanger Verified");
 }
 
-async function verifyLeverageEngine(contracts: Contracts) {
-    Logger.log("levEngine address", contracts.leverageEngine.address);
+async function verifyLeverageEngine (contracts: Contracts) {
+    console.log("levEngine address", contracts.leverageEngine.address);
     const executive = await contracts.leverageEngine.getAddressExecutive();
     verifyStrings(
         executive,
@@ -97,9 +96,9 @@ async function verifyLeverageEngine(contracts: Contracts) {
     Logger.log("LeverageEngine Verified");
 }
 
-async function verifyPositionToken(contracts: Contracts) {
-    Logger.log("positionToken address", contracts.positionToken.address);
-    const exists = await contracts.positionToken.exists(12);
+async function verifyPositionToken (contracts: Contracts) {
+    console.log("positionToken address", contracts.positionToken.address);
+    const exists = await contracts.positionToken.exists(0);
     verifyBooleans(
         exists,
         "Position Exists",
@@ -108,7 +107,7 @@ async function verifyPositionToken(contracts: Contracts) {
     Logger.log("PositionToken Verified");
 }
 
-export async function deployOrGetAllContracts(contracts: Contracts, deployJustTokens = false, deployArchimedesEngine = false, deployVault = false) {
+export async function deployOrGetAllContracts (contracts: Contracts, deployJustTokens = false, deployArchimedesEngine = false, deployVault = false) {
     if (deployJustTokens) {
         console.log("Deploying tokens");
         await contracts.setExternalTokensInstances();
@@ -146,7 +145,7 @@ export async function deployOrGetAllContracts(contracts: Contracts, deployJustTo
     }
 }
 
-export async function verifyArcimedesEngine(contracts: Contracts) {
+export async function verifyArcimedesEngine (contracts: Contracts) {
     // not veriftying tokens as we already verified them in verifyTokens
     await verifyParameterStore(contracts);
     await verifyVaultOUSD(contracts);
