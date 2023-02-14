@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import {IAuction} from "../contracts/interfaces/IAuction.sol";
 import {AccessController} from "./AccessController.sol";
@@ -8,11 +8,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "hardhat/console.sol";
 
 contract Auction is IAuction, AccessController, UUPSUpgradeable {
-    /// access control variables. In V2 move to dedicated lib/class
-    bytes32 public constant AUCTIONEER = keccak256("AUCTIONEER");
-    address internal _addressAuctioneer;
-    // ^^end access control variables
-
     uint256 internal _currentAuctionId;
     uint256 internal _startBlock;
     uint256 internal _endBlock;
@@ -20,6 +15,14 @@ contract Auction is IAuction, AccessController, UUPSUpgradeable {
     uint256 internal _endPrice;
 
     bool internal _isAuctionClosed;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    uint256[44] private __gap;
 
     function startAuctionWithLength(
         uint256 length,
@@ -158,18 +161,5 @@ contract Auction is IAuction, AccessController, UUPSUpgradeable {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
-    }
-
-    function setAuctioneer(address newAuctioneer) public onlyAdmin {
-        address oldAuctioneer = _addressAuctioneer;
-        require(oldAuctioneer != newAuctioneer, "New Auctioneer must be diff");
-        _grantRole(AUCTIONEER, newAuctioneer);
-        _revokeRole(AUCTIONEER, oldAuctioneer);
-        _addressAuctioneer = newAuctioneer;
-    }
-
-    modifier onlyAuctioneer() {
-        require(hasRole(AUCTIONEER, msg.sender), "Caller is not Auctioneer");
-        _;
     }
 }

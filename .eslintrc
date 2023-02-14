@@ -91,8 +91,9 @@
             "error",
             "smart-tabs"
         ],
+        "no-multi-str": "off",
         "no-redeclare": [
-            "error",
+            "off",
             {
                 "builtinGlobals": true
             }
@@ -103,6 +104,7 @@
                 "skipBlankLines": false
             }
         ],
+        "no-multiple-empty-lines": "error",
         "no-undef": "error",
         "no-use-before-define": "off",
         "no-var": "error",
@@ -120,7 +122,7 @@
             "always"
         ],
         "space-before-function-paren": [
-            "error",
+            "off",
             "always"
         ],
         "mocha/no-exclusive-tests": [
@@ -135,7 +137,7 @@
                 "test/*.ts"
             ],
             "rules": {
-                "no-unused-expressions": "off"
+                "no-unused-expressions": "off",
             }
         }
     ]

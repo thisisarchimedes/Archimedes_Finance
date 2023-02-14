@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
@@ -12,7 +12,7 @@ import {BasicAccessController} from "../contracts/BasicAccessController.sol";
  **/
 
 contract ArchToken is ERC20, BasicAccessController, ERC20Permit, ERC20Votes {
-    constructor(address _addressTreasury) ERC20("Archimedes", "ARCH") ERC20Permit("ArchToken") {
+    constructor(address _addressTreasury) ERC20("ARCH", "ARCH") ERC20Permit("ArchToken") {
         _mint(_addressTreasury, 100000000 ether);
         _grantRole(ADMIN_ROLE, _msgSender());
     }

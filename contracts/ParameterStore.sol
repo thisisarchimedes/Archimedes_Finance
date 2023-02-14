@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import "hardhat/console.sol";
 import {AccessController} from "./AccessController.sol";
@@ -27,6 +27,14 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
     uint256 internal _positionTimeToLiveInDays;
     uint256 internal _coordinatorLeverageBalance;
 
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    uint256[44] private __gap;
+
     event ParameterChange(string indexed _name, uint256 _newValue, uint256 _oldValue);
     event TreasuryChange(address indexed _newValue, address indexed _oldValue);
 
@@ -48,11 +56,11 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         _originationFeeRate = 5 ether / 1000; // meaning 0.5%
         _globalCollateralRate = 95;
         _rebaseFeeRate = 30 ether / 100; // meaning 30%
-        _curveGuardPercentage = 95;
+        _curveGuardPercentage = 96;
         _slippage = 1; // 1%;
         _curveMaxExchangeGuard = 50; // meaning we allow exchange with get 50% more then we expected
         _minPositionCollateral = 2 ether;
-        _positionTimeToLiveInDays = 369;
+        _positionTimeToLiveInDays = 370;
         _coordinatorLeverageBalance = 0;
 
         _treasuryAddress = address(0);
@@ -206,13 +214,10 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
         require(numberOfCycles <= _maxNumberOfCycles, "Cycles greater than max allowed");
         uint256 leverageAmount = 0;
         uint256 cyclePrinciple = principle;
-        // console.log("getAllowedLeverageForPosition principle %s, numberOfCycles %s", principle / 1 ether, numberOfCycles);
         for (uint256 i = 0; i < numberOfCycles; ++i) {
-            // console.log("getAllowedLeverageForPosition looping on cycles");
             cyclePrinciple = (cyclePrinciple * _globalCollateralRate) / 100;
             leverageAmount += cyclePrinciple;
         }
-        // console.log("getAllowedLeverageForPosition: leverageAmount %s", leverageAmount / 1 ether);
         return leverageAmount;
     }
 
@@ -227,7 +232,6 @@ contract ParameterStore is AccessController, UUPSUpgradeable {
             // In this case, user approved more(or exactly) arch tokens needed for leverage
             return allowedLeverageNoArchLimit;
         } else {
-            /// TODO : Should this return a revert? Most likely but other changes are needed as well. This can be misleading
             revert("Not enough Arch for Pos");
         }
     }

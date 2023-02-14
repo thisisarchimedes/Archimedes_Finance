@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {IERC20MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC20MetadataUpgradeable.sol";
@@ -23,6 +23,14 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
     IOUSD internal _ousd;
 
     uint256 internal _assetsHandledByArchimedes;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    uint256[44] private __gap;
 
     fallback() external {
         revert("VaultOUSD : Invalid access");

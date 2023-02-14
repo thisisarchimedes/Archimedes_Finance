@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import "hardhat/console.sol";
 
@@ -28,6 +28,14 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     ParameterStore internal _parameterStore;
     ArchToken internal _archToken;
     IERC20Upgradeable internal _ousd;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    uint256[44] private __gap;
 
     event PositionCreated(
         address indexed _from,
@@ -112,7 +120,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
 
         /// check that user gave enough arch allowance for cycle-principle combo
         require(lvUSDAmountNeedForArguments - 1 <= lvUSDAmount, "cant get enough lvUSD");
-        uint256 archNeededToBurn = (_parameterStore.calculateArchNeededForLeverage(lvUSDAmount) / 10000) * 10000; // minus 1000 wei
+        uint256 archNeededToBurn = (_parameterStore.calculateArchNeededForLeverage(lvUSDAmount) / 10000) * 10000; //  max minus 1000 wei
 
         require(archNeededToBurn <= maxArchAmount, "Not enough Arch given for Pos");
         uint256 availableLev = _coordinator.getAvailableLeverage();
@@ -125,6 +133,8 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         if (_ousd.allowance(msg.sender, address(this)) >= ousdPrinciple) {
             _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
         } else {
+            uint256 balanceBefore = _ousd.balanceOf(address(this));
+            console.log("in createLeveragedPosition a- %s -- prince - %s", balanceBefore, ousdPrinciple);
             revert("insuff OUSD allowance");
         }
 

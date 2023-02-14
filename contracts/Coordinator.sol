@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import {ICoordinator} from "../contracts/interfaces/ICoordinator.sol";
 import {VaultOUSD} from "../contracts/VaultOUSD.sol";
@@ -37,6 +37,14 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
     IERC20Upgradeable internal _lvUSD;
     IERC20Upgradeable internal _ousd;
     ParameterStore internal _paramStore;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+
+    uint256[44] private __gap;
 
     function setDependencies(
         address addressLvUSD,
@@ -91,7 +99,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         _lvUSD.safeTransfer(_addressExchanger, amount);
     }
 
-    function acceptLeverageAmount(uint256 leverageAmountToAccept) external onlyAdmin nonReentrant {
+    function acceptLeverageAmount(uint256 leverageAmountToAccept) external onlyAuctioneer nonReentrant {
         require(Auction(_addressAuction).isAuctionClosed() == false, "Auction must be open");
         uint256 currentLvUSDBalance = _lvUSD.balanceOf(address(this));
         require(currentLvUSDBalance >= leverageAmountToAccept, "lvUSD !< levAmt");
@@ -227,6 +235,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         setGovernor(_msgSender());
         setExecutive(_msgSender());
         setGuardian(_msgSender());
+        setAuctioneer(_msgSender());
     }
 
     function _withdrawCollateralUnderNFT(

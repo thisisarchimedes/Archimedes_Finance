@@ -1,0 +1,37 @@
+import type { Contract } from "@nomiclabs/hardhat-ethers/signers";
+import { Signers } from "./Signers";
+import { Coordinator } from "../../types/contracts/Coordinator";
+import { Exchanger } from "../../types/contracts/Exchanger";
+import { LeverageEngine } from "../../types/contracts/LeverageEngine";
+import { PositionToken } from "../../types/contracts/PositionToken";
+import { VaultOUSD } from "../../types/contracts/VaultOUSD";
+import { ArchToken } from "../../types/contracts/ArchToken";
+import { LvUSDToken } from "../../types/contracts/LvUSDToken";
+import { PoolManager } from "../../types/contracts/PoolManager";
+import { Auction } from "../../types/contracts/Auction";
+import { ParameterStore } from "../../types/contracts/ParameterStore";
+import { CDPosition } from "../../types/contracts/CDPosition";
+import { Zapper } from "../../types/contracts/Zapper";
+import { IERC20 } from "../../types/@openzeppelin/contracts/token/ERC20/IERC20";
+export declare class Contracts {
+    signers: Signers;
+    parameterStore: ParameterStore;
+    cdp: CDPosition;
+    coordinator: Coordinator;
+    exchanger: Exchanger;
+    leverageEngine: LeverageEngine;
+    positionToken: PositionToken;
+    vault: VaultOUSD;
+    archToken: ArchToken;
+    lvUSD: LvUSDToken;
+    poolManager: PoolManager;
+    auction: Auction;
+    zapper: Zapper;
+    externalOUSD: IERC20;
+    externalUSDT: IERC20;
+    externalDAI: IERC20;
+    external3CRV: IERC20;
+    init(signers: Signers): Contracts;
+    deployContractProxy(name: String, ...args: Array<any>): Promise<Contract>;
+    deployContract(name: String, ...args: Array<any>): Contract;
+}

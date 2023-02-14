@@ -84,7 +84,6 @@ async function helperSwapETHWithUSDT (destUser, ethAmountToSwap) {
     expect(ret).to.equal(addressWETH9);
 
     /// /////////// 1. ETH->WETH9 //////////////
-    await ethers.provider.send("evm_mine");
 
     // read current signer balance from WETH9 contract (so we can validate increase later)
     let weth9Balance = await weth9.balanceOf(destUser.address);
@@ -182,7 +181,6 @@ async function helperSwapETHWithOUSD (destUser: SignerWithAddress, ethAmountToSw
     /// /////////// 1. ETH->USDT on Curve /////////////////////////
 
     const balance3CRV = await helperSwapETHWith3CRV(destUser, ethAmountToSwap);
-    await ethers.provider.send("evm_mine");
 
     /// /////////// 2. USDT->OUSD with OUSD contract //////////////
 
@@ -266,6 +264,24 @@ async function createUniswapPool (r: ContractTestContext) {
     await ethers.provider.send("evm_mine");
 }
 
+async function getUSDCToUser (r: ContractTestContext, user) {
+    const router = await getRouter(r);
+    const usdcAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+
+    /// Using USDT abi for USDC as its the same (erc20)
+    const tokenUSDC = new ethers.Contract(usdcAddress, abiUSDTToken, user);
+    await router.swapExactETHForTokens(bnFromNum(500, 6), [addressWETH9, usdcAddress], user.address, 1670978314, { value: bnFromNum(1) });
+}
+
+async function getDAIToUser (r: ContractTestContext, user) {
+    // Notice dai is 18 decimal
+    const daiAddress = "0x6b175474e89094c44da98b954eedeac495271d0f";
+    const router = await getRouter(r);
+    /// Using USDT abi for USDC as its the same (erc20)
+    const tokenDAI = new ethers.Contract(daiAddress, abiUSDTToken, user);
+    await router.swapExactETHForTokens(bnFromNum(500, 18), [addressWETH9, daiAddress], user.address, 1670978314, { value: bnFromNum(1) });
+}
+
 export {
     defaultBlockNumber,
 
@@ -275,6 +291,8 @@ export {
     helperSwapETHWith3CRV,
     helperSwapETHWithOUSD,
     createUniswapPool,
+    getUSDCToUser,
+    getDAIToUser,
 
     /* addresses */
     addressCurveTripool2,

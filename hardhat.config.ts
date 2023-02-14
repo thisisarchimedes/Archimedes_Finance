@@ -3,6 +3,7 @@ import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 
+// import 'hardhat-ethernal';
 import "@openzeppelin/hardhat-upgrades";
 
 import "hardhat-watcher";
@@ -19,6 +20,7 @@ dotenv.config({ path: "secrets/alchemy.env" });
 dotenv.config({ path: resolve(__dirname, "./user.env") });
 
 const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
+const mainnetKey = "3d5840424a343a01a9eb7c4e4cce2b9675562910de9e68292c6f4266b40b78b3"; /// demo key, need to set actual key
 // Notice that if no process.env.PRIVATE_WALLET_KEY, set it a random value (junk key)
 const georliPrivateKey = process.env.PRIVATE_WALLET_KEY || "3d5840424a343a01a9eb7c4e4cce2b9675562910de9e68292c6f4266b40b78b3";
 const goerliURL = process.env.GOERLI_ALCHEMY_URL;
@@ -58,7 +60,7 @@ task("test:log", "Run tests with all logger logs", async (taskArgs: { file }, hr
  */
 export default {
     solidity: {
-        version: "0.8.13",
+        version: "0.8.17",
         settings: {
             optimizer: {
                 enabled: true,
@@ -67,6 +69,10 @@ export default {
         },
     },
     networks: {
+        mainnet: {
+            url: `${alchemyUrl}`,
+            accounts: [`0x${mainnetKey}`],
+        },
         persistant: {
             url: "http://ec2-54-211-119-50.compute-1.amazonaws.com:8545",
             accounts: [
@@ -91,7 +97,14 @@ export default {
                 "0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0", // OG 8
                 "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e",
             ],
-            allowUnlimitedContractSize: true,
+            allowUnlimitedContractSize: false,
+        },
+        deploymenttest: {
+            url: "http://ec2-18-210-14-7.compute-1.amazonaws.com:8545",
+            accounts: [
+                "0xea6c44ac03bff858b476bba40716402b03e41b8e97e276d1baec7c37d42484a0", // private key of owner
+            ],
+            allowUnlimitedContractSize: false,
         },
         goerli: {
             url: `${goerliURL}`,
@@ -101,13 +114,15 @@ export default {
             chainId: 1337,
             forking: {
                 url: alchemyUrl,
+                // accounts: [`0x${mainnetKey}`],
                 allowUnlimitedContractSize: false,
-                blockNumber: 15104872,
+                blockNumber: 16602252,
             },
 
             localhost: {
                 url: "http://127.0.0.1:8545",
-                blockNumber: 15104872,
+                // accounts: [`0x${mainnetKey}`],
+                blockNumber: 16602252,
                 allowUnlimitedContractSize: false,
             },
         },
@@ -129,5 +144,14 @@ export default {
     },
     mocha: {
         timeout: 100000000,
+    },
+    // ethernal: {
+    //     email: "yotam@archimedesfi.com",
+    //     password: "URJk1Biee1&9",
+    //     verbose: false,
+    // },
+    tenderly: {
+        username: "YotamDaniel",
+        project: "ZapperV",
     },
 };
