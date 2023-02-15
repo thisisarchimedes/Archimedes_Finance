@@ -113,8 +113,6 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         address userAddress,
         uint256 minLeverageAmount
     ) internal returns (uint256) {
-        // console.log("in createLeveragedPositionFromZapper: msg.sender is %s", msg.sender);
-        // add some minor buffer to the arch we will use for the position
         if (cycles == 0 || cycles > _parameterStore.getMaxNumberOfCycles()) {
             revert("Invalid number of cycles");
         }
@@ -169,7 +167,6 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
-        console.log("in unwindLeveragedPosition: positionWindfall is %s", positionWindfall/ 1 ether);
         require(positionWindfall >= minReturnedOUSD, "Not enough OUSD returned");
         emit PositionUnwind(msg.sender, positionTokenId, positionWindfall);
     }
