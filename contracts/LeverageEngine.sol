@@ -12,6 +12,7 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/se
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {ICDP} from "./interfaces/ICDP.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable, PausableUpgradeable {
@@ -29,13 +30,15 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     ArchToken internal _archToken;
     IERC20Upgradeable internal _ousd;
 
+    address internal _addressCDP;
+
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
 
-    uint256[44] private __gap;
+    uint256[43] private __gap;
 
     event PositionCreated(
         address indexed _from,
@@ -53,7 +56,8 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         address addressPositionToken,
         address addressParameterStore,
         address addressArchToken,
-        address addressOUSD
+        address addressOUSD,
+        address addressCDP
     ) external nonReentrant onlyAdmin {
         require(addressCoordinator != address(0), "cant set to 0 A");
         require(addressPositionToken != address(0), "cant set to 0 A");
@@ -70,6 +74,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         _archToken = ArchToken(addressArchToken);
         _addressOUSD = addressOUSD;
         _ousd = IERC20Upgradeable(_addressOUSD);
+        _addressCDP = addressCDP;
     }
 
     /// @dev deposit OUSD under NFT ID
@@ -83,18 +88,20 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     function createLeveragedPosition(
         uint256 ousdPrinciple,
         uint256 cycles,
-        uint256 maxArchAmount
+        uint256 maxArchAmount,
+        uint256 minLeverageAmount
     ) external nonReentrant whenNotPaused returns (uint256) {
-        return _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, msg.sender);
+        return _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, msg.sender,minLeverageAmount);
     }
 
     function createLeveragedPositionFromZapper(
         uint256 ousdPrinciple,
         uint256 cycles,
         uint256 maxArchAmount,
-        address userAddress
+        address userAddress,
+        uint256 minLeverageAmount
     ) external nonReentrant whenNotPaused returns (uint256) {
-        _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, userAddress);
+        return _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, userAddress,minLeverageAmount);
     }
 
     /* Non-privileged functions */
@@ -103,7 +110,8 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         uint256 ousdPrinciple,
         uint256 cycles,
         uint256 maxArchAmount,
-        address userAddress
+        address userAddress,
+        uint256 minLeverageAmount
     ) internal returns (uint256) {
         // console.log("in createLeveragedPositionFromZapper: msg.sender is %s", msg.sender);
         // add some minor buffer to the arch we will use for the position
@@ -128,8 +136,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         _burnArchTokenForPosition(msg.sender, archNeededToBurn);
         uint256 positionTokenId = _positionToken.safeMint(userAddress);
 
-        // Checking allowance due to a potential bug in OUSD contract that can under some conditions, transfer much more then allowance.
-        // This bug is fixed in later versions of solidity but adding the check here as a precaution
+        // Checking allownce from an abundence of caution
         if (_ousd.allowance(msg.sender, address(this)) >= ousdPrinciple) {
             _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
         } else {
@@ -140,6 +147,10 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
 
         _coordinator.depositCollateralUnderNFT(positionTokenId, ousdPrinciple);
         _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
+
+        uint256 positionLeveragedOUSD = ICDP(_addressCDP).getOUSDTotalWithoutInterest(positionTokenId) - ousdPrinciple;
+        require(positionLeveragedOUSD >=  minLeverageAmount,  "Not enough leveragedOUSD");
+
         uint256 positionExpireTime = _coordinator.getPositionExpireTime(positionTokenId);
 
         emit PositionCreated(userAddress, positionTokenId, ousdPrinciple, lvUSDAmount, archNeededToBurn, positionExpireTime);
@@ -154,10 +165,12 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     /// provide msg.sender address to coordinator destroy position
     ///
     /// @param positionTokenId the NFT ID of the position
-    function unwindLeveragedPosition(uint256 positionTokenId) external nonReentrant whenNotPaused {
+    function unwindLeveragedPosition(uint256 positionTokenId, uint256 minReturnedOUSD) external nonReentrant whenNotPaused {
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
+        console.log("in unwindLeveragedPosition: positionWindfall is %s", positionWindfall/ 1 ether);
+        require(positionWindfall >= minReturnedOUSD, "Not enough OUSD returned");
         emit PositionUnwind(msg.sender, positionTokenId, positionWindfall);
     }
 

@@ -589,8 +589,6 @@ describe("Zapper test suite", function () {
             const usdtAmount = bnFromNum(3, 6);
             const { r, zapper } = await loadFixture(setupFixture);
             // zapIntoPosition(r, zapper, false, owner,)
-            // await r.externalUSDT.approve(zapper.address, usdtAmount);
-            // await zapper.zapIn(usdtAmount, defaultCycles, 990, addressUSDT, false);
 
             await zapIntoPosition(r, zapper, false, owner, usdtAmount);
 
@@ -638,8 +636,6 @@ describe("Zapper test suite", function () {
         it("Should be able to open a position with 1 cycle", async function () {
             const usdtAmount = bnFromNum(100, 6);
             const { r, zapper } = await loadFixture(setupFixture);
-            // await r.externalUSDT.approve(zapper.address, usdtAmount);
-            // await zapper.zapIn(usdtAmount, 1, 990, addressUSDT, false);
             await zapIntoPosition(r, zapper, false, owner, usdtAmount, 1);
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
@@ -659,7 +655,6 @@ describe("Zapper test suite", function () {
             const usdtAmount = bnFromNum(100, 6);
             const { r, zapper } = await loadFixture(setupFixture);
             // await r.externalUSDT.approve(zapper.address, usdtAmount);
-            // await zapper.zapIn(usdtAmount, 3, 990, addressUSDT, false);
             await zapIntoPosition(r, zapper, false, owner, usdtAmount, 3);
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
@@ -679,7 +674,6 @@ describe("Zapper test suite", function () {
             const usdtAmount = bnFromNum(100, 6);
             const { r, zapper } = await loadFixture(setupFixture);
             // await r.externalUSDT.approve(zapper.address, usdtAmount);
-            // await zapper.zapIn(usdtAmount, 10, 990, addressUSDT, false);
             await zapIntoPosition(r, zapper, false, owner, usdtAmount, 10);
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
@@ -715,10 +709,10 @@ describe("Zapper test suite", function () {
             expect(collateral).to.be.closeTo(expectedCollateral, expectedMargin);
         });
 
-        it("Should be able to open a position with 99.9% slippage tolerance", async function () {
+        it("Should be able to open a position with 99% slippage tolerance", async function () {
             const usdtAmount = bnFromNum(100, 6);
             const { r, zapper } = await loadFixture(setupFixture);
-            await zapIntoPosition(r, zapper, false, owner, usdtAmount, defaultCycles, 999);
+            await zapIntoPosition(r, zapper, false, owner, usdtAmount, defaultCycles, 990);
             // Check for creation of position nft
             expect(await r.positionToken.ownerOf(0)).to.equal(owner.address);
 

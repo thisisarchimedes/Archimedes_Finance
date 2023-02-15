@@ -123,7 +123,8 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         }
 
         /// create position
-        uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(ousdAmount, cycles, _archToken.balanceOf(address(this)), msg.sender);
+        uint256 minLeverageOUSD = (_paramStore.getAllowedLeverageForPosition(ousdAmount, cycles) * maxSlippageAllowed) / 1000;
+        uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(ousdAmount, cycles, _archToken.balanceOf(address(this)), msg.sender, minLeverageOUSD);
 
         /// Return all remaining dust/tokens to user
         _archToken.safeTransfer(msg.sender, _archToken.balanceOf(address(this)));

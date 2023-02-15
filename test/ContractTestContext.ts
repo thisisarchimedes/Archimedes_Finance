@@ -142,6 +142,7 @@ export async function buildContractTestContext(skipPoolBalances = false): Promis
         context.parameterStore.address,
         context.archToken.address,
         context.externalOUSD.address,
+        context.cdp.address,
     );
 
     await ethers.provider.send("evm_mine");
