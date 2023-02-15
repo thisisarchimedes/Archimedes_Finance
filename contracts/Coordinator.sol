@@ -188,6 +188,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         require(numberOfSharesInPosition != 0, "Position has no shares");
 
         uint256 redeemedOUSD = _vault.archimedesRedeem(numberOfSharesInPosition, _addressExchanger, address(this));
+        _cdp.removeSharesFromPosition(_nftId, numberOfSharesInPosition);
 
         /// TODO: add slippage protection
         (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.swapOUSDforLvUSD(redeemedOUSD, borrowedLvUSD);

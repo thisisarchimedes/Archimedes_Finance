@@ -122,7 +122,15 @@ contract CDPosition is AccessController, UUPSUpgradeable, ReentrancyGuardUpgrade
     /// @param oUSDAmountToWithdraw amount to remove to position's existing deposited sum
     function withdrawOUSDFromPosition(uint256 nftID, uint256 oUSDAmountToWithdraw) external nftIDMustExist(nftID) nonReentrant onlyExecutive {
         require(getOUSDTotalIncludeInterest(nftID) >= oUSDAmountToWithdraw, "Insufficient OUSD balance");
-        _nftCDP[nftID].oUSDTotalWithoutInterest -= oUSDAmountToWithdraw;
+        // We verifed that the position has enough OUSD to withdraw (from both profits and principal)
+        // Now, if amount to withdraw is more then the size of the position,we'll need to just zero out ousdTotalWithoutInterest
+
+        // position OUSD without interest is bigger then amount to withdraw
+        if (_nftCDP[nftID].oUSDTotalWithoutInterest > oUSDAmountToWithdraw) {
+            _nftCDP[nftID].oUSDTotalWithoutInterest -= oUSDAmountToWithdraw;
+        } else {
+            _nftCDP[nftID].oUSDTotalWithoutInterest = 0;
+        }
     }
 
     // * CDP Getters *//

@@ -91,7 +91,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         uint256 maxArchAmount,
         uint256 minLeverageAmount
     ) external nonReentrant whenNotPaused returns (uint256) {
-        return _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, msg.sender,minLeverageAmount);
+        return _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, msg.sender, minLeverageAmount);
     }
 
     function createLeveragedPositionFromZapper(
@@ -101,7 +101,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         address userAddress,
         uint256 minLeverageAmount
     ) external nonReentrant whenNotPaused returns (uint256) {
-        return _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, userAddress,minLeverageAmount);
+        return _createLeveragedPosition(ousdPrinciple, cycles, maxArchAmount, userAddress, minLeverageAmount);
     }
 
     /* Non-privileged functions */
@@ -147,7 +147,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         _coordinator.getLeveragedOUSD(positionTokenId, lvUSDAmount);
 
         uint256 positionLeveragedOUSD = ICDP(_addressCDP).getOUSDTotalWithoutInterest(positionTokenId) - ousdPrinciple;
-        require(positionLeveragedOUSD >=  minLeverageAmount,  "Not enough leveragedOUSD");
+        require(positionLeveragedOUSD >= minLeverageAmount, "Not enough leveragedOUSD");
 
         uint256 positionExpireTime = _coordinator.getPositionExpireTime(positionTokenId);
 
