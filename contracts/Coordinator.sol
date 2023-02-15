@@ -123,14 +123,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         _cdp.addSharesToPosition(_nftId, shares);
     }
 
-    function withdrawCollateralUnderNFT(
-        uint256 _nftId,
-        uint256 _amount,
-        address _to
-    ) external override nonReentrant onlyExecutive {
-        revert("depracated function");
-    }
-
     function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override nonReentrant onlyExecutive {
         _borrowUnderNFT(_nftId, _amount);
     }
@@ -235,14 +227,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         setExecutive(_msgSender());
         setGuardian(_msgSender());
         setAuctioneer(_msgSender());
-    }
-
-    function _withdrawCollateralUnderNFT(
-        uint256 _nftId,
-        uint256 _amount,
-        address _to
-    ) internal {
-        revert("deprecated function");
     }
 
     function _borrowUnderNFT(uint256 _nftId, uint256 _amount) internal {
