@@ -128,7 +128,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         uint256 _amount,
         address _to
     ) external override nonReentrant onlyExecutive {
-        _withdrawCollateralUnderNFT(_nftId, _amount, _to);
+        revert("depracated function");
     }
 
     function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override nonReentrant onlyExecutive {
@@ -188,15 +188,13 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         require(numberOfSharesInPosition != 0, "Position has no shares");
 
         uint256 redeemedOUSD = _vault.archimedesRedeem(numberOfSharesInPosition, _addressExchanger, address(this));
-        _cdp.removeSharesFromPosition(_nftId, numberOfSharesInPosition);
 
-        /// TODO: add slippage protection
         (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.swapOUSDforLvUSD(redeemedOUSD, borrowedLvUSD);
 
         _repayUnderNFT(_nftId, exchangedLvUSD);
 
         // transferring funds from coordinator to user
-        _withdrawCollateralUnderNFT(_nftId, remainingOUSD, _userAddress);
+        _ousd.safeTransfer(_userAddress, remainingOUSD);
 
         /// Note : leverage engine still need to make sure the delete the NFT itself in positionToken
         _cdp.deletePosition(_nftId);
@@ -244,8 +242,7 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         uint256 _amount,
         address _to
     ) internal {
-        _ousd.safeTransfer(_to, _amount);
-        _cdp.withdrawOUSDFromPosition(_nftId, _amount);
+        revert("deprecated function");
     }
 
     function _borrowUnderNFT(uint256 _nftId, uint256 _amount) internal {
