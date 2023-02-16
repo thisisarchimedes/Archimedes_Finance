@@ -142,4 +142,13 @@ export class Pools {
 
         return NumberBundle.withBn(amountOut);
     }
+
+    async getUSDToUser(userAddress: string) {
+        await this.uniRouter.swapExactETHForTokens(
+            ethers.utils.parseUnits("500", 6),
+            [await this.uniRouter.WETH(), this.contracts.externalUSDT.address],
+            userAddress,
+            1708100978,
+            { value: ethers.utils.parseUnits("1", 18) });
+    }
 }

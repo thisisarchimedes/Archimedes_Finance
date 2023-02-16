@@ -64,11 +64,13 @@ export class PositionManager {
                 position.collateral.getBn(),
                 position.cycles,
                 position.archFee.getBn(),
+                0
             );
         await this.contracts.leverageEngine.connect(position.positionOwner).createLeveragedPosition(
             position.collateral.getBn(),
             position.cycles,
             position.archFee.getBn(),
+            0
         );
         position.positionTokenNum = previewPositionId.toNumber();
     }

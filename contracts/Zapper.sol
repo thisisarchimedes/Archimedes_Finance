@@ -173,11 +173,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         // estimate exchange with curve pool
         ousdCollateralAmount = _poolOUSD3CRV.get_dy_underlying(stableTokenIndex, _OUSD_TOKEN_INDEX, collateralInBaseStableAmount);
 
-        if (useUserArch == false) {
-            uint256 ousdBorrowedAmount = _paramStore.getAllowedLeverageForPosition(ousdCollateralAmount, cycles);
-            archTokenAmount = _paramStore.calculateArchNeededForLeverage(ousdBorrowedAmount);
-        }
-
         if (useUserArch == true) {
             // We are using owners arch tokens, transfer from msg.sender to address(this)
             archTokenAmount = _getArchAmountToTransferFromUser(ousdCollateralAmount, cycles);

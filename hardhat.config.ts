@@ -114,15 +114,13 @@ export default {
             chainId: 1337,
             forking: {
                 url: alchemyUrl,
-                // accounts: [`0x${mainnetKey}`],
                 allowUnlimitedContractSize: false,
-                blockNumber: 16602252,
+                blockNumber: 16638619,
             },
 
             localhost: {
                 url: "http://127.0.0.1:8545",
-                // accounts: [`0x${mainnetKey}`],
-                blockNumber: 16602252,
+                blockNumber: 16638619,
                 allowUnlimitedContractSize: false,
             },
         },
@@ -145,11 +143,6 @@ export default {
     mocha: {
         timeout: 100000000,
     },
-    // ethernal: {
-    //     email: "yotam@archimedesfi.com",
-    //     password: "URJk1Biee1&9",
-    //     verbose: false,
-    // },
     tenderly: {
         username: "YotamDaniel",
         project: "ZapperV",

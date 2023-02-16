@@ -100,6 +100,7 @@ export class Contracts {
         poolManagerAddress: string,
         auctionAddress: string,
         zapperAddress: string) {
+
         this.parameterStore = await this.getInstanceOfExistingContract("ParameterStore", parameterStoreAddress);
         this.cdp = await this.getInstanceOfExistingContract("CDPosition", cdpAddress);
         this.coordinator = await this.getInstanceOfExistingContract("Coordinator", coordinatorAddress);
@@ -109,6 +110,36 @@ export class Contracts {
         this.poolManager = await this.getInstanceOfExistingContract("PoolManager", poolManagerAddress);
         this.auction = await this.getInstanceOfExistingContract("Auction", auctionAddress);
         this.zapper = await this.getInstanceOfExistingContract("Zapper", zapperAddress);
+
+        // Upgrade contracts
+
+        // /// fake owner 
+        // const deployerOwner = await ethers.getImpersonatedSigner("0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7");
+
+        // // Dont remove this section if you want to upgrade contracts
+        // console.log("Upgrading contracts");
+        // const leverageEngineImpToUpgradeFact = await hre.ethers.getContractFactory("LeverageEngine");
+        // // // Import old implementation factory
+        // const factoryOldImpl = await hre.ethers.getContractFactory("LeverageEngine")
+        // factoryOldImpl.attach("0xb18f94b71c41c06eBA5528cBC7885512c1a58CFE");
+
+        // // import deployed proxy
+        // const levEngineProxy = await hre.upgrades.forceImport(leverageEngineAddress, factoryOldImpl);
+
+        // console.log("address excec before ", await this.leverageEngine.getAddressExecutive());
+        // // const levEngine = await hre.ethers.getContractFactory(leverageEngineAddress)
+        // // console.log(this.leverageEngine.address, leverageEngineImpToUpgradeFact)
+        // // await hre.upgrades.
+        // const upgraded = await hre.upgrades.prepareUpgrade(this.leverageEngine.address, leverageEngineImpToUpgradeFact, { kind: "uups" })
+
+        // console.log("newAddress of upgrade is ", upgraded);
+        // this.leverageEngine = await this.getInstanceOfExistingContract("LeverageEngine", leverageEngineAddress);
+
+        // // const lev2 = await hre.upgrades.upgradeProxy(this.leverageEngine.address, leverageEngineImpToUpgradeFact, { kind: "uups" },);
+
+        console.log("Upgrading contracts3");
+
+
     }
 
     async initArchimedesUpgradableContractsWithConstructorArguments() {

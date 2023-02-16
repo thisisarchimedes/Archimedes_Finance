@@ -1,3 +1,4 @@
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { formatEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 import { Contracts } from "../Contracts";
@@ -25,21 +26,30 @@ async function main() {
     const signers = await new Signers().init();
 
     const deployerOwner = await ethers.getImpersonatedSigner(initOwnerAddress);
+    const gnosisOwner = await ethers.getImpersonatedSigner("0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6");
+
     const tx = await signers.owner.sendTransaction({
         to: deployerOwner.address,
-        value: ethers.utils.parseEther("80.0"),
+        value: ethers.utils.parseEther("40.0"),
     });
     console.log("user eth balance is", formatEther(await deployerOwner.getBalance()));
+
+    const tx2 = await signers.owner.sendTransaction({
+        to: gnosisOwner.address,
+        value: ethers.utils.parseEther("20.0"),
+    });
+    console.log("gnosisOwner eth balance is", formatEther(await gnosisOwner.getBalance()));
+
 
     const contracts = new Contracts(signers);
     await deployOrGetAllContracts(contracts, false, false, false);
     const pools = await new Pools().init(contracts);
 
-    /// UNISWAP path USDT -> ETH -> ARCH
-    const path: string[] = [contracts.externalUSDT.address, await pools.uniRouter.WETH(), contracts.archToken.address];
-    const outArray = await pools.uniRouter.getAmountsIn(ValueStore.ONE_ETH, path);
-    const uniswapPriceOfArch = NumberBundle.withBn(outArray[0], 6);
-    console.log("uniswap price of arch is", uniswapPriceOfArch.getNum());
+    // /// UNISWAP path USDT -> ETH -> ARCH
+    // const path: string[] = [contracts.externalUSDT.address, await pools.uniRouter.WETH(), contracts.archToken.address];
+    // const outArray = await pools.uniRouter.getAmountsIn(ValueStore.ONE_ETH, path);
+    // const uniswapPriceOfArch = NumberBundle.withBn(outArray[0], 6);
+    // console.log("uniswap price of arch is", uniswapPriceOfArch.getNum());
 
     const availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
     const currentBiddingPrice = NumberBundle.withBn(await contracts.auction.getCurrentBiddingPrice());
@@ -53,12 +63,20 @@ async function main() {
     const positionManager = new PositionManager(contracts, pools);
     const positionInfo = await PositionInfo.build(contracts, deployerOwner, NumberBundle.withNum(20), 5);
 
-    await positionManager.createPositionEndToEnd(positionInfo, true);
+    const SignersToFund: SignerWithAddress[] = await ethers.getSigners();
+    console.log("SignersToFund", SignersToFund[0].address);
 
-    if (shouldVerifyArchimedesEngine) {
-        await verifyArcimedesEngine(contracts);
-    }
 
+    await pools.getUSDToUser(signers.owner.address)
+    await contracts.archToken.connect(gnosisOwner).transfer(signers.owner.address, ValueStore.ONE_ETH);
+
+
+    // await positionManager.createPositionEndToEnd(positionInfo, true);
+
+    // if (shouldVerifyArchimedesEngine) {
+    //     await verifyArcimedesEngine(contracts);
+    // }
+    await contracts.archToken.connect(gnosisOwner).transfer(signers.owner.address, ValueStore.ONE_ETH);
     console.log("\nDone with verifying tokens\n");
 }
 
