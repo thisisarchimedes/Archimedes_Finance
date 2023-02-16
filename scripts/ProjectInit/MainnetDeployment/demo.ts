@@ -40,7 +40,6 @@ async function main() {
     });
     console.log("gnosisOwner eth balance is", formatEther(await gnosisOwner.getBalance()));
 
-
     const contracts = new Contracts(signers);
     await deployOrGetAllContracts(contracts, false, false, false);
     const pools = await new Pools().init(contracts);
@@ -66,10 +65,8 @@ async function main() {
     const SignersToFund: SignerWithAddress[] = await ethers.getSigners();
     console.log("SignersToFund", SignersToFund[0].address);
 
-
-    await pools.getUSDToUser(signers.owner.address)
+    await pools.getUSDToUser(signers.owner.address);
     await contracts.archToken.connect(gnosisOwner).transfer(signers.owner.address, ValueStore.ONE_ETH);
-
 
     // await positionManager.createPositionEndToEnd(positionInfo, true);
 
