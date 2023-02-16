@@ -375,7 +375,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _minimumOUSD = (_expectedOUSD * (100 - _paramStore.getSlippage())) / 100;
 
         // Make sure pool isn't too bent
-        require(_minimumOUSD >= _guardOUSD, "LvUSD pool too imbalanced.");
+        require(_minimumOUSD >= _guardOUSD, "ousd/3crv imbalanced.");
 
         // Increase allowance
         _crv3.safeIncreaseAllowance(address(_poolOUSD3CRV), amount3CRV);
