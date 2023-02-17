@@ -13,8 +13,6 @@ import {ParameterStore} from "./ParameterStore.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -160,7 +158,11 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
             uint256 coinsToPayForArchAmount;
             (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
             // preview buy arch tokens from uniswap. results from this will be used as mimimum for Arch to get
-            archTokenAmount = _uniswapRouter.getAmountsOut(coinsToPayForArchAmount, path)[2];
+            if (addressBaseStable == _ADDRESS_USDC) {
+                archTokenAmount = _uniswapRouter.getAmountsOut(coinsToPayForArchAmount, path)[1];
+            } else {
+                archTokenAmount = _uniswapRouter.getAmountsOut(coinsToPayForArchAmount, path)[2];
+            }
         }
 
         // estimate exchange with curve pool
@@ -304,11 +306,23 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
     //  [2] USDC 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 - 6
     //  [3] USDT 0xdAC17F958D2ee523a2206206994597C13D831ec7 - 6
 
+    // _getPath determines the Uniswap exchange path
+    // There exists a USDC / ARCH Uniswap pool
+    // If the user has USDT or DAI we must first convert to USDC
     function _getPath(address addressBaseStable) internal view returns (address[] memory) {
-        address[] memory path = new address[](3);
-        path[0] = addressBaseStable;
-        path[1] = _ADDRESS_WETH9;
-        path[2] = address(_archToken);
+        address[] memory path;
+        if (addressBaseStable == _ADDRESS_USDC) {
+            // Base stable is already USDC, no conversion needed
+            path = new address[](2);
+            path[0] = addressBaseStable;
+            path[1] = address(_archToken);
+        } else {
+            // Base stable is not USDC, must convert to USDC first
+            path = new address[](3);
+            path[0] = addressBaseStable;
+            path[1] = _ADDRESS_USDC;
+            path[2] = address(_archToken);
+        }
         return path;
     }
 
