@@ -35,12 +35,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
 
     event ZapIn(uint256 positionID, uint256 totalStableAmount, address baseStableAddress, bool usedUserArch);
 
-    struct StableBalances {
-        uint256 stableBalanceBeforeExchanges;
-        uint256 stableBalanceAfterArchExchange;
-        uint256 remainingStable;
-    }
-
     /*
         @dev Exchange base stable to OUSD and Arch and create position 
 

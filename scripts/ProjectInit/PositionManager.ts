@@ -25,10 +25,11 @@ export class PositionManager {
         await this.createPosition(position);
         // Now fill all the info needed on position
         await position.fillPositionPostCreation();
-        await position.fillPositionExchangeEstimates(this.pools);
+        // await position.fillPositionExchangeEstimates(this.pools);
 
         EtherUtils.mineBlock();
         if (printCreation === true) {
+            console.log("printing position info after creation")
             await position.printPositionInfo();
         }
     }
@@ -47,10 +48,9 @@ export class PositionManager {
 
     async unwindPosition(position: PositionInfo) {
         const userOusdBalanceBefore = await ERC20Utils.balance(position.positionOwner.address, this.contracts.externalOUSD);
-        await this.contracts.leverageEngine.connect(position.positionOwner).unwindLeveragedPosition(position.positionTokenNum);
+        await this.contracts.leverageEngine.connect(position.positionOwner).unwindLeveragedPosition(position.positionTokenNum, position.minReturnedOUSD.getBn());
         EtherUtils.mineBlock();
         const userOusdBalanceAfter = await ERC20Utils.balance(position.positionOwner.address, this.contracts.externalOUSD);
-
         const ousdReturned = NumberBundle.withBn(userOusdBalanceAfter.getBn().sub(userOusdBalanceBefore.getBn()));
         position.fillPositionPostUnwind(ousdReturned);
     }

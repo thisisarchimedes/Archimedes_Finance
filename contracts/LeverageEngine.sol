@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "hardhat/console.sol";
-
 import {AccessController} from "./AccessController.sol";
 import {ICoordinator} from "./interfaces/ICoordinator.sol";
 import {PositionToken} from "./PositionToken.sol";
@@ -13,7 +11,7 @@ import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ER
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {ICDP} from "./interfaces/ICDP.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable, PausableUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -139,7 +137,6 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
             _ousd.safeTransferFrom(msg.sender, _addressCoordinator, ousdPrinciple);
         } else {
             uint256 balanceBefore = _ousd.balanceOf(address(this));
-            console.log("in createLeveragedPosition a- %s -- prince - %s", balanceBefore, ousdPrinciple);
             revert("insuff OUSD allowance");
         }
 

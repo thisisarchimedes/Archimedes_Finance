@@ -36,63 +36,63 @@ class DeploymentUtils {
             contracts.externalOUSD.address,
         );
 
-        // await contracts.coordinator.setDependencies(
-        //     contracts.lvUSD.address,
-        //     contracts.vault.address,
-        //     contracts.cdp.address,
-        //     contracts.externalOUSD.address,
-        //     contracts.exchanger.address,
-        //     contracts.parameterStore.address,
-        //     contracts.poolManager.address,
-        //     contracts.auction.address,
-        // );
-        // console.log("before setDependencies on exchanger, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
-        // await contracts.exchanger.setDependencies(
-        //     contracts.parameterStore.address,
-        //     contracts.coordinator.address,
-        //     contracts.lvUSD.address,
-        //     contracts.externalOUSD.address,
-        //     contracts.external3CRV.address,
-        //     pools.curveLvUSDPool.address,
-        //     ValueStore.addressCurveOUSDPool,
-        // );
+        await contracts.coordinator.setDependencies(
+            contracts.lvUSD.address,
+            contracts.vault.address,
+            contracts.cdp.address,
+            contracts.externalOUSD.address,
+            contracts.exchanger.address,
+            contracts.parameterStore.address,
+            contracts.poolManager.address,
+            contracts.auction.address,
+        );
+        console.log("before setDependencies on exchanger, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
+        await contracts.exchanger.setDependencies(
+            contracts.parameterStore.address,
+            contracts.coordinator.address,
+            contracts.lvUSD.address,
+            contracts.externalOUSD.address,
+            contracts.external3CRV.address,
+            pools.curveLvUSDPool.address,
+            ValueStore.addressCurveOUSDPool,
+        );
 
-        // console.log("before setDependencies on vault, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
+        console.log("before setDependencies on vault, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
 
-        // await contracts.vault.setDependencies(contracts.parameterStore.address, contracts.externalOUSD.address);
+        await contracts.vault.setDependencies(contracts.parameterStore.address, contracts.externalOUSD.address);
 
-        // // await contracts.parameterStore.changeTreasuryAddress(contracts.signers.treasury.address);
+        // await contracts.parameterStore.changeTreasuryAddress(contracts.signers.treasury.address);
 
-        // console.log("before setDependencies on pool, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
+        console.log("before setDependencies on pool, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
 
-        // await contracts.poolManager.setDependencies(
-        //     contracts.parameterStore.address,
-        //     contracts.coordinator.address,
-        //     contracts.lvUSD.address,
-        //     contracts.external3CRV.address,
-        //     pools.curveLvUSDPool.address,
-        // );
-        // console.log("before setDependencies on param, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
+        await contracts.poolManager.setDependencies(
+            contracts.parameterStore.address,
+            contracts.coordinator.address,
+            contracts.lvUSD.address,
+            contracts.external3CRV.address,
+            pools.curveLvUSDPool.address,
+        );
+        console.log("before setDependencies on param, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
 
-        // await contracts.parameterStore.setDependencies(
-        //     contracts.coordinator.address,
-        //     contracts.exchanger.address,
-        //     contracts.auction.address,
-        // );
+        await contracts.parameterStore.setDependencies(
+            contracts.coordinator.address,
+            contracts.exchanger.address,
+            contracts.auction.address,
+        );
 
-        // console.log("before setDependencies on cdp, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
+        console.log("before setDependencies on cdp, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
 
-        // await contracts.cdp.setDependencies(
-        //     contracts.vault.address,
-        //     contracts.parameterStore.address,
-        // );
-        // console.log("before setDependencies on zapper, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
+        await contracts.cdp.setDependencies(
+            contracts.vault.address,
+            contracts.parameterStore.address,
+        );
+        console.log("before setDependencies on zapper, curveLvUSDPool.address: ", pools.curveLvUSDPool.address);
 
-        // await contracts.zapper.setDependencies(
-        //     contracts.leverageEngine.address,
-        //     contracts.archToken.address,
-        //     contracts.parameterStore.address,
-        // );
+        await contracts.zapper.setDependencies(
+            contracts.leverageEngine.address,
+            contracts.archToken.address,
+            contracts.parameterStore.address,
+        );
         // Logger.log("Finished setting dependencies on contracts");
     }
 }

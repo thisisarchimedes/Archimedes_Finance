@@ -44,8 +44,8 @@ async function main() {
 
     /// Individual token deployments for upgrades
     console.log("Owner address is ", signers.owner.address);
-    const levEngineImp = await contracts.deployContract("LeverageEngine");
-    // const coordinatorImp = await contracts.deployContract("Coordinator");
+    // const levEngineImp = await contracts.deployContract("LeverageEngine");
+    const coordinatorImp = await contracts.deployContract("Coordinator");
 
     // await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
     // const pools = await new Pools().init(contracts, shouldCreatePool);
