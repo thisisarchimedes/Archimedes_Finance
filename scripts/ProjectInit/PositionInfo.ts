@@ -3,7 +3,6 @@ import { Logger } from "./Logger";
 import { NumberBundle } from "./NumberBundle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Pools } from "./Pools";
-import { BigNumber } from "ethers";
 
 export class PositionInfo {
     contracts: Contracts;
@@ -48,7 +47,9 @@ export class PositionInfo {
         this.archToLevRatio = NumberBundle.withBn(
             await this.contracts.parameterStore.getArchToLevRatio(),
         );
+
         this.minReturnedOUSD = NumberBundle.withNum(this.collateral.getNum() * 0.95, 18);
+
     }
 
     async fillPositionPostCreation() {
@@ -102,18 +103,19 @@ export class PositionInfo {
     }
 
     async printPositionInfo() {
-        // Logger.log("Position Owner: %s", this.positionOwner.address);
+        Logger.log("--------POSITION INFO -------")
         Logger.log("Position Info: Collateral: %s, Cycles: %s, Leverage Taken: %s",
             this.collateral.getNum(),
             this.cycles,
             (await this.getPositionLeverageTaken()).getNum(),
         );
         Logger.log("Arch Fee: %s at arch/Lev ratio of %s", (await this.getArchFee()).getNum(), this.archToLevRatio.getNum());
+        Logger.log("Now some info on position after creation")
         if (this.fillPostCreationCalled) {
             Logger.log("Position token ID: %s", this.positionTokenNum);
             // Logger.log("CDP Shares: %s", this.cdpShares.getNum());
             // Logger.log("CDP Borrowed LvUSD: %s", this.cdpBorrowedLvUSD.getNum());
-            Logger.log("For %s borrowed lvUSD + %s OUSD collataeral, %s OUSD was Deposited in Vault.\
+            Logger.log("For %s borrowed lvUSD + %s OUSD collataeral, %s OUSD was Deposited in Vault. \
              Which means around %s OUSD was taken as fees + slippage(if exchange 1:1)",
                 this.cdpBorrowedLvUSD.getNum(),
                 this.collateral.getNum(),
@@ -123,5 +125,7 @@ export class PositionInfo {
         if (this.fillPostUnwindCalled) {
             Logger.log("When unwinded, %s OUSD Redeemed, which means user got %s OUSD earning", this.ousdRedeemed.getNum(), this.ousdFinalEarning);
         }
+        Logger.log("--------END POSITION INFO END-------")
+
     }
 }
