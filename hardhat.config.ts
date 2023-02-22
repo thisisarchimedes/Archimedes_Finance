@@ -21,6 +21,8 @@ dotenv.config({ path: resolve(__dirname, "./user.env") });
 
 const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
 const mainnetKey = "3d5840424a343a01a9eb7c4e4cce2b9675562910de9e68292c6f4266b40b78b3"; /// demo key, need to set actual key
+const mainnetKey2 = "3d5840424a343a01a9eb7c4e4cce2b9675562910de9e68292c6f4266b40b78b3"; /// demo key, need to set actual key
+
 // Notice that if no process.env.PRIVATE_WALLET_KEY, set it a random value (junk key)
 const georliPrivateKey = process.env.PRIVATE_WALLET_KEY || "3d5840424a343a01a9eb7c4e4cce2b9675562910de9e68292c6f4266b40b78b3";
 const goerliURL = process.env.GOERLI_ALCHEMY_URL;
@@ -71,7 +73,7 @@ export default {
     networks: {
         mainnet: {
             url: `${alchemyUrl}`,
-            accounts: [`0x${mainnetKey}`],
+            accounts: [`0x${mainnetKey}`, `0x${mainnetKey2}`],
         },
         persistant: {
             url: "http://ec2-54-211-119-50.compute-1.amazonaws.com:8545",
@@ -96,6 +98,7 @@ export default {
                 "0x689af8efa8c651a91ad287602527f3af2fe9f6501a7ac4b061667b5a93e037fd", // OG 7
                 "0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0", // OG 8
                 "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e",
+
             ],
             allowUnlimitedContractSize: false,
         },
@@ -115,12 +118,12 @@ export default {
             forking: {
                 url: alchemyUrl,
                 allowUnlimitedContractSize: false,
-                blockNumber: 16653423,
+                // blockNumber: 16671619,
             },
 
             localhost: {
                 url: "http://127.0.0.1:8545",
-                blockNumber: 16653423,
+                // blockNumber: 16671619,
                 allowUnlimitedContractSize: false,
             },
         },

@@ -1,6 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { formatEther } from "ethers/lib/utils";
-import { ethers } from "hardhat";
+import { formatEther, formatUnits } from "ethers/lib/utils";
+import hre, { ethers } from "hardhat";
 import { helperSwapETHWithOUSD } from "../../../test/MainnetHelper";
 import { Contracts } from "../Contracts";
 import { DeploymentUtils } from "../DeploymentUtils";
@@ -14,49 +14,107 @@ import { PositionInfo } from "../PositionInfo";
 import { PositionManager } from "../PositionManager";
 import { Signers } from "../Signers";
 import { ValueStore } from "../ValueStore";
-import { fundCurvePool } from "./CommonActions";
-import { DeployedStore } from "./DeployedStore";
 import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
 
-const shouldVerifyArchimedesEngine = true;
+const shouldOpenPosition = true
+const shouldClosePosition = false
+const shouldFundUsers = true
+const shouldCreateAuction = false;
+const shouldImportAccounts = true;
 
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
+const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744"
 const initOwnerAddress = "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7";
+
+// const positionOwnerAddress = "0x345F4556945873820520Cb966a95a1B0122ad3c2"
+
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
 
 async function main() {
     const signers = await new Signers().init();
 
-    // ------  Impersonate users and fund ETH
-    const deployerOwner = await ethers.getImpersonatedSigner(initOwnerAddress);
-    const gnosisOwner = await ethers.getImpersonatedSigner("0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6");
-    const tx = await signers.owner.sendTransaction({
-        to: deployerOwner.address,
-        value: ethers.utils.parseEther("40.0"),
-    });
-    const tx2 = await signers.owner.sendTransaction({
-        to: gnosisOwner.address,
-        value: ethers.utils.parseEther("20.0"),
-    });
+    /// END persistetn network
+    let deployerOwner;
+    let positionOwner;
+    let gnosisOwner;
+    let gnosisTreasury;
+    if (shouldImportAccounts) {
+        // ------  Impersonate users and fund ETH when persisting networ
+        if (hre.network.name === "persistant") {
+            console.log("impersonating account on persistant network");
+            const provider = await new ethers.providers.JsonRpcProvider("http://ec2-54-211-119-50.compute-1.amazonaws.com:8545");
+            await hre.network.provider.request({
+                method: "hardhat_impersonateAccount",
+                params: [initOwnerAddress],
+            });
+            deployerOwner = await provider.getSigner(
+                initOwnerAddress
+            );
+
+            await hre.network.provider.request({
+                method: "hardhat_impersonateAccount",
+                params: [gnosisOwnerAddress],
+            });
+            gnosisOwner = await provider.getSigner(
+                gnosisOwnerAddress
+            );
+
+            await hre.network.provider.request({
+                method: "hardhat_impersonateAccount",
+                params: [treasuryAddress],
+            });
+            gnosisTreasury = await provider.getSigner(
+                treasuryAddress
+            );
+        } else {
+            deployerOwner = await ethers.getImpersonatedSigner(initOwnerAddress);
+            gnosisOwner = await ethers.getImpersonatedSigner(gnosisOwnerAddress);
+            gnosisTreasury = await ethers.getImpersonatedSigner(treasuryAddress);
+        }
+        console.log("got  gnosis signer in address", await gnosisTreasury.getAddress());
+        const tx = await signers.owner.sendTransaction({
+            to: deployerOwner.getAddress(),
+            value: ethers.utils.parseEther("20.0"),
+        });
+        const tx2 = await signers.owner.sendTransaction({
+            to: gnosisOwner.getAddress(),
+            value: ethers.utils.parseEther("20.0"),
+        });
+        const tx3 = await signers.owner.sendTransaction({
+            to: await gnosisTreasury.getAddress(),
+            value: ethers.utils.parseEther("5.0"),
+        });
+    } else {
+        deployerOwner = signers.owner;
+        // positionOwner = signers.treasury
+        console.log("contract owner is ", await deployerOwner.getAddress());
+        // console.log("position owner is ", await positionOwner.getAddress());
+
+    }
 
     /// ----  Initialize contracts
     const contracts = new Contracts(signers);
+    Logger.setVerbose(false);
     await deployOrGetAllContracts(contracts, false, false, false);
     const pools = await new Pools().init(contracts);
+    Logger.setVerbose(false);
 
     /// ---------  Fund Users
     const SignersToFund: SignerWithAddress[] = await ethers.getSigners();
-    // console.log("SignersToFund", SignersToFund[0].address);
-    // SignersToFund.shift();
-    // SignersToFund.shift();
-    // SignersToFund.shift();
-    for (let i = 0; i < 1; i++) {
-        // await helperSwapETHWithOUSD(SignersToFund[0], ethers.utils.parseUnits("0.4"));
-        await pools.getUSDToUser(SignersToFund[0].address);
-        await contracts.archToken.connect(gnosisOwner).transfer(SignersToFund[0].address, ValueStore.TEN_ETH);
+    if (shouldFundUsers) {
+        /// starting with owner, funding a few users  
+        console.log("funding users");
+        for (let i = 0; i < 1; i++) {
+            // slow method, use only if needed
+            // await helperSwapETHWithOUSD(SignersToFund[0], ethers.utils.parseUnits("0.4"));
+            await pools.getUSDToUser(SignersToFund[i].address);
+            await contracts.archToken.connect(gnosisTreasury).transfer(SignersToFund[i].address, ValueStore.TEN_ETH);
+            console.log("funded user %s", await SignersToFund[i].getAddress());
+        }
     }
 
     const positionManager = new PositionManager(contracts, pools);
-
 
     // -------  UNISWAP Info
     const path: string[] = [contracts.externalUSDC.address, contracts.archToken.address];
@@ -65,88 +123,187 @@ async function main() {
     console.log("uniswap price of arch is", uniswapPriceOfArch.getNum());
 
 
-    // const position = await PositionInfo.build(contracts, SignersToFund[0], NumberBundle.withNum(20), 5);
-    // Logger.setVerbose(true);
-    // // await positionManager.createPositionEndToEnd(position, true);
-    // let availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
-    // console.log("availableLeverage before creating position is ", availableLeverage.getNum());
-    // await positionManager.createPositionEndToEnd(position, true);
-    // availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
-    // console.log("availableLeverage after creating position is ", availableLeverage.getNum());
-    // await EtherUtils.mineBlock();
-    // await positionManager.unwindPosition(position);
-    // console.log("redeemed position for %s OUSD, which means earning of %s OUSD", position.ousdRedeemed.getNum(), position.ousdFinalEarning)
+    // Change max leverage to 13x
+    // await contracts.parameterStore.connect(deployerOwner).changeMaxNumberOfCycles(13)
 
-    // console.log("owner arch balance is", formatEther(await contracts.archToken.balanceOf(signers.owner.address)));
-    // console.log("owner oUSD balance is", formatEther(await contracts.externalOUSD.balanceOf(signers.owner.address)));
-    // console.log("owner arch allowance to levEngine is",
-    //     formatEther(await contracts.archToken.allowance(signers.owner.address, contracts.leverageEngine.address)));
-    // console.log("owner OUSD allowance to levEngine is",
-    //     formatEther(await contracts.externalOUSD.allowance(signers.owner.address, contracts.leverageEngine.address)));
-    const availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
-    // const coordinatorAvailableLvUSD = NumberBundle.withBn(await contracts.lvUSD.balanceOf(contracts.coordinator.address));
-    // const isAuctionClosed = await contracts.auction.isAuctionClosed();
-    console.log("accepted leverage is ", availableLeverage.getNum());
+    /// ------ Start auction section 
+    // await contracts.coordinator.connect(deployerOwner).resetAndBurnLeverage();
+
+    if (shouldCreateAuction) {
+
+        const leverageHelper = new LeverageHelper(contracts);
+        const auction = new AuctionInfo(
+            21000,
+            NumberBundle.withNum(2100),
+            NumberBundle.withNum(20000),
+            NumberBundle.withNum(300000),
+        );
+
+        console.log("Trying to start auction with start/end price of %s/%s, %s blocks long ,for %s leverage",
+            auction.startPrice.getNum(), auction.endPrice.getNum(), auction.length, auction.leverageAmount.getNum());
+        console.log("Trying to start auction with start/end price of %s/%s, %s blocks long ,for %s leverage",
+            auction.startPrice.getBn(), auction.endPrice.getBn(), auction.length, auction.leverageAmount.getNum());
+        // Minting lvUSD and transfering to coordinator
+        /// !!!!Remove this when dealing with mainnet - you have to do it manually!!!!
+        // console.log("Trying to mint lvUSD to coordinator. Remember if you're on mainnet, you MUST disable those lines!!")
+        // await contracts.lvUSD.connect(gnosisOwner).mint(auction.leverageAmount.getBn());
+        // await contracts.lvUSD.connect(gnosisTreasury).transfer(contracts.coordinator.address, auction.leverageAmount.getBn());
+        // console.log("Minted % lvUSD to coordinator", auction.leverageAmount.getNum());
+        console.log("trying to start auction as %s", await deployerOwner.getAddress());
+        await contracts.auction.connect(deployerOwner).stopAuction();
+        console.log("auction stopped");
+        await leverageHelper.startAuctionAndAcceptLeverage(auction, deployerOwner);
+        console.log("auction created");
+
+        // verify leverage on coordinator
+        const availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
+        const coordinatorAvailableLvUSD = await leverageHelper.getLvUSDBalance(contracts.coordinator.address);
+        console.log("accepted leverage is ", availableLeverage.getNum());
+        console.log("LvUSD balance of coooedinator is", coordinatorAvailableLvUSD.getNum());
+    }
+
     const currentBiddingPrice = NumberBundle.withBn(await contracts.auction.getCurrentBiddingPrice());
     console.log("current bidding price is ", currentBiddingPrice.getNum());
-    // console.log("LvUSD balance of coooedinator is", coordinatorAvailableLvUSD.getNum());
-    // console.log("isAuctionClosed", isAuctionClosed);
 
-    // ----  Deploy new zapper
-    // contracts.zapper = await contracts.deployContractProxy("Zapper");
-    // await contracts.zapper.setDependencies(
-    //     contracts.leverageEngine.address,
-    //     contracts.archToken.address,
-    //     contracts.parameterStore.address,
-    // );
+    let shouldPositionViaLevEngine = false
+    if (shouldPositionViaLevEngine) {
+        // const position = await PositionInfo.build(contracts, SignersToFund[0], NumberBundle.withNum(20), 5);
+        // Logger.setVerbose(true);
+        // // await positionManager.createPositionEndToEnd(position, true);
+        // let availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
+        // console.log("availableLeverage before creating position is ", availableLeverage.getNum());
+        // await positionManager.createPositionEndToEnd(position, true);
+        // availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
+        // console.log("availableLeverage after creating position is ", availableLeverage.getNum());
+        // await EtherUtils.mineBlock();
+        // await positionManager.unwindPosition(position);
+        // console.log("redeemed position for %s OUSD, which means earning of %s OUSD", position.ousdRedeemed.getNum(), position.ousdFinalEarning)
 
+        // console.log("owner arch balance is", formatEther(await contracts.archToken.balanceOf(signers.owner.address)));
+        // console.log("owner oUSD balance is", formatEther(await contracts.externalOUSD.balanceOf(signers.owner.address)));
+        // console.log("owner arch allowance to levEngine is",
+        //     formatEther(await contracts.archToken.allowance(signers.owner.address, contracts.leverageEngine.address)));
+        // console.log("owner OUSD allowance to levEngine is",
+        //     formatEther(await contracts.externalOUSD.allowance(signers.owner.address, contracts.leverageEngine.address)));
+        // const availableLeverage = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
+        // const coordinatorAvailableLvUSD = NumberBundle.withBn(await contracts.lvUSD.balanceOf(contracts.coordinator.address));
+        // const isAuctionClosed = await contracts.auction.isAuctionClosed();
+        // const currentBiddingPrice = NumberBundle.withBn(await contracts.auction.getCurrentBiddingPrice());
+        // console.log("current bidding price is ", currentBiddingPrice.getNum());
+        // console.log("LvUSD balance of coooedinator is", coordinatorAvailableLvUSD.getNum());
+        // console.log("isAuctionClosed", isAuctionClosed);
+    }
 
-    // OR  ------- Upgrade zapper
-
+    // ------- Upgrade zapper (And others)
+    console.log("Deploying new zapper implementation")
     const newZapperImp = await contracts.deployContract("Zapper");
     await contracts.zapper.connect(deployerOwner).upgradeTo(newZapperImp.address);
 
+    if (shouldOpenPosition) {
+        const positionStack: PositionInfo[] = [];
+        let ownerOfPosition: SignerWithAddress;
+        for (let i = 0; i < 1; i++) {
+            // ownerOfPosition = positionOwner
+            ownerOfPosition = SignersToFund[0]
+            console.log("\n----------Zapping in position %s------------", (i + 1));
+            // ------- Zap in process
+            const collataeral6dec = NumberBundle.withNum(1000 * (i + 1), 6)
+            const numberOfCyclesForZapped = 12;
+            const useUserArch = false;
+            const maxSlippage = 990; // means 1% slippage
+
+            const currentBiddingPriceBeforePreview = NumberBundle.withBn(await contracts.auction.getCurrentBiddingPrice());
+            console.log("current bidding price before ZapPreview is ", currentBiddingPriceBeforePreview.getNum());
+            const availableLeverageAfterZapIn = NumberBundle.withBn(await contracts.coordinator.getAvailableLeverage());
+            console.log("availableLeverage before zapping in position is ", availableLeverageAfterZapIn.getNum());
+
+            const previewResults = await contracts.zapper.connect(ownerOfPosition).previewZapInAmount(
+                collataeral6dec.getBn(),
+                numberOfCyclesForZapped,
+                contracts.externalUSDT.address,
+                useUserArch
+            )
+
+            // sleep for x seconds seconds to simulate some blocks 
+            console.log("Going to sleep for 3 seconds")
+            await sleep(3000)
+            console.log("Done sleeping")
+
+            console.log("Preview zapping position with %s USDT, user user arch = ", collataeral6dec.getNum(), useUserArch);
+            const archTokenAmountReturn = NumberBundle.withBn(previewResults.archTokenAmountReturn);
+            console.log("archTokenAmountReturn ", archTokenAmountReturn.getNum());
+            const ousdCollateralAmountReturn = NumberBundle.withBn(previewResults.ousdCollateralAmountReturn);
+
+            console.log("ousdCollateralAmountReturn ", ousdCollateralAmountReturn.getNum());
+            console.log("Now zapping using %s USDT", collataeral6dec.getNum());
+
+            await contracts.externalUSDT.connect(ownerOfPosition).approve(contracts.zapper.address, collataeral6dec.getBn());
+            console.log("Approved USDT")
+            if (useUserArch) {
+                await contracts.archToken.connect(ownerOfPosition).approve(contracts.zapper.address, archTokenAmountReturn.getBn());
+                console.log("Approved arch")
+            }
+
+            console.log("ownerOfPositon USDT balance is", formatUnits(await contracts.externalUSDT.balanceOf(ownerOfPosition.address), 6));
+
+            const treasuryOUSDBalanceBefore = NumberBundle.withBn(await contracts.externalOUSD.balanceOf(treasuryAddress));
+            const treasuryArchBalanceBefore = NumberBundle.withBn(await contracts.archToken.balanceOf(treasuryAddress));
+
+            console.log("ZapIn Position params",
+                collataeral6dec.getBn(),
+                numberOfCyclesForZapped,
+                archTokenAmountReturn.getBn(),
+                ousdCollateralAmountReturn.getBn(),
+                maxSlippage,
+                contracts.externalUSDT.address,
+                useUserArch)
+
+            await contracts.zapper.connect(ownerOfPosition).zapIn(
+                collataeral6dec.getBn(),
+                numberOfCyclesForZapped,
+                archTokenAmountReturn.getBn(),
+                ousdCollateralAmountReturn.getBn(),
+                maxSlippage,
+                contracts.externalUSDT.address,
+                useUserArch
+            )
+
+            const treasuryOUSDBalanceAfter = NumberBundle.withBn(await contracts.externalOUSD.balanceOf(treasuryAddress));
+            const treasuryArchBalanceAfter = NumberBundle.withBn(await contracts.archToken.balanceOf(treasuryAddress));
 
 
-    // ------- Zap in process
-    const collataeral6dec = NumberBundle.withNum(20, 6)
-    const previewResults = await contracts.zapper.previewZapInAmount(
-        collataeral6dec.getBn(),
-        5,
-        contracts.externalUSDT.address,
-        true
-    )
-    console.log("Preview zapping position with %s USDT, not user user arch", collataeral6dec.getNum());
-    const archTokenAmountReturn = NumberBundle.withBn(previewResults.archTokenAmountReturn);
-    console.log("archTokenAmountReturn ", archTokenAmountReturn.getNum());
-    const ousdCollateralAmountReturn = NumberBundle.withBn(previewResults.ousdCollateralAmountReturn);
-    console.log("ousdCollateralAmountReturn ", ousdCollateralAmountReturn.getNum());
-    console.log("Now zapping using %s USDT", collataeral6dec.getNum());
-    await contracts.externalUSDT.approve(contracts.zapper.address, collataeral6dec.getBn());
-    await contracts.archToken.approve(contracts.zapper.address, archTokenAmountReturn.getBn());
-    await contracts.zapper.zapIn(
-        collataeral6dec.getBn(),
-        5,
-        archTokenAmountReturn.getBn(),
-        ousdCollateralAmountReturn.getBn(),
-        990,
-        contracts.externalUSDT.address,
-        true
-    )
-    console.log("Done zapping in, now printing position info")
-    const zappedPosition = await PositionInfo.build(contracts, signers.owner, ousdCollateralAmountReturn, 5);
-    zappedPosition.positionTokenNum = 1; /// This is super important -< need to choose the right one!
-    await zappedPosition.fillPositionPostCreation();
-    Logger.setVerbose(true);
-    await zappedPosition.printPositionInfo();
+            console.log("%s ousd deposited into treasury ", treasuryOUSDBalanceAfter.getNum() - treasuryOUSDBalanceBefore.getNum());
+            console.log("%s ArchToken deposited into treasury ", treasuryArchBalanceAfter.getNum() - treasuryArchBalanceBefore.getNum());
 
-    // ------- Zap out/unwind process
-    console.log("Now unwinding zapped position")
-    const ownerOUSDBalancBefore = NumberBundle.withBn(await contracts.externalOUSD.balanceOf(signers.owner.address));
-    await positionManager.unwindPosition(zappedPosition);
-    const ownerOUSDBalancAfter = NumberBundle.withBn(await contracts.externalOUSD.balanceOf(signers.owner.address));
+            console.log("Done zapping in, now printing position info")
+            const zappedPosition = await PositionInfo.build(contracts, ownerOfPosition, ousdCollateralAmountReturn, numberOfCyclesForZapped);
+            positionStack.push(zappedPosition);
 
-    console.log("owner OUSD windfall from Zapped position is", ownerOUSDBalancAfter.getNum() - ownerOUSDBalancBefore.getNum());
+            /// This is super important -< need to choose the right one! (start  from 1 due to prevous positons)
+            zappedPosition.positionTokenNum = i + 13;
+            await zappedPosition.fillPositionPostCreation();
+            Logger.setVerbose(true);
+            await zappedPosition.printPositionInfo();
+            console.log("----------END Zapping position %s END------------\n", (i + 1));
+
+        }
+
+        for (let i = 0; i < 1; i++) {
+            if (shouldClosePosition) {
+                ownerOfPosition = SignersToFund[i]
+                const zappedPosition = positionStack[i];
+                // // ------- Zap out/unwind process
+                console.log("----->Now unwinding zapped position %s-----", (i + 1));
+                const ownerOUSDBalancBefore = NumberBundle.withBn(await contracts.externalOUSD.balanceOf(ownerOfPosition.address));
+
+                await positionManager.unwindPosition(zappedPosition);
+
+                const ownerOUSDBalancAfter = NumberBundle.withBn(await contracts.externalOUSD.balanceOf(ownerOfPosition.address));
+                console.log("owner OUSD windfall from Zapped position is", ownerOUSDBalancAfter.getNum() - ownerOUSDBalancBefore.getNum());
+            }
+        }
+
+    }
 }
 
 main().catch((error) => {

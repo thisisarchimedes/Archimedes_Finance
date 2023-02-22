@@ -12,8 +12,6 @@ import {AccessController} from "./AccessController.sol";
 import {ParameterStore} from "./ParameterStore.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -172,7 +170,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         ousdCollateralAmount = _poolOUSD3CRV.get_dy_underlying(stableTokenIndex, _OUSD_TOKEN_INDEX, collateralInBaseStableAmount);
 
         if (useUserArch == true) {
-            // We are using owners arch tokens, transfer from msg.sender to address(this)
+            // We are using owners arch tokens, calculate transfer amount from msg.sender to address(this)
             archTokenAmount = _getArchAmountToTransferFromUser(ousdCollateralAmount, cycles);
         }
 
@@ -254,7 +252,7 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         uint256 collateralInBaseStableAmount = _getCollateralAmount(stableCoinAmount, cycles, path, decimal);
         // Set aside a bit less for collateral, to reduce risk of revert
         // TODO: do we actually need this buffer down?
-        collateralInBaseStableAmount = (collateralInBaseStableAmount * 990) / 1000;
+        collateralInBaseStableAmount = (collateralInBaseStableAmount * 999) / 1000;
         uint256 coinsToPayForArchAmount = stableCoinAmount - collateralInBaseStableAmount;
         return (collateralInBaseStableAmount, coinsToPayForArchAmount);
     }

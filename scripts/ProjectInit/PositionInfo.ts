@@ -48,8 +48,7 @@ export class PositionInfo {
             await this.contracts.parameterStore.getArchToLevRatio(),
         );
 
-        this.minReturnedOUSD = NumberBundle.withNum(this.collateral.getNum() * 0.95, 18);
-
+        this.minReturnedOUSD = NumberBundle.withNum(this.collateral.getNum() * 0.90, 18);
     }
 
     async fillPositionPostCreation() {

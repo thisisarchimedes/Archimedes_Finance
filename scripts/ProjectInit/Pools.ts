@@ -39,7 +39,7 @@ export class Pools {
             Logger.log("Created lvUSD curve pools at : " + this.curveLvUSDPool.address);
         } else {
             this.curveLvUSDPool = await this.findPool(ValueStore.address3CRV, this.contracts.lvUSD.address);
-            console.log("Found lvUSD/3CRV pool at address: " + this.curveLvUSDPool.address);
+            Logger.log("Found lvUSD/3CRV pool at address: " + this.curveLvUSDPool.address);
         }
         return this;
     }
@@ -145,10 +145,10 @@ export class Pools {
 
     async getUSDToUser(userAddress: string) {
         await this.uniRouter.swapExactETHForTokens(
-            ethers.utils.parseUnits("500", 6),
+            ethers.utils.parseUnits("3000", 6),
             [await this.uniRouter.WETH(), this.contracts.externalUSDT.address],
             userAddress,
             1708100978,
-            { value: ethers.utils.parseUnits("1", 18) });
+            { value: ethers.utils.parseUnits("5", 18) });
     }
 }

@@ -48,7 +48,11 @@ export class PositionManager {
 
     async unwindPosition(position: PositionInfo) {
         const userOusdBalanceBefore = await ERC20Utils.balance(position.positionOwner.address, this.contracts.externalOUSD);
-        await this.contracts.leverageEngine.connect(position.positionOwner).unwindLeveragedPosition(position.positionTokenNum, position.minReturnedOUSD.getBn());
+        console.log("Min amount accepting for position windfall %s ", position.minReturnedOUSD.getNum())
+        await this.contracts.leverageEngine.connect(position.positionOwner)
+            .unwindLeveragedPosition(
+                position.positionTokenNum,
+                position.minReturnedOUSD.getBn());
         EtherUtils.mineBlock();
         const userOusdBalanceAfter = await ERC20Utils.balance(position.positionOwner.address, this.contracts.externalOUSD);
         const ousdReturned = NumberBundle.withBn(userOusdBalanceAfter.getBn().sub(userOusdBalanceBefore.getBn()));
