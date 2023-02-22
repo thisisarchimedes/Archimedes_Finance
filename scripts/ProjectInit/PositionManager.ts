@@ -29,7 +29,7 @@ export class PositionManager {
 
         EtherUtils.mineBlock();
         if (printCreation === true) {
-            console.log("printing position info after creation")
+            console.log("printing position info after creation");
             await position.printPositionInfo();
         }
     }
@@ -48,7 +48,7 @@ export class PositionManager {
 
     async unwindPosition(position: PositionInfo) {
         const userOusdBalanceBefore = await ERC20Utils.balance(position.positionOwner.address, this.contracts.externalOUSD);
-        console.log("Min amount accepting for position windfall %s ", position.minReturnedOUSD.getNum())
+        console.log("Min amount accepting for position windfall %s ", position.minReturnedOUSD.getNum());
         await this.contracts.leverageEngine.connect(position.positionOwner)
             .unwindLeveragedPosition(
                 position.positionTokenNum,

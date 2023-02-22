@@ -17,10 +17,8 @@ import { ValueStore } from "../ValueStore";
 import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
 
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
-const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744"
+const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744";
 const initOwnerAddress = "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7";
-
-
 
 async function main() {
     /// ----  Initialize contracts
@@ -33,16 +31,15 @@ async function main() {
     // const positionManager = new PositionManager(contracts, pools);
     Logger.setVerbose(false);
 
-    await auctionInfo(contracts)
-    await positionSummery(contracts)
-
+    await auctionInfo(contracts);
+    await positionSummery(contracts);
 }
 
 async function auctionInfo(contracts: Contracts) {
     const isAuctionClosed = await contracts.auction.isAuctionClosed();
     const currentBiddingPrice = await contracts.auction.getCurrentBiddingPrice();
     const availableLeverage = await contracts.coordinator.getAvailableLeverage();
-    console.log("---- Auction Info ----- ")
+    console.log("---- Auction Info ----- ");
     console.log("is auction closed? %s", isAuctionClosed);
     console.log("current bidding price %s", formatEther(currentBiddingPrice));
     console.log("available leverage %s", formatEther(availableLeverage));
@@ -58,11 +55,10 @@ async function positionSummery(contracts: Contracts) {
             totalCollateral += positionInfo.getNum();
         }
     }
-    console.log("---- Position Info ----- ")
+    console.log("---- Position Info ----- ");
     console.log("number of positions %s", numberOfPositions);
     console.log("total collateral %s", totalCollateral);
 }
-
 
 main().catch((error) => {
     console.error(error);

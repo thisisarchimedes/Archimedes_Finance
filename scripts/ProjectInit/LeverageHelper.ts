@@ -63,7 +63,7 @@ export class AuctionInfo {
         length: number = TestConstants.AUCTION_LENGTH_DEFAULT,
         startPrice: NumberBundle = TestConstants.AUCTION_START_PRICE_DEFAULT,
         endPrice: NumberBundle = TestConstants.AUCTION_END_PRICE_DEFAULT,
-        leverageAmount: NumberBundle = TestConstants.AUCTION_LEVERAGE_AMOUNT_DEFAULT,) {
+        leverageAmount: NumberBundle = TestConstants.AUCTION_LEVERAGE_AMOUNT_DEFAULT) {
         this.startPrice = startPrice;
         this.endPrice = endPrice;
         this.length = length;

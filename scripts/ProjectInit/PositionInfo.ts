@@ -26,7 +26,7 @@ export class PositionInfo {
     fillPostUnwindCalled = false;
     ousdFinalEarning: number;
 
-    minReturnedOUSD: NumberBundle
+    minReturnedOUSD: NumberBundle;
 
     private constructor (contracts: Contracts, owner: SignerWithAddress, collateral: NumberBundle, cycles: number) {
         this.contracts = contracts;
@@ -102,29 +102,28 @@ export class PositionInfo {
     }
 
     async printPositionInfo() {
-        Logger.log("--------POSITION INFO -------")
+        Logger.log("--------POSITION INFO -------");
         Logger.log("Position Info: Collateral: %s, Cycles: %s, Leverage Taken: %s",
             this.collateral.getNum(),
             this.cycles,
             (await this.getPositionLeverageTaken()).getNum(),
         );
         Logger.log("Arch Fee: %s at arch/Lev ratio of %s", (await this.getArchFee()).getNum(), this.archToLevRatio.getNum());
-        Logger.log("Now some info on position after creation")
+        Logger.log("Now some info on position after creation");
         if (this.fillPostCreationCalled) {
             Logger.log("Position token ID: %s", this.positionTokenNum);
             // Logger.log("CDP Shares: %s", this.cdpShares.getNum());
             // Logger.log("CDP Borrowed LvUSD: %s", this.cdpBorrowedLvUSD.getNum());
             Logger.log("For %s borrowed lvUSD + %s OUSD collataeral, %s OUSD was Deposited in Vault. \
              Which means around %s OUSD was taken as fees + slippage(if exchange 1:1)",
-                this.cdpBorrowedLvUSD.getNum(),
-                this.collateral.getNum(),
-                this.ousdDepositedInVault.getNum(),
-                this.ousdFeesAtCreationRoughEstimate.getNum());
+            this.cdpBorrowedLvUSD.getNum(),
+            this.collateral.getNum(),
+            this.ousdDepositedInVault.getNum(),
+            this.ousdFeesAtCreationRoughEstimate.getNum());
         }
         if (this.fillPostUnwindCalled) {
             Logger.log("When unwinded, %s OUSD Redeemed, which means user got %s OUSD earning", this.ousdRedeemed.getNum(), this.ousdFinalEarning);
         }
-        Logger.log("--------END POSITION INFO END-------")
-
+        Logger.log("--------END POSITION INFO END-------");
     }
 }

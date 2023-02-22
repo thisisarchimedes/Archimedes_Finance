@@ -16,20 +16,17 @@ import { Signers } from "../Signers";
 import { ValueStore } from "../ValueStore";
 import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
 
-const shouldOpenPosition = true
-const shouldClosePosition = false
-const shouldFundUsers = true
+const shouldOpenPosition = true;
+const shouldClosePosition = false;
+const shouldFundUsers = true;
 const shouldCreateAuction = false;
 const shouldImportAccounts = true;
 
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
-const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744"
+const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744";
 const initOwnerAddress = "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7";
 
 // const positionOwnerAddress = "0x345F4556945873820520Cb966a95a1B0122ad3c2"
-
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
 
 async function main() {
     const signers = await new Signers().init();
@@ -49,7 +46,7 @@ async function main() {
                 params: [initOwnerAddress],
             });
             deployerOwner = await provider.getSigner(
-                initOwnerAddress
+                initOwnerAddress,
             );
 
             await hre.network.provider.request({
@@ -57,7 +54,7 @@ async function main() {
                 params: [gnosisOwnerAddress],
             });
             gnosisOwner = await provider.getSigner(
-                gnosisOwnerAddress
+                gnosisOwnerAddress,
             );
 
             await hre.network.provider.request({
@@ -65,7 +62,7 @@ async function main() {
                 params: [treasuryAddress],
             });
             gnosisTreasury = await provider.getSigner(
-                treasuryAddress
+                treasuryAddress,
             );
         } else {
             deployerOwner = await ethers.getImpersonatedSigner(initOwnerAddress);
@@ -90,7 +87,6 @@ async function main() {
         // positionOwner = signers.treasury
         console.log("contract owner is ", await deployerOwner.getAddress());
         // console.log("position owner is ", await positionOwner.getAddress());
-
     }
 
     /// ----  Initialize contracts
@@ -103,7 +99,7 @@ async function main() {
     /// ---------  Fund Users
     const SignersToFund: SignerWithAddress[] = await ethers.getSigners();
     if (shouldFundUsers) {
-        /// starting with owner, funding a few users  
+        /// starting with owner, funding a few users
         console.log("funding users");
         for (let i = 0; i < 1; i++) {
             // slow method, use only if needed
@@ -122,15 +118,13 @@ async function main() {
     const uniswapPriceOfArch = NumberBundle.withBn(outArray[0], 6);
     console.log("uniswap price of arch is", uniswapPriceOfArch.getNum());
 
-
     // Change max leverage to 13x
     // await contracts.parameterStore.connect(deployerOwner).changeMaxNumberOfCycles(13)
 
-    /// ------ Start auction section 
+    /// ------ Start auction section
     // await contracts.coordinator.connect(deployerOwner).resetAndBurnLeverage();
 
     if (shouldCreateAuction) {
-
         const leverageHelper = new LeverageHelper(contracts);
         const auction = new AuctionInfo(
             21000,
@@ -165,7 +159,7 @@ async function main() {
     const currentBiddingPrice = NumberBundle.withBn(await contracts.auction.getCurrentBiddingPrice());
     console.log("current bidding price is ", currentBiddingPrice.getNum());
 
-    let shouldPositionViaLevEngine = false
+    const shouldPositionViaLevEngine = false;
     if (shouldPositionViaLevEngine) {
         // const position = await PositionInfo.build(contracts, SignersToFund[0], NumberBundle.withNum(20), 5);
         // Logger.setVerbose(true);
@@ -195,7 +189,7 @@ async function main() {
     }
 
     // ------- Upgrade zapper (And others)
-    console.log("Deploying new zapper implementation")
+    console.log("Deploying new zapper implementation");
     const newZapperImp = await contracts.deployContract("Zapper");
     await contracts.zapper.connect(deployerOwner).upgradeTo(newZapperImp.address);
 
@@ -204,10 +198,10 @@ async function main() {
         let ownerOfPosition: SignerWithAddress;
         for (let i = 0; i < 1; i++) {
             // ownerOfPosition = positionOwner
-            ownerOfPosition = SignersToFund[0]
+            ownerOfPosition = SignersToFund[0];
             console.log("\n----------Zapping in position %s------------", (i + 1));
             // ------- Zap in process
-            const collataeral6dec = NumberBundle.withNum(1000 * (i + 1), 6)
+            const collataeral6dec = NumberBundle.withNum(1000 * (i + 1), 6);
             const numberOfCyclesForZapped = 12;
             const useUserArch = false;
             const maxSlippage = 990; // means 1% slippage
@@ -221,13 +215,13 @@ async function main() {
                 collataeral6dec.getBn(),
                 numberOfCyclesForZapped,
                 contracts.externalUSDT.address,
-                useUserArch
-            )
+                useUserArch,
+            );
 
-            // sleep for x seconds seconds to simulate some blocks 
-            console.log("Going to sleep for 3 seconds")
-            await sleep(3000)
-            console.log("Done sleeping")
+            // sleep for x seconds seconds to simulate some blocks
+            // console.log("Going to sleep for 3 seconds");
+            // // await sleep(3000);
+            // console.log("Done sleeping");
 
             console.log("Preview zapping position with %s USDT, user user arch = ", collataeral6dec.getNum(), useUserArch);
             const archTokenAmountReturn = NumberBundle.withBn(previewResults.archTokenAmountReturn);
@@ -238,10 +232,10 @@ async function main() {
             console.log("Now zapping using %s USDT", collataeral6dec.getNum());
 
             await contracts.externalUSDT.connect(ownerOfPosition).approve(contracts.zapper.address, collataeral6dec.getBn());
-            console.log("Approved USDT")
+            console.log("Approved USDT");
             if (useUserArch) {
                 await contracts.archToken.connect(ownerOfPosition).approve(contracts.zapper.address, archTokenAmountReturn.getBn());
-                console.log("Approved arch")
+                console.log("Approved arch");
             }
 
             console.log("ownerOfPositon USDT balance is", formatUnits(await contracts.externalUSDT.balanceOf(ownerOfPosition.address), 6));
@@ -256,7 +250,7 @@ async function main() {
                 ousdCollateralAmountReturn.getBn(),
                 maxSlippage,
                 contracts.externalUSDT.address,
-                useUserArch)
+                useUserArch);
 
             await contracts.zapper.connect(ownerOfPosition).zapIn(
                 collataeral6dec.getBn(),
@@ -265,17 +259,16 @@ async function main() {
                 ousdCollateralAmountReturn.getBn(),
                 maxSlippage,
                 contracts.externalUSDT.address,
-                useUserArch
-            )
+                useUserArch,
+            );
 
             const treasuryOUSDBalanceAfter = NumberBundle.withBn(await contracts.externalOUSD.balanceOf(treasuryAddress));
             const treasuryArchBalanceAfter = NumberBundle.withBn(await contracts.archToken.balanceOf(treasuryAddress));
 
-
             console.log("%s ousd deposited into treasury ", treasuryOUSDBalanceAfter.getNum() - treasuryOUSDBalanceBefore.getNum());
             console.log("%s ArchToken deposited into treasury ", treasuryArchBalanceAfter.getNum() - treasuryArchBalanceBefore.getNum());
 
-            console.log("Done zapping in, now printing position info")
+            console.log("Done zapping in, now printing position info");
             const zappedPosition = await PositionInfo.build(contracts, ownerOfPosition, ousdCollateralAmountReturn, numberOfCyclesForZapped);
             positionStack.push(zappedPosition);
 
@@ -285,12 +278,11 @@ async function main() {
             Logger.setVerbose(true);
             await zappedPosition.printPositionInfo();
             console.log("----------END Zapping position %s END------------\n", (i + 1));
-
         }
 
         for (let i = 0; i < 1; i++) {
             if (shouldClosePosition) {
-                ownerOfPosition = SignersToFund[i]
+                ownerOfPosition = SignersToFund[i];
                 const zappedPosition = positionStack[i];
                 // // ------- Zap out/unwind process
                 console.log("----->Now unwinding zapped position %s-----", (i + 1));
@@ -302,7 +294,6 @@ async function main() {
                 console.log("owner OUSD windfall from Zapped position is", ownerOUSDBalancAfter.getNum() - ownerOUSDBalancBefore.getNum());
             }
         }
-
     }
 }
 
