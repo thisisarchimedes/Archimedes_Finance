@@ -251,7 +251,6 @@ contract Zapper is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable
         // Figure out how much of stable goes to OUSD and how much to pay as arch tokens
         uint256 collateralInBaseStableAmount = _getCollateralAmount(stableCoinAmount, cycles, path, decimal);
         // Set aside a bit less for collateral, to reduce risk of revert
-        // TODO: do we actually need this buffer down?
         collateralInBaseStableAmount = (collateralInBaseStableAmount * 999) / 1000;
         uint256 coinsToPayForArchAmount = stableCoinAmount - collateralInBaseStableAmount;
         return (collateralInBaseStableAmount, coinsToPayForArchAmount);
