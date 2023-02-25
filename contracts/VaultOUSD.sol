@@ -15,7 +15,7 @@ import "hardhat/console.sol";
 
 /// @title Archimedes OUSD vault
 /// @notice Vault holds OUSD managed by Archimedes under all positions.
-/// @notice It Uses ER4626 to mint shares for deposited OUSD.
+/// @notice It Uses ERC4626 to mint shares for deposited OUSD.
 contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
