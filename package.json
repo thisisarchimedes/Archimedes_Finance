@@ -69,7 +69,7 @@
         "typescript": "^4.8.4"
     },
     "dependencies": {
-        "@openzeppelin/contracts-upgradeable": "^4.7.0",
+        "@openzeppelin/contracts-upgradeable": "^4.8.1",
         "@uniswap/v2-core": "^1.0.1",
         "@uniswap/v2-periphery": "^1.1.0-beta.0",
         "@uniswap/v3-core": "^1.0.1",
