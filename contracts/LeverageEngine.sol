@@ -160,12 +160,13 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     /// provide msg.sender address to coordinator destroy position
     ///
     /// @param positionTokenId the NFT ID of the position
-    function unwindLeveragedPosition(uint256 positionTokenId, uint256 minReturnedOUSD) external nonReentrant whenNotPaused {
+    function unwindLeveragedPosition(uint256 positionTokenId, uint256 minReturnedOUSD) external nonReentrant whenNotPaused returns (uint256) {
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
         require(positionWindfall >= minReturnedOUSD, "Not enough OUSD returned");
         emit PositionUnwind(msg.sender, positionTokenId, positionWindfall);
+        return positionWindfall;
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor

@@ -31,8 +31,23 @@ async function main() {
     // const positionManager = new PositionManager(contracts, pools);
     Logger.setVerbose(false);
 
+    /// Impersonate admin and give it some Eth
+    let gnosisOwner = await ethers.getImpersonatedSigner(gnosisOwnerAddress);
+    const tx2 = await signers.owner.sendTransaction({
+        to: gnosisOwner.getAddress(),
+        value: ethers.utils.parseEther("20.0"),
+    });
+
     await auctionInfo(contracts);
+
     await positionSummery(contracts);
+
+    console.log("---- Now taking fees-----")
+    await contracts.vault.connect(gnosisOwner).takeRebaseFees()
+    console.log("---- Done taking fees-----")
+
+    await positionSummery(contracts);
+
 }
 
 async function auctionInfo(contracts: Contracts) {
@@ -49,15 +64,27 @@ async function positionSummery(contracts: Contracts) {
     const numberOfPositions = NumberBundle.withBn(await contracts.positionToken.totalSupply(), 0).getNum();
     const estimateLastPositionId = numberOfPositions * 2;
     let totalCollateral = 0;
+    let totallvUSDDebt = 0;
     for (let index = 0; index < estimateLastPositionId; index++) {
         if (await contracts.positionToken.exists(index)) {
+            const poisitionEstimatedEarning = NumberBundle.withBn(await contracts.cdp.getOUSDInterestEarned(index));
+            console.log("position %s has earned %s interest", index, poisitionEstimatedEarning.getNum());
             const positionInfo = NumberBundle.withBn(await contracts.cdp.getOUSDPrinciple(index));
+            const lvUSD = NumberBundle.withBn(await contracts.cdp.getLvUSDBorrowed(index));
             totalCollateral += positionInfo.getNum();
+            totallvUSDDebt += lvUSD.getNum();
         }
     }
+
+    const vaultOUSD = NumberBundle.withBn(await contracts.vault.totalSupply());
+
+
     console.log("---- Position Info ----- ");
-    console.log("number of positions %s", numberOfPositions);
+    console.log("number of open positions %s", numberOfPositions);
     console.log("total collateral %s", totalCollateral);
+    console.log("total lvUSD debt %s", totallvUSDDebt);
+
+    console.log("Vault OUSD is %s . It should be close to lvUSD debt + total collateral which is %s", vaultOUSD.getNum(), totallvUSDDebt + totalCollateral);
 }
 
 main().catch((error) => {
