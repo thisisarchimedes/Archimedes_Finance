@@ -26,8 +26,7 @@ const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
 const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744";
 const initOwnerAddress = "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7";
 
-
-const positionOwnerAddress = "0xbDfA4f4492dD7b7Cf211209C4791AF8d52BF5c50"
+const positionOwnerAddress = "0xbDfA4f4492dD7b7Cf211209C4791AF8d52BF5c50";
 
 async function main() {
     const signers = await new Signers().init();
@@ -140,7 +139,7 @@ async function main() {
             auction.startPrice.getBn(), auction.endPrice.getBn(), auction.length, auction.leverageAmount.getNum());
         // Minting lvUSD and transfering to coordinator
         /// !!!!Remove this when dealing with mainnet - you have to do it manually!!!!
-        console.log("Trying to mint lvUSD to coordinator. Remember if you're on mainnet, you MUST disable those lines!!")
+        console.log("Trying to mint lvUSD to coordinator. Remember if you're on mainnet, you MUST disable those lines!!");
         // await contracts.lvUSD.connect(gnosisOwner).mint(auction.leverageAmount.getBn());
         // await contracts.lvUSD.connect(gnosisTreasury).transfer(contracts.coordinator.address, auction.leverageAmount.getBn());
         console.log("Minted % lvUSD to coordinator", auction.leverageAmount.getNum());
@@ -200,7 +199,7 @@ async function main() {
     // await contracts.leverageEngine.connect(deployerOwner).upgradeTo(newZapperImp.address);
     // console.log("Done deploying new LevEngine implementation");
 
-    const latestOpenPosition = 11
+    const latestOpenPosition = 11;
     if (shouldOpenPosition) {
         const positionStack: PositionInfo[] = [];
         let ownerOfPosition: SignerWithAddress;
@@ -309,10 +308,10 @@ async function main() {
         // }
     }
 
-    let block = 16686470
+    const block = 16686470;
     if (shouldClosePosition) {
         for (let i = 0; i < 100; i++) {
-            const positionNum = 4
+            const positionNum = 4;
             const positionTotal = NumberBundle.withBn(await contracts.cdp.getOUSDPrinciple(positionNum));
             // console.log("position prince  is", positionTotal.getNum());
             const OUSDVaultBefore = NumberBundle.withBn(await contracts.vault.totalAssets());
@@ -320,7 +319,6 @@ async function main() {
             const ownerOfPosition = await ethers.getImpersonatedSigner(positionOwnerAddress);
             const zappedPosition = await PositionInfo.build(contracts, ownerOfPosition, NumberBundle.withNum(1200), 10);
             zappedPosition.positionTokenNum = positionNum;
-
 
             const tx = await signers.owner.sendTransaction({
                 to: ownerOfPosition.getAddress(),
@@ -343,7 +341,8 @@ async function main() {
             const ownerOUSDBalancAfter = NumberBundle.withBn(await contracts.externalOUSD.balanceOf(ownerOfPosition.address));
             const OUSDVaultAfter = NumberBundle.withBn(await contracts.vault.totalAssets());
 
-            console.log("$$ windfall, vault withdraw was %s", ownerOUSDBalancAfter.getNum() - ownerOUSDBalancBefore.getNum(), OUSDVaultBefore.getNum() - OUSDVaultAfter.getNum());
+            console.log("$$ windfall, vault withdraw was %s",
+                ownerOUSDBalancAfter.getNum() - ownerOUSDBalancBefore.getNum(), OUSDVaultBefore.getNum() - OUSDVaultAfter.getNum());
             // console.log("OUSD Vault AFTER closing position is", OUSDVaultAfter.getNum());
             // console.log("OUSD Vault lost is", OUSDVaultBefore.getNum() - OUSDVaultAfter.getNum());
             // console.log("customer position total is", positionTotal.getNum());
@@ -358,8 +357,8 @@ async function main() {
                             jsonRpcUrl: alchemyUrl,
                             blockNumber: block + 1 * (i + 1),
                         },
-                    },]
-            })
+                    }],
+            });
         }
     }
 }

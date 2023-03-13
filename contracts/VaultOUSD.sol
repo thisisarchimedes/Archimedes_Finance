@@ -74,7 +74,7 @@ contract VaultOUSD is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgra
     ) public virtual override returns (uint256) {
         revert("cant withdraw on vault");
     }
-    
+
     function archimedesRedeem(
         uint256 shares,
         address receiver,

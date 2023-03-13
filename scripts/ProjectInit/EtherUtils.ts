@@ -4,6 +4,7 @@ class EtherUtils {
     async getBlock(): any {
         return (await ethers.provider.getBlock("latest")).number;
     }
+
     async mineBlock() {
         await ethers.provider.send("evm_mine");
     }

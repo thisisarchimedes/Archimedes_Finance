@@ -32,7 +32,7 @@ async function main() {
     Logger.setVerbose(false);
 
     /// Impersonate admin and give it some Eth
-    let gnosisOwner = await ethers.getImpersonatedSigner(gnosisOwnerAddress);
+    const gnosisOwner = await ethers.getImpersonatedSigner(gnosisOwnerAddress);
     const tx2 = await signers.owner.sendTransaction({
         to: gnosisOwner.getAddress(),
         value: ethers.utils.parseEther("20.0"),
@@ -42,12 +42,11 @@ async function main() {
 
     await positionSummery(contracts);
 
-    console.log("---- Now taking fees-----")
-    await contracts.vault.connect(gnosisOwner).takeRebaseFees()
-    console.log("---- Done taking fees-----")
+    console.log("---- Now taking fees-----");
+    await contracts.vault.connect(gnosisOwner).takeRebaseFees();
+    console.log("---- Done taking fees-----");
 
     await positionSummery(contracts);
-
 }
 
 async function auctionInfo(contracts: Contracts) {
@@ -78,13 +77,13 @@ async function positionSummery(contracts: Contracts) {
 
     const vaultOUSD = NumberBundle.withBn(await contracts.vault.totalSupply());
 
-
     console.log("---- Position Info ----- ");
     console.log("number of open positions %s", numberOfPositions);
     console.log("total collateral %s", totalCollateral);
     console.log("total lvUSD debt %s", totallvUSDDebt);
 
-    console.log("Vault OUSD is %s . It should be close to lvUSD debt + total collateral which is %s", vaultOUSD.getNum(), totallvUSDDebt + totalCollateral);
+    console.log("Vault OUSD is %s . It should be close to lvUSD debt + total collateral which is %s",
+        vaultOUSD.getNum(), totallvUSDDebt + totalCollateral);
 }
 
 main().catch((error) => {

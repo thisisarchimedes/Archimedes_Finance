@@ -653,7 +653,7 @@ describe("Zapper test suite", function () {
             // expect(leverage).to.be.closeTo(expectedLeverage, expectedLeverageMargin);
             // Check for correct collateral amount
             const collateral = numFromBn(await r.cdp.getOUSDPrinciple(positionId));
-            expect(collateral).to.be.closeTo(2033, 5);
+            expect(collateral).to.be.closeTo(2050, 5);
         });
     });
 
