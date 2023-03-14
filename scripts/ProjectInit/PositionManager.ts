@@ -1,4 +1,5 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "hardhat";
 import { Contracts } from "./Contracts";
 import { ERC20Utils } from "./ERC20Utils";
 import { EtherUtils } from "./EtherUtils";
@@ -25,10 +26,11 @@ export class PositionManager {
         await this.createPosition(position);
         // Now fill all the info needed on position
         await position.fillPositionPostCreation();
-        await position.fillPositionExchangeEstimates(this.pools);
+        // await position.fillPositionExchangeEstimates(this.pools);
 
         EtherUtils.mineBlock();
         if (printCreation === true) {
+            console.log("printing position info after creation");
             await position.printPositionInfo();
         }
     }
@@ -47,11 +49,23 @@ export class PositionManager {
 
     async unwindPosition(position: PositionInfo) {
         const userOusdBalanceBefore = await ERC20Utils.balance(position.positionOwner.address, this.contracts.externalOUSD);
-        await this.contracts.leverageEngine.connect(position.positionOwner).unwindLeveragedPosition(position.positionTokenNum);
+        // console.log("Min amount accepting for position windfall %s ", position.minReturnedOUSD.getNum());
+        // console.log("Unwinding position %s owned by %s", position.positionTokenNum, position.positionOwner.address)
+        await this.contracts.leverageEngine.connect(position.positionOwner)
+            .unwindLeveragedPosition(
+                position.positionTokenNum,
+                position.minReturnedOUSD.getBn());
+        // const windfall = await this.contracts.leverageEngine
+        //     .connect(position.positionOwner)
+        //     .callStatic
+        //     .unwindLeveragedPosition(
+        //         position.positionTokenNum,
+        //         position.minReturnedOUSD.getBn());
+        // console.log("----windfall %s", ethers.utils.formatEther(windfall));
         EtherUtils.mineBlock();
         const userOusdBalanceAfter = await ERC20Utils.balance(position.positionOwner.address, this.contracts.externalOUSD);
-
         const ousdReturned = NumberBundle.withBn(userOusdBalanceAfter.getBn().sub(userOusdBalanceBefore.getBn()));
+        // console.log("done unwinding")
         position.fillPositionPostUnwind(ousdReturned);
     }
 
@@ -64,11 +78,13 @@ export class PositionManager {
                 position.collateral.getBn(),
                 position.cycles,
                 position.archFee.getBn(),
+                0,
             );
         await this.contracts.leverageEngine.connect(position.positionOwner).createLeveragedPosition(
             position.collateral.getBn(),
             position.cycles,
             position.archFee.getBn(),
+            0,
         );
         position.positionTokenNum = previewPositionId.toNumber();
     }

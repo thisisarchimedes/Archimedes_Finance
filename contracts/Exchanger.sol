@@ -46,12 +46,10 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
 
     // /** @dev curve stable metapools provide 1:1 swaps
     //  * if the pools are very bent, this is a protection for users
-    //  * TODO: user should be able to override and force a trade
     //  * @dev expressed as a percentage
     //  * 100 would require a perfect 1:1 swap
     //  * 90 allows at most, 1:.9 swaps
     //  */
-    // uint256 internal _curveGuardPercentage;
 
     /**
      * @dev initialize Exchanger
@@ -250,9 +248,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _minimum3CRV = (_expected3CRV * (100 - _paramStore.getSlippage())) / 100;
 
         // Make sure pool isn't too bent
-        // TODO allow user to override this protection
-        // TODO auto balance if pool is bent
-        // console.log("Exchanger:req  _minimum3CRV >= _guard3CRV, %s >= %s", _minimum3CRV, _guard3CRV);
         require(_minimum3CRV >= _guard3CRV, "LvUSD pool too imbalanced.");
 
         // Increase allowance
@@ -296,8 +291,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _minimum3CRV = (_expected3CRV * (100 - _paramStore.getSlippage())) / 100;
 
         // Make sure pool isn't too bent
-        // TODO allow user to override this protection
-        // TODO auto balance if pool is bent
         require(_minimum3CRV >= _guard3CRV, "OUSD pool too imbalanced.");
 
         // Increase allowance
@@ -340,8 +333,6 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _minimumLvUSD = (_expectedLvUSD * (100 - _paramStore.getSlippage())) / 100;
 
         // Make sure pool isn't too bent
-        // TODO allow user to override this protection
-        // TODO auto balance if pool is bent
         require(_minimumLvUSD >= _guardLvUSD, "LvUSD pool too imbalanced.");
 
         // Increase allowance
@@ -384,9 +375,7 @@ contract Exchanger is AccessController, ReentrancyGuardUpgradeable, IExchanger, 
         _minimumOUSD = (_expectedOUSD * (100 - _paramStore.getSlippage())) / 100;
 
         // Make sure pool isn't too bent
-        // TODO allow user to override this protection
-        // TODO auto balance if pool is bent
-        require(_minimumOUSD >= _guardOUSD, "LvUSD pool too imbalanced.");
+        require(_minimumOUSD >= _guardOUSD, "ousd/3crv imbalanced.");
 
         // Increase allowance
         _crv3.safeIncreaseAllowance(address(_poolOUSD3CRV), amount3CRV);

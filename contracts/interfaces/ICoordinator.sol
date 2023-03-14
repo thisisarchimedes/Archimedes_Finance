@@ -18,19 +18,6 @@ interface ICoordinator {
     /// @param _amountInOUSD the amount of OUSD sent to Archimedes
     function depositCollateralUnderNFT(uint256 _nftId, uint256 _amountInOUSD) external;
 
-    /// @dev withdraw OUSD under NFT ID
-    ///
-    /// User withdraw OUSD from the contract
-    ///
-    /// @param _nftId the position token id
-    /// @param _amount OUSD amount
-    /// @param _to address to transfer principle to
-    function withdrawCollateralUnderNFT(
-        uint256 _nftId,
-        uint256 _amount,
-        address _to
-    ) external;
-
     /// @dev Borrow lvUSD under NFT ID
     ///
     /// User borrow lvUSD against the OUSD deposited as collateral in Vault

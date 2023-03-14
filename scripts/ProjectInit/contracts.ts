@@ -42,6 +42,7 @@ export class Contracts {
     externalUSDT!: ERC20;
     externalDAI!: ERC20;
     external3CRV!: ERC20;
+    externalUSDC!: ERC20;
 
     constructor (signers: Signers) {
         this.signers = signers;
@@ -126,6 +127,7 @@ export class Contracts {
         this.externalOUSD = new ethers.Contract(ValueStore.addressOUSD, ValueStore.abiOUSDToken, contractsOwner);
         this.externalUSDT = new ethers.Contract(ValueStore.addressUSDT, ValueStore.abiUSDTToken, contractsOwner);
         this.externalDAI = new ethers.Contract(ValueStore.addressDAI, ValueStore.abiUSDTToken, contractsOwner);
+        this.externalUSDC = new ethers.Contract(ValueStore.addressUSDC, ValueStore.abiUSDTToken, contractsOwner);
         this.external3CRV = new ethers.Contract(ValueStore.address3CRV, ValueStore.abi3CRVToken, contractsOwner);
     }
 

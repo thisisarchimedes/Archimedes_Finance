@@ -9,13 +9,15 @@ describe("LeverageEngine test suit", async function () {
     const principleNaturalString = "2";
 
     const principle = ethers.utils.parseUnits(principleNaturalString);
+    const minLeverageAllowed = principle.mul(99).div(100);
     const archTokenToBurn = ethers.utils.parseUnits("100.0");
+    const minReturnedOUSD = principle.mul(92).div(100);
     let initialArchTokenBalance;
     let maxCycles: BigNumber;
     let positionTokenId: BigNumber;
     let userInitialOUSD;
 
-    async function prepForPositionCreation (lvUSDAmountToMint: BigNumber = ethers.utils.parseUnits("5000")) {
+    async function prepForPositionCreation(lvUSDAmountToMint: BigNumber = ethers.utils.parseUnits("5000")) {
         r = await buildContractTestContext();
         maxCycles = await r.parameterStore.getMaxNumberOfCycles();
         const totalOUSD = await helperSwapETHWithOUSD(r.owner, ethers.utils.parseUnits("5"));
@@ -45,7 +47,7 @@ describe("LeverageEngine test suit", async function () {
 
     it("Should revert if cycles is greater than global max cycles", async function () {
         const maxCycles = await r.parameterStore.getMaxNumberOfCycles();
-        const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles.add(1), ethers.utils.parseUnits("10"));
+        const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles.add(1), ethers.utils.parseUnits("10"), minLeverageAllowed);
         await expect(promise).to.be.revertedWith("Invalid number of cycles");
     });
 
@@ -59,12 +61,12 @@ describe("LeverageEngine test suit", async function () {
             await prepForPositionCreation(ethers.utils.parseUnits("0"));
         });
         it("Should fail because not enough lvUSD available to use", async function () {
-            const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
+            const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn, minLeverageAllowed);
             await expect(promise).to.be.revertedWith("Not enough available leverage");
         });
         it("Should fail because not enough arch tokens burned", async function () {
             await r.lvUSD.mint(ethers.utils.parseUnits("5000"));
-            const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, ethers.utils.parseUnits("0.0001"));
+            const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, ethers.utils.parseUnits("0.0001"), minLeverageAllowed);
             await expect(promise).to.be.revertedWith("Not enough Arch for Pos");
             // Now check that no arch was burned on revert
             const archBalance = await r.archToken.balanceOf(r.owner.address);
@@ -77,7 +79,7 @@ describe("LeverageEngine test suit", async function () {
             await prepForPositionCreation();
         });
         it("Should emit position creation event", async function () {
-            const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
+            const promise = r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn, minLeverageAllowed);
             // eslint-disable-next-line @typescript-eslint/no-var-requires
             const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
             await expect(promise)
@@ -93,14 +95,14 @@ describe("LeverageEngine test suit", async function () {
         });
 
         it("Should emit position unwind event", async function () {
-            const promise = r.leverageEngine.unwindLeveragedPosition(0);
+            const promise = r.leverageEngine.unwindLeveragedPosition(0, minReturnedOUSD);
             await expect(promise).to.emit(r.leverageEngine, "PositionUnwind");
         });
     });
     describe("After successful position creation", async function () {
         before(async function () {
             await prepForPositionCreation();
-            await r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn);
+            await r.leverageEngine.createLeveragedPosition(principle, maxCycles, archTokenToBurn, minLeverageAllowed);
         });
 
         it("PositionToken balance of user should be equal to 1 (balance is of number of NFTs)", async () => {
@@ -135,18 +137,18 @@ describe("LeverageEngine test suit", async function () {
 
         it("Should fail to unwind if caller doesn't own positionToken", async function () {
             await r.positionToken.transferFrom(r.owner.address, r.addr1.address, positionTokenId);
-            const unwindPromise = r.leverageEngine.unwindLeveragedPosition(positionTokenId);
+            const unwindPromise = r.leverageEngine.unwindLeveragedPosition(positionTokenId, minReturnedOUSD);
             await expect(unwindPromise).to.be.revertedWith("Caller is not token owner");
         });
 
         it("Should fail to unwind if positionToken doesn't exist", async function () {
-            await expect(r.leverageEngine.unwindLeveragedPosition(99999)).to.be.revertedWith("ERC721: invalid token ID");
+            await expect(r.leverageEngine.unwindLeveragedPosition(99999, minReturnedOUSD)).to.be.revertedWith("ERC721: invalid token ID");
         });
 
         describe("After successful position unwind", async () => {
             before(async () => {
                 await r.positionToken.connect(r.addr1).transferFrom(r.addr1.address, r.owner.address, positionTokenId);
-                await r.leverageEngine.unwindLeveragedPosition(positionTokenId);
+                await r.leverageEngine.unwindLeveragedPosition(positionTokenId, minReturnedOUSD);
             });
 
             it("Should destroy the positionToken", async () => {

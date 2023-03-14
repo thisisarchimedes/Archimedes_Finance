@@ -8,6 +8,7 @@ import { BigNumber } from "ethers";
 import { logger } from "../logger";
 import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { ethNumToWeiBn } from "./helpers";
 
 let r: ContractTestContext;
 let owner: SignerWithAddress;
@@ -21,7 +22,6 @@ const fundsInPoolBase = getFloatFromBigNum(fundedPoolAmount);
 const fundInPoolAddOnForTest = 600;
 const initialFundsInPool = fundInPoolAddOnForTest + fundsInPoolBase;
 const initialCoordinatorLvUSDBalance = 10000;
-// const initialUserLevAllocation = 10000;
 
 const numberOfCycles = 2;
 /// Add either 0 or 1 to the last bit of 18Dec number. Used to test rounding errors
@@ -37,17 +37,22 @@ async function approveAndGetLeverageAsUser(
     _archTokenAmount: BigNumber,
     _r: ContractTestContext,
     _user: SignerWithAddress,
+    slippage = 99,
 ) {
-    // logger(
-    //     "Will deposit %s OUSD principle that cost %s ArchToken for %s cycles",
-    //     getFloatFromBigNum(_principleOUSD),
-    //     getFloatFromBigNum(_archTokenAmount),
-    //     _numberOfCycles,
-    // );
+    const expectedLeverage = await _r.parameterStore.getAllowedLeverageForPosition(_principleOUSD, _numberOfCycles);
+    const minLeverageAcceptable = expectedLeverage.mul(slippage).div(100);
+    console.log(
+        "Will deposit %s OUSD principle that cost %s ArchToken for %s cycles. Expected leverage is %s but min acceptable is %s",
+        getFloatFromBigNum(_principleOUSD),
+        getFloatFromBigNum(_archTokenAmount),
+        _numberOfCycles,
+        getFloatFromBigNum(expectedLeverage),
+        getFloatFromBigNum(minLeverageAcceptable),
+    );
     // these two approvals will happen on the UI side when a customer actually creates a position via UI
     await _r.archToken.connect(_user).approve(_r.leverageEngine.address, _archTokenAmount);
     await _r.externalOUSD.connect(_user).approve(_r.leverageEngine.address, _principleOUSD);
-    await _r.leverageEngine.connect(_user).createLeveragedPosition(_principleOUSD, _numberOfCycles, _archTokenAmount);
+    await _r.leverageEngine.connect(_user).createLeveragedPosition(_principleOUSD, _numberOfCycles, _archTokenAmount, minLeverageAcceptable);
 }
 
 function parseUnitsNum(num): BigNumber {
@@ -155,6 +160,52 @@ describe("Building basic environment", function () {
 
         return { r };
     }
+
+    describe("Test minLeverage and minReturn", function () {
+        const userOUSDPrinciple = parseUnitsNum("200.0");
+        const cycles = 5;
+
+        async function getArchNeeded(_r, _user, _principle, _cycles) {
+            const leverageUserIsTakingIn18Dec = await _r.parameterStore.getAllowedLeverageForPosition(_principle, _cycles);
+            const archCostOfLeverageIn18Dec = await _r.parameterStore.calculateArchNeededForLeverage(leverageUserIsTakingIn18Dec);
+            return archCostOfLeverageIn18Dec;
+        }
+
+        it("Create position with accurate minLeverage", async function () {
+            await loadFixture(setupEnvForIntegrationTestsFixture);
+            const archCostOfLeverageIn18Dec = await getArchNeeded(r, user, userOUSDPrinciple, cycles);
+
+            const expectedLeverage = await r.parameterStore.getAllowedLeverageForPosition(userOUSDPrinciple, cycles);
+            const minLeverageAcceptable = expectedLeverage.mul(99).div(100);
+
+            console.log(
+                "Will deposit %s OUSD principle that cost %s ArchToken for %s cycles. Expected leverage is %s but min acceptable is %s",
+                getFloatFromBigNum(userOUSDPrinciple),
+                getFloatFromBigNum(archCostOfLeverageIn18Dec),
+                cycles,
+                getFloatFromBigNum(expectedLeverage),
+                getFloatFromBigNum(minLeverageAcceptable),
+            );
+            // these two approvals will happen on the UI side when a customer actually creates a position via UI
+            await r.archToken.connect(user).approve(r.leverageEngine.address, archCostOfLeverageIn18Dec);
+            await r.externalOUSD.connect(user).approve(r.leverageEngine.address, userOUSDPrinciple);
+
+            await r.leverageEngine.connect(user).createLeveragedPosition(userOUSDPrinciple,
+                cycles, archCostOfLeverageIn18Dec, minLeverageAcceptable);
+
+            const lvUSDBorrowed = getFloatFromBigNum(await r.cdp.getLvUSDBorrowed(0));
+            console.log("lvUSDBorrowed is %s", lvUSDBorrowed);
+            const OUSDLeveraged = getFloatFromBigNum(await r.cdp.getOUSDTotalWithoutInterest(0));
+            console.log("OUSDLeveraged is %s", OUSDLeveraged);
+            // Num of cycles is 5, so min leverage is 2.5
+            expect(lvUSDBorrowed).to.be.greaterThan(850);
+            expect(OUSDLeveraged).to.be.greaterThan(1050);
+
+            await r.leverageEngine.connect(user).unwindLeveragedPosition(0, ethNumToWeiBn(190));
+        });
+    });
+
+    const spec8 = 0;
 
     describe("Test suit for setting up the stage", function () {
         //  Admin checks
@@ -264,14 +315,16 @@ describe("Building basic environment", function () {
             await r.leverageEngine.pauseContract();
             const createPromise = approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
             await expect(createPromise).to.revertedWith("Pausable: paused");
+            const minReturnedOUSD = userOUSDPrincipleIn18Decimal.mul(97).div(100);
 
-            const unwindPromise = r.leverageEngine.connect(user).unwindLeveragedPosition(0);
+            const unwindPromise = r.leverageEngine.connect(user).unwindLeveragedPosition(0, minReturnedOUSD);
             await expect(unwindPromise).to.revertedWith("Pausable: paused");
 
             // Now unpause and check that we can create position and Unwind
             await r.leverageEngine.unPauseContract();
             await approveAndGetLeverageAsUser(userOUSDPrincipleIn18Decimal, numberOfCycles, archCostOfLeverageIn18Dec, r, user);
-            await r.leverageEngine.connect(user).unwindLeveragedPosition(0);
+
+            await r.leverageEngine.connect(user).unwindLeveragedPosition(0, minReturnedOUSD);
         });
     });
 
@@ -389,8 +442,10 @@ describe("Building basic environment", function () {
         });
 
         it("Should be able to unwind positions with new owners", async function () {
-            await r.leverageEngine.connect(user).unwindLeveragedPosition(2);
-            await r.leverageEngine.connect(userOther).unwindLeveragedPosition(4);
+            const minReturnedOUSD = userOUSDPrincipleIn18Decimal.mul(98).div(100);
+
+            await r.leverageEngine.connect(user).unwindLeveragedPosition(2, minReturnedOUSD);
+            await r.leverageEngine.connect(userOther).unwindLeveragedPosition(4, minReturnedOUSD);
 
             const userTokenIdsArray = await r.positionToken.getTokenIDsArray(user.address);
             const userOtherTokenIdsArray = await r.positionToken.getTokenIDsArray(userOther.address);
@@ -592,7 +647,7 @@ describe("Building basic environment", function () {
             contractEstimatedReturnedOUSDMinusInterestFromUnwinding =
                 getFloatFromBigNum(contractEstimatedReturnedOUSDMinusInterestFromUnwindingIn18Dec);
 
-            await r.leverageEngine.connect(user).unwindLeveragedPosition(positionId);
+            await r.leverageEngine.connect(user).unwindLeveragedPosition(positionId, contractEstimatedReturnedOUSDMinusInterestFromUnwindingIn18Dec);
 
             const isNFTValid = await r.positionToken.exists(positionId);
             expect(isNFTValid).to.equal(false);
@@ -622,7 +677,10 @@ describe("Building basic environment", function () {
             expect(await r.positionToken.ownerOf(positionIdToTransfer)).to.equal(userOther.address);
 
             /// should be able to close position as new owner
-            await r.leverageEngine.connect(userOther).unwindLeveragedPosition(positionIdToTransfer);
+            /// No rebases on this test so return collateral minus fees
+            const minReturnedOUSD = userOUSDPrincipleIn18Decimal.mul(98).div(100);
+            // console.log("minReturnedOUSD", getFloatFromBigNum(minReturnedOUSD));
+            await r.leverageEngine.connect(userOther).unwindLeveragedPosition(positionIdToTransfer, minReturnedOUSD);
         });
     });
 
@@ -648,7 +706,9 @@ describe("Building basic environment", function () {
         ) {
             await r.archToken.connect(user).approve(r.leverageEngine.address, archToGive);
             await r.externalOUSD.connect(user).approve(r.leverageEngine.address, ousdPrinciple);
-            const promise = r.leverageEngine.connect(user).createLeveragedPosition(ousdPrinciple, cycles, archToGive);
+            const expectedLeverage = await r.parameterStore.getAllowedLeverageForPosition(ousdPrinciple, cycles);
+
+            const promise = r.leverageEngine.connect(user).createLeveragedPosition(ousdPrinciple, cycles, archToGive, expectedLeverage);
             await expect(promise).to.be.revertedWith(message);
         }
 

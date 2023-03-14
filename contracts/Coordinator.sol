@@ -12,10 +12,7 @@ import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ER
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {AccessController} from "./AccessController.sol";
 import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
-import "hardhat/console.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /// @title Coordinator
 /// @dev is in charge of overall flow of creating positions and unwinding positions
@@ -123,14 +120,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         _cdp.addSharesToPosition(_nftId, shares);
     }
 
-    function withdrawCollateralUnderNFT(
-        uint256 _nftId,
-        uint256 _amount,
-        address _to
-    ) external override nonReentrant onlyExecutive {
-        _withdrawCollateralUnderNFT(_nftId, _amount, _to);
-    }
-
     function borrowUnderNFT(uint256 _nftId, uint256 _amount) external override nonReentrant onlyExecutive {
         _borrowUnderNFT(_nftId, _amount);
     }
@@ -189,13 +178,12 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
 
         uint256 redeemedOUSD = _vault.archimedesRedeem(numberOfSharesInPosition, _addressExchanger, address(this));
 
-        /// TODO: add slippage protection
         (uint256 exchangedLvUSD, uint256 remainingOUSD) = _exchanger.swapOUSDforLvUSD(redeemedOUSD, borrowedLvUSD);
 
         _repayUnderNFT(_nftId, exchangedLvUSD);
 
         // transferring funds from coordinator to user
-        _withdrawCollateralUnderNFT(_nftId, remainingOUSD, _userAddress);
+        _ousd.safeTransfer(_userAddress, remainingOUSD);
 
         /// Note : leverage engine still need to make sure the delete the NFT itself in positionToken
         _cdp.deletePosition(_nftId);
@@ -236,15 +224,6 @@ contract Coordinator is ICoordinator, AccessController, ReentrancyGuardUpgradeab
         setExecutive(_msgSender());
         setGuardian(_msgSender());
         setAuctioneer(_msgSender());
-    }
-
-    function _withdrawCollateralUnderNFT(
-        uint256 _nftId,
-        uint256 _amount,
-        address _to
-    ) internal {
-        _ousd.safeTransfer(_to, _amount);
-        _cdp.withdrawOUSDFromPosition(_nftId, _amount);
     }
 
     function _borrowUnderNFT(uint256 _nftId, uint256 _amount) internal {

@@ -36,13 +36,18 @@ const shouldVerifyArchimedesEngine = true;
 
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
 
-async function main () {
+async function main() {
     Logger.setVerbose(true);
     const signers = await new Signers().initOwnerOnly();
 
     const contracts = new Contracts(signers);
 
-    await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
+    /// Individual token deployments for upgrades
+    console.log("Owner address is ", signers.owner.address);
+    // const levEngineImp = await contracts.deployContract("LeverageEngine");
+    const zapper = await contracts.deployContract("VaultOUSD");
+
+    // await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
     // const pools = await new Pools().init(contracts, shouldCreatePool);
 
     // console.log("expecting signer address to be 0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7")
@@ -86,9 +91,9 @@ async function main () {
     //     console.log("LvUSD balance of coooedinator is", coordinatorAvailableLvUSD.getNum());
     // }
 
-    if (shouldVerifyArchimedesEngine) {
-        await verifyArcimedesEngine(contracts);
-    }
+    // if (shouldVerifyArchimedesEngine) {
+    //     await verifyArcimedesEngine(contracts);
+    // }
 
     console.log("\nDone with verifying tokens\n");
 }

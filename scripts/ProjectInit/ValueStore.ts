@@ -20,4 +20,5 @@ export class ValueStore {
     static abiUniswapRouter = routerABI;
 
     static ONE_ETH = ethers.utils.parseUnits("1.0", 18);
+    static TEN_ETH = ethers.utils.parseUnits("10.0", 18);
 }
