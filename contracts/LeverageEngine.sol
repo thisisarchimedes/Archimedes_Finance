@@ -17,7 +17,6 @@ import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
 import "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
-
 contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable, PausableUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -217,24 +216,26 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         revert("LevEngine : Invalid access");
     }
 
-    function expirePosition(
-        uint256 positionTokenId, 
-        uint256 minOUSDReturned
-    ) nonReentrant ensureExpired(positionTokenId) onlyAdmin external returns (uint256) {
-        address postionOwner = _positionToken.ownerOf(positionTokenId);        
+    function expirePosition(uint256 positionTokenId, uint256 minOUSDReturned)
+        external
+        nonReentrant
+        ensureExpired(positionTokenId)
+        onlyAdmin
+        returns (uint256)
+    {
+        address postionOwner = _positionToken.ownerOf(positionTokenId);
         uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, address(this));
         require(positionWindfall >= minOUSDReturned, "Not enough OUSD returned");
         _positionToken.burn(positionTokenId);
 
-        /// Now deposit funds into expired vault, send shares to owner of position (shared can be 
+        /// Now deposit funds into expired vault, send shares to owner of position (shared can be
         /// used later to redeem OUSD)
         _ousd.safeApprove(_addressExpiredVault, positionWindfall);
-        uint256 shares = IERC4626(_addressExpiredVault).deposit(positionWindfall,postionOwner);
+        uint256 shares = IERC4626(_addressExpiredVault).deposit(positionWindfall, postionOwner);
         _ousd.safeApprove(_addressExpiredVault, 0);
 
         emit PositionExpired(postionOwner, positionTokenId, shares, positionWindfall);
         return positionWindfall;
-
     }
 
     modifier ensureExpired(uint256 positionTokenId) {

@@ -13,7 +13,6 @@ import { PositionManager } from "../scripts/ProjectInit/PositionManager";
 import { Signers } from "../scripts/ProjectInit/Signers";
 import { ValueStore } from "../scripts/ProjectInit/ValueStore";
 
-
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
 const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744";
 const auctioneerAddress = "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7";
@@ -29,7 +28,6 @@ export async function getDefaultPosition(contracts: Contracts): Promise<Position
     const position = await PositionInfo.build(contracts, contracts.signers.c1, NumberBundle.withNum(1000), 12);
     return position;
 }
-
 
 export async function setupContractsFixture(): Promise<Contracts> {
     const signers = await new Signers().init();
@@ -55,7 +53,7 @@ export async function setupUpgradesFixture(contracts: Contracts) {
 export async function createPositionFixture(contracts: Contracts, position: PositionInfo) {
     const pools = await new Pools().init(contracts);
     const positionManager = new PositionManager(contracts, pools);
-    await positionManager.fundSignerForPosition(position.positionOwner, false)
+    await positionManager.fundSignerForPosition(position.positionOwner, false);
     await positionManager.createPositionEndToEnd(position, true);
 }
 
@@ -75,6 +73,5 @@ async function ImpersonateAndFund(address: string): Promise<SignerWithAddress> {
         to: acount.getAddress(),
         value: ethers.utils.parseEther("10.0"),
     });
-    return acount
+    return acount;
 }
-

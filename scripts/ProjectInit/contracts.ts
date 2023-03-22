@@ -13,7 +13,7 @@ import { Auction } from "../../types/contracts/Auction";
 import { ParameterStore } from "../../types/contracts/ParameterStore";
 import { CDPosition } from "../../types/contracts/CDPosition";
 import { Zapper } from "../../types/contracts/Zapper";
-import { CDPExired } from "../../types/contracts/CDPExpired"
+import { CDPExired } from "../../types/contracts/CDPExpired";
 import { IERC20 } from "../../types/@openzeppelin/contracts/token/ERC20/IERC20";
 import { VaultOUSDExpired } from "../../types/contracts/VaultOUSDExpired";
 import { ValueStore } from "./ValueStore";
@@ -47,8 +47,8 @@ export class Contracts {
     externalUSDC!: ERC20;
 
     // Add ons
-    expiredVault: VaultOUSDExpired
-    cdpExpired: CDPExired
+    expiredVault: VaultOUSDExpired;
+    cdpExpired: CDPExired;
 
     constructor (signers: Signers) {
         this.signers = signers;

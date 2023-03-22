@@ -126,7 +126,6 @@ async function main() {
 
     await contracts.parameterStore.connect(deployerOwner).changePositionTimeToLiveInDays(31);
 
-
     if (shouldCreateAuction) {
         const leverageHelper = new LeverageHelper(contracts);
         const auction = new AuctionInfo(
@@ -311,13 +310,13 @@ async function main() {
         // }
     }
 
-    const estimateLastPositionId = 29
+    const estimateLastPositionId = 29;
     const block = 16671698;
     if (shouldClosePosition) {
         for (let i = 0; i < 22; i++) {
             const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
             // Reset hardhat mainnet fork
-            var blockToTest = block + 8000 * (i)
+            const blockToTest = block + 8000 * (i);
             await network.provider.request({
                 method: "hardhat_reset",
                 params: [
@@ -332,7 +331,7 @@ async function main() {
             for (let index = 5; index < estimateLastPositionId; index++) {
                 if (await contracts.positionToken.exists(index)) {
                     // console.log("now attmeping to get info on position %s", index)
-                    const currentPositionOwnerAddress = await contracts.positionToken.ownerOf(index)
+                    const currentPositionOwnerAddress = await contracts.positionToken.ownerOf(index);
                     const ownerOfPosition = await ethers.getImpersonatedSigner(currentPositionOwnerAddress);
 
                     const tx = await signers.owner.sendTransaction({
@@ -355,7 +354,7 @@ async function main() {
                         currentPositionOwnerAddress,
                         index,
                         userCollateral.getNum(),
-                        ownerOUSDBalancAfter.getNum() - ownerOUSDBalancBefore.getNum())
+                        ownerOUSDBalancAfter.getNum() - ownerOUSDBalancBefore.getNum());
 
                     // const positionNum = 4;
                     // const positionTotal = NumberBundle.withBn(await contracts.cdp.getOUSDPrinciple(positionNum));
@@ -392,8 +391,6 @@ async function main() {
                     // console.log("OUSD Vault AFTER closing position is", OUSDVaultAfter.getNum());
                     // console.log("OUSD Vault lost is", OUSDVaultBefore.getNum() - OUSDVaultAfter.getNum());
                     // console.log("customer position total is", positionTotal.getNum());
-
-
                 }
             }
         }

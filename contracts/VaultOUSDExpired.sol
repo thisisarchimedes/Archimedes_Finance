@@ -39,5 +39,4 @@ contract VaultOUSDExpired is ERC4626Upgradeable, AccessController, ReentrancyGua
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
     }
-
 }
