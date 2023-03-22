@@ -6,7 +6,6 @@ import {IERC20MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/int
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {AccessController} from "./AccessController.sol";
-import {ParameterStore} from "./ParameterStore.sol";
 import {ERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
@@ -38,5 +37,9 @@ contract VaultOUSDExpired is ERC4626Upgradeable, AccessController, ReentrancyGua
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {
         _requireAdmin();
+    }
+
+    function optInForRebases() external {
+        IOUSD("0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86").rebaseOptIn();
     }
 }
