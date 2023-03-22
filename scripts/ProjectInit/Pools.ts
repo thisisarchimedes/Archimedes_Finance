@@ -24,7 +24,7 @@ export class Pools {
     curveOUSDPool: any;
     factoryCurveMetapool: any;
 
-    static deadlineBlock = 16902252;
+    static deadlineBlock = 1710564966;
 
     async init(contracts: Contracts, createPool = false): Pools {
         this.contracts = contracts;

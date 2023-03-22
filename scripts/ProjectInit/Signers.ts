@@ -8,6 +8,7 @@ export class Signers {
     c2: SignerWithAddress;
     c3: SignerWithAddress;
     dump: SignerWithAddress;
+    governor: SignerWithAddress;
 
     async init(): Signers {
         [this.owner, this.treasury, this.c1, this.c2, this.c3, this.dump] = await ethers.getSigners();

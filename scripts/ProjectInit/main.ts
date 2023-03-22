@@ -53,7 +53,7 @@ async function main () {
     await leverageHelper.startAuctionAndMintAndAcceptLeverage(auctionInfo);
 
     // fund user and create position
-    await positionManager.fundSignerForPosition(signers.c1, leverageHelper);
+    await positionManager.fundSignerForPosition(signers.c1);
 
     Logger.setVerbose(true);
     paramStoreHelper.setOriginationFee(NumberBundle.withNum(0.00005));

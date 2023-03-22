@@ -12,7 +12,7 @@ export class LeverageHelper {
     }
 
     async startAuctionAndAcceptLeverage(auction: AuctionInfo, owner = this.contracts.signers.owner) {
-        // await this._startAuction(auction, owner);
+        await this._startAuction(auction, owner);
         await this._acceptLeverage(auction.leverageAmount, owner);
         Logger.log("Auction started with endPrice of %s and leverage of %s lvUSD accepted\n",
             auction.endPrice.getNum(), auction.leverageAmount.getNum());

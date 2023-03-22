@@ -13,6 +13,11 @@ import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/
 import {ICDP} from "./interfaces/ICDP.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
+import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+
+import "@openzeppelin/contracts/interfaces/IERC4626.sol";
+
+
 contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable, PausableUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -30,13 +35,15 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
 
     address internal _addressCDP;
 
+    address internal _addressExpiredVault;
+
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
 
-    uint256[43] private __gap;
+    uint256[42] private __gap;
 
     event PositionCreated(
         address indexed _from,
@@ -47,6 +54,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         uint256 _positionExp
     );
     event PositionUnwind(address indexed _from, uint256 indexed _positionId, uint256 _positionWindfall);
+    event PositionExpired(address indexed _from, uint256 indexed _positionId, uint256 _shares, uint256 _positionWindfall);
 
     /// @dev set the addresses for Coordinator, PositionToken, ParameterStore
     function setDependencies(
@@ -160,12 +168,13 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     /// provide msg.sender address to coordinator destroy position
     ///
     /// @param positionTokenId the NFT ID of the position
-    function unwindLeveragedPosition(uint256 positionTokenId, uint256 minReturnedOUSD) external nonReentrant whenNotPaused {
+    function unwindLeveragedPosition(uint256 positionTokenId, uint256 minReturnedOUSD) external nonReentrant whenNotPaused returns (uint256) {
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
         require(positionWindfall >= minReturnedOUSD, "Not enough OUSD returned");
         emit PositionUnwind(msg.sender, positionTokenId, positionWindfall);
+        return positionWindfall;
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -206,5 +215,34 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
 
     fallback() external {
         revert("LevEngine : Invalid access");
+    }
+
+    function expirePosition(
+        uint256 positionTokenId, 
+        uint256 minOUSDReturned
+    ) nonReentrant ensureExpired(positionTokenId) onlyAdmin external returns (uint256) {
+        address postionOwner = _positionToken.ownerOf(positionTokenId);        
+        uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, address(this));
+        require(positionWindfall >= minOUSDReturned, "Not enough OUSD returned");
+        _positionToken.burn(positionTokenId);
+
+        /// Now deposit funds into expired vault, send shares to owner of position (shared can be 
+        /// used later to redeem OUSD)
+        _ousd.safeApprove(_addressExpiredVault, positionWindfall);
+        uint256 shares = IERC4626(_addressExpiredVault).deposit(positionWindfall,postionOwner);
+        _ousd.safeApprove(_addressExpiredVault, 0);
+
+        emit PositionExpired(postionOwner, positionTokenId, shares, positionWindfall);
+        return positionWindfall;
+
+    }
+
+    modifier ensureExpired(uint256 positionTokenId) {
+        require(ICDP(_addressCDP).getPositionExpireTime(positionTokenId) <= block.timestamp, "positionNotExpired");
+        _;
+    }
+
+    function setExpiredVault(address vault) external onlyAdmin {
+        _addressExpiredVault = vault;
     }
 }
