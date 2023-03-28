@@ -14,8 +14,6 @@ import {ICDP} from "./interfaces/ICDP.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
-import "@openzeppelin/contracts/interfaces/IERC4626.sol";
-
 contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable, PausableUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -174,7 +172,6 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         emit PositionUnwind(msg.sender, positionTokenId, positionWindfall);
     }
 
-
     /// @dev deposit OUSD under NFT ID
     ///
     /// De-leverage and unwind. Send OUSD to msg.sender
@@ -182,7 +179,12 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     /// provide msg.sender address to coordinator destroy position
     ///
     /// @param positionTokenId the NFT ID of the position
-    function unwindLeveragedPositionWithReturn(uint256 positionTokenId, uint256 minReturnedOUSD) external nonReentrant whenNotPaused returns (uint256) {
+    function unwindLeveragedPositionWithReturn(uint256 positionTokenId, uint256 minReturnedOUSD)
+        external
+        nonReentrant
+        whenNotPaused
+        returns (uint256)
+    {
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
@@ -243,7 +245,7 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
         require(positionWindfall >= minOUSDReturned, "Not enough OUSD returned");
         _positionToken.burn(positionTokenId);
 
-        /// Now deposit funds into expired vault, send shares to owner of position (shared can be
+        /// Now deposit funds into expired vault, send shares to owner of position (shares can be
         /// used later to redeem OUSD)
         _ousd.safeApprove(_addressExpiredVault, positionWindfall);
         uint256 shares = IERC4626(_addressExpiredVault).deposit(positionWindfall, postionOwner);

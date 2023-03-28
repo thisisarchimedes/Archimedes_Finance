@@ -21,8 +21,8 @@ const shouldClosePosition = false;
 const shouldFundUsers = true;
 const shouldCreateAuction = true;
 const shouldImportAccounts = true;
-const shouldMintLvUSD = true
-const shouldUpgradeLeverageEngine = false
+const shouldMintLvUSD = true;
+const shouldUpgradeLeverageEngine = false;
 
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
 const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744";
