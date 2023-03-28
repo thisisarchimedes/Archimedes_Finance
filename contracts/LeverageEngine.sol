@@ -12,7 +12,6 @@ import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {ICDP} from "./interfaces/ICDP.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
 import "@openzeppelin/contracts/interfaces/IERC4626.sol";
@@ -167,7 +166,23 @@ contract LeverageEngine is AccessController, ReentrancyGuardUpgradeable, UUPSUpg
     /// provide msg.sender address to coordinator destroy position
     ///
     /// @param positionTokenId the NFT ID of the position
-    function unwindLeveragedPosition(uint256 positionTokenId, uint256 minReturnedOUSD) external nonReentrant whenNotPaused returns (uint256) {
+    function unwindLeveragedPosition(uint256 positionTokenId, uint256 minReturnedOUSD) external nonReentrant whenNotPaused {
+        require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
+        _positionToken.burn(positionTokenId);
+        uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);
+        require(positionWindfall >= minReturnedOUSD, "Not enough OUSD returned");
+        emit PositionUnwind(msg.sender, positionTokenId, positionWindfall);
+    }
+
+
+    /// @dev deposit OUSD under NFT ID
+    ///
+    /// De-leverage and unwind. Send OUSD to msg.sender
+    /// must check that the msg.sender owns the NFT
+    /// provide msg.sender address to coordinator destroy position
+    ///
+    /// @param positionTokenId the NFT ID of the position
+    function unwindLeveragedPositionWithReturn(uint256 positionTokenId, uint256 minReturnedOUSD) external nonReentrant whenNotPaused returns (uint256) {
         require(_positionToken.ownerOf(positionTokenId) == msg.sender, "Caller is not token owner");
         _positionToken.burn(positionTokenId);
         uint256 positionWindfall = _coordinator.unwindLeveragedOUSD(positionTokenId, msg.sender);

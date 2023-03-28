@@ -21,6 +21,8 @@ const shouldClosePosition = false;
 const shouldFundUsers = true;
 const shouldCreateAuction = true;
 const shouldImportAccounts = true;
+const shouldMintLvUSD = true
+const shouldUpgradeLeverageEngine = false
 
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
 const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744";
@@ -124,15 +126,20 @@ async function main() {
     /// ------ Start auction section
     // await contracts.coordinator.connect(deployerOwner).resetAndBurnLeverage();
 
-    await contracts.parameterStore.connect(deployerOwner).changePositionTimeToLiveInDays(31);
+    // // Upgrade leverage engine
+    if (shouldUpgradeLeverageEngine) {
+        // const newLevEngineImp = await contracts.deployContract("LeverageEngine");
+        // await contracts.leverageEngine.connect(gnosisOwner).upgradeTo(newLevEngineImp.address);
+    }
+    // await contracts.parameterStore.connect(deployerOwner).changePositionTimeToLiveInDays(31);
 
     if (shouldCreateAuction) {
         const leverageHelper = new LeverageHelper(contracts);
         const auction = new AuctionInfo(
-            8000,
-            NumberBundle.withNum(15000),
-            NumberBundle.withNum(100000),
-            NumberBundle.withNum(300000),
+            24000,
+            NumberBundle.withNum(20000),
+            NumberBundle.withNum(75000),
+            NumberBundle.withNum(500000),
         );
 
         console.log("Trying to start auction with start/end price of %s/%s, %s blocks long ,for %s leverage",
@@ -141,12 +148,15 @@ async function main() {
             auction.startPrice.getBn(), auction.endPrice.getBn(), auction.length, auction.leverageAmount.getNum());
         // Minting lvUSD and transfering to coordinator
         /// !!!!Remove this when dealing with mainnet - you have to do it manually!!!!
-        console.log("Trying to mint lvUSD to coordinator. Remember if you're on mainnet, you MUST disable those lines!!");
-        await contracts.lvUSD.connect(gnosisOwner).mint(auction.leverageAmount.getBn());
-        // await contracts.lvUSD.connect(gnosisTreasury).transfer(contracts.coordinator.address, auction.leverageAmount.getBn());
-        console.log("Minted % lvUSD to coordinator", auction.leverageAmount.getNum());
+        if (shouldMintLvUSD) {
+            console.log("Trying to mint lvUSD to coordinator. Remember if you're on mainnet, you MUST disable those lines!!");
+            await contracts.lvUSD.connect(gnosisOwner).mint(auction.leverageAmount.getBn());
+            console.log("Minted % lvUSD to coordinator", auction.leverageAmount.getNum());
+
+            // await contracts.lvUSD.connect(gnosisTreasury).transfer(contracts.coordinator.address, auction.leverageAmount.getBn());
+        }
         console.log("trying to start auction as %s", await deployerOwner.getAddress());
-        // await contracts.auction.connect(deployerOwner).stopAuction();
+        await contracts.auction.connect(deployerOwner).stopAuction();
         console.log("auction stopped");
         await leverageHelper.startAuctionAndAcceptLeverage(auction, deployerOwner);
         console.log("auction created");
