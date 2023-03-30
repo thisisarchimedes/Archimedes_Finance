@@ -28,9 +28,8 @@ export class PositionManager {
         await position.fillPositionPostCreation();
         // await position.fillPositionExchangeEstimates(this.pools);
 
-        EtherUtils.mineBlock();
+        // EtherUtils.mineBlock();
         if (printCreation === true) {
-            console.log("printing position info after creation");
             await position.printPositionInfo();
         }
     }
@@ -62,7 +61,8 @@ export class PositionManager {
         //         position.positionTokenNum,
         //         position.minReturnedOUSD.getBn());
         // console.log("----windfall %s", ethers.utils.formatEther(windfall));
-        EtherUtils.mineBlock();
+
+        // EtherUtils.mineBlock();
         const userOusdBalanceAfter = await ERC20Utils.balance(position.positionOwner.address, this.contracts.externalOUSD);
         const ousdReturned = NumberBundle.withBn(userOusdBalanceAfter.getBn().sub(userOusdBalanceBefore.getBn()));
         // console.log("done unwinding")
@@ -112,8 +112,10 @@ export class PositionManager {
 
     /// Fund the user with any tokens they might need to create positions
     /// Funds USDT, ARCH, and OUSD
-    async fundSignerForPosition(signer: SignerWithAddress, leverageHelper: LeverageHelper) {
-        await this.pools.exchangeEthForExactStable(TestConstants.ONE_THOUSAND_USDT.getBn(), signer.address, this.contracts.externalUSDT.address);
+    async fundSignerForPosition(signer: SignerWithAddress, getStable = true) {
+        if (getStable) {
+            await this.pools.exchangeEthForExactStable(TestConstants.ONE_THOUSAND_USDT.getBn(), signer.address, this.contracts.externalUSDT.address);
+        }
         await this.pools.exchangeExactEthForOUSD(TestConstants.ONE_ETH.getBn(), signer.address);
         await ERC20Utils.getArchFromTreasury(TestConstants.ONE_HUNDRED_ETH, signer.address, this.contracts);
         const usdtBalance = await ERC20Utils.balance(signer.address, this.contracts.externalUSDT);

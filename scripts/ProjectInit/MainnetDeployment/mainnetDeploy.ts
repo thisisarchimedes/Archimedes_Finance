@@ -9,6 +9,7 @@ import { Logger } from "../Logger";
 import { NumberBundle } from "../NumberBundle";
 import { Pools } from "../Pools";
 import { Signers } from "../Signers";
+import { ValueStore } from "../ValueStore";
 import { fundCurvePool } from "./CommonActions";
 import { DeployedStore } from "./DeployedStore";
 import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
@@ -45,8 +46,11 @@ async function main() {
     /// Individual token deployments for upgrades
     console.log("Owner address is ", signers.owner.address);
     // const levEngineImp = await contracts.deployContract("LeverageEngine");
-    const zapper = await contracts.deployContract("VaultOUSD");
+    const newVault = await contracts.deployContractProxy("VaultOUSDExpired", [ValueStore.addressOUSD, "VaultOUSD", "VOUSD"]);
 
+    // const zapper = await contracts.deployContract("");
+    // console.log("lvEngineImp ", levEngineImp.address);
+    console.log("newVault ", newVault.address);
     // await deployOrGetAllContracts(contracts, deployJustTokens, deployArchimedesEngine, deployVault);
     // const pools = await new Pools().init(contracts, shouldCreatePool);
 

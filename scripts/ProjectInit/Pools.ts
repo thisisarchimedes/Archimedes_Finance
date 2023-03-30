@@ -24,7 +24,7 @@ export class Pools {
     curveOUSDPool: any;
     factoryCurveMetapool: any;
 
-    static deadlineBlock = 16902252;
+    static deadlineBlock = 1710564966;
 
     async init(contracts: Contracts, createPool = false): Pools {
         this.contracts = contracts;
@@ -145,10 +145,10 @@ export class Pools {
 
     async getUSDToUser(userAddress: string) {
         await this.uniRouter.swapExactETHForTokens(
-            ethers.utils.parseUnits("3000", 6),
+            ethers.utils.parseUnits("20000", 6),
             [await this.uniRouter.WETH(), this.contracts.externalUSDT.address],
             userAddress,
             1708100978,
-            { value: ethers.utils.parseUnits("5", 18) });
+            { value: ethers.utils.parseUnits("20", 18) });
     }
 }
