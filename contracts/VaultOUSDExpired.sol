@@ -11,11 +11,15 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {IOUSD} from "./interfaces/IOUSD.sol";
 
-// import "hardhat/console.sol";
 
 contract VaultOUSDExpired is ERC4626Upgradeable, AccessController, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     address internal constant _ADDRESS_OUSD = 0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86;
+    
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
     function initialize(
         IERC20MetadataUpgradeable asset,

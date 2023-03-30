@@ -156,9 +156,9 @@ async function main() {
             // await contracts.lvUSD.connect(gnosisTreasury).transfer(contracts.coordinator.address, auction.leverageAmount.getBn());
         }
         console.log("trying to start auction as %s", await deployerOwner.getAddress());
-        await contracts.auction.connect(deployerOwner).stopAuction();
+        await contracts.auction.connect(gnosisOwner).stopAuction();
         console.log("auction stopped");
-        await leverageHelper.startAuctionAndAcceptLeverage(auction, deployerOwner);
+        await leverageHelper.startAuctionAndAcceptLeverage(auction, gnosisOwner);
         console.log("auction created");
 
         // verify leverage on coordinator
