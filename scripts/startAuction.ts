@@ -49,7 +49,8 @@ async function main() {
         signerAuctioneer = await ethers.getImpersonatedSigner("0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744");
         signerAdmin = await ethers.getImpersonatedSigner("0x01d3aa4c9a61f5fb4b3ef5ad90c0e02ccf861842");
     } else {
-        // trying to run on another network, throw error
+        /** trying to run on another network, throw error
+         *  unsure if this is necessary but I'd rather not have any1 running this anywhere else on accident */
         throw new Error("Must be on hardhat or persistant network to run this script");
     }
 
