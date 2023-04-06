@@ -41,6 +41,10 @@ async function main() {
         await provider.send("hardhat_impersonateAccount", ["0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744"]);
         signerAuctioneer = provider.getSigner("0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744");
         signerAdmin = provider.getSigner("0x01d3aa4c9a61f5fb4b3ef5ad90c0e02ccf861842");
+        // fund accounts using ethSigners owner (account from hardhat.config.ts)
+        await signers.owner.sendTransaction({ to: "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744", value: ethers.utils.parseEther("10") });
+        await signers.owner.sendTransaction({ to: "0x95622e85962BC154c76AB24e48FdF6CdAeDAd6E5", value: ethers.utils.parseEther("10") });
+        await signers.owner.sendTransaction({ to: "0x01d3aa4c9a61f5fb4b3ef5ad90c0e02ccf861842", value: ethers.utils.parseEther("10") });
     } else if (network.name === "hardhat") {
         /** IF NOT ON FORK (PERSISTANT) NEED TO FUND THE ADDRESSES AND IMPERSONATE THEM WITH ETHERS */
         await signers.owner.sendTransaction({ to: "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744", value: ethers.utils.parseEther("10") });
@@ -57,7 +61,17 @@ async function main() {
     console.log("stop previous auction");
     // await contracts.auction.connect(signerAuctioneer).stopAuction();
     const isAuctionClosed = await contracts.auction.connect(signerAuctioneer).isAuctionClosed();
-    console.log({ url: (network.config as any)?.url, name: network.name, isAuctionClosed, chainId: network.config.chainId });
+    const owner = ethSigners[0];
+    const ownerBalance = await owner.getBalance();
+    console.log({
+        url: (network.config as any)?.url,
+        name: network.name,
+        isAuctionClosed,
+        chainId: network.config.chainId,
+        ownerBalance: ethers.utils.formatEther(ownerBalance.toString()),
+        auctioneerBalance: ethers.utils.formatEther(await signerAuctioneer.getBalance()),
+        adminBalance: ethers.utils.formatEther(await signerAdmin.getBalance()),
+    });
 
     const leverageAmount = NumberBundle.withNum(5e5, 18).getBn();
     console.log("setting tokens");
