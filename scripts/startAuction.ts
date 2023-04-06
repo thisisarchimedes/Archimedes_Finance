@@ -59,7 +59,7 @@ async function main() {
     }
 
     console.log("stop previous auction");
-    // await contracts.auction.connect(signerAuctioneer).stopAuction();
+    await contracts.auction.connect(signerAuctioneer).stopAuction();
     const isAuctionClosed = await contracts.auction.connect(signerAuctioneer).isAuctionClosed();
     const owner = ethSigners[0];
     const ownerBalance = await owner.getBalance();
@@ -83,7 +83,7 @@ async function main() {
     console.log("starting new auction");
     await contracts.auction
         .connect(signerAuctioneer)
-        .startAuctionWithLength(5760, NumberBundle.withNum(2e4, 18).getBn(), NumberBundle.withNum(3e4, 18).getBn());
+        .startAuctionWithLength(7152, NumberBundle.withNum(2e4, 18).getBn(), NumberBundle.withNum(3e4, 18).getBn());
     if (await contracts.auction.isAuctionClosed()) {
         throw new Error("Must be in an active auction to accept leverage");
     } else {
