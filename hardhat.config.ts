@@ -118,7 +118,7 @@ export default {
             forking: {
                 url: alchemyUrl,
                 allowUnlimitedContractSize: false,
-                blockNumber: 16820560,
+                blockNumber: 16977380,
             },
 
             localhost: {
