@@ -1,4 +1,4 @@
-import { ethers, network } from "hardhat";
+import hre, { ethers, network } from "hardhat";
 import { impersonateAccount } from "../integrationTests/IntegrationTestContext";
 import { Contracts } from "./ProjectInit/Contracts";
 import { AuctionInfo, LeverageHelper } from "./ProjectInit/LeverageHelper";
@@ -7,9 +7,27 @@ import { DeployedStore } from "./ProjectInit/MainnetDeployment/DeployedStore";
 import { NumberBundle } from "./ProjectInit/NumberBundle";
 import { Signers } from "./ProjectInit/Signers";
 
+const DAY_IN_BLOCKS = 7152;
+const DEFAULT_AUCTION_LENGTH = DAY_IN_BLOCKS * 1;
+const DEFAULT_AUCTION_START_PRICE = 2e4; // 20k lvUSD
+const DEFAULT_AUCTION_END_PRICE = 3e4; // 30k lvUSD
+const DEFAULT_LEVERAGE_AMOUNT = 5e5; // 500k lvUSD
 /// test class
 async function main() {
+    await hre.run("compile");
     Logger.setVerbose(true);
+    /**
+     * these are the values to be used that can be changed depending on the auction setup you want to run
+     * @param auctionLength the length of the auction in blocks
+     * @param auctionStartPrice the starting price of the auction in lvUSD integer (not wei parsed)
+     * @param auctionEndPrice the ending price of the auction in lvUSD integer (not wei parsed)
+     * @param leverageAmount the amount of leverage to be used in the auction integer ( not wei parsed )
+     */
+    const auctionLength = DEFAULT_AUCTION_LENGTH;
+    const auctionStartPrice = DEFAULT_AUCTION_START_PRICE;
+    const auctionEndPrice = DEFAULT_AUCTION_END_PRICE;
+    const leverageAmount = DEFAULT_LEVERAGE_AMOUNT;
+
     console.log("set signers");
     const signers = await new Signers().init();
     const ethSigners = await ethers.getSigners();
@@ -73,22 +91,26 @@ async function main() {
         adminBalance: ethers.utils.formatEther(await signerAdmin.getBalance()),
     });
 
-    const leverageAmount = NumberBundle.withNum(5e5, 18).getBn();
+    const leverage = NumberBundle.withNum(leverageAmount, 18).getBn();
     console.log("setting tokens");
     await contracts.setTokensInstances(DeployedStore.lvUSDAddress, DeployedStore.archTokenAddress);
     await contracts.setExternalTokensInstances();
     console.log("mint lvUSd");
     await contracts.lvUSD.connect(signerAdmin).setMintDestination(contracts.coordinator.address);
-    await contracts.lvUSD.connect(signerAuctioneer).mint(leverageAmount);
+    await contracts.lvUSD.connect(signerAuctioneer).mint(leverage);
     console.log("starting new auction");
     await contracts.auction
         .connect(signerAuctioneer)
-        .startAuctionWithLength(7152, NumberBundle.withNum(2e4, 18).getBn(), NumberBundle.withNum(3e4, 18).getBn());
+        .startAuctionWithLength(
+            auctionLength,
+            NumberBundle.withNum(auctionStartPrice, 18).getBn(),
+            NumberBundle.withNum(auctionEndPrice, 18).getBn(),
+        );
     if (await contracts.auction.isAuctionClosed()) {
         throw new Error("Must be in an active auction to accept leverage");
     } else {
         console.log("accepting leverage");
-        await contracts.coordinator.connect(signerAuctioneer).acceptLeverageAmount(leverageAmount);
+        await contracts.coordinator.connect(signerAuctioneer).acceptLeverageAmount(leverage);
     }
     const isAuctionClosedAfterOpen = await contracts.auction.connect(signerAuctioneer).isAuctionClosed();
     console.log({ url: (network.config as any)?.url, name: network.name, isAuctionClosedAfterOpen, chainId: network.config.chainId });
