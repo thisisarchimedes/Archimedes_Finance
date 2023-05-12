@@ -3,6 +3,7 @@ import { ConfigurationServicePlaceholders } from "aws-sdk/lib/config_service_pla
 import { formatEther, formatUnits } from "ethers/lib/utils";
 import hre, { ethers, network } from "hardhat";
 import { helperSwapETHWithOUSD } from "../../../test/MainnetHelper";
+import { balPoolAbi } from "../balPoolAbi";
 import { Contracts } from "../Contracts";
 import { DeploymentUtils } from "../DeploymentUtils";
 import { ERC20Utils } from "../ERC20Utils";
@@ -28,11 +29,13 @@ const shouldUpgradeLeverageEngine = false;
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
 const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744";
 const initOwnerAddress = "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7";
+const stakerAddress = "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7"
 
 const timelockAdminAddress = "0x01D3Aa4C9a61f5fB4b3EF5aD90C0e02ccF861842";
 const positionOwnerAddress = "0xbDfA4f4492dD7b7Cf211209C4791AF8d52BF5c50";
 const expiredPosOwnerAddress = "0x6aa70acB053f70dB222C3653E74DF383fEBAa492";
 
+const balancerPoolAddress = "0xdf2c03c12442c7a0895455a48569b889079ca52a";
 
 async function main() {
     const signers = await new Signers().init();
@@ -44,6 +47,8 @@ async function main() {
     let gnosisTreasury;
     let timelockAdmin;
     let expiredPosOwner;
+    let stakerSigner
+
     if (shouldImportAccounts) {
         // ------  Impersonate users and fund ETH when persisting networ
         if (hre.network.name === "persistant") {
@@ -85,15 +90,31 @@ async function main() {
             });
             timelockAdmin = await provider.getSigner;
 
+            await hre.network.provider.request({
+                method: "hardhat_impersonateAccount",
+                params: [expiredPosOwnerAddress],
+            });
             expiredPosOwner = await provider.getSigner(
                 expiredPosOwnerAddress,
             );
+
+            await hre.network.provider.request({
+                method: "hardhat_impersonateAccount",
+                params: [stakerAddress],
+            });
+            stakerSigner = await provider.getSigner(
+                stakerAddress,
+            );
+
+            console.log("END impersonating account on persistant network");
+
         } else {
             deployerOwner = await ethers.getImpersonatedSigner(initOwnerAddress);
             gnosisOwner = await ethers.getImpersonatedSigner(gnosisOwnerAddress);
             gnosisTreasury = await ethers.getImpersonatedSigner(treasuryAddress);
             expiredPosOwner = await ethers.getImpersonatedSigner(expiredPosOwnerAddress);
             timelockAdmin = await ethers.getImpersonatedSigner(timelockAdminAddress);
+            stakerSigner = await ethers.getImpersonatedSigner(stakerAddress);
         }
         console.log("got  gnosis signer in address", await gnosisTreasury.getAddress());
         const tx = await signers.owner.sendTransaction({
@@ -109,7 +130,8 @@ async function main() {
             value: ethers.utils.parseEther("2.0"),
         });
         const tx4 = await signers.owner.sendTransaction({
-            to: timelockAdmin.getAddress(),
+            // to: await timelockAdmin.getAddress(),
+            to: "0x01D3Aa4C9a61f5fB4b3EF5aD90C0e02ccF861842",
             value: ethers.utils.parseEther("5.0"),
         });
     } else {
@@ -118,6 +140,16 @@ async function main() {
         console.log("contract owner is ", await deployerOwner.getAddress());
         // console.log("position owner is ", await positionOwner.getAddress());
     }
+    console.log("start BAL section");
+    const balancerPool = await ethers.getContractAt(balPoolAbi, balancerPoolAddress, signers.owner);
+    const tx2 = await signers.owner.sendTransaction({
+        to: stakerSigner.getAddress(),
+        value: ethers.utils.parseEther("10.0"),
+    });
+    // transfer lp balancer pool from staker to 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+    const balPoolLpBalance = await balancerPool.balanceOf(stakerAddress)
+    await balancerPool.connect(stakerSigner).transfer("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", balPoolLpBalance);
+    console.log("new user balPoolLpBalance: ", formatEther(await balancerPool.balanceOf("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")));
 
     /// ----  Initialize contracts
     const contracts = new Contracts(signers);
