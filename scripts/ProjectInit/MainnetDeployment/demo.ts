@@ -19,18 +19,20 @@ import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
 
 const shouldOpenPosition = false;
 const shouldClosePosition = false;
-const shouldFundUsers = true;
-const shouldCreateAuction = true;
+const shouldFundUsers = false;
+const shouldCreateAuction = false;
 const shouldImportAccounts = true;
-const shouldMintLvUSD = true;
+const shouldMintLvUSD = false;
 const shouldUpgradeLeverageEngine = false;
 
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
 const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744";
 const initOwnerAddress = "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7";
 
+const timelockAdminAddress = "0x01D3Aa4C9a61f5fB4b3EF5aD90C0e02ccF861842";
 const positionOwnerAddress = "0xbDfA4f4492dD7b7Cf211209C4791AF8d52BF5c50";
-const expiredPosOwnerAddress = "0x1b3b8Cebd8c680557fC9aB5B55E1159FC7a6a0B8"
+const expiredPosOwnerAddress = "0x6aa70acB053f70dB222C3653E74DF383fEBAa492";
+
 
 async function main() {
     const signers = await new Signers().init();
@@ -40,6 +42,7 @@ async function main() {
     let positionOwner;
     let gnosisOwner;
     let gnosisTreasury;
+    let timelockAdmin;
     let expiredPosOwner;
     if (shouldImportAccounts) {
         // ------  Impersonate users and fund ETH when persisting networ
@@ -74,6 +77,14 @@ async function main() {
                 method: "hardhat_impersonateAccount",
                 params: [expiredPosOwnerAddress],
             });
+
+
+            await hre.network.provider.request({
+                method: "hardhat_impersonateAccount",
+                params: [timelockAdminAddress],
+            });
+            timelockAdmin = await provider.getSigner;
+
             expiredPosOwner = await provider.getSigner(
                 expiredPosOwnerAddress,
             );
@@ -82,6 +93,7 @@ async function main() {
             gnosisOwner = await ethers.getImpersonatedSigner(gnosisOwnerAddress);
             gnosisTreasury = await ethers.getImpersonatedSigner(treasuryAddress);
             expiredPosOwner = await ethers.getImpersonatedSigner(expiredPosOwnerAddress);
+            timelockAdmin = await ethers.getImpersonatedSigner(timelockAdminAddress);
         }
         console.log("got  gnosis signer in address", await gnosisTreasury.getAddress());
         const tx = await signers.owner.sendTransaction({
@@ -95,6 +107,10 @@ async function main() {
         const tx3 = await signers.owner.sendTransaction({
             to: await gnosisTreasury.getAddress(),
             value: ethers.utils.parseEther("2.0"),
+        });
+        const tx4 = await signers.owner.sendTransaction({
+            to: timelockAdmin.getAddress(),
+            value: ethers.utils.parseEther("5.0"),
         });
     } else {
         deployerOwner = signers.owner;
@@ -389,9 +405,20 @@ async function main() {
     //     }
     // }
     // console.log("before expire")
-
-    await contracts.leverageEngine.connect(gnosisOwner).expirePosition(ethers.utils.parseUnits("32", 0), NumberBundle.withNum(100).getBn())
-    console.log("expired pos 32")
+    console.log("Trying to get OUSD")
+    // const ousdBalanceBefore = await contracts.externalOUSD.balanceOf(expiredPosOwnerAddress)
+    // await contracts.leverageEngine.connect(expiredPosOwner).unwindLeveragedPosition(ethers.utils.parseUnits("32", 0), NumberBundle.withNum(100).getBn())
+    // const ousdBalanceAfter = await contracts.externalOUSD.balanceOf(expiredPosOwnerAddress)
+    // const delta = NumberBundle.withBn(ousdBalanceAfter).getNum() - NumberBundle.withBn(ousdBalanceBefore).getNum()
+    const userOUSDBefore = await contracts.externalOUSD.balanceOf(expiredPosOwnerAddress)
+    const tx4 = await signers.owner.sendTransaction({
+        to: expiredPosOwnerAddress,
+        value: ethers.utils.parseEther("5.0"),
+    });
+    await contracts.leverageEngine.connect(expiredPosOwner).unwindLeveragedPositionWithReturn(ethers.utils.parseUnits("40", 0), NumberBundle.withNum(100).getBn())
+    const userOUSDAfter = await contracts.externalOUSD.balanceOf(expiredPosOwnerAddress)
+    const delta = NumberBundle.withBn(userOUSDAfter).getNum() - NumberBundle.withBn(userOUSDBefore).getNum()
+    console.log("expired pos 32, got %s OUSD", delta)
 }
 main().catch((error) => {
     console.error(error);

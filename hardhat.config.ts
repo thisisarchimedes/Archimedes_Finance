@@ -118,12 +118,12 @@ export default {
             forking: {
                 url: alchemyUrl,
                 allowUnlimitedContractSize: false,
-                blockNumber: 17119973,
+                blockNumber: 17235534,
             },
 
             localhost: {
                 url: "http://127.0.0.1:8545",
-                blockNumber: 17119973,
+                blockNumber: 17235534,
                 allowUnlimitedContractSize: false,
             },
         },
