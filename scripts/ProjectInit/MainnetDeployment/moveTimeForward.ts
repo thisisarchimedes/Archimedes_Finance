@@ -35,9 +35,9 @@ async function main() {
     const feeDis = await ethers.getContractAt(feeDisABI, feeDisAddress, userDistrbutorSigner);
     const archToken = await ethers.getContractAt(abiUSDC, archAddress, userDistrbutorSigner);
 
-    await archToken.approve(feeDisAddress, ValueStore.TEN_ETH);
+    await archToken.approve(feeDisAddress, ValueStore.ONE_ETH);
 
-    await feeDis.depositToken(archAddress, ValueStore.TEN_ETH);
+    await feeDis.depositToken(archAddress, ValueStore.ONE_ETH);
     console.log("deposited arch")
     time.increase(days15InSeconds * 2)
 
