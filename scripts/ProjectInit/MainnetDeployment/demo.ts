@@ -29,7 +29,7 @@ const shouldUpgradeLeverageEngine = false;
 const treasuryAddress = "0x29520fd76494Fd155c04Fa7c5532D2B2695D68C6";
 const gnosisOwnerAddress = "0x84869Ccd623BF5Fb1d18E61A21B20d50cC786744";
 const initOwnerAddress = "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7";
-const stakerAddress = "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7"
+const stakerAddress = "0x68AFb79D25C9740e036b264A92d26eF95B4B9Ae7";
 
 const timelockAdminAddress = "0x01D3Aa4C9a61f5fB4b3EF5aD90C0e02ccF861842";
 const positionOwnerAddress = "0xbDfA4f4492dD7b7Cf211209C4791AF8d52BF5c50";
@@ -47,7 +47,7 @@ async function main() {
     let gnosisTreasury;
     let timelockAdmin;
     let expiredPosOwner;
-    let stakerSigner
+    let stakerSigner;
 
     if (shouldImportAccounts) {
         // ------  Impersonate users and fund ETH when persisting networ
@@ -58,31 +58,24 @@ async function main() {
                 method: "hardhat_impersonateAccount",
                 params: [initOwnerAddress],
             });
-            deployerOwner = await provider.getSigner(
-                initOwnerAddress,
-            );
+            deployerOwner = await provider.getSigner(initOwnerAddress);
 
             await hre.network.provider.request({
                 method: "hardhat_impersonateAccount",
                 params: [gnosisOwnerAddress],
             });
-            gnosisOwner = await provider.getSigner(
-                gnosisOwnerAddress,
-            );
+            gnosisOwner = await provider.getSigner(gnosisOwnerAddress);
 
             await hre.network.provider.request({
                 method: "hardhat_impersonateAccount",
                 params: [treasuryAddress],
             });
-            gnosisTreasury = await provider.getSigner(
-                treasuryAddress,
-            );
+            gnosisTreasury = await provider.getSigner(treasuryAddress);
 
             await hre.network.provider.request({
                 method: "hardhat_impersonateAccount",
                 params: [expiredPosOwnerAddress],
             });
-
 
             await hre.network.provider.request({
                 method: "hardhat_impersonateAccount",
@@ -94,20 +87,15 @@ async function main() {
                 method: "hardhat_impersonateAccount",
                 params: [expiredPosOwnerAddress],
             });
-            expiredPosOwner = await provider.getSigner(
-                expiredPosOwnerAddress,
-            );
+            expiredPosOwner = await provider.getSigner(expiredPosOwnerAddress);
 
             await hre.network.provider.request({
                 method: "hardhat_impersonateAccount",
                 params: [stakerAddress],
             });
-            stakerSigner = await provider.getSigner(
-                stakerAddress,
-            );
+            stakerSigner = await provider.getSigner(stakerAddress);
 
             console.log("END impersonating account on persistant network");
-
         } else {
             deployerOwner = await ethers.getImpersonatedSigner(initOwnerAddress);
             gnosisOwner = await ethers.getImpersonatedSigner(gnosisOwnerAddress);
@@ -150,8 +138,8 @@ async function main() {
     });
 
     // transfer lp balancer pool from staker to 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-    const balPoolLpBalance = await balancerPool.balanceOf(stakerAddress)
-    const halfBalPoolLPBalance = balPoolLpBalance.div(2)
+    const balPoolLpBalance = await balancerPool.balanceOf(stakerAddress);
+    const halfBalPoolLPBalance = balPoolLpBalance.div(2);
     const user0Address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
     const user1Address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
     await balancerPool.connect(stakerSigner).transfer(user0Address, halfBalPoolLPBalance);
@@ -159,7 +147,6 @@ async function main() {
 
     console.log("user %s  has %s balPoolLpBalance: ", user0Address, formatEther(await balancerPool.balanceOf(user0Address)));
     console.log("user %s  has %s balPoolLpBalance: ", user1Address, formatEther(await balancerPool.balanceOf(user1Address)));
-
 
     /// ----  Initialize contracts
     const contracts = new Contracts(signers);
@@ -205,17 +192,22 @@ async function main() {
 
     if (shouldCreateAuction) {
         const leverageHelper = new LeverageHelper(contracts);
-        const auction = new AuctionInfo(
-            24000,
-            NumberBundle.withNum(20000),
-            NumberBundle.withNum(75000),
-            NumberBundle.withNum(500000),
-        );
+        const auction = new AuctionInfo(24000, NumberBundle.withNum(20000), NumberBundle.withNum(75000), NumberBundle.withNum(500000));
 
-        console.log("Trying to start auction with start/end price of %s/%s, %s blocks long ,for %s leverage",
-            auction.startPrice.getNum(), auction.endPrice.getNum(), auction.length, auction.leverageAmount.getNum());
-        console.log("Trying to start auction with start/end price of %s/%s, %s blocks long ,for %s leverage",
-            auction.startPrice.getBn(), auction.endPrice.getBn(), auction.length, auction.leverageAmount.getNum());
+        console.log(
+            "Trying to start auction with start/end price of %s/%s, %s blocks long ,for %s leverage",
+            auction.startPrice.getNum(),
+            auction.endPrice.getNum(),
+            auction.length,
+            auction.leverageAmount.getNum(),
+        );
+        console.log(
+            "Trying to start auction with start/end price of %s/%s, %s blocks long ,for %s leverage",
+            auction.startPrice.getBn(),
+            auction.endPrice.getBn(),
+            auction.length,
+            auction.leverageAmount.getNum(),
+        );
         // Minting lvUSD and transfering to coordinator
         /// !!!!Remove this when dealing with mainnet - you have to do it manually!!!!
         if (shouldMintLvUSD) {
