@@ -1,4 +1,4 @@
-[
+export const balVaultABI = [
     {
         "inputs": [
             {
@@ -1176,4 +1176,4 @@
         "stateMutability": "payable",
         "type": "receive"
     }
-]
+];

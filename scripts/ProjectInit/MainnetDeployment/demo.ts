@@ -20,7 +20,7 @@ import { deployOrGetAllContracts, verifyArcimedesEngine } from "./Helpers";
 
 const shouldOpenPosition = false;
 const shouldClosePosition = false;
-const shouldFundUsers = false;
+const shouldFundUsers = true;
 const shouldCreateAuction = false;
 const shouldImportAccounts = true;
 const shouldMintLvUSD = false;
@@ -140,16 +140,26 @@ async function main() {
         console.log("contract owner is ", await deployerOwner.getAddress());
         // console.log("position owner is ", await positionOwner.getAddress());
     }
+
+    /** BALANCER SECTION */
     console.log("start BAL section");
     const balancerPool = await ethers.getContractAt(balPoolAbi, balancerPoolAddress, signers.owner);
     const tx2 = await signers.owner.sendTransaction({
         to: stakerSigner.getAddress(),
         value: ethers.utils.parseEther("10.0"),
     });
+
     // transfer lp balancer pool from staker to 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
     const balPoolLpBalance = await balancerPool.balanceOf(stakerAddress)
-    await balancerPool.connect(stakerSigner).transfer("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", balPoolLpBalance);
-    console.log("new user balPoolLpBalance: ", formatEther(await balancerPool.balanceOf("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")));
+    const halfBalPoolLPBalance = balPoolLpBalance.div(2)
+    const user0Address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+    const user1Address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+    await balancerPool.connect(stakerSigner).transfer(user0Address, halfBalPoolLPBalance);
+    await balancerPool.connect(stakerSigner).transfer(user1Address, halfBalPoolLPBalance);
+
+    console.log("user %s  has %s balPoolLpBalance: ", user0Address, formatEther(await balancerPool.balanceOf(user0Address)));
+    console.log("user %s  has %s balPoolLpBalance: ", user1Address, formatEther(await balancerPool.balanceOf(user1Address)));
+
 
     /// ----  Initialize contracts
     const contracts = new Contracts(signers);
@@ -437,20 +447,20 @@ async function main() {
     //     }
     // }
     // console.log("before expire")
-    console.log("Trying to get OUSD")
+    // console.log("Trying to get OUSD")
     // const ousdBalanceBefore = await contracts.externalOUSD.balanceOf(expiredPosOwnerAddress)
     // await contracts.leverageEngine.connect(expiredPosOwner).unwindLeveragedPosition(ethers.utils.parseUnits("32", 0), NumberBundle.withNum(100).getBn())
     // const ousdBalanceAfter = await contracts.externalOUSD.balanceOf(expiredPosOwnerAddress)
     // const delta = NumberBundle.withBn(ousdBalanceAfter).getNum() - NumberBundle.withBn(ousdBalanceBefore).getNum()
-    const userOUSDBefore = await contracts.externalOUSD.balanceOf(expiredPosOwnerAddress)
-    const tx4 = await signers.owner.sendTransaction({
-        to: expiredPosOwnerAddress,
-        value: ethers.utils.parseEther("5.0"),
-    });
-    await contracts.leverageEngine.connect(expiredPosOwner).unwindLeveragedPositionWithReturn(ethers.utils.parseUnits("40", 0), NumberBundle.withNum(100).getBn())
-    const userOUSDAfter = await contracts.externalOUSD.balanceOf(expiredPosOwnerAddress)
-    const delta = NumberBundle.withBn(userOUSDAfter).getNum() - NumberBundle.withBn(userOUSDBefore).getNum()
-    console.log("expired pos 32, got %s OUSD", delta)
+    // const userOUSDBefore = await contracts.externalOUSD.balanceOf(expiredPosOwnerAddress)
+    // const tx4 = await signers.owner.sendTransaction({
+    //     to: expiredPosOwnerAddress,
+    //     value: ethers.utils.parseEther("5.0"),
+    // });
+    // await contracts.leverageEngine.connect(expiredPosOwner).unwindLeveragedPositionWithReturn(ethers.utils.parseUnits("40", 0), NumberBundle.withNum(100).getBn())
+    // const userOUSDAfter = await contracts.externalOUSD.balanceOf(expiredPosOwnerAddress)
+    // const delta = NumberBundle.withBn(userOUSDAfter).getNum() - NumberBundle.withBn(userOUSDBefore).getNum()
+    // console.log("expired pos 32, got %s OUSD", delta)
 }
 main().catch((error) => {
     console.error(error);
