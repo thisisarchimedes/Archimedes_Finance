@@ -29,7 +29,7 @@ async function main() {
     const oneDayInSeconds = 60 * 60 * 24; // 1 day in seconds
 
     // Move forward 32 days
-    const daysToMove = 32;
+    const daysToMove = 28;
     time.increase(oneDayInSeconds * daysToMove);
     console.log("moved forward " + daysToMove + " days");
 
