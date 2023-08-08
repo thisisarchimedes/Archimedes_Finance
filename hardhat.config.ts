@@ -20,11 +20,11 @@ dotenv.config({ path: "secrets/alchemy.env" });
 dotenv.config({ path: resolve(__dirname, "./user.env") });
 
 const alchemyUrl = "https://eth-mainnet.alchemyapi.io/v2/" + process.env.ALCHEMY_API_KEY;
-const mainnetKey = "3d5840424a343a01a9eb7c4e4cce2b9675562910de9e68292c6f4266b40b78b3"; /// demo key, need to set actual key
-const mainnetKey2 = "3d5840424a343a01a9eb7c4e4cce2b9675562910de9e68292c6f4266b40b78b3"; /// demo key, need to set actual key
+const mainnetKey = "0"; /// demo key, need to set actual key
+const mainnetKey2 = "0"; /// demo key, need to set actual key
 
 // Notice that if no process.env.PRIVATE_WALLET_KEY, set it a random value (junk key)
-const georliPrivateKey = process.env.PRIVATE_WALLET_KEY || "3d5840424a343a01a9eb7c4e4cce2b9675562910de9e68292c6f4266b40b78b3";
+const georliPrivateKey = process.env.PRIVATE_WALLET_KEY;
 const goerliURL = process.env.GOERLI_ALCHEMY_URL;
 
 // This is a sample Hardhat task. To learn how to create your own go to
