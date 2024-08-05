@@ -74,6 +74,6 @@
         "@uniswap/v2-periphery": "^1.1.0-beta.0",
         "@uniswap/v3-core": "^1.0.1",
         "@uniswap/v3-periphery": "^1.4.3",
-        "aws-sdk": "^2.1319.0"
+        "aws-sdk": "^2.1668.0"
     }
 }
